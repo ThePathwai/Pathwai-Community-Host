@@ -1,0 +1,61 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --c-bg: 13 13 13; --c-surface: 23 23 23; --c-ink: 235 235 235; --c-muted: 161 161 161; --c-line: 46 46 46;
+  --accent: #EBEBEB; --on-accent: #0D0D0D;
+  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+  --r-card: 0.5rem; --r-input: 0.5rem; --r-btn: 9999px;
+  --heading-transform: uppercase; --heading-weight: 900; --heading-ls: -0.025em;
+  /* Layered elevation (ambient + contact shadow) instead of a flat drop-shadow — the same trick
+     Shopify/Strava-style dark UI uses so cards read as physically raised panels, not just outlined
+     boxes. Works on light or dark surfaces since it's pure black at low, stacked opacities. */
+  --shadow-sm: 0 1px 1px rgb(0 0 0 / 0.06), 0 2px 6px -2px rgb(0 0 0 / 0.12);
+  --shadow-md: 0 1px 1px rgb(0 0 0 / 0.06), 0 16px 32px -16px rgb(0 0 0 / 0.5);
+  --shadow-lg: 0 2px 4px rgb(0 0 0 / 0.1), 0 28px 56px -20px rgb(0 0 0 / 0.6);
+  --ease-out: cubic-bezier(.2, .8, .2, 1);
+  color-scheme: dark;
+}
+html, body { background: rgb(var(--c-bg)); color: rgb(var(--c-ink)); font-family: var(--font-sans); -webkit-font-smoothing: antialiased; }
+* { box-sizing: border-box; border-color: rgb(var(--c-line)); }
+.glass { background: rgb(var(--c-bg) / 0.72); -webkit-backdrop-filter: saturate(180%) blur(18px); backdrop-filter: saturate(180%) blur(18px); }
+h1, h2, .font-display { font-family: var(--font-heading, var(--font-sans)); font-weight: var(--heading-weight); text-transform: var(--heading-transform); letter-spacing: var(--heading-ls); line-height: 1.08; }
+h3 { font-weight: 700; letter-spacing: -0.01em; }
+::selection { background: var(--accent); color: var(--on-accent); }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+select option { background: rgb(var(--c-surface)); color: rgb(var(--c-ink)); }
+[data-mode="light"] { --mark-filter: invert(1); }
+/* status colours are tuned for dark surfaces; darken them on light themes */
+[data-mode="light"] .text-amber-300 { color: #b45309; }
+[data-mode="light"] .text-sky-300 { color: #0369a1; }
+[data-mode="light"] .text-red-400 { color: #b91c1c; }
+[data-mode="light"] .text-green-400 { color: #15803d; }
+/* Every link/button in the app is styled with raw hover: utilities rather than a shared component,
+   so the one place to make every one of those interactions feel smooth instead of an instant snap
+   is here, globally, rather than adding `transition` to hundreds of call sites individually. */
+a, button, [role="button"], select, .input {
+  transition: background-color .16s var(--ease-out), border-color .16s var(--ease-out), color .16s var(--ease-out), box-shadow .16s var(--ease-out), transform .16s var(--ease-out), opacity .16s var(--ease-out);
+}
+/* Big, confident, tabular figures — stat tiles, counters, profile-completion rings — read at a
+   glance the way Strava's activity numbers do, instead of blending into body copy. */
+.stat { font-family: var(--font-heading, var(--font-sans)); font-weight: 800; font-variant-numeric: tabular-nums; letter-spacing: -0.02em; line-height: 1; }
+@layer components {
+  .btn { @apply inline-flex items-center justify-center gap-2 px-5 py-2.5 text-sm font-semibold disabled:opacity-50 disabled:cursor-not-allowed; border-radius: var(--r-btn); }
+  .btn-primary { @apply btn; background: var(--accent); background-image: var(--accent-grad, none); color: var(--on-accent); box-shadow: 0 6px 20px -8px var(--accent); }
+  .btn-primary:hover { filter: brightness(1.07); transform: translateY(-1px); box-shadow: 0 10px 26px -8px var(--accent); }
+  .btn-primary:active { transform: translateY(0) scale(.97); filter: brightness(.97); }
+  .btn-ghost { @apply btn border border-line bg-transparent text-ink hover:bg-ink/5; }
+  .btn-ghost:hover { border-color: rgb(var(--c-ink) / 0.3); }
+  .btn-ghost:active { transform: scale(.97); }
+  .card { @apply border border-line/70 bg-surface p-5; border-radius: var(--r-card); box-shadow: var(--shadow-sm); transition: border-color .2s var(--ease-out), transform .2s var(--ease-out), box-shadow .2s var(--ease-out); }
+  a.card:hover, .card-hover:hover { border-color: rgb(var(--c-ink) / 0.22); transform: translateY(-3px); box-shadow: var(--shadow-lg); }
+  a.card:active, .card-hover:active { transform: translateY(-1px); }
+  .input { @apply w-full border border-line bg-surface px-3.5 py-2.5 text-sm text-ink placeholder:text-muted; border-radius: var(--r-input); }
+  .input:hover { border-color: rgb(var(--c-ink) / 0.22); }
+  .input:focus { outline: 2px solid var(--accent); outline-offset: 0; border-color: transparent; }
+  .label { @apply mb-1 block text-[10px] font-medium uppercase text-muted; letter-spacing: 0.18em; }
+  .chip { @apply inline-flex items-center border border-line bg-ink/[.06] px-2.5 py-0.5 text-xs font-medium text-ink/80; border-radius: var(--r-btn); }
+  .chip-accent { background: var(--accent); background-image: var(--accent-grad, none); border-color: transparent; color: var(--on-accent); box-shadow: 0 4px 14px -6px var(--accent); }
+  .eyebrow { @apply text-[10px] font-medium uppercase text-muted; letter-spacing: 0.24em; }
+}

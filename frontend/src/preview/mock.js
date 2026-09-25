@@ -1,0 +1,795 @@
+// Preview-only API layer: answers /api/* from responses recorded off the real backend.
+// Loaded only when REACT_APP_PREVIEW=true (see lib/api.js). Not part of the normal build.
+import axios from "axios";
+import fixtures from "./fixtures.json";
+
+const S = { role: null, email: null, community: null, books: {}, extra: {} };
+const book = () => { const k = S.community || "playr"; return (S.books[k] = S.books[k] || JSON.parse(JSON.stringify(fixtures.communities[k]))); };
+const slugOf = () => S.community || "playr";
+// The active community's recorded data. `member` and `admin` both point at the signed-in person's view, so shared helpers keep working.
+Object.defineProperty(S, "data", { get() { const b = book(); const v = (S.email && b.logins[S.email]) || {}; return { public: b.public, member: v, admin: v }; } });
+const ACCOUNTS = { "demo@yourcommunity.app": { name: "Maya Okonkwo", role: "member" }, "admin@yourcommunity.app": { name: "Devon Clarke", role: "admin" }, "host@thevillage.example": { name: "Camille Laurent", role: "host" } };
+const BASE = { "demo@yourcommunity.app": { playr: "approved", grace: "approved", "club-pto": "approved" }, "admin@yourcommunity.app": { playr: "approved", grace: "approved", "the-village": "approved", "club-pto": "approved", unity: "approved" }, "host@thevillage.example": { "the-village": "approved" } };
+const ADMIN_OF = { "admin@yourcommunity.app": ["playr", "grace", "the-village", "club-pto", "unity"], "host@thevillage.example": ["the-village"] };
+const memStatus = (email, slug) => (S.extra.join || {})[email + "|" + slug] || (BASE[email] || {})[slug] || "none";
+const isAdminHere = () => (ADMIN_OF[S.email] || []).includes(slugOf());
+const appsHere = () => ((S.extra.apps || {})[slugOf()] || []);
+const clone = (x) => JSON.parse(JSON.stringify(x));
+const q = (s) => (s || "").toLowerCase();
+const has = (o, s) => JSON.stringify(o).toLowerCase().includes(s);
+
+// ---- admin onboarding: self-serve "create a community" (mirrors routes/hub.py CATEGORY_PRESETS) ----
+const CATEGORY_PRESETS = {
+  church: { label: "Church / faith community", kind: "Faith community", theme_preset: "forest", member_plural: "Congregation",
+    event_types: ["Sunday Gathering", "Community Meal", "Connect Group", "Volunteer Day", "Youth Night", "Prayer Evening"] },
+  wellness: { label: "Wellness / fitness brand", kind: "Wellness & events community", theme_preset: "playr-modern", member_plural: "Members",
+    event_types: ["Networking", "Workshop", "Wellness", "Social", "Summit"] },
+  dinner_club: { label: "Private club / dinner series", kind: "Private club", theme_preset: "sunset", member_plural: "Guests",
+    event_types: ["Dinner", "Wine Salon", "Market Morning", "Members' Supper"] },
+  professional: { label: "Professional network", kind: "Professional network", theme_preset: "ocean", member_plural: "Members",
+    event_types: ["Networking", "Workshop", "Panel", "Mixer"] },
+  other: { label: "Something else", kind: "Community", theme_preset: "pathwai", member_plural: "Members",
+    event_types: ["Gathering", "Meetup", "Workshop", "Social"] },
+};
+// Reference/schema data that describes the product, not any one community's content — carried over
+// as-is onto a brand-new community's book. Everything else in `public` gets wiped to an empty state.
+const REFERENCE_PUBLIC_KEYS = ["/member-requests/kinds", "/support-categories", "/community/presets", "/auth/demo-accounts", "/organizations/meta/filters", "/users/filters", "/chat/quick-starts", "/profile-requests/kinds", "/connect-requests/kinds", "/integrations/public"];
+// Mirrors backend routes/community_config.py's DEFAULT_CONFIG — the shape a brand-new community's
+// config starts from before the category preset below rebrands the name/theme/event-types on top.
+// Kept generic on purpose (nav labels, member types, profile fields) rather than inheriting the
+// flavour of whichever recorded community happens to be used as the structural template.
+const DEFAULT_CONFIG = {
+  community_name: "New Community", require_approval: true, community_kind: "Community", about: "", hub_cover: null, apply_questions: [],
+  tagline: "", community_type: "social", theme: { preset: "pathwai", accent: "#F00F21" },
+  member_label_singular: "Member", member_label_plural: "Members",
+  member_types: { founder: "Member", mentor: "Host", alumni: "Alumni", partner: "Partner", guest: "Guest" },
+  profile: { fields: [
+    { key: "age", label: "Age", enabled: true }, { key: "height", label: "Height", enabled: true }, { key: "title", label: "Profession", enabled: true },
+    { key: "skill_set", label: "Skills", enabled: true }, { key: "interests_hobbies", label: "Interests", enabled: true },
+    { key: "goals", label: "Goals", enabled: true }, { key: "support_needs", label: "Support needed", enabled: true },
+  ] },
+  event_types: ["Gathering", "Meetup", "Workshop", "Social"],
+  support_categories: ["Career advice", "Business help", "Legal & finance", "Marketing & content", "Mentorship", "Wellness", "Introductions", "Events", "Other"],
+  signup_fields: [
+    { key: "title", label: "Profession", type: "text", required: false },
+    { key: "skill_set", label: "Skills", type: "tags", required: false },
+    { key: "interests_hobbies", label: "Interests", type: "tags", required: false },
+  ],
+  custom_profile_fields: [], widgets: ["upcoming_events", "support_requests", "smart_matches", "announcements", "resources"], page_text: {},
+  gallery_photos: [],
+  allow_member_submissions: { events: true, resources: true, announcements: true },
+  brand: {
+    preset: "pathwai", mode: "light", colors: { accent: "#F00F21", on_accent: "#FFFFFF", background: "#FFFFFF", surface: "#F7F7F5", text: "#111111", muted: "#6B6B70", border: "#E5E5E0" },
+    font: "Inter", heading_font: "Inter", heading_style: "normal", radius: "soft", button_shape: "rounded",
+    logo_url: null, logo_mark_url: null, logo_adapts: true, show_name_with_logo: false,
+    login_headline: "Meet your people.", login_subhead: "Find your next event and the members who can help you grow.",
+    welcome_message: "Welcome to the community. Here's what's happening this week.", footer_text: "", support_email: "",
+  },
+  nav: [
+    { key: "members", label: "Members", enabled: true }, { key: "matches", label: "Connections", enabled: true },
+    { key: "events", label: "Events", enabled: true }, { key: "resources", label: "Perks", enabled: true },
+    { key: "updates", label: "News", enabled: true }, { key: "requests", label: "To-do", enabled: true },
+    { key: "support", label: "Help board", enabled: true },
+  ],
+  custom_links: [], setup_completed: true,
+};
+function slugify(name) {
+  const base = name.trim().toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "") || "community";
+  const taken = (s) => !!fixtures.communities[s] || !!S.books[s];
+  let slug = base, i = 2;
+  while (taken(slug)) { slug = `${base}-${i}`; i++; }
+  return slug;
+}
+// Recursively wipes a fixture object down to its shape — arrays become [], numbers become 0,
+// everything else (strings, booleans, null) passes through — so a page built for a data-rich
+// community still finds every key it expects, just showing a fresh, empty state.
+function blank(v) {
+  if (Array.isArray(v)) return [];
+  if (v && typeof v === "object") { const o = {}; for (const k of Object.keys(v)) o[k] = typeof v[k] === "number" ? 0 : blank(v[k]); return o; }
+  return v;
+}
+
+const fail = (config, status, detail) => {
+  const response = { status, data: { detail }, headers: {}, config, statusText: "" };
+  return Promise.reject(new axios.AxiosError(detail, "ERR_BAD_REQUEST", config, null, response));
+};
+const ok = (config, data, status = 200) => Promise.resolve({ data, status, statusText: "OK", headers: {}, config });
+
+const LABELS = { name: "Name", avatar_url: "Photo", age: "Age", height: "Height", title: "Profession", location: "Neighbourhood / city", bio: "Bio", industry: "Main sport", stage: "Level", position: "Position / role", cohort: "Division / team", skill_set: "Skills", interests_hobbies: "Interests", goals: "Goals", support_needs: "Support needed" };
+const filled = (v) => (Array.isArray(v) ? v.length > 0 : v && typeof v === "object" ? Object.keys(v).length > 0 : !!(v && String(v).trim()));
+const effective = (r) => (["not_started", "in_progress"].includes(r.status) && r.due_date && r.due_date < new Date().toISOString().slice(0, 10) ? "overdue" : r.status);
+function reqList(d, p) {
+  const live = S.extra.reqs || {};
+  let items = d.requests.map((r) => { const m = { ...r, ...(live[r.id] || {}) }; m.effective_status = effective(m); return m; });
+  const open = items.filter((r) => ["not_started", "in_progress", "overdue"].includes(r.effective_status)).length;
+  if (p.status === "open") items = items.filter((r) => ["not_started", "in_progress", "overdue"].includes(r.effective_status));
+  return { requests: items, open };
+}
+function completion() {
+  const base = S.data.member["/me/profile-completion"];
+  const patched = S.extra.profile || {};
+  const keys = Object.keys(LABELS);
+  const missing = (base.missing_keys || []).filter((k) => !filled(patched[k]));
+  return { ...base, missing_keys: missing, missing: missing.map((k) => LABELS[k] || k), percent: Math.round((100 * (keys.length - missing.length)) / keys.length), sections: base.sections, _k: keys.length };
+}
+const view = () => (S.role ? S.data.member : {});
+function lookup(path) {
+  if (S.role && S.community && view()[path] !== undefined) return view()[path];
+  if (S.data.public[path] !== undefined) return S.data.public[path];
+  // A detail page for something created live this session (never "recorded" by a login) — surface it
+  // from the shared overlay instead of 404ing, so a just-created event/member can be opened.
+  const em = path.match(/^\/events\/([^/]+)$/);
+  if (em) return sharedContent("events").created.find((x) => x.id === em[1]);
+  const um = path.match(/^\/users\/([^/]+)$/);
+  if (um) return sharedContent("users").created.find((x) => x.id === um[1]);
+  return undefined;
+}
+
+
+// ---- integrations (demo-mode simulation) ----
+// Shared per-community, not per-login: any member's purchase/opt-in checks need to see what the admin connected.
+const integ = () => {
+  const bk = book();
+  if (!bk.integrations) {
+    const seed = Object.values(bk.logins).find((l) => l["/admin/integrations"]);
+    bk.integrations = clone((seed && seed["/admin/integrations"].integrations) || []);
+  }
+  return bk.integrations;
+};
+const stripeOn = () => integ().find((p) => p.provider === "stripe")?.enabled;
+const PLANS = [{ key: "member", label: "Community member", amount_cents: 4900, interval: "month" }, { key: "founder", label: "Founder plan", amount_cents: 12900, interval: "month" }];
+const SYNC = { airtable: { imported: 12, updated: 4, skipped: 1 }, luma: { events_imported: 5, rsvps_synced: 18 }, stripe: { plans: 2, payments: 3 } };
+function integWrite(method, path, body, config) {
+  const m = path.match(/^\/admin\/integrations\/(\w+)(?:\/(test|sync))?$/);
+  if (!m) return null;
+  const p = integ().find((x) => x.provider === m[1]);
+  if (!p) return fail(config, 404, "Unknown integration");
+  const now = new Date().toISOString();
+  if (method === "delete") { Object.assign(p, { enabled: false, status: "disconnected", demo: false, masked: {}, last_result: null, last_error: null }); return ok(config, { ok: true }); }
+  if (m[2] === "test") return ok(config, { ok: true, message: `Connected to ${p.label} (demo data)` });
+  if (m[2] === "sync") {
+    p.last_sync_at = now; p.last_result = SYNC[p.provider] || {};
+    p.log = [{ at: now, ok: true, message: "Sync complete (demo)" }, ...(p.log || [])].slice(0, 10);
+    return ok(config, { ok: true, result: p.last_result });
+  }
+  const key = (body.credentials || {}).api_key || (body.credentials || {}).account_sid;
+  if (p.kind === "link") Object.assign(p, { enabled: true, status: "connected" });
+  else {
+    if (!key && !p.enabled) return fail(config, 400, "Enter your credentials first");
+    p.enabled = true; p.status = "connected"; p.demo = !key || String(key).startsWith("demo") || p.demo;
+    if (key) p.masked = { api_key: "••••" + String(key).slice(-4) };
+    p.settings = { ...(p.settings || {}), ...(body.settings || {}) };
+    if (p.provider === "stripe") p.settings.plans = (body.settings || {}).plans || p.settings.plans || PLANS;
+  }
+  return ok(config, p);
+}
+
+// ---- shared community content ----
+// Fixtures are recorded per login (admin vs. member each got their own snapshot at record time), so
+// without this, anything created/edited/RSVP'd during the live preview would only ever show up for
+// whichever login made the change. These overlays live on the community's book (not per-login), so
+// every login that visits the same community sees the same events/resources/announcements/members
+// and the same attendee counts — admin actions show up for members and vice versa.
+function sharedContent(kind) {
+  const bk = book();
+  bk.shared = bk.shared || {};
+  bk.shared[kind] = bk.shared[kind] || { created: [], edits: {}, deleted: {} };
+  return bk.shared[kind];
+}
+function sharedRsvp() {
+  const bk = book();
+  bk.shared = bk.shared || {};
+  bk.shared.rsvp = bk.shared.rsvp || { byUser: {}, delta: {} }; // byUser: {eventId: {email: status}}, delta: {eventId: net change}
+  return bk.shared.rsvp;
+}
+const HIDDEN_STATUSES = ["pending", "rejected", "changes_requested"];
+function applyEdit(item, kind) {
+  if (!item) return item;
+  const patch = sharedContent(kind).edits[item.id];
+  return patch ? { ...item, ...patch } : item;
+}
+// Merges what was recorded for this login (`base`) with what was created/edited/deleted live during
+// this preview session, community-wide. `filterPending` hides not-yet-approved submissions from the
+// member-facing list (mirrors the real backend's approved_q, which hides them from everyone).
+function mergedList(base, kind, filterPending = true) {
+  const ov = sharedContent(kind);
+  let created = ov.created.map((x) => applyEdit(x, kind));
+  if (filterPending) created = created.filter((x) => !HIDDEN_STATUSES.includes(x.status));
+  const rest = (base || []).filter((x) => !ov.deleted[x.id]).map((x) => applyEdit(x, kind));
+  return [...created, ...rest];
+}
+// Bookmarking is personal, not shared — keyed by the viewer, so it applies cleanly to both a
+// recorded fixture resource and one someone created live this session.
+function savedSet() {
+  const bk = book();
+  bk.shared = bk.shared || {};
+  bk.shared.saved = bk.shared.saved || {};
+  return (bk.shared.saved[S.email] = bk.shared.saved[S.email] || {});
+}
+function withRsvpFields(e) {
+  if (!e || !e.id) return e;
+  const rv = sharedRsvp();
+  const mine = (rv.byUser[e.id] || {})[S.email];
+  const my_rsvp = mine !== undefined ? mine : e.my_rsvp ?? null;
+  const attendee_count = Math.max(0, (e.attendee_count || 0) + (rv.delta[e.id] || 0));
+  return { ...e, my_rsvp, is_attending: my_rsvp === "yes", attendee_count };
+}
+
+function hubList() {
+  const acct = S.email;
+  const all = [...fixtures.hub, ...(S.extra.createdCommunities || [])];
+  return clone(all).map((c) => {
+    const st = memStatus(acct, c.slug);
+    const mine = (S.extra.apps || {})[c.slug] || [];
+    const out = { ...c, my: { status: st, role: st === "approved" && (ADMIN_OF[acct] || []).includes(c.slug) ? "admin" : st === "approved" ? "member" : null, platform_admin: acct === "admin@yourcommunity.app" || undefined, requested_at: st === "pending" ? ((mine.find((a) => a.email === acct) || {}).requested_at || new Date().toISOString()) : null, note: null } };
+    out.members = (out.members || 0) + ((S.books[c.slug] && S.books[c.slug].shared && S.books[c.slug].shared.users && S.books[c.slug].shared.users.created.length) || 0);
+    if (out.my.role === "admin") {
+      const tmpl = fixtures.communities[c.slug];
+      if (tmpl) {
+        const ov = S.extra.mship || {};
+        const seeded = (tmpl.logins[Object.keys(tmpl.logins).find((e) => (ADMIN_OF[e] || []).includes(c.slug)) || ""] || {})["/admin/membership-requests"];
+        out.pending_requests = Math.max(0, ((seeded && seeded.counts && seeded.counts.pending) || 0) - Object.keys(ov).filter((k) => (seeded?.requests || []).some((r) => r.id === k)).length) + mine.filter((a) => memStatus(a.email, c.slug) === "pending").length;
+      } else {
+        out.pending_requests = mine.filter((a) => memStatus(a.email, c.slug) === "pending").length; // freshly created — no seeded requests
+      }
+    }
+    return out;
+  });
+}
+
+const sum = (id) => String(id).split("").reduce((a, c) => a + c.charCodeAt(0), 0);
+const t_sold_out = (tier, orders) => tier.capacity != null && orders.filter((o) => o.tier_id === tier.id).length >= tier.capacity;
+function get(path, p, config) {
+  if (path === "/admin/blasts/history") return ok(config, { blasts: S.extra.blasts || [] });
+  const sl = path.match(/^\/admin\/events\/([^/]+)\/sales$/);
+  if (sl) {
+    const ev = withRsvpFields(applyEdit([...sharedContent("events").created, ...((view()["/events"]) || [])].find((x) => x.id === sl[1]), "events")) || {};
+    const orders = (S.extra.sales || {})[sl[1]] || [];
+    const tiers = (ev.tier_summary?.tiers || []).map((t) => ({
+      id: t.id, name: t.name, price_cents: t.price_cents, capacity: t.capacity,
+      sold: orders.filter((o) => o.tier_id === t.id).length,
+      revenue_cents: orders.filter((o) => o.tier_id === t.id).reduce((a, o) => a + (o.amount || 0), 0),
+      sold_out: t.capacity != null && orders.filter((o) => o.tier_id === t.id).length >= t.capacity,
+    }));
+    const v = (S.extra.views || {})[sl[1]] || { total: 0, users: [] };
+    const unique = v.users.length;
+    return ok(config, {
+      price_cents: ev.price_cents, capacity: ev.capacity, sold: orders.length, revenue_cents: orders.reduce((a, o) => a + (o.amount || 0), 0),
+      currency: "cad", attending: ev.attendee_count, orders, stripe_connected: !!stripeOn(), tiers,
+      traffic: { views: v.total, unique_viewers: unique, anonymous_views: v.total - v.users.filter((u) => u !== "anon").length, conversion_rate: unique ? orders.length / unique : v.total === 0 ? 0 : null },
+    });
+  }
+  if (path === "/auth/oauth/providers") return ok(config, { google: { label: "Google", client_id: null, configured: false }, apple: { label: "Apple", client_id: null, configured: false } });
+  if (path === "/hub/community-categories") return ok(config, { categories: Object.entries(CATEGORY_PRESETS).map(([key, v]) => ({ key, label: v.label })) });
+  if (path === "/hub/me") {
+    const prof = (S.extra.acctProfile || {})[S.email] || {};
+    const baseName = (ACCOUNTS[S.email] || (S.extra.accounts || {})[S.email] || {}).name;
+    return ok(config, { account: S.role ? { id: "acct-" + S.email, name: baseName, email: S.email, avatar_url: null, age: null,
+      title: "", company: "", location: "", bio: "", skill_set: [], interests_hobbies: [], goals: [], support_needs: [],
+      contact: { phone: "", linkedin: "", instagram: "", website: "" }, ...prof, name: prof.name || baseName } : null, active: S.community });
+  }
+  if (path === "/hub/communities") return S.role ? ok(config, { communities: hubList(), active: S.community }) : fail(config, 401, "Not authenticated");
+  if (path === "/auth/me") return S.role && S.community ? ok(config, view()["/auth/me"]) : fail(config, 401, "Not authenticated");
+  if (!S.role && !path.startsWith("/community") && !path.startsWith("/auth") && !path.startsWith("/organizations") &&
+      !path.startsWith("/discover") && !path.startsWith("/mentors") && !path.startsWith("/chat")) {
+    return fail(config, 401, "Not authenticated");
+  }
+  if (path === "/me/billing") {
+    const pay = S.extra.pay || [];
+    const cur = pay.find((x) => x.kind === "plan");
+    return ok(config, { enabled: !!stripeOn(), plans: stripeOn() ? PLANS : [], status: cur ? "active" : null, plan: cur ? cur.description : null, payments: pay, currency: "cad" });
+  }
+  if (path === "/admin/integrations") return ok(config, { integrations: integ() });
+  let d = lookup(path);
+  if (d === undefined) return fail(config, 404, "This link is not available.");
+  d = clone(d);
+
+  if (path === "/me/requests") return ok(config, reqList(d, p));
+  if (path.startsWith("/member-requests/") && path !== "/member-requests/kinds") {
+    const live = (S.extra.reqs || {})[path.split("/")[2]];
+    if (live) d = { ...d, ...live };
+    if (d.status === "not_started") d.status = "in_progress";
+    d.effective_status = effective(d);
+    return ok(config, d);
+  }
+  if (path === "/me/team-support") return ok(config, { requests: [...(S.extra.team || []), ...d.requests] });
+  if (path === "/me/settings") return ok(config, { ...d, settings: S.extra.settings || d.settings });
+  if (path === "/me/profile-completion") return ok(config, completion());
+  if (path === "/matches") {
+    const acts = S.extra.acts || {};
+    d.people = d.people.filter((x) => acts["person:" + x.user.id] !== "dismiss").map((x) => ({ ...x, state: acts["person:" + x.user.id] || x.state }));
+    d.events = d.events.filter((x) => acts["event:" + x.id] !== "dismiss").map((x) => ({ ...x, state: acts["event:" + x.id] || x.state }));
+    d.resources = d.resources.filter((x) => acts["resource:" + x.id] !== "dismiss").map((x) => ({ ...x, state: acts["resource:" + x.id] || x.state }));
+    return ok(config, d);
+  }
+  if (path === "/announcements") return ok(config, mergedList(d, "announcements"));
+  if (path === "/admin/member-requests") {
+    d.requests = d.requests.map((r) => { const l = (S.extra.reqs || {})[r.id]; return l ? { ...r, ...l, effective_status: effective({ ...r, ...l }) } : r; });
+    if (p.status && p.status !== "all") d.requests = d.requests.filter((r) => r.effective_status === p.status);
+    d.counts = d.requests.reduce((a, r) => ({ ...a, [r.effective_status]: (a[r.effective_status] || 0) + 1 }), {});
+    return ok(config, d);
+  }
+  if (path === "/admin/membership-requests") {
+    const ov = S.extra.mship || {};
+    let rows = [...appsHere(), ...d.requests].map((r) => (ov[r.id] ? { ...r, ...ov[r.id] } : r));
+    const counts = rows.reduce((a, r) => ({ ...a, [r.status]: (a[r.status] || 0) + 1 }), { pending: 0, approved: 0, rejected: 0 });
+    if (p.status && p.status !== "all") rows = rows.filter((r) => r.status === p.status);
+    return ok(config, { requests: rows, counts });
+  }
+  if (path === "/admin/moderation") {
+    const decided = S.extra.moderated || {};
+    const dyn = [];
+    for (const kind of ["events", "resources", "announcements"]) {
+      for (const item of sharedContent(kind).created) {
+        if (item.status === "pending" && !decided[item.id]) dyn.push({ kind: kind.slice(0, -1), id: item.id, title: item.title || item.name, status: "pending", note: null });
+      }
+    }
+    d.items = [...dyn, ...d.items.filter((i) => !decided[i.id])];
+    return ok(config, d);
+  }
+  if (path === "/admin/team-support") {
+    d.requests = [...(S.extra.team || []), ...d.requests].map((r) => ({ ...r, ...((S.extra.teamUpd || {})[r.id] || {}) }));
+    return ok(config, d);
+  }
+  if (path === "/admin/action-center") { { const ov = S.extra.mship || {}; const apps = appsHere(); d.pending_memberships = d.pending_memberships - Object.keys(ov).filter((k) => !apps.some((x) => x.id === k)).length + apps.filter((x) => !ov[x.id]).length; } d.pending_moderation = d.pending_moderation - Object.keys(S.extra.moderated || {}).length; return ok(config, d); }
+
+  if (path === "/dashboard") {
+    const ov = S.extra.mship || {};
+    if (isAdminHere()) {
+      const all = [...appsHere(), ...(d.membership_requests || [])].filter((r) => !ov[r.id]);
+      d = { ...d, membership_requests: all.slice(0, 5), membership_requests_total: all.length + Math.max(0, (d.membership_requests_total || 0) - (d.membership_requests || []).length) };
+    }
+    return ok(config, d);
+  }
+  if (path === "/users") {
+    d = mergedList(d, "users", false);
+    const s = q(p.q);
+    if (s) d = d.filter((u) => has([u.name, u.company, u.bio, u.expertise, u.services_offered, u.startup_one_liner], s));
+    for (const [k, fields] of [["offer", ["services_offered", "topics_can_advise_on", "expertise", "open_to"]], ["looking_for", ["needs_seeking", "growing_in", "goals"]], ["interest", ["interests_hobbies"]]]) {
+      if (p[k] && p[k] !== "all") d = d.filter((u) => fields.some((f) => has(u[f] || [], q(p[k]))));
+    }
+    return ok(config, d);
+  }
+  if (path.match(/^\/users\/[^/]+$/)) return ok(config, applyEdit(d, "users"));
+  if (path === "/events") {
+    d = mergedList(d, "events").map(withRsvpFields);
+    if (p.upcoming === true || p.upcoming === "true") d = d.filter((e) => !e.is_past);
+    if (p.upcoming === false || p.upcoming === "false") d = d.filter((e) => e.is_past);
+    return ok(config, d);
+  }
+  if (path.match(/^\/events\/[^/]+$/)) {
+    if (sharedContent("events").deleted[d.id]) return fail(config, 404, "This event was removed.");
+    return ok(config, withRsvpFields(applyEdit(d, "events")));
+  }
+  if (path === "/resources") {
+    const sv = savedSet();
+    d = mergedList(d, "resources").map((r) => ({ ...r, is_saved: Object.prototype.hasOwnProperty.call(sv, r.id) ? sv[r.id] : !!r.is_saved }));
+    if (p.q) d = d.filter((r) => has([r.title, r.description, r.tags], q(p.q)));
+    if (p.source && p.source !== "all") d = d.filter((r) => r.source === p.source);
+    if (p.saved) d = d.filter((r) => r.is_saved);
+    return ok(config, d);
+  }
+  if (path === "/support-requests") {
+    const all = [...(S.extra.requests || []), ...d];
+    const me = view()["/auth/me"];
+    let r = all;
+    if (p.mine) r = all.filter((x) => x.user_id === me.id);
+    else if (p.status && p.status !== "all") r = all.filter((x) => x.status === p.status);
+    return ok(config, r);
+  }
+  if (path === "/discover") {
+    const s = q(p.q);
+    const f = (arr) => (s ? arr.filter((x) => has(x, s)) : arr);
+    const r = { programs: [], grants: [], mentors: [] };
+    if (!p.kind || p.kind === "all" || p.kind === "program") r.programs = f(d.programs);
+    if (!p.kind || p.kind === "all" || p.kind === "grant") r.grants = f(d.grants);
+    if (!p.kind || p.kind === "all" || p.kind === "mentor") r.mentors = f(d.mentors);
+    r.counts = { programs: r.programs.length, grants: r.grants.length, mentors: r.mentors.length, total: r.programs.length + r.grants.length + r.mentors.length };
+    return ok(config, r);
+  }
+  if (path === "/organizations") {
+    let o = d.organizations;
+    if (p.q) o = o.filter((x) => has([x.name, x.tagline, x.focus_areas], q(p.q)));
+    if (p.type && p.type !== "all") o = o.filter((x) => x.type === p.type);
+    if (p.region && p.region !== "all") o = o.filter((x) => x.region === p.region);
+    return ok(config, { organizations: o, total: o.length });
+  }
+  if (path === "/admin/audit-log") {
+    if (p.action && p.action !== "all") d.entries = d.entries.filter((e) => e.action === p.action);
+    return ok(config, d);
+  }
+  return ok(config, d);
+}
+
+function write(method, path, body, config) {
+  if (path === "/auth/login") {
+    const acct = ACCOUNTS[body.email] ? { ...ACCOUNTS[body.email], pw: "Demo123!" } : (S.extra.accounts || {})[body.email];
+    if (!acct) return fail(config, 401, "Invalid email or password");
+    const override = (S.extra.pwOverrides || {})[body.email];
+    const expectedPw = override !== undefined ? override : acct.pw;
+    if (body.password !== expectedPw) return fail(config, 401, "Invalid email or password");
+    S.role = acct.role; S.email = body.email;
+    const first = ["playr", "grace", "the-village", "club-pto"].find((k) => memStatus(S.email, k) === "approved");
+    S.community = first || null;
+    return ok(config, { ok: true, user: S.community ? view()["/auth/me"] : null, account: { id: "acct-" + S.email, name: acct.name, email: S.email } });
+  }
+  if (path === "/auth/logout") { S.role = null; S.email = null; S.community = null; return ok(config, { ok: true }); }
+  if (path === "/auth/forgot-password") {
+    // Same shape as the real backend: always a generic response, so this can't be used to probe which emails exist.
+    // There's no real inbox in this preview, so — unlike production, which only emails the link —
+    // the response hands the link straight back for the UI to display; ForgotPassword.jsx shows it
+    // behind an explicit "this is a demo" note rather than pretending an email was sent.
+    const email = (body.email || "").trim().toLowerCase();
+    let demo_reset_link = null;
+    if (ACCOUNTS[email] || (S.extra.accounts || {})[email]) {
+      const token = "demo-reset-" + Math.random().toString(36).slice(2) + Date.now().toString(36);
+      (S.extra.resetTokens = S.extra.resetTokens || {})[token] = email;
+      demo_reset_link = `#/reset-password?token=${token}`;
+    }
+    return ok(config, { ok: true, message: "If an account exists for that email, we've sent a reset link.", demo_reset_link });
+  }
+  if (path === "/auth/reset-password") {
+    const email = (S.extra.resetTokens || {})[body.token];
+    if (!email) return fail(config, 400, "This reset link is invalid or has expired. Request a new one.");
+    (S.extra.pwOverrides = S.extra.pwOverrides || {})[email] = body.password;
+    delete S.extra.resetTokens[body.token];
+    return ok(config, { ok: true });
+  }
+  if (path === "/auth/oauth/google" || path === "/auth/oauth/apple") {
+    // Real Google/Apple SDKs can't load inside this bundled preview, so both buttons simulate
+    // signing in as the member demo persona — same account the "Try the demo" button uses.
+    const email = "demo@yourcommunity.app";
+    const acct = ACCOUNTS[email];
+    S.role = acct.role; S.email = email;
+    const first = ["playr", "grace", "the-village", "club-pto"].find((k) => memStatus(email, k) === "approved");
+    S.community = first || null;
+    return ok(config, { ok: true, user: S.community ? view()["/auth/me"] : null, account: { id: "acct-" + email, name: acct.name, email }, new_account: false });
+  }
+  if (path === "/hub/signup") {
+    if (ACCOUNTS[body.email] || (S.extra.accounts || {})[body.email]) return fail(config, 409, "An account with that email already exists. Sign in instead.");
+    (S.extra.accounts = S.extra.accounts || {})[body.email] = { name: body.name, role: "member", pw: body.password };
+    S.role = "member"; S.email = body.email; S.community = null;
+    return ok(config, { ok: true, account: { id: "acct-" + body.email, name: body.name, email: body.email } }, 201);
+  }
+  if (path === "/hub/communities" && method === "post") {
+    if (!S.role || !S.email) return fail(config, 401, "Not authenticated");
+    const name = (body.name || "").trim();
+    if (name.length < 2) return fail(config, 400, "Give your community a name.");
+    const category = CATEGORY_PRESETS[body.category] ? body.category : "other";
+    const preset = CATEGORY_PRESETS[category];
+    const slug = slugify(name);
+    const now = new Date().toISOString();
+    const template = fixtures.communities.grace;
+    const themes = template.public["/community/presets"].themes;
+    const theme = themes.find((t) => t.preset === preset.theme_preset) || themes[0];
+    const singular = preset.member_plural.endsWith("s") ? preset.member_plural.slice(0, -1) : preset.member_plural;
+
+    const pub = blank(template.public);
+    for (const k of REFERENCE_PUBLIC_KEYS) pub[k] = clone(template.public[k]);
+    // Mirrors backend routes/hub.py's create_community: start from DEFAULT_CONFIG (generic nav,
+    // member types, profile fields — not whichever recorded community's own flavour) and rebrand
+    // just the bits the category preset and the admin's own input determine.
+    pub["/community/config"] = {
+      ...clone(DEFAULT_CONFIG),
+      community_name: name, tagline: (body.tagline || "").trim() || `Welcome to ${name}.`,
+      community_kind: preset.kind, community_type: "social",
+      member_label_singular: singular, member_label_plural: preset.member_plural,
+      event_types: [...preset.event_types],
+      theme: { preset: theme.preset, accent: theme.accent },
+      brand: {
+        ...clone(DEFAULT_CONFIG.brand),
+        preset: theme.preset, mode: theme.mode, colors: { ...theme.colors },
+        font: theme.font, heading_font: theme.heading_font, heading_style: theme.heading_style,
+        radius: theme.radius, button_shape: theme.button_shape,
+        login_headline: `Welcome to ${name}.`, login_subhead: "Sign in to find events and people.",
+        welcome_message: `Welcome to ${name}. Here's what's happening this week.`, footer_text: name,
+      },
+      setup_completed: false, updated_at: now,
+    };
+
+    const acct = ACCOUNTS[S.email] || (S.extra.accounts || {})[S.email] || { name: S.email };
+    const prof = (S.extra.acctProfile || {})[S.email] || {};
+    const login = blank(template.logins["admin@yourcommunity.app"]);
+    // "Founder" and the community's own name stay fixed here (that's what makes this the founding
+    // entry), but personal details still carry over from the standard Pathwai profile, same as the backend.
+    const founderName = prof.name || acct.name;
+    login["/auth/me"] = { ...login["/auth/me"], id: "u-" + slug + "-founder", name: founderName, email: S.email, role: "admin", member_type: "founder",
+      company: name, title: "Founder", location: prof.location || "", bio: prof.bio || "", age: prof.age || null, skill_set: prof.skill_set || [], expertise: prof.skill_set || [],
+      interests_hobbies: prof.interests_hobbies || [], interests: prof.interests_hobbies || [], goals: prof.goals || [], support_needs: prof.support_needs || [],
+      needs_seeking: prof.support_needs || [], avatar_url: prof.avatar_url || null, contact: { email: S.email, ...(prof.contact || {}) }, memberships_space_slugs: [slug],
+      active_space_slug: null, platform_admin: false, header_stats: [], created_at: now, updated_at: now };
+    login["/dashboard"] = { ...login["/dashboard"], me: login["/auth/me"], community_name: name };
+    login["/admin/overview"] = { members: 1, events: 0, resources: 0, open_support_requests: 0, pending_applications: 0, invites: 0 };
+    login["/me/settings"] = { ...login["/me/settings"], account: { name: founderName, email: S.email, member_type: "founder" } };
+
+    S.books[slug] = { public: pub, logins: { [S.email]: login } };
+    ADMIN_OF[S.email] = [...(ADMIN_OF[S.email] || []), slug];
+    (S.extra.join = S.extra.join || {})[S.email + "|" + slug] = "approved";
+    (S.extra.createdCommunities = S.extra.createdCommunities || []).push({
+      slug, name, tagline: pub["/community/config"].tagline, kind: preset.kind, about: "", cover: null,
+      apply_questions: [], require_approval: true, brand: pub["/community/config"].brand, members: 1, upcoming_events: 0,
+    });
+    S.community = slug;
+    return ok(config, { ok: true, slug }, 201);
+  }
+  if (/^\/hub\/communities\/[^/]+\/apply$/.test(path)) {
+    const slug = path.split("/")[3];
+    if (memStatus(S.email, slug) !== "none") return ok(config, { ok: true, status: memStatus(S.email, slug) }, 201);
+    const prof = (S.extra.acctProfile || {})[S.email] || {};
+    const name = prof.name || (ACCOUNTS[S.email] || (S.extra.accounts || {})[S.email] || {}).name || S.email;
+    const why = [body.message, ...Object.entries(body.answers || {}).map(([k, v]) => `${k}: ${v}`)].filter(Boolean).join("\n");
+    // Pre-filled from the standard Pathwai profile saved via PATCH /hub/profile, same as the real backend's hub_apply.
+    // Carries every onboarding field through to the application record — the admin reviewing this
+    // request should see the same profile the applicant already built, not a trimmed-down copy of it.
+    ((S.extra.apps = S.extra.apps || {})[slug] = S.extra.apps[slug] || []).unshift({ id: "app-" + S.email, name, email: S.email, title: body.title || prof.title || null, company: prof.company || null, bio: prof.bio || null, tagline: null, join_reason: why || null, avatar_url: prof.avatar_url || null, location: prof.location || null, age: prof.age || null, status: "pending", requested_at: new Date().toISOString(), decided_at: null, decided_by_name: null, note: null, skill_set: prof.skill_set || [], interests_hobbies: prof.interests_hobbies || [], goals: prof.goals || [], support_needs: prof.support_needs || [], linkedin: (prof.contact || {}).linkedin || null, phone: (prof.contact || {}).phone || null, instagram: (prof.contact || {}).instagram || null, website: (prof.contact || {}).website || null });
+    (S.extra.join = S.extra.join || {})[S.email + "|" + slug] = "pending";
+    return ok(config, { ok: true, status: "pending" }, 201);
+  }
+  if (path === "/hub/enter") {
+    if (memStatus(S.email, body.slug) !== "approved") return fail(config, 403, "You're not a member of this community yet.");
+    S.community = body.slug;
+    return ok(config, { ok: true, slug: body.slug });
+  }
+  if (path === "/hub/leave-community") { S.community = null; return ok(config, { ok: true }); }
+  if (path === "/hub/profile" && method === "patch") {
+    if (!S.role || !S.email) return fail(config, 401, "Not authenticated");
+    const prof = { ...((S.extra.acctProfile || {})[S.email] || {}), ...body, profile_completed: true };
+    (S.extra.acctProfile = S.extra.acctProfile || {})[S.email] = prof;
+    return ok(config, { ok: true, account: { id: "acct-" + S.email, name: (ACCOUNTS[S.email] || (S.extra.accounts || {})[S.email] || {}).name, email: S.email, ...prof } });
+  }
+  if (path.endsWith("/rsvp")) {
+    const id = path.split("/")[2];
+    const ov = sharedContent("events");
+    if (ov.deleted[id]) return fail(config, 404, "This event was removed.");
+    const baseEvent = applyEdit([...ov.created, ...((view()["/events"]) || [])].find((x) => x.id === id), "events");
+    const rv = sharedRsvp();
+    rv.byUser[id] = rv.byUser[id] || {};
+    const priorOverlay = rv.byUser[id][S.email];
+    const baseline = priorOverlay !== undefined ? priorOverlay : (baseEvent?.my_rsvp ?? null);
+    const status = body.status === undefined ? (baseline === "yes" ? null : "yes") : body.status;
+    if (status === "yes" && baseEvent?.price_cents && baseline !== "yes" && !isAdminHere()) return fail(config, 402, "This event needs a ticket. Buy one to reserve your spot.");
+    rv.delta[id] = (rv.delta[id] || 0) + ((status === "yes" ? 1 : 0) - (baseline === "yes" ? 1 : 0));
+    rv.byUser[id][S.email] = status;
+    const attendee_count = Math.max(0, (baseEvent?.attendee_count || 0) + rv.delta[id]);
+    return ok(config, { ok: true, is_attending: status === "yes", my_rsvp: status, attendee_count });
+  }
+  if (path.endsWith("/feedback") || path.endsWith("/open") || path === "/matches/action" && false) return ok(config, { ok: true });
+  if (path === "/matches/action") { (S.extra.acts = S.extra.acts || {})[`${body.kind}:${body.target_id}`] = body.action === "undo" ? undefined : body.action; return ok(config, { ok: true }); }
+  if (path.startsWith("/member-requests/") && path !== "/member-requests/kinds") {
+    const id = path.split("/")[2], op = path.split("/")[3];
+    const cur = { ...(view()[`/member-requests/${id}`] || {}), ...((S.extra.reqs = S.extra.reqs || {})[id] || {}) };
+    if (op === "submit") {
+      const missing = (cur.fields || []).filter((f) => f.required && !filled(body.response?.[f.key]));
+      if (missing.length) return fail(config, 400, "Please fill in: " + missing.map((f) => f.label).join(", "));
+      S.extra.reqs[id] = { status: "submitted", response: body.response, submitted_at: new Date().toISOString(), applied_fields: Object.keys(body.response || {}).filter((k) => LABELS[k]) };
+      S.extra.profile = { ...(S.extra.profile || {}), ...(body.response || {}) };
+      return ok(config, { ok: true, applied_fields: S.extra.reqs[id].applied_fields });
+    }
+    if (op === "save") { S.extra.reqs[id] = { ...(S.extra.reqs[id] || {}), status: "in_progress", draft: body.response }; return ok(config, { ok: true }); }
+    if (op === "external-open") { S.extra.reqs[id] = { ...(S.extra.reqs[id] || {}), status: "in_progress" }; return ok(config, { ok: true, url: cur.external_url }); }
+    if (op === "external-complete") { S.extra.reqs[id] = { status: "submitted", response: { completed_external_form: true }, submitted_at: new Date().toISOString() }; return ok(config, { ok: true }); }
+  }
+  if (path === "/me/settings" && method === "patch") {
+    const cur = S.extra.settings || clone(view()["/me/settings"].settings);
+    for (const k of Object.keys(body)) cur[k] = body[k] && typeof body[k] === "object" ? { ...cur[k], ...body[k], ...(body[k].kinds ? { kinds: { ...cur[k].kinds, ...body[k].kinds } } : {}) } : body[k];
+    S.extra.settings = cur; return ok(config, { settings: cur });
+  }
+  if (path === "/me/change-password") return body.current_password === "Demo123!" ? ok(config, { ok: true }) : fail(config, 400, "Your current password is not correct.");
+  if (path === "/me/profile" && method === "patch") {
+    const vals = { ...body.values };
+    if (vals.age !== undefined) vals.age = parseInt(vals.age, 10) || null;
+    [["support_needs", "needs_seeking"], ["skill_set", "expertise"], ["interests_hobbies", "interests"]].forEach(([a, b]) => { if (vals[a]) vals[b] = vals[a]; });
+    S.extra.profile = { ...(S.extra.profile || {}), ...vals };
+    const me = view()["/auth/me"];
+    // Also a shared edit — someone updating their own profile should show up in the directory for
+    // admin and every other member, not just their own logged-in view.
+    const ov = sharedContent("users");
+    ov.edits[me.id] = { ...(ov.edits[me.id] || {}), ...vals };
+    const created = ov.created.find((x) => x.id === me.id);
+    if (created) Object.assign(created, vals);
+    const u = { ...(view()[`/users/${me.id}`] || me), ...S.extra.profile };
+    view()[`/users/${me.id}`] = u;
+    return ok(config, { user: u, completion: completion() });
+  }
+  if (path === "/team-support") {
+    const me = view()["/auth/me"];
+    const doc = { id: "team-" + Date.now(), user_id: me.id, to_team: true, user_snapshot: { name: me.name }, status: "submitted", category_label: body.category, urgency: body.urgency, created_at: new Date().toISOString(), timeline: [{ status: "submitted", at: new Date().toISOString(), by: me.name }], ...body };
+    (S.extra.team = S.extra.team || []).unshift(doc); return ok(config, doc, 201);
+  }
+  if (path.startsWith("/admin/team-support/")) { const id = path.split("/")[3]; const u = (S.extra.teamUpd = S.extra.teamUpd || {}); u[id] = { ...(u[id] || {}), ...(body.status ? { status: body.status } : {}), ...(body.assignee_id ? { assignee_id: body.assignee_id, status: u[id]?.status || "assigned" } : {}), ...(body.response ? { last_response: body.response } : {}) }; return ok(config, { ok: true }); }
+  if (path.startsWith("/admin/member-requests/") && path.endsWith("/review")) { const id = path.split("/")[3]; (S.extra.reqs = S.extra.reqs || {})[id] = { ...(S.extra.reqs[id] || {}), status: body.status }; return ok(config, { ok: true }); }
+  if (path === "/admin/member-requests") { return ok(config, { created: 3, ids: [] }, 201); }
+  if (/^\/admin\/membership-requests\/[^/]+\/decision$/.test(path)) {
+    const id = path.split("/")[3]; const okd = body.decision === "approve";
+    const app = appsHere().find((x) => x.id === id);
+    if (app) {
+      (S.extra.join = S.extra.join || {})[app.email + "|" + slugOf()] = okd ? "approved" : "rejected";
+      // Approving a request seats a real member — put them in the shared directory so admin AND
+      // every other member see them right away, not just whoever clicked Approve.
+      const users = sharedContent("users");
+      if (okd && !users.created.some((u) => u.email === app.email)) {
+        users.created.push({
+          id: "u-" + app.email.split("@")[0].replace(/[^a-z0-9]/gi, "-"), name: app.name, email: app.email, role: "member", member_type: "member",
+          title: app.title || "", company: app.company || "", bio: app.bio || "", location: app.location || "", avatar_url: app.avatar_url || null,
+          skill_set: app.skill_set || [], expertise: app.skill_set || [], interests_hobbies: [], goals: [], support_needs: [], needs_seeking: [], open_to: [],
+          contact: { email: app.email }, contact_visibility: "members", hidden_from_directory: false, created_at: new Date().toISOString(),
+        });
+      }
+    }
+    (S.extra.mship = S.extra.mship || {})[id] = { status: okd ? "approved" : "rejected", decided_at: new Date().toISOString(), decided_by_name: "Devon Clarke", note: body.note || null };
+    return ok(config, { ok: true, status: okd ? "approved" : "rejected" });
+  }
+  if (path.startsWith("/admin/moderation/")) {
+    // The URL and the queue item both use the singular ("event"/"resource"/"announcement") — map to
+    // the plural bucket sharedContent actually stores under (mirrors backend's COLLECTIONS dict).
+    const kindSingular = path.split("/")[3], id = path.split("/")[4];
+    const kind = { event: "events", resource: "resources", announcement: "announcements" }[kindSingular] || kindSingular;
+    (S.extra.moderated = S.extra.moderated || {})[id] = body.decision;
+    const item = sharedContent(kind).created.find((x) => x.id === id);
+    if (item) item.status = body.decision === "approve" ? "approved" : body.decision === "reject" ? "rejected" : "changes_requested";
+    return ok(config, { ok: true, status: body.decision });
+  }
+  if ((path === "/events" || path === "/resources" || path === "/announcements") && method === "post") {
+    const admin = isAdminHere();
+    const kind = path.slice(1);
+    const me = view()["/auth/me"];
+    const doc = { id: "sub-" + Date.now(), ...body, status: admin ? "approved" : "pending", published_at: new Date().toISOString(), author: me.name, submitted_by: me.id, submitted_by_name: me.name };
+    doc.cover_url = body.image_url || null;
+    if (kind === "resources") Object.assign(doc, { shared_by: { id: me.id, name: me.name, avatar_url: me.avatar_url, title: me.title }, category: body.category || "Discount", is_saved: false, tags: body.tags || [] });
+    if (kind === "events") Object.assign(doc, { is_past: false, attendee_count: 0, my_rsvp: null });
+    // Shared per community (not per login) so it shows up for every login that visits — admin-posted
+    // content is visible immediately; a member's submission waits, pending, for admin's moderation.
+    sharedContent(kind).created.unshift(doc);
+    return ok(config, doc, 201);
+  }
+  if (path === "/chat/message") {
+    const m = (body.message || "").toLowerCase();
+    const R = [[["event", "game", "clinic", "attend"], "Browse games", "/events"], [["coach", "teammate", "who can help", "connect", "partner", "match"], "See your matches", "/matches"], [["resource", "playbook", "guide", "drill"], "Open the playbook", "/resources"], [["due", "request", "form", "update", "task"], "View your requests", "/requests"], [["profile", "bio", "missing"], "Edit your profile", "/profile"], [["support", "stuck"], "Ask the team for support", "/support"]];
+    const actions = R.filter(([k]) => k.some((x) => m.includes(x))).map(([, label, to]) => ({ label, to })).slice(0, 3);
+    return ok(config, { session_id: body.session_id || "preview", actions: actions.length ? actions : [{ label: "See your matches", to: "/matches" }, { label: "View your requests", to: "/requests" }],
+      reply: "This is the offline preview, so Ask can't reach a language model here. In the running app it answers from your members, events and perks. The buttons below still take you to the right place." });
+  }
+  if (path.endsWith("/save")) {
+    const id = path.split("/")[2];
+    const base = (view()["/resources"] || []).find((x) => x.id === id) || sharedContent("resources").created.find((x) => x.id === id);
+    if (!base) return fail(config, 404, "Not found");
+    const sv = savedSet();
+    const was = Object.prototype.hasOwnProperty.call(sv, id) ? sv[id] : !!base.is_saved;
+    sv[id] = !was;
+    return ok(config, { ok: true, is_saved: sv[id] });
+  }
+  if (path === "/support-requests" && method === "post") {
+    const me = view()["/auth/me"];
+    const doc = { id: "new-" + Date.now(), user_id: me.id, user_snapshot: { name: me.name, avatar_url: null }, status: "open", helpers: [], helper_count: 0, created_at: new Date().toISOString(), ...body };
+    (S.extra.requests = S.extra.requests || []).unshift(doc);
+    return ok(config, doc, 201);
+  }
+  if (path.endsWith("/offer-help")) return ok(config, { ok: true, helper_count: 1 });
+  if (path.includes("/programs/") && path.endsWith("/apply")) {
+    const org = S.data.public[`/organizations/${path.split("/")[2]}`];
+    const prog = S.data.public[path.replace(/\/apply$/, "")]?.program;
+    const missing = (prog?.extra_questions || []).filter((x) => x.required && !(body.extra_answers || {})[x.key]).map((x) => x.key);
+    if (missing.length) return fail(config, 400, { error: "missing_required", missing });
+    return ok(config, { ok: true, already: false, application: { org_name: org?.name } });
+  }
+  if (path.endsWith("/apply")) return ok(config, { ok: true });
+  if (path === "/notifications/read") { view()["/notifications"].unread = 0; view()["/notifications"].notifications.forEach((n) => (n.read = true)); return ok(config, { ok: true, unread: 0 }); }
+  if (path.startsWith("/admin/audits/")) return ok(config, { reply: "Audits call the language model, which the preview doesn't include." });
+  if (path === "/invites") {
+    const inv = { id: "inv-" + Date.now(), code: Math.random().toString(36).slice(2, 10), email: body.email, status: "pending", created_at: new Date().toISOString() };
+    view()["/invites"].unshift(inv);
+    return ok(config, inv, 201);
+  }
+  const ce = path.match(/^\/admin\/content\/(events|resources|announcements)\/([^/]+)$/);
+  if (ce) {
+    const [, kind, id] = ce;
+    const ov = sharedContent(kind);
+    if (ov.deleted[id]) return fail(config, 404, "Not found");
+    const created = ov.created.find((x) => x.id === id);
+    const base = created || (view()[`/${kind}`] || []).find((x) => x.id === id);
+    if (!base) return fail(config, 404, "Not found");
+    if (method === "delete") { ov.deleted[id] = true; return ok(config, { ok: true }); }
+    const vals = { ...(body.values || {}) };
+    ["tags", "agenda"].forEach((k) => { if (typeof vals[k] === "string") vals[k] = vals[k].split(",").map((x) => x.trim()).filter(Boolean); });
+    // Shared edit, not a per-login mutation — every login reading this community sees the change.
+    ov.edits[id] = { ...(ov.edits[id] || {}), ...vals };
+    if (created) Object.assign(created, vals);
+    return ok(config, { ...base, ...ov.edits[id] });
+  }
+  const mp = path.match(/^\/admin\/users\/([^/]+)\/profile$/);
+  if (mp) {
+    const uid = mp[1];
+    const ov = sharedContent("users");
+    ov.edits[uid] = { ...(ov.edits[uid] || {}), ...(body.values || {}) };
+    const created = ov.created.find((x) => x.id === uid);
+    if (created) Object.assign(created, body.values || {});
+    const base = created || view()[`/users/${uid}`] || (view()["/users"] || []).find((x) => x.id === uid) || {};
+    return ok(config, { ...base, ...ov.edits[uid] });
+  }
+  const iw = integWrite(method, path, body, config);
+  if (iw) return iw;
+  if (path === "/me/billing/checkout") {
+    const pl = PLANS.find((x) => x.key === body.plan_key) || PLANS[0];
+    (S.extra.pay = S.extra.pay || []).unshift({ id: "pay-" + Date.now(), kind: "plan", plan_key: pl.key, description: pl.label, amount: pl.amount_cents, currency: "cad", status: "paid", at: new Date().toISOString() });
+    return ok(config, { ok: true, demo: true, message: `Demo payment complete: ${pl.label}` });
+  }
+  const vw = path.match(/^\/events\/([^/]+)\/view$/);
+  if (vw) {
+    const v = (S.extra.views = S.extra.views || {})[vw[1]] = (S.extra.views || {})[vw[1]] || { total: 0, users: [] };
+    v.total += 1;
+    const who = S.role ? S.email : "anon";
+    if (S.role && !v.users.includes(who)) v.users.push(who);
+    return ok(config, { ok: true }, 201);
+  }
+  const ck = path.match(/^\/events\/([^/]+)\/checkout$/);
+  if (ck) {
+    if (!stripeOn()) return fail(config, 400, "Payments aren't set up for this community yet.");
+    const ovEv = sharedContent("events");
+    const ev = applyEdit([...ovEv.created, ...((view()["/events"]) || [])].find((x) => x.id === ck[1]), "events") || {};
+    const orders = (S.extra.sales = S.extra.sales || {})[ck[1]] = (S.extra.sales || {})[ck[1]] || [];
+    const rv = sharedRsvp();
+    const effAttendee = Math.max(0, (ev.attendee_count || 0) + (rv.delta[ck[1]] || 0));
+    const tiers = ev.tier_summary?.tiers || [];
+    let tier = null, amount = ev.price_cents;
+    if (tiers.length) {
+      tier = tiers.find((t) => t.id === body.tier_id);
+      if (!tier) return fail(config, 400, "Pick a ticket type.");
+      if (t_sold_out(tier, orders)) return fail(config, 409, `${tier.name} is sold out.`);
+      amount = tier.price_cents;
+    } else if (ev.capacity && effAttendee >= ev.capacity) return fail(config, 409, "Sold out.");
+    if (orders.some((o) => o.email === S.email)) return fail(config, 409, "You already have a ticket.");
+    orders.unshift({ id: "o-" + Date.now(), name: (ACCOUNTS[S.email] || {}).name || "Member", email: S.email, tier_id: tier?.id || null, tier_name: tier?.name || null, amount, currency: "cad", at: new Date().toISOString(), demo: true });
+    rv.byUser[ck[1]] = rv.byUser[ck[1]] || {};
+    const baseline = rv.byUser[ck[1]][S.email] !== undefined ? rv.byUser[ck[1]][S.email] : (ev.my_rsvp ?? null);
+    rv.delta[ck[1]] = (rv.delta[ck[1]] || 0) + (baseline === "yes" ? 0 : 1);
+    rv.byUser[ck[1]][S.email] = "yes";
+    return ok(config, { url: null, demo: true, message: "Demo mode: ticket purchase simulated — you're registered." });
+  }
+  if (path === "/admin/blasts/audience") {
+    const tw = integ().find((x) => x.provider === "twilio"), sg = integ().find((x) => x.provider === "sendgrid");
+    const allUsers = mergedList(view()["/users"] || [], "users", false);
+    const smsUsers = allUsers.filter((u) => sum(u.id) % 3 !== 0);
+    const emailUsers = allUsers.filter((u) => sum(u.id) % 5 !== 0);
+    const total = allUsers.length;
+    const smsCount = body.type === "admins" ? 1 : body.type === "event" ? Math.min(smsUsers.length, 8) : smsUsers.length;
+    const emailCount = body.type === "admins" ? 1 : body.type === "event" ? Math.min(emailUsers.length, 8) : emailUsers.length;
+    return ok(config, {
+      sms_count: smsCount, email_count: emailCount, total_members: total,
+      sms_no_phone: 0, sms_not_opted_in: body.type === "all" ? total - smsUsers.length : 0, email_not_opted_in: body.type === "all" ? total - emailUsers.length : 0,
+      twilio_connected: !!tw?.enabled, sendgrid_connected: !!sg?.enabled, sms_demo: !!tw?.demo, email_demo: !!sg?.demo,
+    });
+  }
+  if (path === "/admin/blasts/send") {
+    const tw = integ().find((x) => x.provider === "twilio"), sg = integ().find((x) => x.provider === "sendgrid");
+    const wantSms = body.channel === "sms" || body.channel === "both", wantEmail = body.channel === "email" || body.channel === "both";
+    if (wantSms && !tw?.enabled) return fail(config, 400, "Connect Twilio first (Admin → Integrations) to send texts.");
+    if (wantEmail && !sg?.enabled) return fail(config, 400, "Connect SendGrid first (Admin → Integrations) to send email.");
+    const allUsers = mergedList(view()["/users"] || [], "users", false);
+    const smsUsers = allUsers.filter((u) => sum(u.id) % 3 !== 0);
+    const emailUsers = allUsers.filter((u) => sum(u.id) % 5 !== 0);
+    const n = (list) => body.audience.type === "admins" ? 1 : body.audience.type === "event" ? Math.min(list.length, 8) : list.length;
+    const b = {
+      id: "blast-" + Date.now(), message: body.message.trim(), subject: body.subject || null, channel: body.channel, audience: body.audience,
+      sms_sent: wantSms ? n(smsUsers) : 0, sms_failed: 0, email_sent: wantEmail ? n(emailUsers) : 0, email_failed: 0,
+      demo: true, at: new Date().toISOString(),
+    };
+    (S.extra.blasts = S.extra.blasts || []).unshift(b);
+    return ok(config, b);
+  }
+  if (path === "/community/config" && method === "patch") {
+    Object.assign(S.data.public["/community/config"], body);
+    return ok(config, S.data.public["/community/config"]);
+  }
+  return ok(config, { ok: true });
+}
+
+export function install(api) {
+  api.defaults.adapter = async (config) => {
+    const path = (config.url || "").replace(/^https?:\/\/[^/]+/, "").replace(/^\/api/, "").split("?")[0];
+    const method = (config.method || "get").toLowerCase();
+    let body = {};
+    try { body = typeof config.data === "string" ? JSON.parse(config.data) : config.data || {}; } catch { body = {}; }
+    await new Promise((r) => setTimeout(r, 60));
+    return method === "get" ? get(path, config.params || {}, config) : write(method, path, body, config);
+  };
+}
