@@ -51,7 +51,40 @@ export default function Events() {
       <PageHeader k="events" title="Events" subtitle="Networking, workshops and wellness sessions." actions={<Button variant="ghost" onClick={() => setOpen(true)} data-testid="suggest-event">{user.role === "admin" ? "Add an event" : "Suggest an event"}</Button>} />
       <Tabs tabs={[{ value: "upcoming", label: "Upcoming" }, { value: "past", label: "Past" }]} value={tab} onChange={setTab} />
       {!items ? <Spinner /> : items.length === 0 ? <Empty title={tab === "upcoming" ? "No upcoming games or events yet." : "No past events yet."} hint="Suggest one and the team will review it." /> : (
-        <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-3">
+        <>
+          {/* Mobile: 2-up tiles — same density step as Members — built around the mini calendar-day
+              chip and the RSVP/ticket action, since date + "can I go" is this page's whole value
+              (distinct from Connections' "why" and Perks' savings). Desktop keeps the photo grid
+              below (`hidden lg:grid`). */}
+          <div className="grid grid-cols-2 gap-2 lg:hidden">
+            {items.map((e) => {
+              const dt = new Date(e.starts_at);
+              const soldOut = e.tier_summary?.has_tiers ? e.tier_summary.all_sold_out : e.capacity && e.attendee_count >= e.capacity;
+              return (
+                <div key={e.id} className="card card-hover !p-2 flex flex-col gap-1" data-testid="event-tile">
+                  <div className="flex items-center gap-1.5">
+                    <Link to={`/events/${e.id}`} className="flex w-8 shrink-0 flex-col items-center overflow-hidden rounded-md border border-line" aria-hidden>
+                      <span className="w-full bg-ink/[.06] py-px text-center text-[7px] font-semibold uppercase tracking-wide text-muted">{dt.toLocaleDateString(undefined, { month: "short" })}</span>
+                      <span className="stat w-full py-px text-center text-[12px] leading-none">{dt.getDate()}</span>
+                    </Link>
+                    <Link to={`/events/${e.id}`} className="min-w-0 flex-1">
+                      <p className="truncate text-[11px] font-semibold leading-tight">{e.title}</p>
+                      <p className="truncate text-[9px] text-muted">{e.location} · {e.attendee_count} going</p>
+                    </Link>
+                  </div>
+                  {tab === "upcoming" && e.price_cents && e.my_rsvp !== "yes" ? (
+                    <Link className="btn-primary !flex !w-full !items-center !justify-center whitespace-nowrap !px-2 !py-1 !text-[9px]" to={`/events/${e.id}`} data-testid="get-ticket-mobile">{soldOut ? "Sold out" : "Ticket"}</Link>
+                  ) : tab === "upcoming" ? (
+                    <button data-testid="rsvp-toggle-mobile" className={(e.my_rsvp === "yes" ? "btn-ghost" : "btn-primary") + " w-full whitespace-nowrap !px-2 !py-1 !text-[9px]"} onClick={() => rsvp(e.id, e.my_rsvp === "yes" ? null : "yes")}>{e.my_rsvp === "yes" ? "Going ✓" : "RSVP"}</button>
+                  ) : (
+                    <Link className="btn-ghost !flex !w-full !items-center !justify-center whitespace-nowrap !px-2 !py-1 !text-[9px]" to={`/events/${e.id}`}>Details</Link>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+
+          <div className="hidden gap-5 lg:grid lg:grid-cols-2 xl:grid-cols-3">
           {items.map((e) => (
             <div key={e.id} className="card card-hover group relative overflow-hidden !p-0" data-testid="event-card">
               <Link to={`/events/${e.id}`} className="relative block h-52 overflow-hidden">
@@ -75,7 +108,8 @@ export default function Events() {
               </div>
             </div>
           ))}
-        </div>
+          </div>
+        </>
       )}
       <Modal open={open} onClose={() => setOpen(false)} title="Suggest an event">
         <div className="space-y-4">

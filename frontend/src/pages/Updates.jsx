@@ -22,11 +22,26 @@ export default function Updates() {
     <div>
       <PageHeader k="updates" title="Community news" subtitle="Announcements and updates from the team." actions={<Button variant="ghost" onClick={() => setOpen(true)} data-testid="new-announcement">{user.role === "admin" ? "Post an update" : "Share an update"}</Button>} />
       {!items ? <Spinner /> : items.length === 0 ? <Empty title="No updates yet" hint="Check back soon, or share one with the community." /> : (
-        <div className="space-y-3">{items.map((a) => (
-          <Card key={a.id} className="cursor-pointer transition hover:border-ink/30" onClick={() => setSel(a)} data-testid="announcement">
-            <div className="mb-2 flex flex-wrap items-center gap-2"><Chip>{a.category || "Community news"}</Chip>{a.priority === "high" && <Chip>Important</Chip>}<span className="eyebrow">{fmtDate(a.published_at, { month: "short", day: "numeric" })} · {a.author || "The Playr League team"}</span></div>
-            <ItemTools kind="announcements" item={a} onChanged={load} className="mb-2" />{a.image_url && <img src={a.image_url} alt="" className="mb-3 h-44 w-full rounded-lg object-cover" />}<h3 className="text-lg">{a.title}</h3><p className="mt-1 line-clamp-2 text-sm text-muted">{a.body}</p>
-          </Card>))}</div>)}
+        <>
+          {/* Mobile: a compact row per update — a small square thumbnail instead of a full-width
+              banner image, title + one line instead of the full preview — tapping still opens the
+              full post in the modal. Desktop keeps the richer card list below (`hidden lg:block`). */}
+          <div className="space-y-2 lg:hidden">{items.map((a) => (
+            <div key={a.id} className="card card-hover flex cursor-pointer items-center gap-3 !p-3" onClick={() => setSel(a)} data-testid="announcement-tile">
+              {a.image_url ? <img src={a.image_url} alt="" className="h-11 w-11 shrink-0 rounded-lg object-cover" />
+                : <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg bg-ink/[.06] text-center text-[9px] font-semibold uppercase text-muted">{(a.category || "News").slice(0, 4)}</span>}
+              <div className="min-w-0 flex-1">
+                <p className="truncate text-[13px] font-semibold leading-tight">{a.title}</p>
+                <p className="truncate text-[11px] text-muted">{fmtDate(a.published_at, { month: "short", day: "numeric" })}{a.priority === "high" ? " · Important" : ""}</p>
+              </div>
+            </div>))}</div>
+
+          <div className="hidden space-y-3 lg:block">{items.map((a) => (
+            <Card key={a.id} className="cursor-pointer transition hover:border-ink/30" onClick={() => setSel(a)} data-testid="announcement">
+              <div className="mb-2 flex flex-wrap items-center gap-2"><Chip>{a.category || "Community news"}</Chip>{a.priority === "high" && <Chip>Important</Chip>}<span className="eyebrow">{fmtDate(a.published_at, { month: "short", day: "numeric" })} · {a.author || "The Playr League team"}</span></div>
+              <ItemTools kind="announcements" item={a} onChanged={load} className="mb-2" />{a.image_url && <img src={a.image_url} alt="" className="mb-3 h-44 w-full rounded-lg object-cover" />}<h3 className="text-lg">{a.title}</h3><p className="mt-1 line-clamp-2 text-sm text-muted">{a.body}</p>
+            </Card>))}</div>
+        </>)}
       <Modal open={!!sel} onClose={() => setSel(null)} title={sel?.title}>
         {sel && <div className="space-y-3"><p className="eyebrow">{sel.category || "Community news"} · {fmtDate(sel.published_at)} · {sel.author || "The Playr League team"}</p>
           {sel.image_url && <img src={sel.image_url} alt="" className="max-h-80 w-full rounded-xl border border-line object-cover" />}

@@ -38,29 +38,52 @@ export default function Resources() {
         <label className="flex items-center gap-2 text-sm"><input type="checkbox" checked={saved} onChange={(e) => setSaved(e.target.checked)} /> Saved only</label>
       </div>
       {!items ? <Spinner /> : shown.length === 0 ? <Empty title="No perks match this search." hint="Try a different keyword, or share one yourself." /> : (
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {shown.map((r) => (
-            <Card key={r.id} className="flex flex-col" data-testid="resource-card">
-              <ItemTools kind="resources" item={r} onChanged={load} className="mb-3" />
-              {r.cover_url && <img src={r.cover_url} alt="" className="-mx-1 mb-3 h-40 w-[calc(100%+0.5rem)] rounded-lg object-cover" />}
-              <div className="mb-2 flex items-start justify-between"><Chip>{r.category}</Chip>
-                <button onClick={() => toggle(r.id)} aria-label="Save" data-testid="save-btn"><Bookmark className={`h-4 w-4 ${r.is_saved ? "fill-current" : ""}`} /></button></div>
-              {r.perk_value && <p className="text-2xl leading-tight" style={{ color: "var(--accent)", fontFamily: "var(--font-heading)" }}>{r.perk_value}</p>}
-              <h3 className="mt-1 font-medium">{r.title}</h3>
-              <p className="mt-1 line-clamp-3 text-sm text-muted">{r.description}</p>
-              {r.how_to_claim && <p className="mt-2 flex-1 text-xs"><span className="eyebrow">How to claim · </span>{r.how_to_claim}</p>}
-              {!r.how_to_claim && <div className="flex-1" />}
-              {r.shared_by && (
-                <Link to={`/members/${r.shared_by.id}`} className="mt-3 flex items-center gap-2 border-t pt-3" style={{ borderColor: "var(--c-line)" }}>
-                  <Avatar src={r.shared_by.avatar_url} name={r.shared_by.name} size={32} />
-                  <span className="min-w-0 text-xs"><span className="block truncate font-medium">{r.shared_by.name}</span><span className="block truncate text-muted">{r.shared_by.title}</span></span>
-                  <a className="ml-auto shrink-0 text-sm underline" href={r.external_url || r.url} target="_blank" rel="noreferrer" onClick={(e) => { e.stopPropagation(); api.post(`/resources/${r.id}/open`).catch(() => {}); }}>{r.cta_label || "Claim"} →</a>
-                </Link>
-              )}
-              {(r.tags || []).length > 0 && <div className="mt-2 flex flex-wrap gap-1">{r.tags.slice(0, 3).map((t) => <Chip key={t}>{t}</Chip>)}</div>}
-            </Card>
-          ))}
-        </div>
+        <>
+          {/* Mobile: 2-up tiles — same density step as Members — built around the value badge and the
+              claim action, since "what's the deal and how do I get it" is this page's whole value
+              (distinct from Connections' "why" and Events' date/RSVP). Desktop keeps the rich card
+              grid below (`hidden lg:grid`). */}
+          <div className="grid grid-cols-2 gap-2 lg:hidden">
+            {shown.map((r) => (
+              <div key={r.id} className="card card-hover !p-2 flex flex-col gap-1" data-testid="resource-tile">
+                <div className="flex items-center justify-between gap-1">
+                  <span className="stat truncate rounded-md px-1.5 py-0.5 text-[9px] leading-tight" style={{ background: "rgb(var(--c-ink) / 0.07)", color: "var(--accent)" }}>{r.perk_value || r.category}</span>
+                  <button onClick={() => toggle(r.id)} aria-label="Save" data-testid="save-btn-mobile" className="shrink-0 rounded p-0.5 text-muted hover:bg-ink/5"><Bookmark className={`h-3 w-3 ${r.is_saved ? "fill-current" : ""}`} /></button>
+                </div>
+                <p className="truncate text-[11px] font-semibold leading-tight">{r.title}</p>
+                {(r.external_url || r.url) ? (
+                  <a className="truncate text-[10px] font-semibold underline" style={{ color: "var(--accent)" }} href={r.external_url || r.url} target="_blank" rel="noreferrer" onClick={() => api.post(`/resources/${r.id}/open`).catch(() => {})}>{r.cta_label || "Claim"} →</a>
+                ) : (
+                  <p className="truncate text-[10px] text-muted">{r.shared_by ? `Shared by ${r.shared_by.name}` : r.category}</p>
+                )}
+              </div>
+            ))}
+          </div>
+
+          <div className="hidden gap-4 lg:grid lg:grid-cols-3">
+            {shown.map((r) => (
+              <Card key={r.id} className="flex flex-col" data-testid="resource-card">
+                <ItemTools kind="resources" item={r} onChanged={load} className="mb-3" />
+                {r.cover_url && <img src={r.cover_url} alt="" className="-mx-1 mb-3 h-40 w-[calc(100%+0.5rem)] rounded-lg object-cover" />}
+                <div className="mb-2 flex items-start justify-between"><Chip>{r.category}</Chip>
+                  <button onClick={() => toggle(r.id)} aria-label="Save" data-testid="save-btn"><Bookmark className={`h-4 w-4 ${r.is_saved ? "fill-current" : ""}`} /></button></div>
+                {r.perk_value && <p className="text-2xl leading-tight" style={{ color: "var(--accent)", fontFamily: "var(--font-heading)" }}>{r.perk_value}</p>}
+                <h3 className="mt-1 font-medium">{r.title}</h3>
+                <p className="mt-1 line-clamp-3 text-sm text-muted">{r.description}</p>
+                {r.how_to_claim && <p className="mt-2 flex-1 text-xs"><span className="eyebrow">How to claim · </span>{r.how_to_claim}</p>}
+                {!r.how_to_claim && <div className="flex-1" />}
+                {r.shared_by && (
+                  <Link to={`/members/${r.shared_by.id}`} className="mt-3 flex items-center gap-2 border-t pt-3" style={{ borderColor: "var(--c-line)" }}>
+                    <Avatar src={r.shared_by.avatar_url} name={r.shared_by.name} size={32} />
+                    <span className="min-w-0 text-xs"><span className="block truncate font-medium">{r.shared_by.name}</span><span className="block truncate text-muted">{r.shared_by.title}</span></span>
+                    <a className="ml-auto shrink-0 text-sm underline" href={r.external_url || r.url} target="_blank" rel="noreferrer" onClick={(e) => { e.stopPropagation(); api.post(`/resources/${r.id}/open`).catch(() => {}); }}>{r.cta_label || "Claim"} →</a>
+                  </Link>
+                )}
+                {(r.tags || []).length > 0 && <div className="mt-2 flex flex-wrap gap-1">{r.tags.slice(0, 3).map((t) => <Chip key={t}>{t}</Chip>)}</div>}
+              </Card>
+            ))}
+          </div>
+        </>
       )}
       <Modal open={open} onClose={() => setOpen(false)} title="Share a perk">
         <div className="space-y-4">

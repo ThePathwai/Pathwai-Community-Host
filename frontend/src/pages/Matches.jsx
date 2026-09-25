@@ -26,31 +26,77 @@ export default function Matches() {
       <Button variant="ghost" className="!px-3" onClick={() => act(kind, id, "dismiss")} aria-label="Dismiss"><X className="h-4 w-4" /></Button>
     </div>
   );
+  // Compact action row for the mobile 2-up tiles below: the primary action fills the tile's width,
+  // save/dismiss shrink to icon-only buttons so a whole recommendation still fits in a tile half the
+  // width of a phone screen.
+  const ActionsCompact = ({ kind, id, state, primary }) => (
+    <div className="flex items-center gap-1">
+      <div className="min-w-0 flex-1">{primary}</div>
+      <button className="shrink-0 rounded-lg p-1.5 text-muted hover:bg-ink/5" onClick={() => act(kind, id, state === "save" ? "undo" : "save")} aria-label="Save"><Bookmark className={`h-3.5 w-3.5 ${state === "save" ? "fill-current" : ""}`} /></button>
+      <button className="shrink-0 rounded-lg p-1.5 text-muted hover:bg-ink/5" onClick={() => act(kind, id, "dismiss")} aria-label="Dismiss"><X className="h-3.5 w-3.5" /></button>
+    </div>
+  );
   const list = !d ? null : d[tab];
   return (
     <div>
       <PageHeader k="matches" title="Recommended connections" subtitle="Members, events and perks picked for what you need and what you offer." />
       <Tabs tabs={[{ value: "people", label: `People${d ? ` (${d.people.length})` : ""}` }, { value: "events", label: "Events" }, { value: "resources", label: "Resources" }]} value={tab} onChange={setTab} />
       {!d ? <Spinner /> : list.length === 0 ? <Empty title="No recommendations yet" hint={d.profile_hint || "Complete your profile to improve recommendations."} action={<Link className="btn-primary" to="/profile">Complete your profile</Link>} /> : (
-        <div className="grid gap-4 md:grid-cols-2">
-          {tab === "people" && list.map((m) => (
-            <Card key={m.user.id} data-testid="match-card" className={m.state === "intro" ? "!border-green-500/40" : ""}>
-              <div className="mb-3 flex items-center justify-between"><span className="eyebrow">{m.match_type}</span></div>
-              <div className="flex items-center gap-3"><Avatar src={m.user.avatar_url} name={m.user.name} size={44} />
-                <div><Link to={`/members/${m.user.id}`} className="font-medium hover:underline">{m.user.name}</Link><p className="text-xs text-muted">{m.user.title}{m.user.company ? ` · ${m.user.company}` : ""}</p></div></div>
-              <p className="mt-3 text-sm"><span className="text-muted">Why: </span>{m.why}</p>
-              <div className="mt-3 flex flex-wrap gap-1">{(m.matched_on || []).slice(0, 5).map((t) => <Chip key={t}>{t}</Chip>)}</div>
-              <Actions kind="person" id={m.user.id} state={m.state} primary={m.state === "intro" ? <Chip>Intro requested</Chip> : <Button onClick={() => { setIntro(m); setTopic(m.can_help_you?.[0] || ""); }} data-testid="request-intro">{m.next_action}</Button>} />
-            </Card>))}
-          {tab === "events" && list.map((e) => (
-            <Card key={e.id}><span className="eyebrow">{e.match_type}</span><h3 className="mt-2 text-lg">{e.title}</h3><p className="text-sm text-muted">{fmtDate(e.starts_at)} · {e.location}</p>
-              <p className="mt-2 text-sm"><span className="text-muted">Why: </span>{e.why}</p>
-              <Actions kind="event" id={e.id} state={e.state} primary={<Button onClick={() => nav(`/events/${e.id}`)}>View & RSVP</Button>} /></Card>))}
-          {tab === "resources" && list.map((r) => (
-            <Card key={r.id}><span className="eyebrow">{r.match_type}</span><h3 className="mt-2 text-lg">{r.title}</h3><p className="mt-1 line-clamp-2 text-sm text-muted">{r.description}</p>
-              <p className="mt-2 text-sm"><span className="text-muted">Why: </span>{r.why}</p>
-              <Actions kind="resource" id={r.id} state={r.state} primary={<a className="btn-primary" href={r.url || r.external_url} target="_blank" rel="noreferrer" onClick={() => api.post(`/resources/${r.id}/open`).catch(() => {})}>Open resource</a>} /></Card>))}
-        </div>)}
+        <>
+          {/* Mobile: 2-up tiles, same density step as Members — but each tab keeps the one line that
+              actually explains its own value (why this person/event/perk was picked for you), so the
+              tabs stay legible as distinct sections rather than collapsing into identical grids.
+              Desktop keeps the full card below (`hidden lg:grid`). */}
+          <div className="grid grid-cols-2 gap-2 lg:hidden">
+            {tab === "people" && list.map((m) => (
+              <div key={m.user.id} data-testid="match-tile" className={"card card-hover !p-2 flex flex-col gap-1 " + (m.state === "intro" ? "!border-green-500/40" : "")}>
+                <div className="flex items-center gap-1.5">
+                  <Avatar src={m.user.avatar_url} name={m.user.name} size={26} />
+                  <div className="min-w-0 flex-1">
+                    <Link to={`/members/${m.user.id}`} className="block truncate text-[11px] font-semibold hover:underline">{m.user.name}</Link>
+                    <p className="truncate text-[9px] text-muted">{m.user.title}</p>
+                  </div>
+                </div>
+                <p className="line-clamp-1 text-[9px] leading-tight text-muted"><span className="text-ink/50">Why · </span>{m.why}</p>
+                <ActionsCompact kind="person" id={m.user.id} state={m.state} primary={m.state === "intro" ? <Chip className="!px-1.5 !py-0.5 !text-[9px]">Requested</Chip> : <Button className="!w-full !px-1.5 !py-1 !text-[9px]" onClick={() => { setIntro(m); setTopic(m.can_help_you?.[0] || ""); }} data-testid="request-intro-mobile">{m.next_action}</Button>} />
+              </div>))}
+            {tab === "events" && list.map((e) => (
+              <div key={e.id} data-testid="match-tile" className="card card-hover !p-2 flex flex-col gap-1">
+                <span className="eyebrow text-[8px]">{e.match_type}</span>
+                <h3 className="-mt-0.5 truncate text-[11px] font-semibold">{e.title}</h3>
+                <p className="truncate text-[9px] text-muted">{fmtDate(e.starts_at)}</p>
+                <p className="line-clamp-1 text-[9px] leading-tight text-muted"><span className="text-ink/50">Why · </span>{e.why}</p>
+                <ActionsCompact kind="event" id={e.id} state={e.state} primary={<Button className="!w-full !px-1.5 !py-1 !text-[9px]" onClick={() => nav(`/events/${e.id}`)}>View & RSVP</Button>} />
+              </div>))}
+            {tab === "resources" && list.map((r) => (
+              <div key={r.id} data-testid="match-tile" className="card card-hover !p-2 flex flex-col gap-1">
+                <span className="eyebrow text-[8px]">{r.match_type}</span>
+                <h3 className="-mt-0.5 truncate text-[11px] font-semibold">{r.title}</h3>
+                <p className="line-clamp-1 text-[9px] leading-tight text-muted"><span className="text-ink/50">Why · </span>{r.why}</p>
+                <ActionsCompact kind="resource" id={r.id} state={r.state} primary={<a className="btn-primary !flex !w-full !items-center !justify-center !px-1.5 !py-1 !text-[9px]" href={r.url || r.external_url} target="_blank" rel="noreferrer" onClick={() => api.post(`/resources/${r.id}/open`).catch(() => {})}>Open</a>} />
+              </div>))}
+          </div>
+
+          <div className="hidden gap-4 lg:grid lg:grid-cols-2">
+            {tab === "people" && list.map((m) => (
+              <Card key={m.user.id} data-testid="match-card" className={m.state === "intro" ? "!border-green-500/40" : ""}>
+                <div className="mb-3 flex items-center justify-between"><span className="eyebrow">{m.match_type}</span></div>
+                <div className="flex items-center gap-3"><Avatar src={m.user.avatar_url} name={m.user.name} size={44} />
+                  <div><Link to={`/members/${m.user.id}`} className="font-medium hover:underline">{m.user.name}</Link><p className="text-xs text-muted">{m.user.title}{m.user.company ? ` · ${m.user.company}` : ""}</p></div></div>
+                <p className="mt-3 text-sm"><span className="text-muted">Why: </span>{m.why}</p>
+                <div className="mt-3 flex flex-wrap gap-1">{(m.matched_on || []).slice(0, 5).map((t) => <Chip key={t}>{t}</Chip>)}</div>
+                <Actions kind="person" id={m.user.id} state={m.state} primary={m.state === "intro" ? <Chip>Intro requested</Chip> : <Button onClick={() => { setIntro(m); setTopic(m.can_help_you?.[0] || ""); }} data-testid="request-intro">{m.next_action}</Button>} />
+              </Card>))}
+            {tab === "events" && list.map((e) => (
+              <Card key={e.id}><span className="eyebrow">{e.match_type}</span><h3 className="mt-2 text-lg">{e.title}</h3><p className="text-sm text-muted">{fmtDate(e.starts_at)} · {e.location}</p>
+                <p className="mt-2 text-sm"><span className="text-muted">Why: </span>{e.why}</p>
+                <Actions kind="event" id={e.id} state={e.state} primary={<Button onClick={() => nav(`/events/${e.id}`)}>View & RSVP</Button>} /></Card>))}
+            {tab === "resources" && list.map((r) => (
+              <Card key={r.id}><span className="eyebrow">{r.match_type}</span><h3 className="mt-2 text-lg">{r.title}</h3><p className="mt-1 line-clamp-2 text-sm text-muted">{r.description}</p>
+                <p className="mt-2 text-sm"><span className="text-muted">Why: </span>{r.why}</p>
+                <Actions kind="resource" id={r.id} state={r.state} primary={<a className="btn-primary" href={r.url || r.external_url} target="_blank" rel="noreferrer" onClick={() => api.post(`/resources/${r.id}/open`).catch(() => {})}>Open resource</a>} /></Card>))}
+          </div>
+        </>)}
       <Modal open={!!intro} onClose={() => setIntro(null)} title={`Request an intro to ${intro?.user.name || ""}`}>
         <div className="space-y-4"><Field label="What would you like to talk about?"><Input value={topic} onChange={(e) => setTopic(e.target.value)} /></Field>
           <Field label="Add a note (optional)"><Textarea value={note} onChange={(e) => setNote(e.target.value)} /></Field>

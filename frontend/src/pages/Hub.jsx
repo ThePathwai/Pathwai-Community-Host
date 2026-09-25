@@ -47,6 +47,39 @@ function CommunityCard({ c, onEnter, onApply, onView }) {
   );
 }
 
+// Mobile-only stand-in for CommunityCard (see the grid split below) — a dense, portrait grid tile
+// closer to an Instagram grid / Airbnb search grid than an editorial card, so someone in several
+// communities can scan all of them without much scrolling. Always opens the detail modal on tap
+// (never acts immediately) since there's no room on a tile this small for a real action button.
+function CommunityTile({ c, onView }) {
+  const col = c.brand?.colors || {};
+  const st = c.my?.status;
+  return (
+    <article className="relative aspect-[4/5] cursor-pointer overflow-hidden rounded-xl border" data-testid={`community-tile-${c.slug}`} onClick={() => onView(c)}
+      style={{ background: col.background || "rgb(var(--c-ink) / 0.06)", borderColor: col.border || "transparent" }}>
+      {c.cover ? <img src={c.cover} alt="" className="absolute inset-0 h-full w-full object-cover" />
+        : <div className="absolute inset-0 flex items-center justify-center" style={{ background: col.accent ? `linear-gradient(135deg, ${col.accent}, ${col.background || "#000"})` : undefined }}>
+            {c.brand?.logo_url && <img src={c.brand.logo_url} alt="" className="h-10 w-auto max-w-[70%] object-contain opacity-90" />}
+          </div>}
+      <div className="absolute inset-0" style={{ background: "linear-gradient(to top, rgba(0,0,0,.85), rgba(0,0,0,.05) 55%)" }} />
+      {c.brand?.logo_url && c.cover && <img src={c.brand.logo_url} alt="" className="absolute left-2 top-2 h-5 w-auto max-w-[45%] object-contain drop-shadow" />}
+      {st === "approved" && c.my.role === "admin" && c.pending_requests > 0 && (
+        <span className="absolute right-2 top-2 flex h-5 min-w-[1.25rem] items-center justify-center rounded-full bg-red-600 px-1 text-[10px] font-bold text-white" data-testid={`tile-badge-${c.slug}`}>{c.pending_requests}</span>
+      )}
+      {st === "pending" && <span className="absolute right-2 top-2 h-2.5 w-2.5 animate-pulse rounded-full bg-amber-400" aria-hidden />}
+      <div className="absolute inset-x-0 bottom-0 p-2.5 text-white">
+        <p className="truncate text-[13px] font-bold leading-tight">{c.name}</p>
+        <p className="truncate text-[11px] text-white/70">
+          {st === "approved" ? (c.my.role === "admin" ? (c.my.platform_admin ? "Platform admin" : "Admin") : `${c.members} members`)
+            : st === "pending" ? "Request sent"
+            : st === "rejected" ? "Not approved"
+            : c.kind}
+        </p>
+      </div>
+    </article>
+  );
+}
+
 // Opened by clicking a CommunityCard (its Enter/Request-to-join buttons still act immediately without
 // opening this). Shows the same info as the card, uncropped, plus the same status-dependent action —
 // styled in that community's own brand, exactly like the card is, so it doesn't feel like a generic modal.
@@ -212,13 +245,17 @@ export default function Hub() {
       {!items ? <Spinner /> : (
         <>
           {mine.length === 0 ? <p className="mt-8 rounded-xl border border-dashed border-line p-8 text-center text-sm text-muted">You haven't joined a community yet. Pick one below and send a request.</p> : (
-            <div className="mt-6 grid gap-5 md:grid-cols-2 lg:grid-cols-3">{mine.map((c) => <CommunityCard key={c.slug} c={c} onEnter={doEnter} onView={setViewing} />)}</div>)}
+            <>
+              <div className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-3 md:hidden">{mine.map((c) => <CommunityTile key={c.slug} c={c} onView={setViewing} />)}</div>
+              <div className="mt-6 hidden gap-5 md:grid md:grid-cols-2 lg:grid-cols-3">{mine.map((c) => <CommunityCard key={c.slug} c={c} onEnter={doEnter} onView={setViewing} />)}</div>
+            </>)}
 
           {discover.length > 0 && (
             <>
               <h2 className="mt-14 text-xl font-bold sm:text-2xl">Discover communities</h2>
               <p className="mt-1 text-sm text-muted">Every community reviews requests to join. You'll get a notification when you're in.</p>
-              <div className="mt-6 grid gap-5 md:grid-cols-2 lg:grid-cols-3">{discover.map((c) => <CommunityCard key={c.slug} c={c} onApply={(x) => { setApply(x); setF({ title: account.title || "", message: "", answers: {} }); }} onView={setViewing} />)}</div>
+              <div className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-3 md:hidden">{discover.map((c) => <CommunityTile key={c.slug} c={c} onView={setViewing} />)}</div>
+              <div className="mt-6 hidden gap-5 md:grid md:grid-cols-2 lg:grid-cols-3">{discover.map((c) => <CommunityCard key={c.slug} c={c} onApply={(x) => { setApply(x); setF({ title: account.title || "", message: "", answers: {} }); }} onView={setViewing} />)}</div>
             </>)}
         </>)}
 

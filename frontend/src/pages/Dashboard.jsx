@@ -48,6 +48,40 @@ export default function Dashboard() {
   const Ring = ({ value }) => (
     <svg viewBox="0 0 44 44" className="h-16 w-16 shrink-0 -rotate-90"><circle cx="22" cy="22" r="18" fill="none" stroke="currentColor" strokeOpacity=".12" strokeWidth="5" /><circle cx="22" cy="22" r="18" fill="none" stroke="var(--accent)" strokeWidth="5" strokeLinecap="round" strokeDasharray={`${(value / 100) * 113} 113`} /></svg>
   );
+  // Mobile dashboard, below, is a grid of small icon-forward "Tile"/"PeopleTile" widgets rather than
+  // one full-width card per section — the goal is to cut how far a phone has to scroll to see
+  // everything, by trading each section's full list preview for one line of the most useful context
+  // (a count, the next item) that links through to the real page. Desktop is unaffected — it keeps
+  // the original one-section-per-row layout further down (`hidden lg:grid`).
+  const Tile = ({ to, icon: Icon, label, value, sub, className = "", testid }) => (
+    <Link to={to} data-testid={testid} className={"card card-hover !p-3 flex flex-col gap-2.5 " + className}>
+      <span className="flex items-center justify-between">
+        <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-ink/[.06]"><Icon className="h-4 w-4 text-muted" strokeWidth={2.25} aria-hidden /></span>
+        {value != null && <span className="stat text-base leading-none">{value}</span>}
+      </span>
+      <span className="min-w-0">
+        <span className="block text-[13px] font-semibold leading-tight">{label}</span>
+        <span className="mt-0.5 block truncate text-[11px] text-muted">{sub}</span>
+      </span>
+    </Link>
+  );
+  const AvatarStack = ({ people }) => (
+    <span className="flex items-center">
+      {people.slice(0, 3).map((p, i) => (<span key={p.id || p.user?.id || i} className="block rounded-full" style={{ marginLeft: i > 0 ? -10 : 0, zIndex: 3 - i }}><Avatar src={p.avatar_url || p.user?.avatar_url} name={p.name || p.user?.name} size={24} /></span>))}
+    </span>
+  );
+  const PeopleTile = ({ to, icon: Icon, label, people, sub }) => (
+    <Link to={to} className="card card-hover !p-3 flex flex-col gap-2.5">
+      <span className="flex items-center justify-between">
+        <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-ink/[.06]"><Icon className="h-4 w-4 text-muted" strokeWidth={2.25} aria-hidden /></span>
+        {people.length > 0 && <AvatarStack people={people} />}
+      </span>
+      <span className="min-w-0">
+        <span className="block text-[13px] font-semibold leading-tight">{label}</span>
+        <span className="mt-0.5 block truncate text-[11px] text-muted">{sub}</span>
+      </span>
+    </Link>
+  );
   return (
     <div className="space-y-3">
       <div className="flex flex-wrap items-start justify-between gap-4">
@@ -85,7 +119,45 @@ export default function Dashboard() {
           </ul>
         </section>)}
 
-      <div className="grid grid-cols-1 gap-3 lg:grid-cols-12 lg:gap-4 [&>*]:min-w-0" style={{ gridAutoFlow: "dense" }}>
+      <div className="grid grid-cols-2 gap-2.5 lg:hidden">
+        <Link to={`/members/${user.id}`} data-testid="dash-hero-mobile" className="card card-hover !p-3.5 col-span-2 flex items-center gap-3">
+          <div className="relative shrink-0">
+            <Avatar src={user.avatar_url} name={user.name} size={52} />
+            <span className="stat absolute -bottom-1 -right-1 flex h-5 min-w-[1.4rem] items-center justify-center rounded-full border-2 border-surface px-1 text-[9px]" style={{ background: "var(--accent)", color: "var(--on-accent)" }}>{pc.percent}%</span>
+          </div>
+          <span className="min-w-0 flex-1">
+            <span className="block truncate text-[15px] font-semibold">{user.name}</span>
+            <span className="block truncate text-xs text-muted">{[me.title, me.company].filter(Boolean).join(" · ") || "View your profile"}</span>
+          </span>
+        </Link>
+
+        <Link to={next ? `/events/${next.id}` : "/events"} data-testid="dash-next-mobile" className="card card-hover relative col-span-2 flex h-24 flex-col justify-end overflow-hidden !p-0">
+          {next?.cover_url ? <img src={next.cover_url} alt="" className="absolute inset-0 h-full w-full object-cover" />
+            : config?.dashboard_cover_url ? <img src={config.dashboard_cover_url} alt="" className="absolute inset-0 h-full w-full object-cover" />
+            : <div className="absolute inset-0" style={{ background: "var(--accent-grad)" }} />}
+          <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/25 to-transparent" />
+          <div className="relative p-3 text-white">
+            <span className="text-[10px] font-semibold uppercase tracking-wide text-white/70">{next ? "Your next event" : "Next up"}</span>
+            <p className="truncate text-sm font-bold leading-tight">{next ? next.title : "Find your next event"}</p>
+            {next && <p className="truncate text-[11px] text-white/75">{fmtDate(next.starts_at)}{next.location ? ` · ${next.location}` : ""}</p>}
+          </div>
+        </Link>
+
+        <Tile to="/requests" icon={ListChecks} label="To-do" value={d.open_requests.length || undefined}
+          sub={d.pending_profile_requests > 0 ? `${d.pending_profile_requests} profile update requested` : (todo[0]?.title || "You're all caught up")} />
+        <PeopleTile to="/matches" icon={Users} label="Connections" people={d.recommended_people}
+          sub={d.recommended_people.length ? `${d.recommended_people[0].user.name.split(" ")[0]}${d.recommended_people.length > 1 ? ` +${d.recommended_people.length - 1} more` : ""}` : "Complete your profile"} />
+        <Tile to="/events" icon={CalendarDays} label="Events" value={d.stats.events || undefined}
+          sub={events[0] ? `${events[0].title} · ${fmtDate(events[0].starts_at)}` : "Nothing scheduled"} />
+        <Tile to="/resources" icon={Gift} label="Perks" value={d.featured_resources.length || undefined}
+          sub={d.featured_resources[0]?.title || "No perks yet"} />
+        <PeopleTile to="/members" icon={UserPlus} label="New members" people={d.new_members || []}
+          sub={(d.new_members || []).length ? `${d.new_members.length} joined recently` : "No new members yet"} />
+        <Tile to="/updates" icon={Megaphone} label="News" value={d.announcements.length || undefined}
+          sub={d.announcements[0]?.title || "Nothing posted yet"} />
+      </div>
+
+      <div className="hidden lg:grid lg:grid-cols-12 lg:gap-4 [&>*]:min-w-0" style={{ gridAutoFlow: "dense" }}>
         <Widget title="Your profile" to={`/members/${user.id}`} cta="View" quiet className="lg:col-span-3" data-testid="dash-hero">
           <div className="flex items-center gap-4">
             <Avatar src={user.avatar_url} name={user.name} size={96} />
