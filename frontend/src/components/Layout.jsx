@@ -113,7 +113,7 @@ export default function Layout({ children }) {
         ))}
       </nav>
       <BrandDrawer />
-      <footer className="mx-auto flex max-w-[1600px] items-center justify-between border-t border-line px-4 py-6"><PoweredBy /><Inline as="span" field="brand.footer_text" fallback="Discoverable · Connected · Measurable" className="eyebrow" /></footer>
+      <footer className="mx-auto flex max-w-[1600px] items-center justify-between border-t border-line px-4 pt-6 pb-28 xl:pb-6"><PoweredBy /><Inline as="span" field="brand.footer_text" fallback="Discoverable · Connected · Measurable" className="eyebrow" /></footer>
     </div>
   );
 }

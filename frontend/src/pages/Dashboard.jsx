@@ -22,10 +22,6 @@ export default function Dashboard() {
   const { editing } = useEdit();
   const [d, setD] = useState(null);
   const nav = useNavigate();
-  const [decided, setDecided] = useState({});
-  const decide = async (r, decision) => {
-    try { await api.post(`/admin/membership-requests/${r.id}/decision`, { decision }); setDecided((x) => ({ ...x, [r.id]: decision })); toast.success(decision === "approve" ? `${r.name} approved` : `${r.name} declined`); } catch (e) { toast.error(errMsg(e)); }
-  };
   const goMembers = () => { try { sessionStorage.setItem("pathwai.admintab", "members"); } catch {} nav("/admin"); };
   useEffect(() => { api.get("/dashboard", { params: { role: user.role } }).then((r) => setD(r.data)).catch((e) => toast.error(errMsg(e))); }, [user.role]);
   if (!d) return <Spinner />;
@@ -97,27 +93,21 @@ export default function Dashboard() {
         {AI_CHAT_ENABLED && <Link to="/ask" className="btn-ghost">Ask anything</Link>}
       </div>
 
-      {user.role === "admin" && (d.membership_requests || []).length > 0 && (
-        <section
-          className="card relative overflow-hidden !p-4"
-          style={{ borderLeft: "3px solid var(--accent)", background: "linear-gradient(135deg, color-mix(in srgb, var(--accent) 7%, transparent), transparent 55%)" }}
+      {/* Just a heads-up on the home page — approving/declining happens in Admin, not inline here,
+          so this is a single notification-style row rather than a list of actionable requests. */}
+      {user.role === "admin" && (d.membership_requests_total || 0) > 0 && (
+        <button
+          type="button"
+          onClick={goMembers}
+          className="card card-hover flex w-full items-center gap-3 !p-3.5 text-left"
+          style={{ borderLeft: "3px solid var(--accent)" }}
           data-testid="dash-join-requests"
         >
-          <div className="mb-3 flex items-center justify-between">
-            <h2 className="flex items-center gap-2 text-base lg:text-lg"><UserCheck2 className="h-4 w-4 text-muted" strokeWidth={2.25} aria-hidden />New membership requests<span className="stat rounded-md bg-red-600 px-1.5 py-0.5 text-xs text-white">{(d.membership_requests_total || 0) - Object.keys(decided).length}</span></h2>
-            <button className="text-xs text-muted hover:text-ink" onClick={goMembers}>Review all ›</button>
-          </div>
-          <ul className={"-mx-0.5 flex snap-x snap-mandatory gap-2 overflow-x-auto px-0.5 pb-1 md:mx-0 md:grid md:grid-cols-2 md:gap-3 md:overflow-visible md:px-0 md:pb-0 xl:grid-cols-3"}>
-            {d.membership_requests.map((r) => (
-              <li key={r.id} className="w-64 shrink-0 snap-start rounded-xl border border-line bg-surface px-3 py-2 md:w-auto md:shrink">
-                <div className="flex flex-wrap items-center gap-3">
-                  <Avatar src={r.avatar_url} name={r.name} size={44} />
-                  <span className="min-w-0 flex-1"><span className="block truncate text-sm font-medium">{r.name}</span><span className="block truncate text-xs text-muted">{[r.title, r.company].filter(Boolean).join(" · ") || r.email}</span><span className="block text-[11px] text-muted">Requested {timeAgo(r.requested_at)}</span></span>
-                  {decided[r.id] ? <Chip>{decided[r.id] === "approve" ? "Approved" : "Declined"}</Chip> : <span className="flex gap-1.5"><button className="btn-primary !px-3 !py-1.5 text-xs" data-testid="dash-approve" onClick={() => decide(r, "approve")}>Approve</button><button className="btn-ghost !px-3 !py-1.5 text-xs" onClick={() => decide(r, "reject")}>Decline</button></span>}
-                </div>
-              </li>))}
-          </ul>
-        </section>)}
+          <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-ink/[.06]"><UserCheck2 className="h-4 w-4 text-muted" strokeWidth={2.25} aria-hidden /></span>
+          <span className="min-w-0 flex-1 text-sm font-medium">New membership requests</span>
+          <span className="stat shrink-0 rounded-md bg-red-600 px-1.5 py-0.5 text-xs text-white">{d.membership_requests_total}</span>
+          <span className="shrink-0 text-xs text-muted">Review ›</span>
+        </button>)}
 
       <div className="grid grid-cols-2 gap-2.5 lg:hidden">
         <Link to={`/members/${user.id}`} data-testid="dash-hero-mobile" className="card card-hover !p-3.5 col-span-2 flex items-center gap-3">

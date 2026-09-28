@@ -42,11 +42,14 @@ const sections = (cfg) => [
   ["Skills & interests", [["skill_set", fieldLabel(cfg, "skill_set"), "tags"], ["interests_hobbies", fieldLabel(cfg, "interests_hobbies"), "tags"]]],
   ["Goals & support", [["goals", fieldLabel(cfg, "goals"), "tags"], ["support_needs", fieldLabel(cfg, "support_needs"), "tags"]]],
 ];
-const SOCIAL = ["linkedin", "twitter", "website", "instagram"];
 
 function Value({ v, type }) {
   if (Array.isArray(v)) return v.length ? <div className="flex flex-wrap gap-1">{v.map((x) => <span key={x} className="chip">{x}</span>)}</div> : <span className="text-muted">Not added yet</span>;
-  return v ? <span className="whitespace-pre-wrap text-sm">{v}</span> : <span className="text-sm text-muted">Not added yet</span>;
+  if (!v) return <span className="text-sm text-muted">Not added yet</span>;
+  // Short fields (name, email, a URL…) sit in a 2-up grid on mobile now, so they need to truncate
+  // instead of overflowing into the next column — longtext (bio) is the one type that still needs
+  // to wrap and show in full.
+  return type === "longtext" ? <span className="whitespace-pre-wrap text-sm">{v}</span> : <span className="block truncate text-sm">{v}</span>;
 }
 
 function Section({ title, fields, data, onSaved }) {
@@ -57,9 +60,9 @@ function Section({ title, fields, data, onSaved }) {
   const save = async () => { setBusy(true); try { const { data: r } = await api.patch("/me/profile", { values: vals }); toast.success("Saved"); setEdit(false); onSaved(r); } catch (e) { toast.error(errMsg(e)); } finally { setBusy(false); } };
   return (
     <SectionCard title={title} action={edit ? <div className="flex gap-2"><Button variant="ghost" className="!py-1" onClick={() => setEdit(false)}>Cancel</Button><Button className="!py-1" loading={busy} onClick={save} data-testid={`save-${title}`}>Save</Button></div> : <Button variant="ghost" className="!py-1" onClick={start} data-testid={`edit-${title}`}>Edit</Button>}>
-      <div className="grid gap-4 sm:grid-cols-2">
+      <div className={edit ? "grid gap-4 sm:grid-cols-2" : "grid grid-cols-2 gap-x-3 gap-y-3 sm:grid-cols-2"}>
         {fields.map(([k, label, type, ph]) => (
-          <div key={k} className={type === "longtext" || type === "tags" ? "sm:col-span-2" : ""}>
+          <div key={k} className={"min-w-0" + (type === "longtext" || type === "tags" ? " col-span-2" : "")}>
             {edit ? (
               <Field label={label}>
                 {type === "longtext" ? <Textarea value={vals[k] || ""} onChange={(e) => setVals({ ...vals, [k]: e.target.value })} />
@@ -67,7 +70,7 @@ function Section({ title, fields, data, onSaved }) {
                   : type === "level" ? <Select value={vals[k] || ""} onChange={(e) => setVals({ ...vals, [k]: e.target.value })} options={[{ value: "", label: "Choose…" }, ...LEVELS]} />
                   : <Input data-testid={`profile-${k}`} type={type === "number" ? "number" : type === "url" ? "url" : "text"} placeholder={ph} value={vals[k] ?? ""} onChange={(e) => setVals({ ...vals, [k]: e.target.value })} />}
               </Field>
-            ) : (<><p className="label">{label}</p><Value v={data[k]} type={type} /></>)}
+            ) : (<><p className="label truncate">{label}</p><Value v={data[k]} type={type} /></>)}
           </div>))}
       </div>
     </SectionCard>
@@ -75,19 +78,30 @@ function Section({ title, fields, data, onSaved }) {
 }
 
 function ContactSection({ data, onSaved }) {
+  const [edit, setEdit] = useState(false);
+  const [busy, setBusy] = useState(false);
   const [c, setC] = useState(data.contact || {});
   const [vis, setVis] = useState(data.contact_visibility || "members");
-  const save = async () => { try { const { data: r } = await api.patch("/me/profile", { values: { contact: c, contact_visibility: vis } }); onSaved(r); toast.success("Contact details saved"); } catch (e) { toast.error(errMsg(e)); } };
   const F = ["email", "phone", "linkedin", "instagram", "website"];
   const ph = { email: "you@example.com", phone: "+1 416 555 0100", linkedin: "https://linkedin.com/in/you", instagram: "@you", website: "https://" };
+  const start = () => { setC(data.contact || {}); setVis(data.contact_visibility || "members"); setEdit(true); };
+  const save = async () => {
+    setBusy(true);
+    try { const { data: r } = await api.patch("/me/profile", { values: { contact: c, contact_visibility: vis } }); onSaved(r); toast.success("Contact details saved"); setEdit(false); } catch (e) { toast.error(errMsg(e)); } finally { setBusy(false); }
+  };
   return (
-    <SectionCard title="Contact details">
-      <p className="mb-3 text-sm text-muted">Shown on your profile in this community so members can reach you. Your details in other communities are separate.</p>
-      <div className="grid gap-3 sm:grid-cols-2">{F.map((k) => <Field key={k} label={k[0].toUpperCase() + k.slice(1)}><Input data-testid={`contact-${k}`} placeholder={ph[k]} value={c[k] || ""} onChange={(e) => setC({ ...c, [k]: e.target.value })} /></Field>)}</div>
-      <div className="mt-4 flex flex-wrap items-center gap-3">
-        <Select value={vis} onChange={(e) => setVis(e.target.value)} options={[{ value: "members", label: "Visible to community members" }, { value: "hidden", label: "Hidden (message me in the app)" }]} />
-        <Button variant="ghost" onClick={save} data-testid="contact-save">Save contact details</Button>
-      </div>
+    <SectionCard title="Contact details" action={edit ? <div className="flex gap-2"><Button variant="ghost" className="!py-1" onClick={() => setEdit(false)}>Cancel</Button><Button className="!py-1" loading={busy} onClick={save} data-testid="contact-save">Save</Button></div> : <Button variant="ghost" className="!py-1" onClick={start} data-testid="edit-Contact details">Edit</Button>}>
+      {edit ? (
+        <>
+          <p className="mb-3 text-sm text-muted">Shown on your profile in this community so members can reach you. Your details in other communities are separate.</p>
+          <div className="grid gap-3 sm:grid-cols-2">{F.map((k) => <Field key={k} label={k[0].toUpperCase() + k.slice(1)}><Input data-testid={`contact-${k}`} placeholder={ph[k]} value={c[k] || ""} onChange={(e) => setC({ ...c, [k]: e.target.value })} /></Field>)}</div>
+          <div className="mt-4"><Select value={vis} onChange={(e) => setVis(e.target.value)} options={[{ value: "members", label: "Visible to community members" }, { value: "hidden", label: "Hidden (message me in the app)" }]} /></div>
+        </>
+      ) : (
+        <div className="grid grid-cols-2 gap-x-3 gap-y-3 sm:grid-cols-2">
+          {F.map((k) => <div key={k} className="min-w-0"><p className="label truncate">{k[0].toUpperCase() + k.slice(1)}</p><Value v={data.contact?.[k]} /></div>)}
+        </div>
+      )}
     </SectionCard>
   );
 }
@@ -95,7 +109,6 @@ function ContactSection({ data, onSaved }) {
 function Documents({ data, onSaved }) {
   const [docs, setDocs] = useState(data.documents || []);
   const [t, setT] = useState(""); const [u, setU] = useState("");
-  const [links, setLinks] = useState(data.social_links || {});
   const persist = async (values) => { try { const { data: r } = await api.patch("/me/profile", { values }); onSaved(r); toast.success("Saved"); } catch (e) { toast.error(errMsg(e)); } };
   return (
     <SectionCard title="Documents and links">
@@ -103,9 +116,6 @@ function Documents({ data, onSaved }) {
         {docs.map((d, i) => <div key={i} className="flex items-center justify-between text-sm"><a className="underline" href={d.url} target="_blank" rel="noreferrer">{d.title || d.url}</a><button className="text-xs text-muted hover:text-ink" onClick={() => { const n = docs.filter((_, j) => j !== i); setDocs(n); persist({ documents: n }); }}>Remove</button></div>)}</div>
       <div className="mt-3 grid gap-2 sm:grid-cols-[1fr_1.5fr_auto]"><Input placeholder="Title" value={t} onChange={(e) => setT(e.target.value)} /><Input type="url" placeholder="https://" value={u} onChange={(e) => setU(e.target.value)} />
         <Button variant="ghost" disabled={!u.trim()} onClick={() => { const n = [...docs, { title: t || "Document", url: u }]; setDocs(n); setT(""); setU(""); persist({ documents: n }); }}>Add</Button></div>
-      <p className="label mt-5">Social links</p>
-      <div className="grid gap-2 sm:grid-cols-2">{SOCIAL.map((k) => <Input key={k} type="url" placeholder={k[0].toUpperCase() + k.slice(1)} value={links[k] || ""} onChange={(e) => setLinks({ ...links, [k]: e.target.value })} />)}</div>
-      <Button variant="ghost" className="mt-3" onClick={() => persist({ social_links: links })}>Save links</Button>
     </SectionCard>
   );
 }

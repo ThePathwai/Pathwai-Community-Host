@@ -58,7 +58,7 @@ export default function Matches() {
                   </div>
                 </div>
                 <p className="line-clamp-1 text-[9px] leading-tight text-muted"><span className="text-ink/50">Why · </span>{m.why}</p>
-                <ActionsCompact kind="person" id={m.user.id} state={m.state} primary={m.state === "intro" ? <Chip className="!px-1.5 !py-0.5 !text-[9px]">Requested</Chip> : <Button className="!w-full !px-1.5 !py-1 !text-[9px]" onClick={() => { setIntro(m); setTopic(m.can_help_you?.[0] || ""); }} data-testid="request-intro-mobile">{m.next_action}</Button>} />
+                <ActionsCompact kind="person" id={m.user.id} state={m.state} primary={m.state === "intro" ? <Chip className="!px-1.5 !py-0.5 !text-[9px]">Requested</Chip> : <Button className="!flex !w-full !min-w-0 !px-1.5 !py-1 !text-[9px]" onClick={() => { setIntro(m); setTopic(m.can_help_you?.[0] || ""); }} data-testid="request-intro-mobile"><span className="truncate">{m.next_action}</span></Button>} />
               </div>))}
             {tab === "events" && list.map((e) => (
               <div key={e.id} data-testid="match-tile" className="card card-hover !p-2 flex flex-col gap-1">

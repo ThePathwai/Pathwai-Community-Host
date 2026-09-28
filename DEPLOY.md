@@ -121,6 +121,19 @@ per-community, admin-configured integration (Admin → Integrations) — a commu
 their own keys whenever they want payments or texting for their members. Nothing you need to set
 up platform-wide.
 
+**"Sign in with Google" / "Sign in with Apple."** Fully built (`backend/routes/oauth.py` +
+`frontend/src/components/SocialAuthButtons.jsx`) — the login/signup pages already call
+`GET /auth/oauth/providers` and only show a provider's button once it's configured, so there's
+nothing to toggle on the frontend. To turn Google on: Google Cloud Console → create an OAuth
+consent screen → **Credentials → Create Credentials → OAuth client ID** (type: Web application) →
+add every domain people will log in from as an **Authorized JavaScript origin** (your Railway
+frontend domain, and any custom domain from below) → no redirect URI needed, this is a
+client-side ID-token flow, not a server callback → copy the Client ID and set `GOOGLE_CLIENT_ID`
+on the **backend** service. No client secret required. Apple works the same way with a Services
+ID and `APPLE_CLIENT_ID` — see Apple's "Sign in with Apple" setup in the developer portal. Add a
+domain to the origin list later (e.g. after the custom-domain step below) any time without
+touching code — the backend picks it up on next boot, no redeploy needed on the frontend.
+
 ## Custom domain (optional, once the above is solid)
 
 Railway → service → **Settings → Networking → Custom Domain**, then add the CNAME record it gives

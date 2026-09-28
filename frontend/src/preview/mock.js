@@ -188,6 +188,33 @@ function applyEdit(item, kind) {
   const patch = sharedContent(kind).edits[item.id];
   return patch ? { ...item, ...patch } : item;
 }
+// Mirrors the real backend's tier handling (routes/events.py _norm_tiers/_tier_summary): price
+// and capacity are always derived from the tiers themselves, never set independently, so an
+// event's badge/ticket price can't drift from what its tiers actually charge. `orders` are this
+// event's known ticket sales (S.extra.sales[eventId] || []), used for each tier's sold count.
+function deriveEventPricing(tiers, orders) {
+  const norm = (tiers || []).filter((t) => (t.name || "").trim()).map((t, i) => ({
+    id: t.id || `tier-${Date.now()}-${i}`, name: (t.name || "General admission").trim().slice(0, 60),
+    price_cents: Math.max(0, Math.round(Number(t.price_cents) || 0)),
+    capacity: t.capacity != null && t.capacity !== "" ? Math.max(0, Math.round(Number(t.capacity))) : null,
+  }));
+  const out = { ticket_tiers: norm };
+  if (norm.length) {
+    const prices = norm.map((t) => t.price_cents);
+    const caps = norm.map((t) => t.capacity);
+    out.price_cents = Math.min(...prices);
+    out.capacity = caps.some((c) => c == null) ? null : caps.reduce((a, c) => a + c, 0);
+    const tiersSold = norm.map((t) => {
+      const sold = (orders || []).filter((o) => o.tier_id === t.id).length;
+      return { ...t, sold, sold_out: t.capacity != null && sold >= t.capacity };
+    });
+    out.tier_summary = { has_tiers: true, min_price_cents: Math.min(...prices), max_price_cents: Math.max(...prices), tiers: tiersSold, all_sold_out: tiersSold.every((t) => t.sold_out) };
+  } else {
+    out.price_cents = null;
+    out.tier_summary = { has_tiers: false };
+  }
+  return out;
+}
 // Merges what was recorded for this login (`base`) with what was created/edited/deleted live during
 // this preview session, community-wide. `filterPending` hides not-yet-approved submissions from the
 // member-facing list (mirrors the real backend's approved_q, which hides them from everyone).
@@ -636,7 +663,7 @@ function write(method, path, body, config) {
     const doc = { id: "sub-" + Date.now(), ...body, status: admin ? "approved" : "pending", published_at: new Date().toISOString(), author: me.name, submitted_by: me.id, submitted_by_name: me.name };
     doc.cover_url = body.image_url || null;
     if (kind === "resources") Object.assign(doc, { shared_by: { id: me.id, name: me.name, avatar_url: me.avatar_url, title: me.title }, category: body.category || "Discount", is_saved: false, tags: body.tags || [] });
-    if (kind === "events") Object.assign(doc, { is_past: false, attendee_count: 0, my_rsvp: null });
+    if (kind === "events") Object.assign(doc, { is_past: false, attendee_count: 0, my_rsvp: null }, admin ? deriveEventPricing(body.ticket_tiers, []) : { ticket_tiers: [], price_cents: null, tier_summary: { has_tiers: false } });
     // Shared per community (not per login) so it shows up for every login that visits — admin-posted
     // content is visible immediately; a member's submission waits, pending, for admin's moderation.
     sharedContent(kind).created.unshift(doc);
@@ -691,6 +718,14 @@ function write(method, path, body, config) {
     if (method === "delete") { ov.deleted[id] = true; return ok(config, { ok: true }); }
     const vals = { ...(body.values || {}) };
     ["tags", "agenda"].forEach((k) => { if (typeof vals[k] === "string") vals[k] = vals[k].split(",").map((x) => x.trim()).filter(Boolean); });
+    if (kind === "events" && "ticket_tiers" in vals) {
+      const orders = (S.extra.sales || {})[id] || [];
+      Object.assign(vals, deriveEventPricing(vals.ticket_tiers, orders));
+    } else if (kind === "events" && "capacity" in vals && (((ov.edits[id] || {}).ticket_tiers || base.ticket_tiers || []).length)) {
+      // Capacity is derived from tier capacities once an event has tiers; ignore a stray edit to
+      // the flat field so it can't quietly disagree with the tiers (matches the real backend).
+      delete vals.capacity;
+    }
     // Shared edit, not a per-login mutation — every login reading this community sees the change.
     ov.edits[id] = { ...(ov.edits[id] || {}), ...vals };
     if (created) Object.assign(created, vals);

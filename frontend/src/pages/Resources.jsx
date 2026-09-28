@@ -27,16 +27,19 @@ export default function Resources() {
   const request = async () => { try { await api.post("/team-support", { category: "Other", title: `Perk request: ${rq}`, description: rq }); toast.success("Request sent to the team"); setReq(false); setRq(""); } catch (e) { toast.error(errMsg(e)); } };
   const toggle = async (id) => { try { await api.post(`/resources/${id}/save`); load(); } catch (e) { toast.error(errMsg(e)); } };
   const shown = (items || []).filter((r) => cat === "all" || r.category === cat);
+  const active = q || cat !== "all" || saved;
+  const reset = () => { setQ(""); setCat("all"); setSaved(false); };
   return (
     <div>
       <PageHeader k="resources" title="Community perks" subtitle="Discounts, free access and know-how that members share with each other." actions={<><Button variant="ghost" onClick={() => setReq(true)}>Ask for a perk</Button><Button variant="ghost" onClick={() => setOpen(true)} data-testid="submit-resource">Share a perk</Button></>} />
       <div className="mb-3 flex flex-wrap gap-2">
         {["all", ...CATS].map((c) => <button key={c} onClick={() => setCat(c)} className={`rounded-full border px-3 py-1 text-sm ${cat === c ? "bg-accent text-on-accent" : ""}`} style={cat === c ? { background: "var(--accent)", color: "var(--on-accent)" } : {}}>{c === "all" ? "All" : c}</button>)}
       </div>
-      <div className="mb-6 grid gap-3 sm:grid-cols-4">
+      <div className="mb-3 grid gap-3 sm:grid-cols-4">
         <Input className="sm:col-span-3" placeholder="Search perks, people or skills…" value={q} onChange={(e) => setQ(e.target.value)} />
         <label className="flex items-center gap-2 text-sm"><input type="checkbox" checked={saved} onChange={(e) => setSaved(e.target.checked)} /> Saved only</label>
       </div>
+      <p className="mb-6 text-xs text-muted">{shown.length} {shown.length === 1 ? "perk" : "perks"}{active ? <button className="ml-3 underline" onClick={reset}>Clear filters</button> : null}</p>
       {!items ? <Spinner /> : shown.length === 0 ? <Empty title="No perks match this search." hint="Try a different keyword, or share one yourself." /> : (
         <>
           {/* Mobile: 2-up tiles — same density step as Members — built around the value badge and the

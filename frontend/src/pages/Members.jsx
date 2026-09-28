@@ -85,10 +85,6 @@ export default function Members() {
                   </div>
                   {u.member_type && u.member_type !== "founder" && <span className="absolute right-3 top-3"><Chip accent>{typeLabel(config, u.member_type)}</Chip></span>}
                 </div>
-                <div className="space-y-1.5 px-4 py-3">
-                  {fieldOn(config, "skill_set") && (u.skill_set || []).length > 0 && <p className="truncate text-xs"><span className="eyebrow mr-2">{fieldLabel(config, "skill_set")}</span>{u.skill_set.slice(0, 3).join(" · ")}</p>}
-                  {fieldOn(config, "support_needs") && (u.support_needs || []).length > 0 && <p className="truncate text-xs"><span className="eyebrow mr-2" style={{ color: "var(--accent)" }}>{fieldLabel(config, "support_needs")}</span>{u.support_needs.slice(0, 2).join(" · ")}</p>}
-                </div>
               </Link>
             ))}
           </div>

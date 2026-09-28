@@ -9,6 +9,8 @@ export default function Discover() {
   const [region, setRegion] = useState("all");
   const [data, setData] = useState(null);
   const [regions, setRegions] = useState([]);
+  const active = q || region !== "all" || kind !== "all";
+  const reset = () => { setQ(""); setRegion("all"); setKind("all"); };
   useEffect(() => { api.get("/organizations/meta/filters").then((r) => setRegions(r.data.regions)); }, []);
   useEffect(() => {
     const t = setTimeout(() => api.get("/discover", { params: { kind, q: q || undefined, region } }).then((r) => setData(r.data)), 200);
@@ -22,7 +24,10 @@ export default function Discover() {
         <Input className="sm:col-span-2" placeholder="Search programs, clinics, coaches…" value={q} onChange={(e) => setQ(e.target.value)} data-testid="discover-search" />
         <Select value={region} onChange={(e) => setRegion(e.target.value)} options={[{ value: "all", label: "All regions" }, ...regions]} />
       </div>
-      <Tabs tabs={[{ value: "all", label: "All" }, { value: "program", label: "Programs" }, { value: "grant", label: "Grants" }, { value: "mentor", label: "Mentors" }]} value={kind} onChange={setKind} />
+      <div className="mb-1 flex items-center justify-between gap-3">
+        <div className="min-w-0 flex-1"><Tabs tabs={[{ value: "all", label: "All" }, { value: "program", label: "Programs" }, { value: "grant", label: "Grants" }, { value: "mentor", label: "Mentors" }]} value={kind} onChange={setKind} /></div>
+        {active && <button className="mb-5 shrink-0 text-xs text-muted underline" onClick={reset}>Clear filters</button>}
+      </div>
       {!data ? <Spinner /> : data.counts.total === 0 ? <Empty title="No results" hint="Try a broader search." /> : (
         <div className="space-y-6 lg:space-y-8">
           {/* Mobile: 2-up compact cards per section instead of one full-width card per row — same

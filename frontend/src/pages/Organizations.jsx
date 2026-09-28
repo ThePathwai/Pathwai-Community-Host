@@ -7,6 +7,8 @@ export default function Organizations() {
   const [items, setItems] = useState(null);
   const [meta, setMeta] = useState({ types: [], regions: [] });
   const [q, setQ] = useState(""); const [type, setType] = useState("all"); const [region, setRegion] = useState("all");
+  const active = q || type !== "all" || region !== "all";
+  const reset = () => { setQ(""); setType("all"); setRegion("all"); };
   useEffect(() => { api.get("/organizations/meta/filters").then((r) => setMeta(r.data)); }, []);
   useEffect(() => {
     const t = setTimeout(() => api.get("/organizations", { params: { q: q || undefined, type, region } }).then((r) => setItems(r.data.organizations)), 200);
@@ -15,12 +17,13 @@ export default function Organizations() {
   return (
     <div>
       <PageHeader title="Event series & partners" subtitle="Our event series, workshops and the partners who support our members." />
-      <div className="mb-6 grid gap-3 sm:grid-cols-3">
+      <div className="mb-3 grid gap-3 sm:grid-cols-3">
         <Input placeholder="Search organizations…" value={q} onChange={(e) => setQ(e.target.value)} />
         <Select value={type} onChange={(e) => setType(e.target.value)} options={[{ value: "all", label: "All types" }, ...meta.types.map((t) => ({ value: t.value, label: t.label }))]} />
         <Select value={region} onChange={(e) => setRegion(e.target.value)} options={[{ value: "all", label: "All regions" }, ...meta.regions]} />
       </div>
-      {!items ? <Spinner /> : items.length === 0 ? <Empty title="No organizations match" /> : (
+      <p className="mb-4 text-xs text-muted">{items ? `${items.length} ${items.length === 1 ? "result" : "results"}` : ""}{active ? <button className="ml-3 underline" onClick={reset}>Clear filters</button> : null}</p>
+      {!items ? <Spinner /> : items.length === 0 ? <Empty title="No organizations match" hint="Try removing a filter or searching differently." /> : (
         <>
           {/* Mobile: 2-up compact cards — same density as Members/Perks — instead of one full-width
               card per row. Desktop keeps the roomier card grid below (`hidden lg:grid`). */}

@@ -1,30 +1,10 @@
 import React, { useCallback, useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import { Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { api, errMsg, fmtDate } from "../lib/api";
 import { Avatar, Button, Chip, Empty, Field, Input, Modal, PageHeader, PhotoField, Select, Spinner, Tabs, TagInput, Textarea } from "../components/ui";
 import { useAuth } from "../lib/auth";
-import { ItemTools } from "../components/EditKit";
-
-function TierEditor({ tiers, onChange }) {
-  const set = (i, patch) => onChange(tiers.map((t, j) => (j === i ? { ...t, ...patch } : t)));
-  return (
-    <div className="space-y-2 rounded-lg border border-line p-3">
-      <p className="text-xs font-semibold uppercase tracking-wide text-muted">Ticket tiers</p>
-      {tiers.length === 0 && <p className="text-xs text-muted">No tiers yet — this event is free.</p>}
-      {tiers.map((t, i) => (
-        <div key={i} className="grid gap-2 sm:grid-cols-[2fr_1fr_1fr_auto]">
-          <Input placeholder="Tier name (e.g. Early bird)" value={t.name} onChange={(e) => set(i, { name: e.target.value })} data-testid={`tier-name-${i}`} />
-          <Input placeholder="Price $" type="number" min="0" step="0.01" value={t.price} onChange={(e) => set(i, { price: e.target.value })} data-testid={`tier-price-${i}`} />
-          <Input placeholder="Capacity" type="number" min="1" value={t.capacity} onChange={(e) => set(i, { capacity: e.target.value })} data-testid={`tier-capacity-${i}`} />
-          <button type="button" className="p-2 text-muted hover:text-ink" onClick={() => onChange(tiers.filter((_, j) => j !== i))} aria-label="Remove tier"><Trash2 className="h-4 w-4" /></button>
-        </div>))}
-      <Button type="button" variant="ghost" onClick={() => onChange([...tiers, { name: tiers.length ? "" : "General admission", price: "", capacity: "" }])} data-testid="add-tier">Add a tier</Button>
-      <p className="text-xs text-muted">Leave capacity blank for unlimited. Add more than one tier for things like Early bird vs GA vs VIP.</p>
-    </div>
-  );
-}
+import { ItemTools, TierEditor } from "../components/EditKit";
 
 export default function Events() {
   const [tab, setTab] = useState("upcoming");
@@ -62,6 +42,7 @@ export default function Events() {
               const soldOut = e.tier_summary?.has_tiers ? e.tier_summary.all_sold_out : e.capacity && e.attendee_count >= e.capacity;
               return (
                 <div key={e.id} className="card card-hover !p-2 flex flex-col gap-1" data-testid="event-tile">
+                  <ItemTools kind="events" item={e} onChanged={load} />
                   <div className="flex items-center gap-1.5">
                     <Link to={`/events/${e.id}`} className="flex w-8 shrink-0 flex-col items-center overflow-hidden rounded-md border border-line" aria-hidden>
                       <span className="w-full bg-ink/[.06] py-px text-center text-[7px] font-semibold uppercase tracking-wide text-muted">{dt.toLocaleDateString(undefined, { month: "short" })}</span>

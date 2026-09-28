@@ -59,6 +59,27 @@ export function Inline({ field, fallback = "", as: Tag = "span", className = "",
   );
 }
 
+/** Ticket-tier editor: name / price ($) / capacity per tier. Shared by the "Add an event" form
+    and the admin event-edit dialog below, so pricing is set the same way in both places. */
+export function TierEditor({ tiers, onChange }) {
+  const set = (i, patch) => onChange(tiers.map((t, j) => (j === i ? { ...t, ...patch } : t)));
+  return (
+    <div className="space-y-2 rounded-lg border border-line p-3">
+      <p className="text-xs font-semibold uppercase tracking-wide text-muted">Ticket tiers</p>
+      {tiers.length === 0 && <p className="text-xs text-muted">No tiers yet — this event is free.</p>}
+      {tiers.map((t, i) => (
+        <div key={t.id || i} className="grid gap-2 sm:grid-cols-[2fr_1fr_1fr_auto]">
+          <Input placeholder="Tier name (e.g. Early bird)" value={t.name} onChange={(e) => set(i, { name: e.target.value })} data-testid={`tier-name-${i}`} />
+          <Input placeholder="Price $" type="number" min="0" step="0.01" value={t.price} onChange={(e) => set(i, { price: e.target.value })} data-testid={`tier-price-${i}`} />
+          <Input placeholder="Capacity" type="number" min="1" value={t.capacity} onChange={(e) => set(i, { capacity: e.target.value })} data-testid={`tier-capacity-${i}`} />
+          <button type="button" className="p-2 text-muted hover:text-ink" onClick={() => onChange(tiers.filter((_, j) => j !== i))} aria-label="Remove tier"><Trash2 className="h-4 w-4" /></button>
+        </div>))}
+      <Button type="button" variant="ghost" onClick={() => onChange([...tiers, { name: tiers.length ? "" : "General admission", price: "", capacity: "" }])} data-testid="add-tier">Add a tier</Button>
+      <p className="text-xs text-muted">Leave capacity blank for unlimited. Add more than one tier for things like Early bird vs GA vs VIP.</p>
+    </div>
+  );
+}
+
 /** Generic schema-driven form dialog. */
 export function EditDialog({ open, title, fields, initial, onSave, onClose, saveLabel = "Save changes" }) {
   const [v, setV] = useState(initial || {});
@@ -69,7 +90,9 @@ export function EditDialog({ open, title, fields, initial, onSave, onClose, save
   return (
     <Modal open={open} onClose={onClose} title={title}>
       <div className="space-y-4" data-testid="edit-dialog">
-        {fields.map((f) => (
+        {fields.map((f) => f.type === "tiers" ? (
+          <TierEditor key={f.key} tiers={v[f.key] || []} onChange={(t) => set(f.key, t)} />
+        ) : (
           <Field key={f.key} label={f.label}>
             {f.type === "textarea" ? <Textarea rows={f.rows || 4} value={v[f.key] ?? ""} onChange={(e) => set(f.key, e.target.value)} />
               : f.type === "tags" ? <TagInput value={v[f.key] || []} onChange={(x) => set(f.key, x)} />
@@ -90,7 +113,7 @@ export const CONTENT_FIELDS = {
     { key: "title", label: "Title" }, { key: "description", label: "Description", type: "textarea" },
     { key: "starts_at", label: "Starts", type: "datetime-local" }, { key: "location", label: "Location" },
     { key: "virtual_url", label: "Virtual link" }, { key: "host", label: "Host" }, { key: "category", label: "Type" },
-    { key: "capacity", label: "Capacity", type: "number" }, { key: "price_cents", label: "Ticket price (cents, blank = free)", type: "number" },
+    { key: "ticket_tiers", label: "Pricing", type: "tiers" }, { key: "capacity", label: "Capacity (only used if there are no ticket tiers)", type: "number" },
     { key: "url", label: "External registration link (e.g. Luma)" }, { key: "tags", label: "Tags", type: "tags" },
     { key: "prep", label: "What to prepare", type: "textarea", rows: 2 },
   ],
@@ -112,10 +135,22 @@ export function ItemTools({ kind, item, onChanged, className = "" }) {
   if (!editing) return null;
   const fields = CONTENT_FIELDS[kind];
   const initial = { ...item, starts_at: toLocal(item.starts_at), tags: item.tags || [] };
+  if (kind === "events") {
+    // Ticket tiers store price in cents; the tier editor works in dollars. And an older event
+    // that was priced without ever getting a tier (price_cents set, no ticket_tiers) is shown
+    // as one implied "General admission" tier here, so its price is visible and editable
+    // instead of silently reading as free.
+    initial.ticket_tiers = (item.ticket_tiers && item.ticket_tiers.length)
+      ? item.ticket_tiers.map((t) => ({ id: t.id, name: t.name, price: t.price_cents != null ? String(t.price_cents / 100) : "0", capacity: t.capacity != null ? String(t.capacity) : "" }))
+      : item.price_cents ? [{ name: "General admission", price: String(item.price_cents / 100), capacity: item.capacity != null ? String(item.capacity) : "" }] : [];
+  }
   const save = async (v) => {
     const values = {};
     fields.forEach((f) => { if (v[f.key] !== initial[f.key]) values[f.key] = v[f.key]; });
     if (values.starts_at) values.starts_at = new Date(values.starts_at).toISOString();
+    if (kind === "events" && values.ticket_tiers) {
+      values.ticket_tiers = values.ticket_tiers.filter((t) => t.name.trim()).map((t) => ({ id: t.id, name: t.name.trim(), price_cents: Math.round((Number(t.price) || 0) * 100), capacity: Number(t.capacity) > 0 ? Number(t.capacity) : null }));
+    }
     if (!Object.keys(values).length) return setOpen(false);
     try { await api.patch(`/admin/content/${kind}/${item.id}`, { values }); toast.success("Saved"); setOpen(false); onChanged?.(); } catch (e) { toast.error(errMsg(e)); }
   };

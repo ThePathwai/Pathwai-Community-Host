@@ -229,21 +229,37 @@ export const PageHeader = ({ title, subtitle, actions, k }) => (
   </div>
 );
 
-export const Tabs = ({ tabs, value, onChange }) => (
-  <div className="mb-5 inline-flex max-w-full overflow-x-auto rounded-xl border border-line bg-surface p-1">
-    {tabs.map((t) => {
-      const v = typeof t === "string" ? t : t.value;
-      const l = typeof t === "string" ? t : t.label;
-      return (
-        <button key={v} onClick={() => onChange(v)} data-testid={`tab-${v}`}
-          className={cx("rounded-lg px-4 py-1.5 text-sm transition", value === v ? "text-onaccent" : "text-muted hover:bg-ink/5")}
-          style={value === v ? { background: "var(--accent)" } : undefined}>
-          {l}
-        </button>
-      );
-    })}
-  </div>
-);
+export const Tabs = ({ tabs, value, onChange }) => {
+  const ref = React.useRef(null);
+  const [overflowing, setOverflowing] = React.useState(false);
+  const recompute = React.useCallback(() => {
+    const el = ref.current;
+    if (!el) return;
+    // Only hint at more tabs while there's actually room to scroll further right —
+    // this list can be short enough to fit (Matches' 3 tabs) or long enough to need
+    // scrolling (Admin's 11 tabs), and the fade should track real overflow, not guess.
+    setOverflowing(el.scrollWidth - el.scrollLeft - el.clientWidth > 4);
+  }, []);
+  React.useEffect(() => { recompute(); }, [recompute, tabs]);
+  return (
+    <div className="relative mb-5 max-w-full">
+      <div ref={ref} onScroll={recompute} className="inline-flex max-w-full overflow-x-auto rounded-xl border border-line bg-surface p-1">
+        {tabs.map((t) => {
+          const v = typeof t === "string" ? t : t.value;
+          const l = typeof t === "string" ? t : t.label;
+          return (
+            <button key={v} onClick={() => onChange(v)} data-testid={`tab-${v}`}
+              className={cx("shrink-0 rounded-lg px-4 py-1.5 text-sm transition", value === v ? "text-onaccent" : "text-muted hover:bg-ink/5")}
+              style={value === v ? { background: "var(--accent)" } : undefined}>
+              {l}
+            </button>
+          );
+        })}
+      </div>
+      {overflowing && <div className="pointer-events-none absolute inset-y-0 right-0 w-8 rounded-r-xl" style={{ background: "linear-gradient(to right, transparent, rgb(var(--c-surface)))" }} aria-hidden />}
+    </div>
+  );
+};
 
 export const Modal = ({ open, onClose, title, children }) =>
   !open ? null : (
