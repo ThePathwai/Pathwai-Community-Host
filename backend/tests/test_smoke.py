@@ -32,7 +32,7 @@ def test_demo_accounts(c):
 
 def test_auth_flow(c):
     login(c, "demo@yourcommunity.app")
-    assert c.get("/api/auth/me").json()["name"] == "Maya Okonkwo"
+    assert c.get("/api/auth/me").json()["name"] == "Fife Ashley-Dejo"
     assert c.post("/api/auth/refresh").status_code == 200
     c.post("/api/auth/logout")
     assert c.get("/api/auth/me").status_code == 401

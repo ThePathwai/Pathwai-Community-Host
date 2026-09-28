@@ -8,7 +8,7 @@ const book = () => { const k = S.community || "playr"; return (S.books[k] = S.bo
 const slugOf = () => S.community || "playr";
 // The active community's recorded data. `member` and `admin` both point at the signed-in person's view, so shared helpers keep working.
 Object.defineProperty(S, "data", { get() { const b = book(); const v = (S.email && b.logins[S.email]) || {}; return { public: b.public, member: v, admin: v }; } });
-const ACCOUNTS = { "demo@yourcommunity.app": { name: "Maya Okonkwo", role: "member" }, "admin@yourcommunity.app": { name: "Devon Clarke", role: "admin" }, "host@thevillage.example": { name: "Camille Laurent", role: "host" } };
+const ACCOUNTS = { "demo@yourcommunity.app": { name: "Fife Ashley-Dejo", role: "member" }, "admin@yourcommunity.app": { name: "Fife Ashley-Dejo", role: "admin" }, "host@thevillage.example": { name: "Camille Laurent", role: "host" } };
 const BASE = { "demo@yourcommunity.app": { playr: "approved", grace: "approved", "club-pto": "approved" }, "admin@yourcommunity.app": { playr: "approved", grace: "approved", "the-village": "approved", "club-pto": "approved", unity: "approved" }, "host@thevillage.example": { "the-village": "approved" } };
 const ADMIN_OF = { "admin@yourcommunity.app": ["playr", "grace", "the-village", "club-pto", "unity"], "host@thevillage.example": ["the-village"] };
 const memStatus = (email, slug) => (S.extra.join || {})[email + "|" + slug] || (BASE[email] || {})[slug] || "none";
@@ -643,7 +643,7 @@ function write(method, path, body, config) {
         });
       }
     }
-    (S.extra.mship = S.extra.mship || {})[id] = { status: okd ? "approved" : "rejected", decided_at: new Date().toISOString(), decided_by_name: "Devon Clarke", note: body.note || null };
+    (S.extra.mship = S.extra.mship || {})[id] = { status: okd ? "approved" : "rejected", decided_at: new Date().toISOString(), decided_by_name: "Fife Ashley-Dejo", note: body.note || null };
     return ok(config, { ok: true, status: okd ? "approved" : "rejected" });
   }
   if (path.startsWith("/admin/moderation/")) {

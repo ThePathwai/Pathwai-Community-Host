@@ -46,14 +46,14 @@ ORGS = [
                         extra_questions=[dict(key="interests", label="What would you like to get out of the season?", type="text", required=True, placeholder="Clients, mentors, collaborators..."),
                                          dict(key="referral", label="Who referred you?", type="text", required=False)]),
                    dict(name="Member introductions", description="Not sure where to start? We'll introduce you to three members.", duration="Rolling", intake_status="Open")],
-         key_people=[dict(name="Devon Clarke", title="Community Lead"), dict(name="Dre Whitfield", title="Programs Mentor")]),
+         key_people=[dict(name="Fife Ashley-Dejo", title="Community Lead"), dict(name="Dre Whitfield", title="Programs Mentor")]),
     dict(slug="after-hours", name="After Hours Socials", type="nonprofit", tagline="Evening socials with music, food and good company.",
          overview="Relaxed Friday-night socials: live music, food vendors and easy conversation. Members and guests all welcome.",
          accent_color="#F4F1EA", headquarters="The New Arena, Toronto", region="Ontario", founded_year=2024, focus_areas=["Social", "Music", "Creators"],
          stages=["all_stages"], community_size=180, tags=["social", "creators"],
          programs=[dict(name="Host a table", description="Curate a table around a topic you care about.", duration="Per event", intake_status="Open"),
                    dict(name="Creator crew", description="Photo, video and music volunteers.", duration="Per event", intake_status="Open")],
-         key_people=[dict(name="Devon Clarke", title="Community Lead")]),
+         key_people=[dict(name="Fife Ashley-Dejo", title="Community Lead")]),
     dict(slug="playr-academy", name="Playr League Workshops", type="university", tagline="Practical workshops taught by members.",
          overview="Business, career and wellness workshops led by members: pricing, legal basics, public speaking, first aid and more.",
          accent_color=RED, headquarters="Toronto, ON", region="Ontario", founded_year=2023, focus_areas=["Workshops", "Mentorship", "Careers"],
@@ -81,7 +81,7 @@ ORGS = [
 # (id, name, age, (ft,in), sport, level, position, profession, employer, hood, art, division, skills, interests, goals, needs, bio, role, orgs)
 A = dict
 M: List[Dict[str, Any]] = [
-    A(id="u-founder-me", name="Maya Okonkwo", age=27, h=(5, 9), sport="Basketball", level="Intermediate", position="Wing", prof="Physiotherapist", emp="Bayview Health Clinic", hood="Leslieville",
+    A(id="u-founder-me", name="Fife Ashley-Dejo", age=27, h=(5, 9), sport="Basketball", level="Intermediate", position="Wing", prof="Physiotherapist", emp="Bayview Health Clinic", hood="Leslieville",
       art=A(skin="d", hair="puffs", hair_color="black", jersey=RED, number="9", bg=0, smile=True), div="Sunday Indoor · Div B · Red Line",
       skills=["Recovery & mobility", "Defense", "Rebounding", "Team leadership"], interests=["Trail running", "Film photography", "Afrobeats", "Meal prep"],
       goals=["Move up to Division A", "Play a full season injury-free", "Start a women's clinic night"], needs=["Shooting form", "Ball handling", "Video review"],
@@ -221,7 +221,7 @@ M: List[Dict[str, Any]] = [
       skills=["Retail operations", "Hiring", "Leadership", "Customer service"], interests=["Thrifting", "Baking", "Podcasts"],
       goals=["Become a district manager", "Start an online shop"], needs=["Business strategy", "Web development", "Career coaching"],
       bio="I run a store by day. I can share my staff discount and I'm always up for talking hiring and retail.", role="founder", orgs=["indoor-series"]),
-    A(id="u-admin-me", name="Devon Clarke", age=34, h=(6, 1), sport="Basketball", level="Advanced", position="Commissioner", prof="Community Lead", emp="The Playr League", hood="Toronto",
+    A(id="u-admin-me", name="Fife Ashley-Dejo", age=34, h=(6, 1), sport="Basketball", level="Advanced", position="Commissioner", prof="Community Lead", emp="The Playr League", hood="Toronto",
       art=A(skin="d", hair="short", hair_color="black", jersey=RED, number="00", bg=0, beard=True, smile=True), div="League office",
       skills=["Event organising", "Team leadership", "Refereeing"], interests=["Coffee", "Live music"],
       goals=["Fill every division", "Open a second venue"], needs=["Photography", "Content creation", "Refereeing"],
@@ -325,7 +325,7 @@ def _applicants(pw: str) -> List[Dict[str, Any]]:
                     "title": title, "company": company, "location": "Toronto", "bio": why, "join_reason": why, "avatar_url": portrait(number=uid, **art),
                     "skill_set": skills, "expertise": skills, "membership_status": st, "hidden_from_directory": True, "signup_source": "self",
                     "created_at": iso(days), "updated_at": iso(days),
-                    **({"membership_decided_at": iso(-8), "membership_decided_by": "u-admin-me", "membership_decided_by_name": "Devon Clarke",
+                    **({"membership_decided_at": iso(-8), "membership_decided_by": "u-admin-me", "membership_decided_by_name": "Fife Ashley-Dejo",
                         "membership_note": "Promotional sign-up, not a fit for the community."} if st == "rejected" else {})})
     return out
 
@@ -351,13 +351,13 @@ def _events(name: Dict[str, str]) -> List[Dict[str, Any]]:
     ME = "u-founder-me"
     pool = [m["id"] for m in M]
     ev_list = [
-        ev(1, "Community Mixer · September", "Our monthly mixer at The New Arena: three short member talks, then open networking. Bring business cards and an open mind.", 2, 19, 3, "Devon Clarke", "u-admin-me", "The New Arena · Main hall", "Networking", 80,
+        ev(1, "Community Mixer · September", "Our monthly mixer at The New Arena: three short member talks, then open networking. Bring business cards and an open mind.", 2, 19, 3, "Fife Ashley-Dejo", "u-admin-me", "The New Arena · Main hall", "Networking", 80,
            ["networking", "community", "introductions"], "indoor", "indoor-series", pool[:14] + [ME], agenda=["Doors and welcome (18:30)", "Three member talks", "Open networking", "Close and follow-ups"]),
         ev(2, "Business Growth Workshop with Dre", "A small-group working session on positioning, pricing and finding your first ten clients. Bring your numbers.", 5, 18, 2, "Dre Whitfield", "u-dre", "Playr League Workshops studio", "Workshop", 16,
            ["business strategy", "sales", "marketing"], "clinic", "playr-academy", ["u-tariq", "u-marcus", "u-jonah", "u-yuki"], prep="Bring a laptop and one page describing your business."),
-        ev(3, "After Hours · Friday Social", "Live music, food trucks and easy conversation. Photographers and creators welcome.", 8, 21, 3, "Devon Clarke", "u-admin-me", "The New Arena · Lounge", "Social", 300,
+        ev(3, "After Hours · Friday Social", "Live music, food trucks and easy conversation. Photographers and creators welcome.", 8, 21, 3, "Fife Ashley-Dejo", "u-admin-me", "The New Arena · Lounge", "Social", 300,
            ["social", "photography", "music"], "show", "after-hours", pool[3:16], agenda=["Doors 20:30", "Welcome", "Live set", "Open floor"]),
-        ev(4, "Women's and non-binary networking brunch", "A relaxed, no-pressure brunch to meet other members, swap advice and build your circle. All career stages.", 6, 11, 2, "Maya Okonkwo", ME, "Leslieville · Brunch room", "Networking", 30,
+        ev(4, "Women's and non-binary networking brunch", "A relaxed, no-pressure brunch to meet other members, swap advice and build your circle. All career stages.", 6, 11, 2, "Fife Ashley-Dejo", ME, "Leslieville · Brunch room", "Networking", 30,
            ["networking", "mentorship", "leadership"], "social", "indoor-series", [ME, "u-isabela", "u-aaliyah", "u-amara", "u-yuki", "u-grace"], roles=("founder", "mentor")),
         ev(5, "Public speaking workshop", "Structure a talk, manage nerves and land your key message. Coach Sofia leads practice rounds with feedback.", 10, 18, 2, "Sofia Marchetti", "u-sofia", "Playr League Workshops studio", "Workshop", 24,
            ["public speaking", "leadership", "communication"], "clinic", "playr-academy", ["u-jasmine", "u-noor", "u-keisha"]),
@@ -369,7 +369,7 @@ def _events(name: Dict[str, str]) -> List[Dict[str, Any]]:
            ["wellness", "networking", "outdoors"], "outdoor", "outdoor-series", ["u-hannah", "u-elena", "u-lena"], prep="Comfortable shoes and a water bottle."),
         ev(9, "Community social and portrait night", "Free professional portraits, a photo wall and a slideshow of the season so far.", 18, 19, 3, "Aaliyah Grant", "u-aaliyah", "The New Arena · Lounge", "Social", 120,
            ["photography", "social", "content creation"], "social", "after-hours", pool[:10]),
-        ev(10, "Annual Community Summit", "Two days of keynotes, workshops and a member marketplace. Prizes for the best member pitches.", 30, 10, 8, "Devon Clarke", "u-admin-me", "The New Arena", "Summit", 240,
+        ev(10, "Annual Community Summit", "Two days of keynotes, workshops and a member marketplace. Prizes for the best member pitches.", 30, 10, 8, "Fife Ashley-Dejo", "u-admin-me", "The New Arena", "Summit", 240,
            ["summit", "networking", "keynotes"], "indoor", "indoor-series", pool[:8]),
         ev(14, "Career night: people who made the jump", "Five members share how they changed roles, started businesses or got promoted. Mentor speed-rounds after.", 16, 18, 3, "Hannah Li", "u-hannah", "The New Arena · Lounge", "Networking", 80,
            ["career coaching", "networking", "public speaking", "mentorship"], "social", "after-hours", pool[2:12], agenda=["Panel (45 min)", "Mentor speed-rounds", "Open networking"]),
@@ -377,7 +377,7 @@ def _events(name: Dict[str, str]) -> List[Dict[str, Any]]:
            ["business strategy", "legal advice", "accounting & bookkeeping", "sales"], "clinic", "playr-academy", ["u-marcus", "u-rafael", "u-seun"], virtual=True),
         ev(11, "Summit registration closes", "Last day to register for the Annual Community Summit.", 20, 23, 1, "The Playr League", "u-admin-me", "Online", "Deadline", None,
            ["summit", "registration"], "indoor", "indoor-series", [], virtual=True),
-        ev(12, "Community Mixer · August", "Last month's mixer. Photos and speaker notes are in the News tab.", -5, 19, 3, "Devon Clarke", "u-admin-me", "The New Arena · Main hall", "Networking", 80,
+        ev(12, "Community Mixer · August", "Last month's mixer. Photos and speaker notes are in the News tab.", -5, 19, 3, "Fife Ashley-Dejo", "u-admin-me", "The New Arena · Main hall", "Networking", 80,
            ["networking"], "indoor", "indoor-series", pool[:12] + [ME]),
         ev(13, "Members' welcome breakfast", "A relaxed breakfast for new members: meet the team, meet each other, ask anything.", -12, 9, 2, "Dre Whitfield", "u-dre", "Playr League Workshops studio", "Networking", 40,
            ["welcome", "networking"], "clinic", "playr-academy", pool[:10]),
@@ -453,9 +453,9 @@ def _announcements() -> List[Dict[str, Any]]:
         return {"id": f"ann-{i}", "title": title, "body": body, "source": "mailchimp", "priority": prio, "author": author, "published_at": iso(days), "cta_label": cta,
                 "cta_url": "#", "space_slug": space, "status": "approved", "image_url": poster("social") if i == 5 else None}
     return [
-        a(1, "Summit registration is open", "Two days of keynotes, workshops and a member marketplace. Early-bird tickets for members until the end of the month.", "high", "Devon Clarke", -1, "Register", "indoor-series"),
+        a(1, "Summit registration is open", "Two days of keynotes, workshops and a member marketplace. Early-bird tickets for members until the end of the month.", "high", "Fife Ashley-Dejo", -1, "Register", "indoor-series"),
         a(2, "We're at The New Arena", "Signature Events now run in the main hall with better sound, seating and a dedicated networking lounge.", "normal", "The Playr League", -3, "See the venue", "indoor-series"),
-        a(3, "After Hours tickets are live", "Friday's social includes live music, food vendors and a photo wall. Members get first access.", "high", "Devon Clarke", -2, "Reserve tickets", "after-hours"),
+        a(3, "After Hours tickets are live", "Friday's social includes live music, food vendors and a photo wall. Members get first access.", "high", "Fife Ashley-Dejo", -2, "Reserve tickets", "after-hours"),
         a(4, "Workshop leaders wanted", "Have a skill to share? Lead a workshop and get featured in the member directory. Next planning call is in two weeks.", "normal", "Playr League Workshops", -6, "Sign up", "playr-academy"),
         a(5, "Portrait night: help wanted", "Free member portraits at the social night. Photographers, message Aaliyah if you want to help.", "normal", "Aaliyah Grant", -4, "Join the crew", "after-hours"),
     ]
@@ -536,14 +536,14 @@ async def seed_playr(db, force: bool = False) -> bool:
         "title": "Can I lead a workshop next quarter?", "description": "I'd like to run a session on recovery and desk posture. Who decides and what's the process?",
         "category": "scheduling", "category_label": "Scheduling", "urgency": "normal", "deadline": day(10), "status": "in_progress", "assignee_id": "u-admin-me",
         "tags": [], "helpers": [], "last_response": "Dre will review proposals after the next planning call. I'll send the details.",
-        "timeline": [{"status": "submitted", "at": iso(-4), "by": me["name"]}, {"status": "assigned", "at": iso(-3), "by": "Devon Clarke"},
-                     {"status": "in_progress", "at": iso(-1), "by": "Devon Clarke", "note": "Dre will review proposals after the next planning call. I'll send the details."}],
+        "timeline": [{"status": "submitted", "at": iso(-4), "by": me["name"]}, {"status": "assigned", "at": iso(-3), "by": "Fife Ashley-Dejo"},
+                     {"status": "in_progress", "at": iso(-1), "by": "Fife Ashley-Dejo", "note": "Dre will review proposals after the next planning call. I'll send the details."}],
         "created_at": iso(-4), "updated_at": iso(-1), "resolved_at": None})
     from routes.portal import REQUEST_KINDS
 
     def req(i, uid, kind, title, reason, due, status="not_started", **kw):
         d = {"id": f"rq-{i}", "user_id": uid, "kind": kind, "title": title, "reason": reason, "due_date": due, "status": status, "created_by": "u-admin-me",
-             "created_by_name": "Devon Clarke", "created_at": iso(-6), "updated_at": iso(-6), "external_url": None, "webhook_token": None,
+             "created_by_name": "Fife Ashley-Dejo", "created_at": iso(-6), "updated_at": iso(-6), "external_url": None, "webhook_token": None,
              "fields": REQUEST_KINDS[kind]["fields"]}
         d.update(kw)
         return d

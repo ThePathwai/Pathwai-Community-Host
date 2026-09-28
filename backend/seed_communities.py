@@ -107,7 +107,7 @@ def _hub_cover(slug: str) -> str:
 GRACE_ME = "u-founder-me"
 GRACE_ADMIN = "u-g-admin"
 GRACE_M: List[Dict[str, Any]] = [
-    A(id="u-founder-me", name="Maya Okonkwo", age=27, prof="Physiotherapist", emp="Bayview Health Clinic", hood="Leslieville",
+    A(id="u-founder-me", name="Fife Ashley-Dejo", age=27, prof="Physiotherapist", emp="Bayview Health Clinic", hood="Leslieville",
       art=A(skin="d", hair="puffs", hair_color="black", bg=0, smile=True), tag="Welcome team", since=2024,
       skills=["Childcare", "Cooking for a crowd", "Welcoming newcomers", "First aid"], interests=["Trail running", "Choir", "Film photography", "Meal prep"],
       goals=["Help start a Saturday family stretch class", "Get to know more neighbours", "Join the Community Meal rota"], needs=["Rides on winter Sundays", "A running buddy", "Small group to join"],
@@ -119,7 +119,7 @@ GRACE_M: List[Dict[str, Any]] = [
       goals=["Grow our Connect Groups network", "Train ten new Connect Group leaders"], needs=["More volunteers for the Community Meal", "A second person on AV"],
       bio="Campus Pastor at C3 Toronto's Downtown location, alongside his wife Angela. Preaches most Sundays and leads our Pastoral Care team. My door is open, so grab me after any gathering for a coffee.",
       role="admin", mtype="partner", open_to=["Coffee and conversation", "Home visits"], login="pastor@c3.example", flag="admin", site="https://c3toronto.com/locations/downtown"),
-    A(id="u-admin-me", name="Devon Clarke", age=34, prof="Community Lead", emp="Dovercourt Park Community Hub", hood="Dovercourt Park",
+    A(id="u-admin-me", name="Fife Ashley-Dejo", age=34, prof="Community Lead", emp="Dovercourt Park Community Hub", hood="Dovercourt Park",
       art=A(skin="d", hair="short", hair_color="black", bg=2, beard=True, smile=True), tag="Volunteer coordinator", since=2022,
       skills=["Event organising", "Volunteer coordination", "Photography", "Fundraising"], interests=["Coffee", "Live music", "Basketball"],
       goals=["Fill every slot on our volunteer Teams", "Run a neighbourhood clean-up"], needs=["Extra hands on set-up day", "A projector for the hall"],
@@ -275,7 +275,7 @@ TN_APPLICANTS = [
 # --------------------------------------------------------------------------------------------- members: CLUB PTO
 PTO_ADMIN = "u-p-admin"
 PTO_M: List[Dict[str, Any]] = [
-    A(id="u-founder-me", name="Maya Okonkwo", age=27, prof="Physiotherapist", emp="Bayview Health Clinic", hood="Leslieville",
+    A(id="u-founder-me", name="Fife Ashley-Dejo", age=27, prof="Physiotherapist", emp="Bayview Health Clinic", hood="Leslieville",
       art=A(skin="d", hair="puffs", hair_color="black", bg=0, smile=True), tag="Ladder league", since=2024,
       skills=["Doubles strategy", "Match warm-ups", "Injury prevention tips"], interests=["Running", "Tennis (former)", "Brunch after matches"],
       goals=["Move up to Ladder Division B", "Play in the fall mixed doubles tournament"], needs=["A consistent Tuesday partner", "Help with backhand volleys"],
