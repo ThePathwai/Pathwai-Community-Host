@@ -27,7 +27,12 @@ function CommunityCard({ c, onEnter, onApply, onView }) {
         <h3 className="text-xl font-bold leading-tight" style={{ fontFamily: `"${c.brand?.heading_font}", serif` }}>{c.name}</h3>
         <p className="mt-1 text-sm" style={{ color: col.muted }}>{c.tagline}</p>
         <p className="mt-3 line-clamp-3 text-sm" style={{ color: col.text, opacity: 0.85 }}>{c.about}</p>
-        <p className="mt-3 text-xs" style={{ color: col.muted }}>{c.members} members · {c.upcoming_events} upcoming events</p>
+        <p className="mt-3 text-xs" style={{ color: col.muted }}>{c.members} members · {c.upcoming_events} upcoming events{c.country ? ` · ${c.country}` : ""}</p>
+        {c.interest_tags?.length > 0 && (
+          <div className="mt-2 flex flex-wrap gap-1.5">{c.interest_tags.map((t) => (
+            <span key={t} className="px-2 py-0.5 text-[10px] font-medium" style={{ background: col.background, color: col.muted, borderRadius: btn, border: `1px solid ${col.border}` }}>{t}</span>
+          ))}</div>
+        )}
         <div className="mt-auto pt-5">
           {st === "approved" ? (
             <div className="flex items-center justify-between gap-3">
@@ -106,7 +111,12 @@ function CommunityDetailModal({ c, onClose, onEnter, onApply }) {
           </div>
           <p className="mt-1 text-sm" style={{ color: col.muted }}>{c.tagline}</p>
           <p className="mt-4 whitespace-pre-wrap text-sm leading-relaxed" style={{ color: col.text, opacity: 0.85 }}>{c.about || "No description yet."}</p>
-          <p className="mt-4 text-xs" style={{ color: col.muted }}>{c.members} members · {c.upcoming_events} upcoming events</p>
+          <p className="mt-4 text-xs" style={{ color: col.muted }}>{c.members} members · {c.upcoming_events} upcoming events{c.country ? ` · ${c.country}` : ""}</p>
+          {c.interest_tags?.length > 0 && (
+            <div className="mt-2 flex flex-wrap gap-1.5">{c.interest_tags.map((t) => (
+              <span key={t} className="px-2 py-0.5 text-[10px] font-medium" style={{ background: col.background, color: col.muted, borderRadius: btn, border: `1px solid ${col.border}` }}>{t}</span>
+            ))}</div>
+          )}
           <div className="mt-6">
             {st === "approved" ? (
               <div className="flex items-center justify-between gap-3">
@@ -178,6 +188,8 @@ export default function Hub() {
   const [pPhoto, setPPhoto] = useState("");
   const [pBusy, setPBusy] = useState(false);
   const [viewing, setViewing] = useState(null); // community whose detail view is open
+  const [country, setCountry] = useState("all"); // "Discover communities" filters — client-side, over the already-loaded list
+  const [interest, setInterest] = useState("all");
 
   const load = useCallback(() => api.get("/hub/communities").then((r) => setItems(r.data.communities)).catch((e) => toast.error(errMsg(e))), []);
   useEffect(() => { showHubTheme(); }, [showHubTheme]);
@@ -202,6 +214,14 @@ export default function Hub() {
 
   const mine = (items || []).filter((c) => ["approved", "pending"].includes(c.my.status));
   const discover = (items || []).filter((c) => !["approved", "pending"].includes(c.my.status));
+  // At a handful of communities these filters are unnecessary; at hundreds they're how someone
+  // actually finds theirs, so they're built in from the start. Countries/interests are derived from
+  // whatever's on screen rather than a separate call — Discover communities already loads every
+  // community's summary in one shot.
+  const countries = Array.from(new Set(discover.map((c) => c.country).filter(Boolean))).sort();
+  const interestTags = Array.from(new Set(discover.flatMap((c) => c.interest_tags || []))).sort();
+  const filteredDiscover = discover.filter((c) => (country === "all" || c.country === country) && (interest === "all" || (c.interest_tags || []).includes(interest)));
+  const filtersActive = country !== "all" || interest !== "all";
   const doEnter = async (c) => { try { await enter(c.slug); nav("/", { replace: true }); } catch (e) { toast.error(errMsg(e)); } };
   const submit = async () => {
     setBusy(true);
@@ -252,10 +272,27 @@ export default function Hub() {
 
           {discover.length > 0 && (
             <>
-              <h2 className="mt-14 text-xl font-bold sm:text-2xl">Discover communities</h2>
-              <p className="mt-1 text-sm text-muted">Every community reviews requests to join. You'll get a notification when you're in.</p>
-              <div className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-3 md:hidden">{discover.map((c) => <CommunityTile key={c.slug} c={c} onView={setViewing} />)}</div>
-              <div className="mt-6 hidden gap-5 md:grid md:grid-cols-2 lg:grid-cols-3">{discover.map((c) => <CommunityCard key={c.slug} c={c} onApply={(x) => { setApply(x); setF({ title: account.title || "", message: "", answers: {} }); }} onView={setViewing} />)}</div>
+              <div className="mt-14 flex flex-wrap items-end justify-between gap-3">
+                <div>
+                  <h2 className="text-xl font-bold sm:text-2xl">Discover communities</h2>
+                  <p className="mt-1 text-sm text-muted">{discover.length} communities on Pathwai. Every community reviews requests to join — you'll get a notification when you're in.</p>
+                </div>
+              </div>
+              <div className="mt-4 grid gap-3 sm:grid-cols-[1fr_1fr_auto] sm:items-center">
+                <Select data-testid="discover-country-filter" value={country} onChange={(e) => setCountry(e.target.value)}
+                  options={[{ value: "all", label: "All countries" }, ...countries.map((c) => ({ value: c, label: c }))]} />
+                <Select data-testid="discover-interest-filter" value={interest} onChange={(e) => setInterest(e.target.value)}
+                  options={[{ value: "all", label: "All interests" }, ...interestTags.map((t) => ({ value: t, label: t }))]} />
+                {filtersActive && <button className="justify-self-start text-xs text-muted underline sm:justify-self-auto" onClick={() => { setCountry("all"); setInterest("all"); }}>Clear filters</button>}
+              </div>
+              {filteredDiscover.length === 0 ? (
+                <p className="mt-8 rounded-xl border border-dashed border-line p-8 text-center text-sm text-muted">No communities match those filters.</p>
+              ) : (
+                <>
+                  <div className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-3 md:hidden">{filteredDiscover.map((c) => <CommunityTile key={c.slug} c={c} onView={setViewing} />)}</div>
+                  <div className="mt-6 hidden gap-5 md:grid md:grid-cols-2 lg:grid-cols-3">{filteredDiscover.map((c) => <CommunityCard key={c.slug} c={c} onApply={(x) => { setApply(x); setF({ title: account.title || "", message: "", answers: {} }); }} onView={setViewing} />)}</div>
+                </>
+              )}
             </>)}
         </>)}
 

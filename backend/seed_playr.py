@@ -591,6 +591,8 @@ async def seed_playr(db, force: bool = False) -> bool:
     cfg["hub_cover"] = poster("show", "#FF2E44")
     cfg["community_kind"] = "Wellness & events"
     cfg["about"] = "A health and wellness brand that hosts networking nights, workshops and socials, and connects members who can help each other."
+    cfg["country"] = "Canada"
+    cfg["interest_tags"] = ["Wellness", "Sports"]
     cfg["page_text"] = {
         "members_title": "Meet the members", "members_subtitle": "Everyone in the community: their work, skills, goals and what they need help with.",
         "events_title": "Events", "events_subtitle": "Networking, workshops and wellness sessions you can join.",

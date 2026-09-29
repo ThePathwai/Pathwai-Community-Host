@@ -125,6 +125,7 @@ async def _summary(slug: str) -> Dict[str, Any]:
         "slug": slug, "name": cfg.get("community_name") or slug, "tagline": cfg.get("tagline"), "kind": cfg.get("community_kind") or "Community",
         "about": cfg.get("about") or cfg.get("tagline"), "cover": cfg.get("hub_cover"), "apply_questions": cfg.get("apply_questions") or [],
         "require_approval": cfg.get("require_approval", True),
+        "country": cfg.get("country") or "", "interest_tags": cfg.get("interest_tags") or [],
         "brand": {"colors": brand.get("colors"), "mode": brand.get("mode"), "font": brand.get("font"), "heading_font": brand.get("heading_font"),
                   "radius": brand.get("radius"), "button_shape": brand.get("button_shape"), "logo_url": brand.get("logo_url")},
         "members": await d.users.count_documents({"hidden_from_directory": {"$ne": True}, "membership_status": {"$ne": "rejected"}}),

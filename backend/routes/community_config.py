@@ -29,6 +29,9 @@ DEFAULT_CONFIG: Dict[str, Any] = {
     "community_name": "The Playr League",
     "require_approval": True,
     "community_kind": "Wellness & events community", "about": "Networking, workshops and wellness events for professionals across the GTA.", "hub_cover": None, "apply_questions": [],
+    # Shown on the hub's "Discover communities" browse/filter UI (see routes/hub.py:_summary) — not
+    # shown inside the community itself. Free text so any admin can set it; both default to unset.
+    "country": "", "interest_tags": [],
     "tagline": "Play. Connect. Grow. A health and wellness community that brings people together at events.",
     "community_type": "sports",
     "theme": {"preset": "playr", "accent": "#F00F21"},

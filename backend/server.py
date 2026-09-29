@@ -82,6 +82,7 @@ load_dotenv(ROOT_DIR / '.env')
 # can import them without a circular dependency on server.py.
 from database import client, db, strip_id, COMMUNITY_SLUGS, dbfor, hub_db, register_community_slug, set_community  # noqa: E402
 from directory import ensure_directory_indexes, find_all_for_email  # noqa: E402
+from seed_empty_communities import ensure_empty_demo_communities  # noqa: E402
 from routes.hub import router as hub_router, records_for, set_community_cookie  # noqa: E402
 
 app = FastAPI(title="Pathwai API")
@@ -192,6 +193,7 @@ async def on_startup():
         if doc.get("slug"):
             register_community_slug(doc["slug"])
     await ensure_seeded()
+    await ensure_empty_demo_communities()
     await ensure_indexes(db)
     await ensure_org_indexes(db)
     await ensure_mentor_indexes(db)
