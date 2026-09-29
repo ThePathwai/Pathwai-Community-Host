@@ -18,6 +18,7 @@ from pydantic import BaseModel, EmailStr, Field
 
 from auth import create_access_token, create_refresh_token, decode_token, hash_password, verify_password
 from database import COMMUNITY_SLUGS, current_community, db, dbfor, hub_db, register_community_slug, set_community, _current
+from directory import find_all_for_email, find_by_id, record_membership
 from .community_config import DEFAULT_CONFIG, THEME_PRESETS
 
 router = APIRouter(tags=["hub"])
@@ -75,11 +76,7 @@ def in_community(slug: str):
 async def records_for(email: str):
     """The platform account (if any) plus this person's profile in every community, matched on email."""
     hub = await hub_db().accounts.find_one({"email": email})
-    recs = []
-    for slug in COMMUNITY_SLUGS:
-        d = await dbfor(slug).users.find_one({"email": email})
-        if d:
-            recs.append((slug, d))
+    recs = await find_all_for_email(email)
     return hub, recs
 
 
@@ -105,10 +102,10 @@ async def account_from_request(request: Request) -> Optional[dict]:
     acc = await hub_db().accounts.find_one({"id": uid}, {"_id": 0, "password_hash": 0})
     if acc:
         return acc
-    for slug in COMMUNITY_SLUGS:
-        d = await dbfor(slug).users.find_one({"id": uid}, {"_id": 0, "password_hash": 0})
-        if d:
-            return {"id": d["id"], "name": d.get("name"), "email": d.get("email"), "avatar_url": d.get("avatar_url"), "title": d.get("title")}
+    hit = await find_by_id(uid)
+    if hit:
+        _, d = hit
+        return {"id": d["id"], "name": d.get("name"), "email": d.get("email"), "avatar_url": d.get("avatar_url"), "title": d.get("title")}
     return None
 
 
@@ -267,6 +264,7 @@ async def create_community(body: CreateCommunityIn, response: Response, acc: dic
         "needs_seeking": [], "custom_fields": {}, "contact": contact, "contact_visibility": "members",
         "hidden_from_directory": False, "signup_source": "hub_create", "created_at": now, "updated_at": now, "membership_status": "approved",
     })
+    await record_membership(slug, acc["email"], acc["id"])
 
     register_community_slug(slug)
     await hub_db().communities.insert_one({"slug": slug, "name": name, "category": body.category, "owner_id": acc["id"], "created_at": now})
@@ -338,6 +336,7 @@ async def hub_apply(slug: str, body: ApplyIn, acc: dict = Depends(require_accoun
         "membership_status": "pending" if needs else "approved",
     }
     await d.users.insert_one(doc)
+    await record_membership(slug, acc["email"], acc["id"])
     if needs:
         async for a in d.users.find({"role": "admin"}):
             await d.notifications.insert_one({"id": str(uuid.uuid4()), "user_id": a["id"], "kind": "membership_request", "title": "New membership request",
@@ -362,11 +361,9 @@ async def hub_enter(body: EnterIn, response: Response, acc: dict = Depends(requi
         else:
             src = await hub_db().accounts.find_one({"id": acc["id"]}) or {}
             if not src.get("password_hash"):
-                for sl in COMMUNITY_SLUGS:
-                    o = await dbfor(sl).users.find_one({"email": acc["email"]})
-                    if o:
-                        src = o
-                        break
+                for sl, o in await find_all_for_email(acc["email"]):
+                    src = o
+                    break
             await d.users.insert_one({
                 "id": acc["id"], "name": acc["name"], "email": acc["email"], "password_hash": src.get("password_hash"), "role": "admin", "member_type": "founder",
                 "tagline": "Pathwai platform admin", "bio": "", "title": "Platform admin", "company": "Pathwai", "location": "", "avatar_url": acc.get("avatar_url") or "",
@@ -374,6 +371,7 @@ async def hub_enter(body: EnterIn, response: Response, acc: dict = Depends(requi
                 "interests_hobbies": [], "goals": [], "support_needs": [], "needs_seeking": [], "custom_fields": {}, "contact": {"email": acc["email"]},
                 "contact_visibility": "members", "hidden_from_directory": True, "platform_admin": True, "signup_source": "platform",
                 "created_at": now, "updated_at": now, "membership_status": "approved"})
+            await record_membership(body.slug, acc["email"], acc["id"])
         set_community_cookie(response, body.slug)
         return {"ok": True, "slug": body.slug}
     if not u or (u.get("membership_status") or "approved") != "approved":

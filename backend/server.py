@@ -81,6 +81,7 @@ load_dotenv(ROOT_DIR / '.env')
 # Shared Mongo client + strip_id helper live in database.py so route modules
 # can import them without a circular dependency on server.py.
 from database import client, db, strip_id, COMMUNITY_SLUGS, dbfor, hub_db, register_community_slug, set_community  # noqa: E402
+from directory import ensure_directory_indexes, find_all_for_email  # noqa: E402
 from routes.hub import router as hub_router, records_for, set_community_cookie  # noqa: E402
 
 app = FastAPI(title="Pathwai API")
@@ -195,6 +196,7 @@ async def on_startup():
     await ensure_org_indexes(db)
     await ensure_mentor_indexes(db)
     await ensure_membership_indexes(db)
+    await ensure_directory_indexes()
     await seed_demo_credentials(db)
     if use_playr():
         await _playr_startup_tail()
@@ -727,13 +729,10 @@ async def auth_reset_password(body: ResetPasswordRequest, request: Request):
         await hub_db().accounts.update_one({"id": hub["id"]}, {"$set": {"password_hash": new_hash}})
         updated_any = True
     updated_id = hub["id"] if hub else None
-    for slug in COMMUNITY_SLUGS:
-        d = dbfor(slug)
-        rec = await d.users.find_one({"email": email})
-        if rec:
-            await d.users.update_one({"id": rec["id"]}, {"$set": {"password_hash": new_hash}})
-            updated_any = True
-            updated_id = updated_id or rec["id"]
+    for slug, rec in await find_all_for_email(email):
+        await dbfor(slug).users.update_one({"id": rec["id"]}, {"$set": {"password_hash": new_hash}})
+        updated_any = True
+        updated_id = updated_id or rec["id"]
     if not updated_any:
         raise HTTPException(status_code=400, detail="This reset link is invalid or has expired. Request a new one.")
     await write_audit(updated_id, "auth.password_reset", "user", email, request=request)
