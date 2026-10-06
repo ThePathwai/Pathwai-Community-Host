@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { api, errMsg } from "../lib/api";
 import { useAuth } from "../lib/auth";
-import { Button, Card, Field, Input, Spinner, TagInput } from "../components/ui";
+import { Button, Card, Field, Input, Spinner, TagInput, TermsConsent } from "../components/ui";
 
 function AdaptiveField({ f, value, onChange }) {
   // NOTE: no native `required` attribute — the server validates and its message is shown in the error card.
@@ -22,12 +22,15 @@ export default function JoinCommunity() {
   const [f, setF] = useState({ name: "", email: "", password: "" });
   const [fields, setFields] = useState({});
   const [busy, setBusy] = useState(false);
+  const [agreed, setAgreed] = useState(false);
   useEffect(() => { api.get(`/invites/${code}`).then((r) => { setInv(r.data); if (r.data.email) setF((x) => ({ ...x, email: r.data.email })); }).catch((e) => setErr(errMsg(e))); }, [code]);
   if (!inv && !err) return <Spinner />;
   if (!inv) return <div className="mx-auto max-w-md px-4 py-24 text-center"><h1 className="text-2xl font-semibold sm:text-3xl">Invite unavailable</h1><p className="mt-2 text-muted" data-testid="join-error-msg">{err}</p></div>;
   const submit = async (e) => {
-    e.preventDefault(); setBusy(true); setErr("");
-    try { await api.post(`/invites/${code}/accept`, { ...f, fields }); await refresh(); nav("/", { replace: true }); } catch (ex) { setErr(errMsg(ex)); } finally { setBusy(false); }
+    e.preventDefault(); setErr("");
+    if (!agreed) return setErr("Please agree to the Terms of Service and Privacy Policy to join.");
+    setBusy(true);
+    try { await api.post(`/invites/${code}/accept`, { ...f, fields, accepted_terms: true }); await refresh(); nav("/", { replace: true }); } catch (ex) { setErr(errMsg(ex)); } finally { setBusy(false); }
   };
   return (
     <div className="mx-auto flex min-h-screen max-w-md flex-col justify-center px-4">
@@ -38,6 +41,7 @@ export default function JoinCommunity() {
         <Field label="Email"><Input type="email" value={f.email} onChange={(e) => setF({ ...f, email: e.target.value })} data-testid="join-email" /></Field>
         <Field label="Password" hint="10+ characters"><Input type="password" value={f.password} onChange={(e) => setF({ ...f, password: e.target.value })} data-testid="join-password" /></Field>
         {inv.signup_fields.map((sf) => <AdaptiveField key={sf.key} f={sf} value={fields[sf.key]} onChange={(v) => setFields({ ...fields, [sf.key]: v })} />)}
+        <TermsConsent checked={agreed} onChange={setAgreed} testId="join-accept-terms" />
         {err && <p className="rounded-xl bg-red-500/10 p-3 text-sm text-red-400" data-testid="join-error-msg">{err}</p>}
         <Button type="submit" loading={busy} className="w-full" data-testid="join-submit">Join</Button>
       </form></Card>

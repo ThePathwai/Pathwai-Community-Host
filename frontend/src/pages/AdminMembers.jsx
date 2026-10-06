@@ -8,14 +8,12 @@ const FILTERS = [["pending", "Pending"], ["approved", "Approved"], ["rejected", 
 export default function MembershipRequests({ onChanged }) {
   const [status, setStatus] = useState("pending");
   const [d, setD] = useState(null);
-  const [cfg, setCfg] = useState(null);
   const [declining, setDeclining] = useState(null);
   const [note, setNote] = useState("");
   const [busy, setBusy] = useState(null);
   const [previewing, setPreviewing] = useState(null); // the request whose full profile is open in the preview modal
   const load = useCallback(() => api.get("/admin/membership-requests", { params: { status } }).then((r) => setD(r.data)).catch((e) => toast.error(errMsg(e))), [status]);
   useEffect(() => { load(); }, [load]);
-  useEffect(() => { api.get("/community/config").then((r) => setCfg(r.data)); }, []);
 
   const decide = async (id, decision) => {
     setBusy(id);
@@ -25,15 +23,14 @@ export default function MembershipRequests({ onChanged }) {
       setDeclining(null); setNote(""); await load(); onChanged?.();
     } catch (e) { toast.error(errMsg(e)); } finally { setBusy(null); }
   };
-  const toggle = async (v) => { try { const { data } = await api.patch("/community/config", { require_approval: v }); setCfg(data); toast.success(v ? "New members now need approval" : "New members join automatically"); } catch (e) { toast.error(errMsg(e)); } };
 
   return (
     <div className="space-y-5" data-testid="membership-requests">
+      {/* Approval is mandatory platform-wide (every community, every join path) -- there's no
+          per-community toggle to turn it off, so this is a statement, not a control. */}
       <Card className="flex flex-wrap items-center justify-between gap-4">
-        <div><p className="font-medium">Approve new members</p><p className="text-sm text-muted">When on, people who sign up wait for your approval before they can sign in or appear in the directory.</p></div>
-        {cfg && <button role="switch" aria-checked={cfg.require_approval !== false} onClick={() => toggle(cfg.require_approval === false)} data-testid="require-approval"
-          className="relative h-7 w-12 shrink-0 rounded-full transition" style={{ background: cfg.require_approval !== false ? "var(--accent)" : "rgb(var(--c-ink) / 0.2)" }}>
-          <span className="absolute top-0.5 h-6 w-6 rounded-full bg-white shadow transition-all" style={{ left: cfg.require_approval !== false ? "1.35rem" : "0.15rem" }} /></button>}
+        <div><p className="font-medium">Approve new members</p><p className="text-sm text-muted">Everyone who signs up or requests to join waits for your approval before they can sign in or appear in the directory.</p></div>
+        <Chip>Always on</Chip>
       </Card>
 
       <div className="inline-flex rounded-full bg-ink/5 p-1">

@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import { api, errMsg } from "../lib/api";
-import { cx } from "./ui";
+import { Button, TermsConsent, cx } from "./ui";
 
 // Real Google/Apple SDKs live on hosts the bundled preview's sandbox can't load, so the preview
 // always uses the simulated click-through below; a real deployment (REACT_APP_PREVIEW unset)
@@ -38,20 +38,31 @@ const AppleMark = ({ className }) => (
   </svg>
 );
 
-export default function SocialAuthButtons({ onSignedIn, disabled }) {
+export default function SocialAuthButtons({ onSignedIn, disabled, joinSlug, acceptedTerms = false }) {
   const [providers, setProviders] = useState({ google: { configured: false }, apple: { configured: false } });
   const [busy, setBusy] = useState("");
   const googleBoxRef = useRef(null);
   const googleRendered = useRef(false);
+  // A first-ever social sign-in creates an account, which needs the Terms/Privacy agreement. If the
+  // parent form already has it ticked we send it along; otherwise the server answers 428 and we ask
+  // right here, then retry the very same sign-in.
+  const [consent, setConsent] = useState(null); // { provider, credential, name } waiting for the tick
+  const [consentTick, setConsentTick] = useState(false);
+  const acceptedRef = useRef(acceptedTerms);
+  acceptedRef.current = acceptedTerms;
 
   useEffect(() => { api.get("/auth/oauth/providers").then((r) => setProviders(r.data)).catch(() => {}); }, []);
 
-  const finish = async (provider, credential, name) => {
+  const finish = async (provider, credential, name, accepted) => {
     setBusy(provider);
     try {
-      const { data } = await api.post(`/auth/oauth/${provider}`, { credential, name });
+      // Carries a share-link's "I'm here to join X" context through social sign-in the same way
+      // the email form attaches it -- see Signup.jsx/Login.jsx's joinSlug.
+      const { data } = await api.post(`/auth/oauth/${provider}`, { credential, name, join_slug: joinSlug || undefined, accepted_terms: (accepted ?? acceptedRef.current) || undefined });
+      setConsent(null);
       onSignedIn(data);
     } catch (ex) {
+      if (ex?.response?.status === 428) { setConsent({ provider, credential, name }); setConsentTick(false); return; }
       toast.error(errMsg(ex, `Couldn't sign you in with ${provider === "google" ? "Google" : "Apple"}.`));
     } finally {
       setBusy("");
@@ -113,6 +124,17 @@ export default function SocialAuthButtons({ onSignedIn, disabled }) {
         className={cx("flex w-full items-center justify-center gap-2.5 rounded-xl border border-line bg-ink py-2.5 text-sm font-medium text-paper transition hover:opacity-90", (disabled || busy === "apple") && "cursor-not-allowed opacity-60")}>
         <AppleMark /> Continue with iCloud
       </button>
+      {consent && (
+        <div className="space-y-3 rounded-xl border border-line bg-ink/5 p-3.5" data-testid="oauth-consent">
+          <p className="text-sm font-medium">One more step</p>
+          <p className="text-xs text-muted">This is your first time here, so we'll create your Pathwai account with your {consent.provider === "google" ? "Google" : "Apple"} details once you agree.</p>
+          <TermsConsent checked={consentTick} onChange={setConsentTick} testId="oauth-accept-terms" />
+          <div className="flex gap-2">
+            <Button className="flex-1" disabled={!consentTick || !!busy} loading={!!busy} onClick={() => finish(consent.provider, consent.credential, consent.name, true)} data-testid="oauth-consent-continue">Agree and continue</Button>
+            <Button variant="ghost" onClick={() => setConsent(null)} data-testid="oauth-consent-cancel">Cancel</Button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

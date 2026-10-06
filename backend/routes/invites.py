@@ -6,14 +6,13 @@ from typing import Any, Dict, Optional
 from fastapi import APIRouter, Depends, HTTPException, Request, Response
 from pydantic import BaseModel, EmailStr
 
-from auth import create_access_token, create_refresh_token, hash_password, require_role, ACCESS_MIN, REFRESH_DAYS
+from auth import create_access_token, create_refresh_token, hash_password, require_role, set_auth_cookies
 from database import db
-from ._common import audit, clean, now_iso
+from directory import reindex_email
+from ._common import TERMS_REQUIRED_MSG, audit, clean, now_iso, terms_stamp
 from .community_config import get_config
 
 router = APIRouter(tags=["invites"])
-COOKIE_SECURE = os.environ.get("COOKIE_SECURE", "true").lower() == "true"
-COOKIE_SAMESITE = os.environ.get("COOKIE_SAMESITE", "lax").lower()
 
 
 class InviteIn(BaseModel):
@@ -27,6 +26,7 @@ class AcceptIn(BaseModel):
     email: EmailStr
     password: str
     fields: Dict[str, Any] = {}
+    accepted_terms: bool = False
 
 
 @router.post("/invites", status_code=201)
@@ -44,8 +44,9 @@ async def list_invites(_: dict = Depends(require_role("admin"))):
 
 
 @router.delete("/invites/{code}")
-async def revoke(code: str, _: dict = Depends(require_role("admin"))):
+async def revoke(code: str, me: dict = Depends(require_role("admin"))):
     await db.invites.update_one({"code": code}, {"$set": {"status": "revoked"}})
+    await audit(me["id"], "invite.revoked", "invite", code)
     return {"ok": True}
 
 
@@ -68,6 +69,8 @@ async def accept(code: str, body: AcceptIn, response: Response):
     missing = [f["label"] for f in cfg["signup_fields"] if f.get("required") and not body.fields.get(f["key"])]
     if missing:
         raise HTTPException(status_code=400, detail=f"Missing required field(s): {', '.join(missing)}")
+    if not body.accepted_terms:
+        raise HTTPException(status_code=422, detail=TERMS_REQUIRED_MSG)
     if len(body.password) < 10:
         raise HTTPException(status_code=400, detail="Password must be at least 10 characters")
     email = body.email.strip().lower()
@@ -76,7 +79,7 @@ async def accept(code: str, body: AcceptIn, response: Response):
     uid = str(uuid.uuid4())
     doc = {"id": uid, "name": body.name.strip(), "email": email, "password_hash": hash_password(body.password),
            "role": inv.get("role") or "member", "signup_source": "invite", "hidden_from_directory": False,
-           "created_at": now_iso(), "updated_at": now_iso(), "custom_fields": {}}
+           "created_at": now_iso(), "updated_at": now_iso(), "custom_fields": {}, **terms_stamp()}
     for k, v in body.fields.items():
         if k in ("title", "company", "location", "bio"):
             doc[k] = v
@@ -85,9 +88,9 @@ async def accept(code: str, body: AcceptIn, response: Response):
         else:
             doc["custom_fields"][k] = v
     await db.users.insert_one(dict(doc))
+    await reindex_email(email)
     await db.invites.update_one({"code": code}, {"$set": {"status": "accepted", "accepted_by": uid, "accepted_at": now_iso()}})
     access, refresh = create_access_token(uid, doc["role"]), create_refresh_token(uid)
-    response.set_cookie("access_token", access, httponly=True, secure=COOKIE_SECURE, samesite=COOKIE_SAMESITE, max_age=ACCESS_MIN * 60, path="/")
-    response.set_cookie("refresh_token", refresh, httponly=True, secure=COOKIE_SECURE, samesite=COOKIE_SAMESITE, max_age=REFRESH_DAYS * 86400, path="/")
+    set_auth_cookies(response, access, refresh)
     doc.pop("password_hash")
     return {"ok": True, "user": doc}

@@ -46,6 +46,7 @@ async def list_events(
     source: Optional[str] = None,
     category: Optional[str] = None,
     q: Optional[str] = None,
+    saved: Optional[bool] = None,
 ):
     query = approved_q()
     if upcoming is True:
@@ -62,6 +63,8 @@ async def list_events(
         rx = {"$regex": q, "$options": "i"}
         query["$or"] = [{"title": rx}, {"description": rx}, {"host": rx}, {"tags": rx}]
     me = await get_current_user_optional(request)
+    if saved and me:
+        query["saved_by"] = me["id"]
     out = []
     async for e in db.events.find(query).sort("starts_at", 1):
         e = clean(e)
@@ -78,6 +81,8 @@ async def list_events(
         e["attendee_count"] = len(e.get("attendee_ids") or [])
         e["is_attending"] = bool(me and me["id"] in (e.get("attendee_ids") or []))
         e["is_past"] = (e.get("starts_at") or "") < _now()
+        e["is_saved"] = bool(me and me["id"] in (e.get("saved_by") or []))
+        e["save_count"] = len(e.get("saved_by") or [])
         out.append(e)
     return out
 
@@ -134,9 +139,12 @@ class FeedbackIn(BaseModel):
 
 @router.post("/events", status_code=201)
 async def create_event(body: EventIn, me: dict = Depends(get_current_user)):
-    """Admins publish immediately; members' suggestions wait for approval."""
-    is_admin = me.get("role") == "admin"
-    tiers = _norm_tiers(body.ticket_tiers) if is_admin else []
+    """Admin-only: members no longer suggest events for review (see Events.jsx/EventDetail.jsx --
+    the "Suggest an event" entry point was removed for members, and this enforces that server-side
+    too, not just in the UI)."""
+    if me.get("role") != "admin":
+        raise HTTPException(status_code=403, detail="Only admins can add events")
+    tiers = _norm_tiers(body.ticket_tiers)
     payload = body.model_dump()
     payload["ticket_tiers"] = tiers
     if tiers:
@@ -144,11 +152,10 @@ async def create_event(body: EventIn, me: dict = Depends(get_current_user)):
         caps = [t["capacity"] for t in tiers]
         payload["price_cents"] = min(prices) if prices else None
         payload["capacity"] = None if any(c is None for c in caps) else sum(caps)
-    doc = {"id": str(uuid.uuid4()), **payload, "cover_url": check_image(body.image_url), "source": "community", "attendee_ids": [], "rsvps": {},
-           "status": "approved" if is_admin else "pending", "submitted_by": me["id"],
-           "submitted_by_name": me.get("name"), "created_at": now_iso()}
+    doc = {"id": str(uuid.uuid4()), **payload, "cover_url": check_image(body.image_url), "source": "community", "attendee_ids": [], "rsvps": {}, "saved_by": [],
+           "status": "approved", "submitted_by": me["id"], "submitted_by_name": me.get("name"), "created_at": now_iso()}
     await db.events.insert_one(dict(doc))
-    await audit(me["id"], "event.created" if is_admin else "event.submitted", "event", doc["id"])
+    await audit(me["id"], "event.created", "event", doc["id"])
     return doc
 
 
@@ -174,6 +181,8 @@ async def get_event(event_id: str, request: Request):
     e["my_rsvp"] = (e.get("rsvps") or {}).get(me["id"]) if me else None
     e["is_past"] = (e.get("starts_at") or "") < _now()
     e["attended"] = bool(me and me["id"] in (e.get("attended_ids") or []))
+    e["is_saved"] = bool(me and me["id"] in (e.get("saved_by") or []))
+    e["save_count"] = len(e.get("saved_by") or [])
     tags = {t.lower() for t in (e.get("tags") or [])} | {(e.get("category") or "").lower()}
     related = []
     async for r in db.resources.find(approved_q()).limit(60):
@@ -202,7 +211,7 @@ async def rsvp(event_id: str, body: RsvpIn = RsvpIn(), me: dict = Depends(get_cu
             raise HTTPException(status_code=402, detail="This event needs a ticket. Buy one to reserve your spot.")
     if status == "yes" and me["id"] not in ids:
         cap = e.get("capacity")
-        if cap and len(ids) >= cap:
+        if cap is not None and len(ids) >= cap:
             raise HTTPException(status_code=409, detail="Event is full")
         ids.append(me["id"])
     if status != "yes" and me["id"] in ids:
@@ -214,6 +223,24 @@ async def rsvp(event_id: str, body: RsvpIn = RsvpIn(), me: dict = Depends(get_cu
     await db.events.update_one({"id": event_id}, {"$set": {"attendee_ids": ids, "rsvps": rsvps}})
     await audit(me["id"], "event.rsvp", "event", event_id, {"status": status})
     return {"ok": True, "is_attending": status == "yes", "my_rsvp": status, "attendee_count": len(ids), "event_id": event_id}
+
+
+@router.post("/events/{event_id}/save")
+async def toggle_save(event_id: str, me: dict = Depends(get_current_user)):
+    """Bookmark an event, same on/off toggle as a perk's save button (see resources.py) -- feeds the
+    Saved section of /profile alongside saved perks and saved members."""
+    e = await db.events.find_one({"id": event_id})
+    if not e:
+        raise HTTPException(status_code=404, detail="Event not found")
+    saved_by = list(e.get("saved_by") or [])
+    if me["id"] in saved_by:
+        saved_by.remove(me["id"])
+        saved = False
+    else:
+        saved_by.append(me["id"])
+        saved = True
+    await db.events.update_one({"id": event_id}, {"$set": {"saved_by": saved_by}})
+    return {"ok": True, "is_saved": saved, "save_count": len(saved_by)}
 
 
 @router.get("/events/{event_id}/ics")

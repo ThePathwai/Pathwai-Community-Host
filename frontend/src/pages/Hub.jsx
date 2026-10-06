@@ -1,11 +1,13 @@
-import React, { useCallback, useEffect, useState } from "react";
-import { Navigate, useNavigate } from "react-router-dom";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
+import { Navigate, useNavigate, useSearchParams } from "react-router-dom";
+import { Mail, Users } from "lucide-react";
 import { toast } from "sonner";
 import { api, errMsg, timeAgo } from "../lib/api";
 import { useAuth } from "../lib/auth";
 import { SUGGEST } from "../lib/profile";
 import crowd from "../assets/crowd.jpg";
-import { Avatar, AvatarUpload, Button, Field, Input, Modal, PoweredBy, Select, Spinner, TagInput, Textarea, Wordmark } from "../components/ui";
+import { Avatar, AvatarUpload, Button, Field, Input, Modal, PhotoGallery, PoweredBy, Select, Spinner, TagInput, Textarea, Wordmark, cx } from "../components/ui";
+import HubPeople from "../components/HubPeople";
 
 const RADIUS = { sharp: "2px", soft: "0.75rem", round: "1.25rem" };
 
@@ -153,6 +155,7 @@ function AccountProfileForm({ f, setF, photo, setPhoto }) {
       <Field label="Employer or school"><Input value={f.company} onChange={set("company")} maxLength={120} /></Field>
       <Field label="Neighbourhood or city"><Input value={f.location} onChange={set("location")} maxLength={120} /></Field>
       <Field label="About you"><Textarea rows={3} value={f.bio} onChange={set("bio")} maxLength={1000} /></Field>
+      <PhotoGallery value={f.photos} onChange={(v) => setF({ ...f, photos: v })} />
       <Field label="Skills"><TagInput value={f.skill_set} suggestions={SUGGEST.skill_set} onChange={(v) => setF({ ...f, skill_set: v })} /></Field>
       <Field label="Interests"><TagInput value={f.interests_hobbies} suggestions={SUGGEST.interests_hobbies} onChange={(v) => setF({ ...f, interests_hobbies: v })} /></Field>
       <Field label="Goals"><TagInput value={f.goals} suggestions={SUGGEST.goals} onChange={(v) => setF({ ...f, goals: v })} /></Field>
@@ -171,11 +174,80 @@ function AccountProfileForm({ f, setF, photo, setPhoto }) {
 }
 
 const BLANK_PROFILE = { name: "", age: "", title: "", company: "", location: "", bio: "", skill_set: [], interests_hobbies: [], goals: [], support_needs: [],
-  contact: { phone: "", linkedin: "", instagram: "", website: "" } };
+  photos: [], contact: { phone: "", linkedin: "", instagram: "", website: "" } };
+
+// The "Messages centre" from the Hub page: one merged inbox across every community you've joined
+// (GET /hub/messages already does the merging/sorting server-side -- see routes/hub.py), filterable
+// by community and by unread. Replying, deleting and reporting all need that community's own session
+// (get_current_user), which this platform-level page doesn't carry, so opening a thread here enters
+// that community first (same as clicking its card) and lands straight on the thread itself.
+function HubInbox({ open, onClose, loading, data, communities, onOpenThread }) {
+  const [quick, setQuick] = useState("all"); // all | unread
+  const [slugFilter, setSlugFilter] = useState("all");
+  const bySlug = useMemo(() => Object.fromEntries((communities || []).map((c) => [c.slug, c])), [communities]);
+  const threads = useMemo(() => data?.threads || [], [data]);
+  const present = useMemo(() => Array.from(new Set(threads.map((t) => t.community_slug))), [threads]);
+  const filtered = threads.filter((t) => (quick !== "unread" || t.unread) && (slugFilter === "all" || t.community_slug === slugFilter));
+  useEffect(() => { if (!open) { setQuick("all"); setSlugFilter("all"); } }, [open]);
+  if (!open) return null;
+  return (
+    <div className="fixed inset-0 z-50 flex items-start justify-center bg-black/60 p-4 pt-[8vh]" onClick={onClose} data-testid="hub-inbox">
+      <div className="flex max-h-[80vh] w-full max-w-xl flex-col overflow-hidden rounded-xl2 bg-[rgb(var(--c-surface))] text-ink" onClick={(e) => e.stopPropagation()}>
+        <div className="flex items-center justify-between border-b border-line p-4">
+          <h2 className="text-lg font-bold">Messages</h2>
+          <button onClick={onClose} aria-label="Close" data-testid="close-hub-inbox" className="text-muted hover:text-ink">✕</button>
+        </div>
+        <div className="flex flex-wrap items-center gap-2 border-b border-line p-3">
+          <div className="flex gap-1.5">
+            {[["all", "All"], ["unread", "Unread"]].map(([v, l]) => (
+              <button key={v} type="button" onClick={() => setQuick(v)} data-testid={`hub-inbox-quick-${v}`}
+                className={cx("rounded-full border px-3 py-1 text-xs", quick === v ? "border-transparent text-onaccent" : "border-line text-muted hover:bg-ink/5")}
+                style={quick === v ? { background: "var(--accent)" } : undefined}>{l}</button>
+            ))}
+          </div>
+          {present.length > 1 && (
+            <Select className="!w-auto !text-xs" value={slugFilter} onChange={(e) => setSlugFilter(e.target.value)} data-testid="hub-inbox-community-filter"
+              options={[{ value: "all", label: "Every community" }, ...present.map((s) => ({ value: s, label: bySlug[s]?.name || s }))]} />
+          )}
+        </div>
+        <div className="flex-1 overflow-y-auto">
+          {loading ? <div className="p-10"><Spinner /></div> : filtered.length === 0 ? (
+            <p className="p-10 text-center text-sm text-muted">{threads.length === 0 ? "No messages yet, in any of your communities." : "No messages match these filters."}</p>
+          ) : filtered.map((t) => {
+            const com = bySlug[t.community_slug];
+            const names = (t.others || []).map((o) => o.name).join(", ") || "Conversation";
+            return (
+              <button key={`${t.community_slug}:${t.id}`} type="button" onClick={() => onOpenThread(t.community_slug, t.id)} data-testid="hub-inbox-thread"
+                className="flex w-full items-start gap-3 border-b border-line p-3.5 text-left hover:bg-ink/5">
+                <Avatar src={t.other?.avatar_url} name={names} size={36} />
+                <div className="min-w-0 flex-1">
+                  <div className="flex items-center justify-between gap-2">
+                    <p className={cx("truncate text-sm", t.unread ? "font-semibold" : "font-medium")}>{names}</p>
+                    <span className="shrink-0 text-[10px] text-muted">{timeAgo(t.last_message_at)}</span>
+                  </div>
+                  <p className="truncate text-xs text-muted">{t.subject}</p>
+                  <div className="mt-1 flex items-center gap-1.5">
+                    <span className="shrink-0 rounded-full px-2 py-0.5 text-[10px] font-semibold"
+                      style={{ background: com?.brand?.colors?.accent ? `${com.brand.colors.accent}26` : "rgb(var(--c-ink) / 0.08)", color: com?.brand?.colors?.accent || "inherit" }}>
+                      {com?.name || t.community_slug}
+                    </span>
+                    <p className="truncate text-xs text-muted">{t.last_message_preview}</p>
+                  </div>
+                </div>
+                {t.unread && <span className="mt-1.5 h-2 w-2 shrink-0 rounded-full" style={{ background: "var(--accent)" }} aria-hidden data-testid="hub-inbox-unread-dot" />}
+              </button>
+            );
+          })}
+        </div>
+      </div>
+    </div>
+  );
+}
 
 export default function Hub() {
   const { account, loading, enter, logout, showHubTheme, refresh } = useAuth();
   const nav = useNavigate();
+  const [params, setParams] = useSearchParams();
   const [items, setItems] = useState(null);
   const [apply, setApply] = useState(null);
   const [f, setF] = useState({ title: "", message: "", answers: {} });
@@ -190,10 +262,32 @@ export default function Hub() {
   const [viewing, setViewing] = useState(null); // community whose detail view is open
   const [country, setCountry] = useState("all"); // "Discover communities" filters — client-side, over the already-loaded list
   const [interest, setInterest] = useState("all");
+  const [inboxOpen, setInboxOpen] = useState(false);
+  const [inboxData, setInboxData] = useState(null);
+  const [inboxLoading, setInboxLoading] = useState(false);
+  const [peopleOpen, setPeopleOpen] = useState(false);
+  const [peopleInitialThread, setPeopleInitialThread] = useState(null);
+  const [peopleInitialProfile, setPeopleInitialProfile] = useState(null);
+
+  // A community member card's "View on People" link (MemberProfile.jsx) can't open this panel
+  // directly -- it's mounted here, on a different route -- so it hands off through a ?person=
+  // query param instead, the same bridge /join and /c/:slug links use to carry state across a
+  // navigation. Consumed once on arrival, same one-shot pattern as peopleInitialThread.
+  useEffect(() => {
+    const email = params.get("person");
+    if (!email) return;
+    setPeopleInitialProfile(email);
+    setPeopleOpen(true);
+    setParams((p) => { p.delete("person"); return p; }, { replace: true });
+  }, [params, setParams]);
 
   const load = useCallback(() => api.get("/hub/communities").then((r) => setItems(r.data.communities)).catch((e) => toast.error(errMsg(e))), []);
+  const loadInbox = useCallback(() => {
+    setInboxLoading(true);
+    return api.get("/hub/messages").then((r) => setInboxData(r.data)).catch(() => setInboxData({ threads: [], unread: 0 })).finally(() => setInboxLoading(false));
+  }, []);
   useEffect(() => { showHubTheme(); }, [showHubTheme]);
-  useEffect(() => { if (account) load(); }, [account, load]);
+  useEffect(() => { if (account) { load(); loadInbox(); } }, [account, load, loadInbox]);
   useEffect(() => { if (starting && !categories.length) api.get("/hub/community-categories").then((r) => setCategories(r.data.categories)).catch(() => {}); }, [starting, categories.length]);
   if (loading) return <Spinner />;
   if (!account) return <Navigate to="/login" replace />;
@@ -201,7 +295,7 @@ export default function Hub() {
   const openProfileEditor = () => {
     setPf({ name: account.name || "", age: account.age || "", title: account.title || "", company: account.company || "", location: account.location || "", bio: account.bio || "",
             skill_set: account.skill_set || [], interests_hobbies: account.interests_hobbies || [], goals: account.goals || [], support_needs: account.support_needs || [],
-            contact: { phone: "", linkedin: "", instagram: "", website: "", ...(account.contact || {}) } });
+            photos: account.photos || [], contact: { phone: "", linkedin: "", instagram: "", website: "", ...(account.contact || {}) } });
     setPPhoto(account.avatar_url || "");
     setEditingProfile(true);
   };
@@ -223,11 +317,25 @@ export default function Hub() {
   const filteredDiscover = discover.filter((c) => (country === "all" || c.country === country) && (interest === "all" || (c.interest_tags || []).includes(interest)));
   const filtersActive = country !== "all" || interest !== "all";
   const doEnter = async (c) => { try { await enter(c.slug); nav("/", { replace: true }); } catch (e) { toast.error(errMsg(e)); } };
+  // Opening a thread from the unified inbox: a community thread enters that community first (same
+  // as clicking its card), then lands straight on the thread -- replying/deleting/reporting need that
+  // community's own session, which this platform-level page never carries. A platform thread
+  // (community_slug: null) isn't inside any community at all, so it's handed to HubPeople's own
+  // thread view instead.
+  const openThread = async (slug, threadId) => {
+    if (!slug) { setInboxOpen(false); setPeopleInitialThread(threadId); setPeopleOpen(true); return; }
+    try { await enter(slug); setInboxOpen(false); nav(`/inbox/${threadId}`); } catch (e) { toast.error(errMsg(e)); }
+  };
+  const closePeople = () => { setPeopleOpen(false); setPeopleInitialThread(null); setPeopleInitialProfile(null); };
+  // "View" on a platform thread's invite/share card: enters the attached community, same as the
+  // Hub card's own Enter button.
+  const openCommunityFromCard = async (slug) => { try { await enter(slug); closePeople(); nav("/", { replace: true }); } catch (e) { toast.error(errMsg(e)); } };
   const submit = async () => {
     setBusy(true);
     try {
       await api.post(`/hub/communities/${apply.slug}/apply`, { title: f.title, message: f.message, answers: f.answers });
-      toast.success(apply.require_approval ? `Request sent to ${apply.name}` : `Welcome to ${apply.name}`);
+      // Every community requires admin approval now -- no community can auto-approve a join request.
+      toast.success(`Request sent to ${apply.name}`);
       setApply(null); setF({ title: "", message: "", answers: {} }); load();
     } catch (e) { toast.error(errMsg(e)); } finally { setBusy(false); }
   };
@@ -249,6 +357,13 @@ export default function Hub() {
         <span className="text-3xl"><Wordmark name="Pathwai" brand={{}} /></span>
         <div className="flex items-center gap-3">
           <span className="hidden text-right text-xs sm:block"><span className="block font-medium">{account.name}</span><span className="text-muted">{account.email}</span></span>
+          <button onClick={() => setPeopleOpen(true)} data-testid="hub-open-people" title="People" aria-label="People" className="text-ink/80 hover:text-ink">
+            <Users className="h-5 w-5" />
+          </button>
+          <button onClick={() => { setInboxOpen(true); loadInbox(); }} data-testid="hub-open-inbox" title="Messages" aria-label="Messages" className="relative text-ink/80 hover:text-ink">
+            <Mail className="h-5 w-5" />
+            {inboxData?.unread > 0 && <span className="absolute -right-1.5 -top-1.5 flex h-4 min-w-[1rem] items-center justify-center rounded-full bg-red-600 px-1 text-[9px] font-bold text-white" data-testid="hub-inbox-badge">{inboxData.unread}</span>}
+          </button>
           <button onClick={openProfileEditor} data-testid="hub-edit-profile" title="Edit your Pathwai profile"><Avatar src={account.avatar_url} name={account.name} size={36} /></button>
           <button className="btn-ghost" onClick={async () => { await logout(); nav("/login", { replace: true }); }} data-testid="hub-logout">Sign out</button>
         </div>
@@ -295,6 +410,10 @@ export default function Hub() {
               )}
             </>)}
         </>)}
+
+      <HubInbox open={inboxOpen} onClose={() => setInboxOpen(false)} loading={inboxLoading} data={inboxData} communities={items} onOpenThread={openThread} />
+
+      <HubPeople open={peopleOpen} onClose={closePeople} communities={items} initialThreadId={peopleInitialThread} initialProfileEmail={peopleInitialProfile} onThreadRead={loadInbox} onOpenCommunity={openCommunityFromCard} />
 
       <CommunityDetailModal c={viewing} onClose={() => setViewing(null)}
         onEnter={(c) => { setViewing(null); doEnter(c); }}

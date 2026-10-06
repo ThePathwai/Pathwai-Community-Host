@@ -88,14 +88,22 @@ def test_paid_event_ticket_and_disconnect(c):
 
 def test_brand_config_validation(c):
     login(c, "admin@yourcommunity.app")
-    assert c.patch("/api/community/config", json={"brand": {"colors": {"accent": "red"}}}).status_code == 400
-    assert c.patch("/api/community/config", json={"brand": {"font": "Comic Sans"}}).status_code == 400
-    assert c.patch("/api/community/config", json={"brand": {"logo_url": "http://insecure/x.png"}}).status_code == 400
-    assert c.patch("/api/community/config", json={"custom_links": [{"label": "x", "url": "javascript:alert(1)"}]}).status_code == 400
-    ok = c.patch("/api/community/config", json={"community_name": "Acme Hub", "brand": {"preset": "ocean", "mode": "dark", "colors": {"accent": "#3B82F6"}, "font": "Manrope"}, "nav": [{"key": "events", "label": "Happenings", "enabled": True}]}).json()
-    assert ok["brand"]["font"] == "Manrope" and ok["brand"]["colors"]["background"] == "#09090B" and ok["theme"]["accent"] == "#3B82F6"
-    assert ok["nav"][0]["label"] == "Happenings" and len(ok["nav"]) == 7
-    c.patch("/api/community/config", json={"community_name": "Playr"})
+    # mongomock is a single process-wide store for the whole pytest run (not reset per TestClient
+    # block), so every field this test mutates has to be restored before it ends, or later
+    # tests/modules that assume playr's seeded defaults (brand, nav included) break depending on
+    # file-alphabetical run order. See test_hub_share.py's comment for the same risk, caught once
+    # already on `require_approval`.
+    before = c.get("/api/community/config").json()
+    try:
+        assert c.patch("/api/community/config", json={"brand": {"colors": {"accent": "red"}}}).status_code == 400
+        assert c.patch("/api/community/config", json={"brand": {"font": "Comic Sans"}}).status_code == 400
+        assert c.patch("/api/community/config", json={"brand": {"logo_url": "http://insecure/x.png"}}).status_code == 400
+        assert c.patch("/api/community/config", json={"custom_links": [{"label": "x", "url": "javascript:alert(1)"}]}).status_code == 400
+        ok = c.patch("/api/community/config", json={"community_name": "Acme Hub", "brand": {"preset": "ocean", "mode": "dark", "colors": {"accent": "#3B82F6"}, "font": "Manrope"}, "nav": [{"key": "events", "label": "Happenings", "enabled": True}]}).json()
+        assert ok["brand"]["font"] == "Manrope" and ok["brand"]["colors"]["background"] == "#09090B" and ok["theme"]["accent"] == "#3B82F6"
+        assert ok["nav"][0]["label"] == "Happenings" and len(ok["nav"]) == 8
+    finally:
+        c.patch("/api/community/config", json={"community_name": before["community_name"], "brand": before["brand"], "nav": before["nav"]})
 
 
 def test_admin_inline_edit():

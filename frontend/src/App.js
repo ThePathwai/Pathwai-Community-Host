@@ -10,6 +10,7 @@ import Signup from "./pages/Signup";
 import ForgotPassword from "./pages/ForgotPassword";
 import ResetPassword from "./pages/ResetPassword";
 import JoinCommunity from "./pages/JoinCommunity";
+import CommunityLanding from "./pages/CommunityLanding";
 import Dashboard from "./pages/Dashboard";
 import Members from "./pages/Members";
 import MemberProfile from "./pages/MemberProfile";
@@ -25,13 +26,15 @@ import Discover from "./pages/Discover";
 import Organizations from "./pages/Organizations";
 import OrganizationDetail from "./pages/OrganizationDetail";
 import Applications from "./pages/Applications";
-import Messages from "./pages/Messages";
+import Inbox from "./pages/Inbox";
 import Notifications from "./pages/Notifications";
 import ProfileEdit from "./pages/ProfileEdit";
+import Saved from "./pages/Saved";
 import Copilot from "./pages/Copilot";
 import Admin from "./pages/Admin";
 import SetupWizard from "./pages/SetupWizard";
 import Hub from "./pages/Hub";
+import Legal from "./pages/Legal";
 
 function Protected({ children, admin }) {
   const { user, account, loading } = useAuth();
@@ -54,9 +57,12 @@ export default function App() {
         <Route path="/login" element={<Login />} />
         <Route path="/signup" element={<Signup />} />
         <Route path="/forgot-password" element={<ForgotPassword />} />
+        <Route path="/terms" element={<Legal doc="terms" />} />
+        <Route path="/privacy" element={<Legal doc="privacy" />} />
         <Route path="/reset-password" element={<ResetPassword />} />
         <Route path="/hub" element={<Hub />} />
         <Route path="/join/:code" element={<JoinCommunity />} />
+        <Route path="/c/:slug" element={<CommunityLanding />} />
         <Route path="/setup" element={<Protected admin><SetupWizard /></Protected>} />
         <Route path="/" element={<P><Dashboard /></P>} />
         <Route path="/members" element={<P><Members /></P>} />
@@ -74,10 +80,17 @@ export default function App() {
         <Route path="/organizations" element={<P><Organizations /></P>} />
         <Route path="/organizations/:slug" element={<P><OrganizationDetail /></P>} />
         <Route path="/applications" element={<P><Applications /></P>} />
-        <Route path="/messages" element={<P admin><Messages /></P>} />
+        {/* The admin blast composer moved into the Inbox page as a second tab (Blasts) -- this
+            route just keeps any bookmarked/old link to it working. */}
+        <Route path="/messages" element={<Navigate to="/inbox" replace />} />
+        <Route path="/inbox" element={<P><Inbox /></P>} />
+        <Route path="/inbox/:threadId" element={<P><Inbox /></P>} />
         <Route path="/notifications" element={<P><Notifications /></P>} />
         <Route path="/profile" element={<P><ProfileEdit /></P>} />
-        <Route path="/copilot" element={<P><Copilot /></P>} />
+        <Route path="/saved" element={<P><Saved /></P>} />
+        {/* Orphaned alias -- every in-app entry point links to /ask now; kept as a redirect (same
+            pattern as /messages -> /inbox above) in case anyone has the old path bookmarked. */}
+        <Route path="/copilot" element={<Navigate to="/ask" replace />} />
         <Route path="/admin" element={<P admin><Admin /></P>} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes></EditProvider>

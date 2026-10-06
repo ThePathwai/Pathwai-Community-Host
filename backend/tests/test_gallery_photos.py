@@ -36,23 +36,32 @@ def test_gallery_photos_default_empty(c):
 def test_admin_can_set_gallery_photos(c):
     login(c, "admin@yourcommunity.app")
     photos = [SMALL_JPEG, "https://images.example.com/portrait.jpg", SMALL_PNG]
-    r = c.patch("/api/community/config", json={"gallery_photos": photos})
-    assert r.status_code == 200
-    assert r.json()["gallery_photos"] == photos
-    # persisted for subsequent reads, including by a non-admin member of the same community
-    login(c, "demo@yourcommunity.app")
-    assert c.get("/api/community/config").json()["gallery_photos"] == photos
+    # try/finally so a failed assertion mid-test still leaves gallery_photos cleared -- see
+    # test_dashboard_cover.py's comment on the same mongomock-pollution risk.
+    try:
+        r = c.patch("/api/community/config", json={"gallery_photos": photos})
+        assert r.status_code == 200
+        assert r.json()["gallery_photos"] == photos
+        # persisted for subsequent reads, including by a non-admin member of the same community
+        login(c, "demo@yourcommunity.app")
+        assert c.get("/api/community/config").json()["gallery_photos"] == photos
+    finally:
+        login(c, "admin@yourcommunity.app")
+        c.patch("/api/community/config", json={"gallery_photos": []})
 
 
 def test_gallery_photos_reorder_and_remove(c):
     login(c, "admin@yourcommunity.app")
-    c.patch("/api/community/config", json={"gallery_photos": [SMALL_JPEG, SMALL_PNG]})
-    r = c.patch("/api/community/config", json={"gallery_photos": [SMALL_PNG, SMALL_JPEG]})
-    assert r.json()["gallery_photos"] == [SMALL_PNG, SMALL_JPEG]
-    r = c.patch("/api/community/config", json={"gallery_photos": [SMALL_PNG]})
-    assert r.json()["gallery_photos"] == [SMALL_PNG]
-    r = c.patch("/api/community/config", json={"gallery_photos": []})
-    assert r.json()["gallery_photos"] == []
+    try:
+        c.patch("/api/community/config", json={"gallery_photos": [SMALL_JPEG, SMALL_PNG]})
+        r = c.patch("/api/community/config", json={"gallery_photos": [SMALL_PNG, SMALL_JPEG]})
+        assert r.json()["gallery_photos"] == [SMALL_PNG, SMALL_JPEG]
+        r = c.patch("/api/community/config", json={"gallery_photos": [SMALL_PNG]})
+        assert r.json()["gallery_photos"] == [SMALL_PNG]
+        r = c.patch("/api/community/config", json={"gallery_photos": []})
+        assert r.json()["gallery_photos"] == []
+    finally:
+        c.patch("/api/community/config", json={"gallery_photos": []})
 
 
 def test_gallery_photos_reject_bad_url(c):

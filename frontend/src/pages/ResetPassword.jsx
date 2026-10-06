@@ -15,7 +15,7 @@ export default function ResetPassword() {
 
   const submit = async (e) => {
     e.preventDefault();
-    if (password.length < 8) return setErr("Password must be at least 8 characters.");
+    if (password.length < 10 || !/[A-Za-z]/.test(password) || !/\d/.test(password)) return setErr("Password needs 10+ characters with a letter and a number.");
     if (password !== confirm) return setErr("Passwords don't match.");
     setBusy(true); setErr("");
     try {
@@ -30,14 +30,14 @@ export default function ResetPassword() {
     <div className="mx-auto flex min-h-screen w-full max-w-md flex-col justify-center px-4 py-10">
       <span className="mb-6 text-2xl"><Wordmark name="Pathwai" brand={{}} /></span>
       <h1 className="mb-1 text-2xl font-bold sm:text-3xl">Choose a new password</h1>
-      <p className="mb-6 text-sm text-muted">Make it at least 8 characters.</p>
+      <p className="mb-6 text-sm text-muted">10+ characters, with a letter and a number.</p>
       <Card>
         {!token ? (
           <p className="text-sm text-red-400" data-testid="reset-password-missing-token">This link is missing its reset token. Request a new one from the <Link className="underline" to="/forgot-password">forgot password</Link> page.</p>
         ) : (
           <form className="space-y-4" onSubmit={submit}>
-            <Field label="New password"><Input data-testid="reset-password-new" type="password" value={password} onChange={(e) => setPassword(e.target.value)} required minLength={8} /></Field>
-            <Field label="Confirm new password"><Input data-testid="reset-password-confirm" type="password" value={confirm} onChange={(e) => setConfirm(e.target.value)} required minLength={8} /></Field>
+            <Field label="New password"><Input data-testid="reset-password-new" type="password" value={password} onChange={(e) => setPassword(e.target.value)} required minLength={10} /></Field>
+            <Field label="Confirm new password"><Input data-testid="reset-password-confirm" type="password" value={confirm} onChange={(e) => setConfirm(e.target.value)} required minLength={10} /></Field>
             {err && <p className="text-sm text-red-400" data-testid="reset-password-error">{err}</p>}
             <Button type="submit" loading={busy} className="w-full" data-testid="reset-password-submit">Update password</Button>
           </form>

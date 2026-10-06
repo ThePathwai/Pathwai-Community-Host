@@ -2,13 +2,13 @@ import { ItemTools } from "../components/EditKit";
 import { useAuth } from "../lib/auth";
 import React, { useCallback, useEffect, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
-import { CalendarPlus, ExternalLink } from "lucide-react";
+import { Bookmark, CalendarPlus, ExternalLink } from "lucide-react";
 import { toast } from "sonner";
 import { api, errMsg, fmtDate } from "../lib/api";
-import { Avatar, Button, Card, Chip, Field, PageHeader, SectionCard, Select, Spinner, Textarea } from "../components/ui";
+import { Avatar, Button, Card, Chip, cx, Field, PageHeader, SectionCard, Select, Spinner, Textarea } from "../components/ui";
 
-export const RsvpButtons = ({ value, onChange, size }) => (
-  <div className="inline-flex gap-1" role="group" aria-label="RSVP">
+export const RsvpButtons = ({ value, onChange, size, className }) => (
+  <div className={cx("inline-flex gap-1", className)} role="group" aria-label="RSVP">
     {[["yes", "Going"], ["maybe", "Maybe"], ["no", "Can't go"]].map(([v, l]) => (
       <button key={v} data-testid={`rsvp-${v}`} onClick={() => onChange(value === v ? null : v)}
         className={`rounded-full border px-3 py-1.5 text-sm transition ${value === v ? "border-transparent text-onaccent" : "border-line text-muted hover:bg-ink/5"}`}
@@ -33,12 +33,19 @@ export default function EventDetail() {
   const rsvp = async (status) => { try { await api.post(`/events/${id}/rsvp`, { status }); toast.success(status === "yes" ? "You're in — added to your home page" : status ? "RSVP saved" : "RSVP removed"); load(); } catch (x) { toast.error(errMsg(x)); } };
   const buy = async () => { try { const { data } = await api.post(`/events/${id}/checkout`, e.tier_summary?.has_tiers ? { tier_id: tierId } : {}); if (data.url) window.location.href = data.url; else { toast.success(data.message); load(); } } catch (x) { toast.error(errMsg(x)); } };
   const feedback = async () => { try { await api.post(`/events/${id}/feedback`, { rating: Number(rating), note }); toast.success("Thanks for the feedback"); load(); } catch (x) { toast.error(errMsg(x)); } };
+  const toggleSave = async () => { try { await api.post(`/events/${id}/save`); load(); } catch (x) { toast.error(errMsg(x)); } };
+  // The hosted preview artifact runs in a sandboxed iframe that blocks every file download it
+  // starts itself -- a plain <a href> to a real backend URL would also just 404 there (there's no
+  // backend to hit), so a live link is doubly broken in that context. Same honesty as the
+  // chat/extract-pdf preview fallbacks: say so instead of silently failing.
+  const PREVIEW = process.env.REACT_APP_PREVIEW === "true";
+  const addToCalendar = (ev) => { if (PREVIEW) { ev.preventDefault(); toast.message("Downloads aren't available in this preview — this opens a real .ics file in the deployed app."); } };
   if (e === null) return <Spinner />;
   if (e === false) return <div className="py-20 text-center"><p className="font-display text-xl">This link is not available.</p></div>;
   return (
     <div>
       <PageHeader title={e.title} subtitle={`${fmtDate(e.starts_at)} · ${e.location || (e.virtual_url ? "Virtual" : "")} · hosted by ${e.host || "The Playr League"}`}
-        actions={<><ItemTools kind="events" item={e} onChanged={load} /><a className="btn-ghost" href={`${api.defaults.baseURL}/events/${e.id}/ics`} data-testid="add-to-calendar"><CalendarPlus className="h-4 w-4" />Add to calendar</a></>} />
+        actions={<><ItemTools kind="events" item={e} onChanged={load} /><button className="btn-ghost" onClick={toggleSave} aria-label="Save" data-testid="event-detail-save"><Bookmark className={`h-4 w-4 ${e.is_saved ? "fill-current" : ""}`} />{e.is_saved ? "Saved" : "Save"}</button><a className="btn-ghost" href={`${api.defaults.baseURL}/events/${e.id}/ics`} onClick={addToCalendar} data-testid="add-to-calendar"><CalendarPlus className="h-4 w-4" />Add to calendar</a></>} />
       <div className="mb-6 flex flex-wrap items-center gap-3"><Chip>{e.category}</Chip>
         {e.is_past ? <Chip>Past event</Chip> : e.tier_summary?.has_tiers ? null : e.price_cents && e.my_rsvp !== "yes" ? (e.capacity && e.attendee_count >= e.capacity ? <Chip>Sold out</Chip> : <Button onClick={buy} data-testid="buy-ticket">Buy ticket · ${(e.price_cents / 100).toFixed(2)}</Button>) : e.source === "luma" && e.url && e.my_rsvp !== "yes" ? <a className="btn-primary" href={e.url} target="_blank" rel="noreferrer" data-testid="luma-register">Register on Luma</a> : <RsvpButtons value={e.my_rsvp} onChange={rsvp} />}
         <span className="text-sm text-muted">{e.attendee_count}{e.capacity ? ` / ${e.capacity}` : ""} going{e.maybe_count ? ` · ${e.maybe_count} maybe` : ""}</span>

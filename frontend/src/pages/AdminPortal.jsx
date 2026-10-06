@@ -42,22 +42,6 @@ function MemberPicker({ selected, onChange }) {
   );
 }
 
-export function ActionCenter({ go }) {
-  const [a, setA] = useState(null);
-  useEffect(() => { api.get("/admin/action-center").then((r) => setA(r.data)).catch((e) => toast.error(errMsg(e))); }, []);
-  if (!a) return <Spinner />;
-  const tiles = [["pending_memberships", "New member requests", "members"], ["awaiting_review", "Responses to review", "requests"], ["overdue_requests", "Overdue requests", "requests"], ["support_needing_action", "Support needing action", "support"],
-    ["pending_moderation", "Awaiting approval", "moderation"], ["open_requests", "Open requests", "requests"]];
-  return (
-    <div className="space-y-6" data-testid="action-center">
-      <div className="grid gap-3 sm:grid-cols-3 lg:grid-cols-4">{tiles.map(([k, l, tab]) => (
-        <Card key={k} className={tab ? "card-hover cursor-pointer" : ""} onClick={() => tab && go(tab)}><p className="stat font-display text-3xl">{a[k]}</p><p className="mt-1 text-xs text-muted">{l}</p></Card>))}</div>
-      <div><p className="eyebrow mb-3">Recent member activity</p>
-        {a.recent_member_activity.length === 0 ? <Empty title="No activity yet" /> : <div className="space-y-1.5">{a.recent_member_activity.map((e, i) => <p key={i} className="flex justify-between border-b border-line py-2 text-sm"><span>{e.action.replace(/[._]/g, " ")}</span><span className="text-xs text-muted">{timeAgo(e.at)}</span></p>)}</div>}</div>
-    </div>
-  );
-}
-
 export function AdminRequests() {
   const [d, setD] = useState(null);
   const [status, setStatus] = useState("all");

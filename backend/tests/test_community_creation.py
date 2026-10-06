@@ -43,7 +43,7 @@ def test_categories_listed(c):
 
 
 def test_creating_a_community_makes_the_signer_its_admin(c):
-    r = c.post("/api/hub/signup", json={"email": "founder@example.com", "password": "Sup3rSecret!", "name": "Jordan Founder"})
+    r = c.post("/api/hub/signup", json={"accepted_terms": True, "email": "founder@example.com", "password": "Sup3rSecret!", "name": "Jordan Founder"})
     assert r.status_code == 201, r.text
 
     r = c.post("/api/hub/communities", json={"name": "River City Runners", "category": "wellness", "tagline": "A running crew that meets weekly."})
@@ -67,7 +67,7 @@ def test_creating_a_community_makes_the_signer_its_admin(c):
 
 
 def test_duplicate_names_get_a_unique_slug(c):
-    c.post("/api/hub/signup", json={"email": "founder2@example.com", "password": "Sup3rSecret!", "name": "Alex Second"})
+    c.post("/api/hub/signup", json={"accepted_terms": True, "email": "founder2@example.com", "password": "Sup3rSecret!", "name": "Alex Second"})
     r = c.post("/api/hub/communities", json={"name": "River City Runners", "category": "wellness"})
     assert r.status_code == 201
     assert r.json()["slug"] == "river-city-runners-2"

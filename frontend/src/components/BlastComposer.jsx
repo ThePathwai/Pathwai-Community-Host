@@ -6,12 +6,24 @@ import { Button, Card, Chip, Field, Input, Select, Spinner, Textarea } from "./u
 
 const AUD = [{ value: "all", label: "All members" }, { value: "event", label: "Guests of an event" }, { value: "admins", label: "Admins only" }];
 const CHANNEL_LABEL = { sms: "Text", email: "Email", both: "Text + email" };
+// What a past blast's audience chip reads, combining the text/email channel (if any) with whether
+// Pathwai Internal also went out -- "channel" alone used to be the whole story; now it's one of two
+// independent things a blast can carry (see routes/blasts.py's `internal` field).
+const channelLabel = (b) => {
+  const base = b.channel !== "none" ? CHANNEL_LABEL[b.channel] : null;
+  if (base && b.internal) return `${base} + Internal`;
+  return base || "Pathwai Internal";
+};
 
 export default function BlastComposer({ goIntegrations }) {
   const [msg, setMsg] = useState("");
   const [subject, setSubject] = useState("");
   const [sms, setSms] = useState(true);
   const [email, setEmail] = useState(false);
+  // A third, independent send option: an in-app notification to everyone in the audience. No
+  // integration to connect, no SMS/email opt-in gate -- it can be sent alone or stacked with either
+  // or both of the others (see routes/blasts.py's send_blast).
+  const [internal, setInternal] = useState(false);
   const [type, setType] = useState("all");
   const [events, setEvents] = useState([]);
   const [eventId, setEventId] = useState("");
@@ -20,34 +32,46 @@ export default function BlastComposer({ goIntegrations }) {
   const [confirm, setConfirm] = useState(false);
   const [busy, setBusy] = useState(false);
 
-  const channel = sms && email ? "both" : email ? "email" : "sms";
+  // History filters: by context (which audience a past blast went to) and a date range -- the same
+  // two facets the inbox's own filter bar applies to message threads.
+  const [fAudience, setFAudience] = useState("");
+  const [fFrom, setFFrom] = useState("");
+  const [fTo, setFTo] = useState("");
+
+  const channel = sms && email ? "both" : email ? "email" : sms ? "sms" : "none";
 
   useEffect(() => { api.get("/events", { params: { upcoming: true } }).then((r) => { setEvents(r.data); if (r.data[0]) setEventId(r.data[0].id); }).catch(() => {}); }, []);
-  const loadHist = useCallback(() => api.get("/admin/blasts/history").then((r) => setHist(r.data.blasts)), []);
+  const loadHist = useCallback(() => api.get("/admin/blasts/history", { params: { audience_type: fAudience || undefined, since: fFrom || undefined, until: fTo || undefined } }).then((r) => setHist(r.data.blasts)), [fAudience, fFrom, fTo]);
   useEffect(() => { loadHist(); }, [loadHist]);
   useEffect(() => {
     if (type === "event" && !eventId) { setAud(null); return; }
     api.post("/admin/blasts/audience", { type, event_id: type === "event" ? eventId : null }).then((r) => setAud(r.data)).catch(() => setAud(null));
   }, [type, eventId]);
-  useEffect(() => { setConfirm(false); }, [msg, subject, sms, email, type, eventId]);
+  useEffect(() => { setConfirm(false); }, [msg, subject, sms, email, internal, type, eventId]);
 
   const send = async () => {
     setBusy(true);
     try {
-      const { data } = await api.post("/admin/blasts/send", { message: msg, subject: email ? subject : null, channel, audience: { type, event_id: type === "event" ? eventId : null } });
+      const { data } = await api.post("/admin/blasts/send", { message: msg, subject: email ? subject : null, channel, internal, audience: { type, event_id: type === "event" ? eventId : null } });
       const parts = [];
       if (sms) parts.push(`${data.sms_sent} text${data.sms_sent === 1 ? "" : "s"}`);
       if (email) parts.push(`${data.email_sent} email${data.email_sent === 1 ? "" : "s"}`);
+      if (internal) parts.push(`${data.internal_sent} in-app notification${data.internal_sent === 1 ? "" : "s"}`);
       const failed = (data.sms_failed || 0) + (data.email_failed || 0);
-      toast.success(`${data.demo ? "Demo: " : ""}${parts.join(" and ")} sent${failed ? `, ${failed} failed` : ""}`);
+      toast.success(`${data.demo ? "Demo: " : ""}${parts.join(", ")} sent${failed ? `, ${failed} failed` : ""}`);
       setMsg(""); setSubject(""); setConfirm(false); loadHist();
     } catch (e) { toast.error(errMsg(e)); } finally { setBusy(false); }
   };
 
   const segs = Math.max(1, Math.ceil((msg.length + 22) / 153));
-  const count = channel === "email" ? aud?.email_count : channel === "sms" ? aud?.sms_count : Math.max(aud?.sms_count || 0, aud?.email_count || 0);
+  const count = internal && !sms && !email ? aud?.total_members
+    : channel === "email" ? aud?.email_count
+    : channel === "sms" ? aud?.sms_count
+    : Math.max(aud?.sms_count || 0, aud?.email_count || 0);
   const ready = (!sms || aud?.twilio_connected) && (!email || aud?.sendgrid_connected);
   const needsSetup = aud && !ready;
+  const active = fAudience || fFrom || fTo;
+  const clearFilters = () => { setFAudience(""); setFFrom(""); setFTo(""); };
   return (
     <div className="grid gap-5 lg:grid-cols-[3fr_2fr]" data-testid="blast-page">
       <div className="space-y-4">
@@ -62,6 +86,9 @@ export default function BlastComposer({ goIntegrations }) {
               <div className="flex flex-wrap gap-4 text-sm">
                 <label className="flex items-center gap-2"><input type="checkbox" className="accent-accent" checked={sms} onChange={(e) => setSms(e.target.checked)} data-testid="blast-channel-sms" />Text message</label>
                 <label className="flex items-center gap-2"><input type="checkbox" className="accent-accent" checked={email} onChange={(e) => setEmail(e.target.checked)} data-testid="blast-channel-email" />Email</label>
+                {/* In-app only -- reaches everyone in the audience straight through their Pathwai
+                    notifications, with no Twilio/SendGrid connection and no opt-in to check. */}
+                <label className="flex items-center gap-2"><input type="checkbox" className="accent-accent" checked={internal} onChange={(e) => setInternal(e.target.checked)} data-testid="blast-channel-internal" />Pathwai Internal</label>
               </div>
             </Field>
             <div className="grid gap-3 sm:grid-cols-2">
@@ -72,14 +99,15 @@ export default function BlastComposer({ goIntegrations }) {
             <Field label="Message" hint={sms ? `${msg.length} characters · about ${segs} text segment${segs > 1 ? "s" : ""} each. "Reply STOP to opt out." is added automatically.` : `${msg.length} characters`}>
               <Textarea rows={5} maxLength={sms ? 420 : 1600} value={msg} onChange={(e) => setMsg(e.target.value)} placeholder="Doors open at 7pm tonight. Bring your ticket and a friend." data-testid="blast-message" />
             </Field>
-            {aud && (sms || email) && (
+            {aud && (sms || email || internal) && (
               <div className="rounded-lg border border-line bg-ink/5 p-3 text-sm" data-testid="blast-count">
                 {sms && <p>Text: <span className="font-semibold">{aud.sms_count}</span> {aud.sms_count === 1 ? "person" : "people"}{aud.sms_not_opted_in > 0 || aud.sms_no_phone > 0 ? ` · skipped ${aud.sms_not_opted_in} not opted in${aud.sms_no_phone ? `, ${aud.sms_no_phone} no phone` : ""}` : ""}</p>}
                 {email && <p>Email: <span className="font-semibold">{aud.email_count}</span> {aud.email_count === 1 ? "person" : "people"}{aud.email_not_opted_in > 0 ? ` · skipped ${aud.email_not_opted_in} unsubscribed` : ""}</p>}
+                {internal && <p>Pathwai Internal: <span className="font-semibold">{aud.total_members}</span> {aud.total_members === 1 ? "person" : "people"}</p>}
               </div>)}
-            {!confirm ? <Button onClick={() => setConfirm(true)} disabled={!msg.trim() || !ready || !aud || !(sms || email) || count === 0} data-testid="blast-review">Review and send</Button> : (
+            {!confirm ? <Button onClick={() => setConfirm(true)} disabled={!msg.trim() || !ready || !aud || !(sms || email || internal) || !count} data-testid="blast-review">Review and send</Button> : (
               <div className="rounded-lg border border-accent/50 p-4" data-testid="blast-confirm">
-                <p className="text-sm">Send by <strong>{CHANNEL_LABEL[channel].toLowerCase()}</strong> to {sms && <>{" "}<strong>{aud.sms_count}</strong> by text</>}{sms && email && " and "}{email && <><strong>{aud.email_count}</strong> by email</>}? This can't be undone.</p>
+                <p className="text-sm">Send{sms && <>{" "}by text to <strong>{aud.sms_count}</strong></>}{sms && (email || internal) && ","}{email && <>{" "}by email to <strong>{aud.email_count}</strong></>}{email && internal && ","}{internal && <>{" "}as a Pathwai Internal notification to <strong>{aud.total_members}</strong></>}? This can't be undone.</p>
                 <div className="mt-3 flex gap-2"><Button onClick={send} loading={busy} data-testid="blast-send">Send now</Button><Button variant="ghost" onClick={() => setConfirm(false)}>Cancel</Button></div>
               </div>)}
           </div>
@@ -87,15 +115,24 @@ export default function BlastComposer({ goIntegrations }) {
       </div>
       <Card>
         <h3 className="mb-3 text-lg">Recent blasts</h3>
-        {!hist ? <Spinner /> : hist.length === 0 ? <p className="text-sm text-muted">Nothing sent yet.</p> : (
+        <div className="mb-3 grid gap-2 sm:grid-cols-3">
+          <Select value={fAudience} onChange={(e) => setFAudience(e.target.value)} data-testid="blast-filter-audience"
+            options={[{ value: "", label: "Any audience" }, ...AUD]} />
+          <Input type="date" value={fFrom} onChange={(e) => setFFrom(e.target.value)} aria-label="From date" data-testid="blast-filter-from" />
+          <Input type="date" value={fTo} onChange={(e) => setFTo(e.target.value)} aria-label="To date" data-testid="blast-filter-to" />
+        </div>
+        {active && <button className="mb-3 text-xs text-muted underline" onClick={clearFilters} data-testid="blast-filter-clear">Clear filters</button>}
+        {!hist ? <Spinner /> : hist.length === 0 ? <p className="text-sm text-muted">{active ? "No blasts match these filters." : "Nothing sent yet."}</p> : (
           <ul className="space-y-3" data-testid="blast-history">{hist.map((b) => (
             <li key={b.id} className="border-b border-line pb-3 last:border-0">
-              <div className="flex items-center gap-2"><Chip>{CHANNEL_LABEL[b.channel] || b.channel}</Chip><span className="text-xs text-muted">{timeAgo(b.at)}</span></div>
+              <div className="flex items-center gap-2"><Chip>{channelLabel(b)}</Chip><span className="text-xs text-muted">{timeAgo(b.at)}</span></div>
               <p className="mt-1 text-sm">{b.message}</p>
               <p className="mt-1 text-xs text-muted">
-                {b.channel !== "email" && `${b.sms_sent} text${b.sms_sent === 1 ? "" : "s"}${b.sms_failed ? ` (${b.sms_failed} failed)` : ""}`}
-                {b.channel === "both" && " · "}
-                {b.channel !== "sms" && `${b.email_sent} email${b.email_sent === 1 ? "" : "s"}${b.email_failed ? ` (${b.email_failed} failed)` : ""}`}
+                {[
+                  (b.channel === "sms" || b.channel === "both") && `${b.sms_sent} text${b.sms_sent === 1 ? "" : "s"}${b.sms_failed ? ` (${b.sms_failed} failed)` : ""}`,
+                  (b.channel === "email" || b.channel === "both") && `${b.email_sent} email${b.email_sent === 1 ? "" : "s"}${b.email_failed ? ` (${b.email_failed} failed)` : ""}`,
+                  b.internal && `${b.internal_sent} in-app`,
+                ].filter(Boolean).join(" · ")}
                 {b.demo ? " · demo" : ""} · {AUD.find((a) => a.value === b.audience?.type)?.label || "All members"}
               </p>
             </li>))}</ul>)}

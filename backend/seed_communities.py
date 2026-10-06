@@ -17,7 +17,11 @@ from typing import Any, Dict, List
 from urllib.parse import quote
 
 from auth import hash_password
-from playr_art import png_data_uri, portrait
+from playr_art import jpg_data_uri, png_data_uri
+# No avatar_url is set for these communities' members either -- same reasoning as seed_playr.py:
+# Avatar.jsx's own initials-on-color fallback (ui.jsx's hueFromName/Avatar) reads better than an
+# illustrated "character creator" face, and a real photo URL can't load inside the published
+# preview anyway.
 
 COMMUNITY_SLUGS_NEW = ["grace", "the-village", "club-pto"]
 
@@ -278,9 +282,10 @@ PTO_M: List[Dict[str, Any]] = [
     A(id="u-founder-me", name="Fife Ashley-Dejo", age=27, prof="Physiotherapist", emp="Bayview Health Clinic", hood="Leslieville",
       art=A(skin="d", hair="puffs", hair_color="black", bg=0, smile=True), tag="Ladder league", since=2024,
       skills=["Doubles strategy", "Match warm-ups", "Injury prevention tips"], interests=["Running", "Tennis (former)", "Brunch after matches"],
-      goals=["Move up to Ladder Division B", "Play in the fall mixed doubles tournament"], needs=["A consistent Tuesday partner", "Help with backhand volleys"],
+      goals=["Move up to Ladder Division B", "Play in the fall mixed doubles tournament"],
+      needs=["A consistent Tuesday partner", "Help with backhand volleys", "Partner matching", "Footwork drills", "Video analysis"],
       bio="Physiotherapist and recent padel convert. I traded my running shoes for court shoes two years ago and haven't looked back — usually on the Tuesday ladder, always up for a rally before clinic.",
-      role="member", mtype="founder", open_to=["Hitting partners", "Injury advice"], login="demo@yourcommunity.app", flag="founder"),
+      role="member", mtype="founder", open_to=["Hitting partners", "Hitting partner", "Injury advice"], login="demo@yourcommunity.app", flag="founder"),
     A(id="u-p-admin", name="Diego Fontana", age=39, prof="Head Coach & Club Director", emp="Club PTO", hood="Etobicoke",
       art=A(skin="c", hair="short", hair_color="black", bg=1, beard=True, smile=True), tag="Head coach", since=2021,
       skills=["Coaching", "Ladder league management", "Tournament direction", "Stringing"], interests=["Beach padel", "Football (soccer)", "Coffee between sessions"],
@@ -308,7 +313,7 @@ PTO_M: List[Dict[str, Any]] = [
     A(id="u-p-hassan", name="Hassan Ali", age=36, prof="High school teacher", emp="Etobicoke Collegiate", hood="Etobicoke",
       art=A(skin="e", hair="short", hair_color="black", bg=5, beard=True, smile=True, glasses=True), tag="Juniors coach", since=2023,
       skills=["Youth coaching", "Camp planning", "Equipment fitting"], interests=["Cricket", "Hiking", "Cooking for a crowd"],
-      goals=["Launch a Saturday junior clinic", "Get five juniors playing tournaments"], needs=["Kid-sized racquets", "Two more junior coaching volunteers"],
+      goals=["Launch a Saturday junior clinic", "Get five juniors playing tournaments"], needs=["Kid-sized racquets", "Two more junior coaching volunteers", "Injury prevention tips for young players"],
       bio="I teach high school by day and run our junior clinic on Saturdays. Padel is the easiest racquet sport to fall in love with fast, ask any of my students.",
       role="member", mtype="mentor", open_to=["Junior coaching", "Equipment advice"]),
     A(id="u-p-elena", name="Elena Vasquez", age=41, prof="Owner, stringing studio", emp="Vasquez Racquet Studio", hood="Junction",
@@ -347,6 +352,12 @@ PTO_M: List[Dict[str, Any]] = [
       goals=["Mentor five total beginners this year", "Design new club posters"], needs=["A consistent beginner partner on Sunday mornings", "Feedback on the new posters"],
       bio="I design the posters you see on the court fence and mentor total beginners every Sunday morning. Padel is easy to learn and hard to stop playing.",
       role="member", mtype="founder", open_to=["Beginner mentoring", "Design help"]),
+    A(id="u-p-albright", name="Grant Albright", age=61, prof="Founder", emp="Club PTO", hood="Bloor West Village",
+      art=A(skin="a", hair="short", hair_color="grey", bg=0, glasses=True, smile=True), tag="Founder", since=2020,
+      skills=["Club strategy", "Fundraising", "Community building", "Tournament direction"], interests=["Golf", "Wine", "Mentoring young players", "Travel"],
+      goals=["Open a second location in the west end", "Launch a scholarship fund for junior players"], needs=["Board members", "Introductions to potential sponsors"],
+      bio="Founded Club PTO in 2020 with two borrowed courts and a waiting list of friends who wanted somewhere real to play. These days I'm on court less and chasing sponsors more, especially around the Club PTO League tournament every fall.",
+      role="admin", mtype="founder", open_to=["Club history", "Sponsorship introductions"]),
 ]
 
 PTO_APPLICANTS = [
@@ -376,7 +387,7 @@ def _users(slug: str, pw: str) -> List[Dict[str, Any]]:
             contact["website"] = f"https://{first}{last}.example.com"
         doc = {
             "id": m["id"], "name": m["name"], "email": email, "password_hash": pw if m.get("login") else None,
-            "role": m["role"], "member_type": m["mtype"], "age": m["age"], "height": None, "avatar_url": portrait(number=m["id"], **m["art"]),
+            "role": m["role"], "member_type": m["mtype"], "age": m["age"], "height": None, "avatar_url": None,
             "title": m["prof"], "company": m["emp"], "location": f"{m['hood']}, Toronto", "bio": m["bio"],
             "industry": None, "stage": None, "position": None, "cohort": None,
             "skill_set": m["skills"], "expertise": m["skills"], "interests_hobbies": m["interests"], "interests": m["interests"],
@@ -401,7 +412,7 @@ def _users(slug: str, pw: str) -> List[Dict[str, Any]]:
     for uid, name, title, company, st, days, art, why, skills, answer in applicants:
         first, last = name.lower().split()
         out.append({"id": uid, "name": name, "email": f"{first}.{last}@example.com", "password_hash": pw, "role": "member", "member_type": "founder",
-                    "title": title, "company": company, "location": "Toronto", "bio": why, "join_reason": why, "avatar_url": portrait(number=uid, **art),
+                    "title": title, "company": company, "location": "Toronto", "bio": why, "join_reason": why, "avatar_url": None,
                     "skill_set": skills, "expertise": skills, "membership_status": st, "hidden_from_directory": True, "signup_source": "self",
                     "apply_answers": {"referral": answer},
                     "contact": {"email": f"{first}.{last}@example.com", "phone": f"+1 416 555 01{80 + len(out):02d}", "linkedin": f"https://linkedin.com/in/{first}-{last}", "instagram": f"@{first}.{last}"},
@@ -780,6 +791,17 @@ def _config(slug: str) -> Dict[str, Any]:
     cfg["nav"] = [nav[n["key"]] for n in DEFAULT_CONFIG["nav"]]
     cfg["require_approval"] = True
     cfg["hub_cover"] = _hub_cover(slug)
+    if slug == "club-pto":
+        # Dashboard photo carousel — two shots from the fall PTO Tournament trophy ceremony and the
+        # Club PTO League promo flyer. The actual on-screen carousel (Dashboard.jsx's "Photos" widget)
+        # renders in a wide landscape card via object-cover, not the 4:5 portrait box the admin's
+        # upload/crop tool targets, so a straight 4:5 crop of these portrait originals got doubly
+        # cropped on screen and lost people's feet/heads. Each photo here is instead letterboxed onto
+        # a 5:3 canvas (the same ratio as every other cover image in the app -- poster()/hub_cover()
+        # in playr_art.py use the same 400x240 box) with a blurred, darkened extension of the photo
+        # itself filling the sides, so the full original image stays visible and object-cover has
+        # nothing left to crop.
+        cfg["gallery_photos"] = [u for u in (jpg_data_uri("club-pto-gallery-1.jpg"), jpg_data_uri("club-pto-gallery-2.jpg"), jpg_data_uri("club-pto-gallery-3.jpg")) if u]
     return cfg
 
 

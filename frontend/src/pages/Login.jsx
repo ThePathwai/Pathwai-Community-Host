@@ -1,22 +1,23 @@
 import React, { useEffect, useState } from "react";
-import { Link, useLocation, useNavigate } from "react-router-dom";
+import { Link, useLocation, useNavigate, useSearchParams } from "react-router-dom";
 import { toast } from "sonner";
 import { api, errMsg } from "../lib/api";
 import { useAuth } from "../lib/auth";
+import { applyBrand } from "../lib/theme";
 import crowd from "../assets/crowd.jpg";
-import { Button, Card, Field, Input, PoweredBy, Wordmark } from "../components/ui";
+import { Button, Card, Field, Input, MembershipStatusCard, PoweredBy, Wordmark } from "../components/ui";
 import SocialAuthButtons from "../components/SocialAuthButtons";
 
-const SAMPLE = [
-  { n: "C3", k: "Church", bg: "#FAF5EA", fg: "#1F4D3A", ac: "#1F4D3A" },
-  { n: "The Village", k: "Dinner club", bg: "#0F0C0A", fg: "#EFE6D6", ac: "#C8A15B" },
-  { n: "The Playr League", k: "Wellness events", bg: "#09090B", fg: "#F5F5F4", ac: "#FF2E44" },
-];
-
 export default function Login() {
-  const { login, applySession } = useAuth();
+  const { login, applySession, refresh } = useAuth();
   const nav = useNavigate();
   const loc = useLocation();
+  const [params] = useSearchParams();
+  // Present when this login came from a community's own external share link (/c/:slug ->
+  // "Already on Pathwai? Sign in") -- an existing member lands straight in that community
+  // instead of the generic Hub, same spirit as the signup-time join_slug flow.
+  const joinSlug = params.get("join") || null;
+  const [joinInfo, setJoinInfo] = useState(null);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [err, setErr] = useState("");
@@ -26,16 +27,43 @@ export default function Login() {
 
   useEffect(() => { api.get("/auth/demo-accounts").then((r) => setDemo(r.data)).catch(() => {}); }, []);
 
+  useEffect(() => {
+    if (!joinSlug) return;
+    api.get(`/hub/communities/${joinSlug}/public`)
+      .then((r) => { setJoinInfo(r.data); applyBrand({ community_name: r.data.name, brand: r.data.brand }); })
+      .catch(() => {}); // bad/stale link -- fall back to the plain Pathwai sign-in, silently
+  }, [joinSlug]);
+
   const go = async (e, p) => {
     setBusy(true); setErr(""); setStatus("");
     try {
       await login(e, p);
+      if (joinSlug) {
+        try {
+          const { data } = await api.post(`/hub/communities/${joinSlug}/apply`, {});
+          await refresh();
+          if (data.status === "approved") { nav("/", { replace: true }); return; }
+          toast.success(`Request sent — you'll see ${joinInfo?.name || "the community"} once an admin approves you.`);
+          nav("/hub", { replace: true });
+          return;
+        } catch { /* already a member, or the apply failed -- fall through to the usual landing */ }
+      }
       nav(loc.state?.from && loc.state.from !== "/login" ? "/hub" : "/hub", { replace: true });
     } catch (ex) { setStatus(ex?.response?.status === 403 && /membership request/i.test(errMsg(ex)) ? (/not approved/i.test(errMsg(ex)) ? "rejected" : "pending") : ""); setErr(errMsg(ex)); if (ex?.response?.status !== 403) toast.error(errMsg(ex)); } finally { setBusy(false); }
   };
 
-  const onSocialSignedIn = (data) => {
+  const onSocialSignedIn = async (data) => {
     applySession(data);
+    // Mirrors go()'s post-login join handling -- /auth/oauth/{provider} now files the same join_slug
+    // request when one was carried in from a share link, instead of silently dropping it. Same
+    // persistent MembershipStatusCard as the email-login path below, rather than a toast that
+    // vanishes -- a pending/rejected result stays on this page instead of redirecting to the Hub.
+    if (data.joined) {
+      await refresh();
+      if (data.joined.status === "approved") { nav("/", { replace: true }); return; }
+      setStatus(data.joined.status === "rejected" ? "rejected" : "pending");
+      return;
+    }
     if (data.new_account) toast.success("You're in. Apply to a community to get started.");
     nav("/hub", { replace: true });
   };
@@ -49,23 +77,18 @@ export default function Login() {
           <span className="text-4xl"><Wordmark name="Pathwai" brand={{}} /></span>
           <div>
             <p className="font-display text-5xl font-bold leading-[1.08]">One login.<br />Every community you belong to.</p>
-            <p className="mt-4 max-w-md text-white/70">A church, a private dinner club, a wellness brand. Each has its own people, events and look. You keep one account.</p>
-            <div className="mt-8 flex gap-3">
-              {SAMPLE.map((s) => (
-                <div key={s.n} className="w-44 rounded-xl border p-4" style={{ background: s.bg, color: s.fg, borderColor: s.ac + "66" }}>
-                  <span className="block h-1.5 w-8 rounded-full" style={{ background: s.ac }} />
-                  <p className="mt-3 text-sm font-bold leading-tight">{s.n}</p><p className="text-[11px] opacity-70">{s.k}</p>
-                </div>))}
-            </div>
           </div>
         </div>
       </div>
       <div className="mx-auto flex w-full max-w-md flex-col justify-center px-4 py-10">
-        <span className="mb-6 text-2xl lg:hidden"><Wordmark name="Pathwai" brand={{}} /></span>
+        <span className="mb-6 text-2xl lg:hidden"><Wordmark name={joinInfo?.name || "Pathwai"} brand={joinInfo?.brand || {}} /></span>
         <h1 className="mb-1 text-2xl font-bold sm:text-3xl">Sign in to Pathwai</h1>
-        <p className="mb-6 text-sm text-muted">One account for all your communities.</p>
+        <p className="mb-6 text-sm text-muted">
+          {/* Every community requires admin approval now -- no community can auto-approve a join request. */}
+          {joinInfo ? <>Sign in to join <strong>{joinInfo.name}</strong> — an admin will need to approve you.</> : "One account for all your communities."}
+        </p>
         <Card>
-          <SocialAuthButtons onSignedIn={onSocialSignedIn} disabled={busy} />
+          <SocialAuthButtons onSignedIn={onSocialSignedIn} disabled={busy} joinSlug={joinSlug} />
           <div className="my-5 flex items-center gap-3 text-xs text-muted">
             <span className="h-px flex-1 bg-line" /> or continue with email <span className="h-px flex-1 bg-line" />
           </div>
@@ -75,14 +98,7 @@ export default function Login() {
               <Input data-testid="login-password" type="password" value={password} onChange={(e) => setPassword(e.target.value)} required />
             </Field>
             {status ? (
-              <div className="rounded-xl border border-line bg-ink/5 p-4 text-sm" data-testid="login-status">
-                <p className="font-semibold">{status === "pending" ? "Your request is under review" : "Your request wasn't approved"}</p>
-                <ol className="mt-3 space-y-2 text-xs text-muted">
-                  <li className="flex items-center gap-2"><span className="h-2 w-2 rounded-full" style={{ background: "var(--accent)" }} />Request submitted</li>
-                  <li className="flex items-center gap-2"><span className={"h-2 w-2 rounded-full " + (status === "pending" ? "animate-pulse" : "")} style={{ background: status === "pending" ? "#F5A524" : "#ef4444" }} />{status === "pending" ? "The team is reviewing it" : "Reviewed by the team"}</li>
-                  <li className="flex items-center gap-2"><span className="h-2 w-2 rounded-full bg-ink/20" />{status === "pending" ? "You'll get a notification and can sign in once approved" : "Contact the team if you think this is a mistake"}</li>
-                </ol>
-              </div>
+              <MembershipStatusCard status={status} communityName={joinInfo?.name} testId="login-status" />
             ) : err && <p className="text-sm text-red-400" data-testid="login-error">{err}</p>}
             <Button type="submit" loading={busy} className="w-full" data-testid="login-submit">Sign in</Button>
           </form>

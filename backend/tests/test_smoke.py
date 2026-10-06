@@ -46,19 +46,24 @@ def test_password_reset_flow(c):
     assert c.post("/api/auth/forgot-password", json={"email": "nobody-here@example.com"}).status_code == 200
 
     # A garbage token is rejected.
-    assert c.post("/api/auth/reset-password", json={"token": "not-a-real-token", "password": "NewPass123!"}).status_code == 400
+    assert c.post("/api/auth/reset-password", json={"token": "not-a-real-token", "password": "NewPass1234!"}).status_code == 400
 
     token = create_reset_token("demo@yourcommunity.app")
-    assert c.post("/api/auth/reset-password", json={"token": token, "password": "NewPass123!"}).status_code == 200
+    # Same 10-character minimum as signup -- a reset must not be a way around the password rule.
+    assert c.post("/api/auth/reset-password", json={"token": token, "password": "Short123!"}).status_code == 422
+    assert c.post("/api/auth/reset-password", json={"token": token, "password": "NewPass1234!"}).status_code == 200
 
     # Old password no longer works, new one does.
     assert c.post("/api/auth/login", json={"email": "demo@yourcommunity.app", "password": "Demo123!"}).status_code == 401
-    r = c.post("/api/auth/login", json={"email": "demo@yourcommunity.app", "password": "NewPass123!"})
+    r = c.post("/api/auth/login", json={"email": "demo@yourcommunity.app", "password": "NewPass1234!"})
     assert r.status_code == 200, r.text
 
-    # Put the demo password back so later tests (and other modules' fixtures) aren't affected.
-    token2 = create_reset_token("demo@yourcommunity.app")
-    assert c.post("/api/auth/reset-password", json={"token": token2, "password": "Demo123!"}).status_code == 200
+    # Put the demo password back (straight in the DB: "Demo123!" is deliberately too short for the
+    # reset endpoint now) so later tests and other modules' fixtures aren't affected.
+    import asyncio
+    from auth import hash_password
+    asyncio.run(server.db.users.update_many({"email": "demo@yourcommunity.app"}, {"$set": {"password_hash": hash_password("Demo123!")}}))
+    c.post("/api/auth/logout")
 
 
 def test_lockout_429(c):
@@ -113,16 +118,25 @@ def test_admin(c):
     assert c.get("/api/admin/audit-log").status_code == 403
     login(c, "admin@yourcommunity.app")
     assert c.get("/api/admin/audit-log").status_code == 200
-    r = c.patch("/api/community/config", json={"community_name": "Test Co", "event_types": ["A", "B"]})
-    assert r.json()["event_types"] == ["A", "B"]
-    inv = c.post("/api/invites", json={"role": "member"}).json()
-    c.post("/api/auth/logout")
-    j = c.post(f"/api/invites/{inv['code']}/accept", json={"name": "New Person", "email": "new@x.com", "password": "StrongPass1234", "fields": {}})
-    assert j.status_code == 201, j.text
+    # mongomock is a process-wide store for the whole pytest run (not reset per TestClient block),
+    # so community_name/event_types have to be restored before this test ends, or any module that
+    # runs later (alphabetically or under a different collection order) inherits "Test Co" instead
+    # of playr's seeded defaults -- same risk already caught in test_hub_share.py/test_integrations.py.
+    before = c.get("/api/community/config").json()
+    try:
+        r = c.patch("/api/community/config", json={"community_name": "Test Co", "event_types": ["A", "B"]})
+        assert r.json()["event_types"] == ["A", "B"]
+        inv = c.post("/api/invites", json={"role": "member"}).json()
+        c.post("/api/auth/logout")
+        j = c.post(f"/api/invites/{inv['code']}/accept", json={"accepted_terms": True, "name": "New Person", "email": "new@x.com", "password": "StrongPass1234", "fields": {}})
+        assert j.status_code == 201, j.text
+    finally:
+        c.post("/api/auth/login", json={"email": "admin@yourcommunity.app", "password": "Demo123!"})
+        c.patch("/api/community/config", json={"community_name": before["community_name"], "event_types": before["event_types"]})
 
 
 def test_signup_and_chat(c):
-    r = c.post("/api/auth/signup", json={"email": "sig@x.com", "password": "StrongPass1234", "name": "Sig Nup"})
+    r = c.post("/api/auth/signup", json={"accepted_terms": True, "email": "sig@x.com", "password": "StrongPass1234", "name": "Sig Nup"})
     assert r.status_code == 201
     r = c.post("/api/chat/message", json={"message": "who can help me?", "role": "founder"})
     assert r.status_code == 200 and r.json()["reply"]

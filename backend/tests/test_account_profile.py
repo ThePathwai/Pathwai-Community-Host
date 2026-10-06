@@ -42,7 +42,7 @@ def _cleanup_dynamic_communities(c):
 
 
 def test_new_account_starts_with_a_blank_but_shaped_profile(c):
-    r = c.post("/api/hub/signup", json={"email": "profile1@example.com", "password": "Sup3rSecret!", "name": "Priya Profile"})
+    r = c.post("/api/hub/signup", json={"accepted_terms": True, "email": "profile1@example.com", "password": "Sup3rSecret!", "name": "Priya Profile"})
     assert r.status_code == 201, r.text
     me = c.get("/api/hub/me").json()["account"]
     assert me["title"] == "" and me["bio"] == "" and me["skill_set"] == [] and me.get("profile_completed") is False
@@ -102,7 +102,7 @@ def test_applying_to_a_community_prefills_from_the_saved_profile(c):
 
 
 def test_apply_time_title_overrides_the_saved_profile_title(c):
-    c.post("/api/hub/signup", json={"email": "profile2@example.com", "password": "Sup3rSecret!", "name": "Sam Second"})
+    c.post("/api/hub/signup", json={"accepted_terms": True, "email": "profile2@example.com", "password": "Sup3rSecret!", "name": "Sam Second"})
     c.patch("/api/hub/profile", json=PROFILE)
     r = c.post("/api/hub/communities/the-village/apply", json={"title": "Sommelier", "message": "Referred by a friend"})
     assert r.status_code == 201, r.text
@@ -112,7 +112,7 @@ def test_apply_time_title_overrides_the_saved_profile_title(c):
 
 
 def test_starting_a_community_carries_the_profile_into_the_founding_admin_entry(c):
-    c.post("/api/hub/signup", json={"email": "founder-profile@example.com", "password": "Sup3rSecret!", "name": "Founder Profile"})
+    c.post("/api/hub/signup", json={"accepted_terms": True, "email": "founder-profile@example.com", "password": "Sup3rSecret!", "name": "Founder Profile"})
     c.patch("/api/hub/profile", json=PROFILE)
     r = c.post("/api/hub/communities", json={"name": "Profile Test Club", "category": "wellness"})
     assert r.status_code == 201, r.text

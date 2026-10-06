@@ -1,6 +1,8 @@
 import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import { api } from "../lib/api";
+import { Bookmark } from "lucide-react";
+import { toast } from "sonner";
+import { api, errMsg } from "../lib/api";
 import { useAuth } from "../lib/auth";
 import { fieldLabel, fieldOn, typeLabel } from "../lib/profile";
 import { Chip, Empty, Input, PageHeader, Select, Spinner, hueFromName } from "../components/ui";
@@ -16,13 +18,12 @@ export default function Members() {
     const [kind, setKind] = useState("all");
   const [more, setMore] = useState(false);
 
+  const load = () => api.get("/users", { params: { q: q || undefined, offer, looking_for: seeking, interest, member_kind: kind } }).then((r) => setUsers(r.data));
   useEffect(() => { api.get("/users/filters").then((r) => setFilters(r.data)); }, []);
-  useEffect(() => {
-    const t = setTimeout(() => {
-      api.get("/users", { params: { q: q || undefined, offer, looking_for: seeking, interest, member_kind: kind } }).then((r) => setUsers(r.data));
-    }, 200);
-    return () => clearTimeout(t);
-  }, [q, offer, seeking, interest, kind]);
+  useEffect(() => { const t = setTimeout(load, 200); return () => clearTimeout(t); }, [q, offer, seeking, interest, kind]); // eslint-disable-line
+  // Bookmarking a member, same on/off toggle as a perk's save button (Resources.jsx) -- feeds the
+  // Saved section of /profile.
+  const toggleSave = async (id) => { try { await api.post(`/users/${id}/save`); load(); } catch (e) { toast.error(errMsg(e)); } };
 
   const opt = (label, arr) => [{ value: "all", label }, ...arr.map((x) => ({ value: x, label: x }))];
   const active = [offer, seeking, interest, kind].filter((x) => x !== "all").length;
@@ -58,6 +59,7 @@ export default function Members() {
                   </div>
                 )}
                 <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/10 to-transparent" />
+                <button onClick={(ev) => { ev.preventDefault(); toggleSave(u.id); }} aria-label="Save" data-testid="member-save-mobile" className="absolute left-1.5 top-1.5 rounded-full bg-black/35 p-1 text-white hover:bg-black/55"><Bookmark className={`h-3 w-3 ${u.is_saved ? "fill-current" : ""}`} /></button>
                 {u.member_type && u.member_type !== "founder" && <span className="absolute right-1.5 top-1.5"><Chip accent className="!px-1.5 !py-0.5 !text-[9px]">{typeLabel(config, u.member_type)}</Chip></span>}
                 <div className="absolute inset-x-0 bottom-0 p-2 text-white">
                   <p className="truncate text-[12px] font-bold leading-tight">{u.name}</p>
@@ -79,6 +81,7 @@ export default function Members() {
                     </div>
                   )}
                   <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-transparent to-transparent" />
+                  <button onClick={(ev) => { ev.preventDefault(); toggleSave(u.id); }} aria-label="Save" data-testid="member-save" className="absolute left-3 top-3 rounded-full bg-black/35 p-1.5 text-white hover:bg-black/55"><Bookmark className={`h-4 w-4 ${u.is_saved ? "fill-current" : ""}`} /></button>
                   <div className="absolute bottom-3 left-4 right-4 text-white">
                     <p className="font-display text-lg font-bold leading-tight">{u.name}</p>
                     {fieldOn(config, "title") && <p className="truncate text-xs text-white/80">{u.title}</p>}

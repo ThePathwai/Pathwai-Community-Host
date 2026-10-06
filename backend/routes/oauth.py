@@ -28,14 +28,12 @@ from fastapi import APIRouter, HTTPException, Request, Response
 from jwt import PyJWKClient
 from pydantic import BaseModel, Field
 
-from auth import ACCESS_MIN, REFRESH_DAYS, create_access_token, create_refresh_token
-from database import current_community, hub_db
-from .hub import records_for, set_community_cookie
+from auth import create_access_token, create_refresh_token, set_auth_cookies
+from database import COMMUNITY_SLUGS, current_community, hub_db
+from ._common import TERMS_REQUIRED_MSG, terms_stamp, audit_platform
+from .hub import _apply_to_community, records_for, set_community_cookie
 
 router = APIRouter(tags=["oauth"])
-
-COOKIE_SECURE = os.environ.get("COOKIE_SECURE", "false").lower() == "true"
-COOKIE_SAMESITE = os.environ.get("COOKIE_SAMESITE", "lax").lower()
 
 _PROVIDERS: Dict[str, Dict[str, Any]] = {
     "google": {
@@ -75,6 +73,14 @@ async def oauth_providers() -> Dict[str, Any]:
 class OAuthIn(BaseModel):
     credential: str = Field(min_length=10, description="The provider's signed ID token (a JWT).")
     name: Optional[str] = Field(default=None, max_length=120, description="Apple only sends a name once, outside the token — the client forwards it here if it has it.")
+    # Same purpose as SignupIn.join_slug (routes/hub.py) -- came from a community's own external
+    # share link (frontend CommunityLanding.jsx, via Signup.jsx/Login.jsx's ?join=<slug>) and chose
+    # a social sign-in instead of the email form. Without this, that context was silently dropped.
+    join_slug: Optional[str] = None
+    # Only needed when this sign-in would CREATE an account: the client sets it once the person has ticked
+    # "I agree to the Terms and Privacy Policy". Without it a brand-new person gets HTTP 428 (see below)
+    # and the client asks for the agreement and retries with the same credential.
+    accepted_terms: bool = False
 
 
 def _verify_id_token(provider: str, credential: str) -> Dict[str, Any]:
@@ -90,6 +96,8 @@ def _verify_id_token(provider: str, credential: str) -> Dict[str, Any]:
         )
     except jwt.PyJWTError as exc:
         raise HTTPException(status_code=401, detail=f"Couldn't verify that {cfg['label']} sign-in ({exc}). Please try again.")
+    if str(claims.get("email_verified", "true")).lower() != "true":
+        raise HTTPException(status_code=400, detail=f"Your {cfg['label']} email address isn't verified, so we can't sign you in with it.")
     if not claims.get("email"):
         raise HTTPException(status_code=400, detail=f"Your {cfg['label']} account doesn't share an email address, so we can't sign you in with it.")
     return claims
@@ -110,6 +118,8 @@ async def oauth_login(provider: str, body: OAuthIn, request: Request, response: 
     approved = [(sl, d) for sl, d in recs if (d.get("membership_status") or "approved") == "approved"]
     is_new_account = not hub and not recs
 
+    if is_new_account and not body.accepted_terms:
+        raise HTTPException(status_code=428, detail={"error": TERMS_REQUIRED_MSG, "code": "terms_required"})
     if is_new_account:
         # Brand-new person, verified by the provider instead of a password — same shape /hub/signup
         # creates, just without a password hash (there's nothing to check it against).
@@ -117,7 +127,7 @@ async def oauth_login(provider: str, body: OAuthIn, request: Request, response: 
         hub = {
             "id": uid, "name": name, "email": email, "password_hash": None, "avatar_url": picture or None,
             "title": "", "oauth_provider": provider, "oauth_sub": sub,
-            "created_at": datetime.now(timezone.utc).isoformat(),
+            "created_at": datetime.now(timezone.utc).isoformat(), **terms_stamp(),
         }
         await hub_db().accounts.insert_one(dict(hub))
     elif not hub and not approved:
@@ -142,17 +152,30 @@ async def oauth_login(provider: str, body: OAuthIn, request: Request, response: 
 
     access = create_access_token(uid, role)
     refresh = create_refresh_token(uid)
-    response.set_cookie("access_token", access, httponly=True, secure=COOKIE_SECURE, samesite=COOKIE_SAMESITE, max_age=ACCESS_MIN * 60, path="/")
-    response.set_cookie("refresh_token", refresh, httponly=True, secure=COOKIE_SECURE, samesite=COOKIE_SAMESITE, max_age=REFRESH_DAYS * 86400, path="/")
+    set_auth_cookies(response, access, refresh)
     if pick:
         set_community_cookie(response, pick[0])
+    await audit_platform(uid, "auth.signup" if is_new_account else "auth.login_success", "user", uid, {"provider": provider}, request=request)
 
     user = pick[1] if pick else {"id": uid, "name": hub.get("name") if hub else name, "email": email}
     safe_user = {k: v for k, v in user.items() if k not in ("_id", "password_hash")}
+
+    # Same share-link join as /hub/signup's join_slug (routes/hub.py) -- every community requires
+    # admin approval, so this never seats the person immediately; it just makes sure a request is
+    # actually filed instead of silently dropping the "I'm here to join X" context from the share
+    # link just because they chose Google/Apple over the email form.
+    joined = None
+    if body.join_slug and body.join_slug in COMMUNITY_SLUGS:
+        result = await _apply_to_community(body.join_slug, {"id": uid, "name": safe_user.get("name") or name, "email": email, "avatar_url": picture})
+        joined = {"slug": body.join_slug, "status": result["status"]}
+        if result["status"] == "approved":
+            set_community_cookie(response, body.join_slug)
+
     return {
         "ok": True,
         "user": safe_user if pick else None,
         "account": {"id": uid, "name": safe_user.get("name"), "email": email},
         "access_token": access,
         "new_account": is_new_account,
+        "joined": joined,
     }

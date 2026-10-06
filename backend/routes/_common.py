@@ -1,13 +1,14 @@
 """Shared helpers for route modules."""
 from __future__ import annotations
 
+import logging
 from datetime import datetime, timezone
 from typing import Any, Dict, Optional
 
 from fastapi import HTTPException, Request
 
-from auth import get_current_user_optional
-from database import db, strip_id
+from auth import client_ip, get_current_user_optional
+from database import db, demo_mode, hub_db, strip_id
 
 
 def check_image(url: Optional[str]) -> Optional[str]:
@@ -35,7 +36,9 @@ async def viewer(request: Request, role: Optional[str] = None) -> Optional[Dict[
     me = await get_current_user_optional(request)
     if me:
         return me
-    if role:
+    # Public "preview as <role>" browsing is a demo-site feature only. On a real deployment this would
+    # hand any signed-out visitor the dashboard of the first real member (or admin) with that role.
+    if role and demo_mode():
         u = await db.users.find_one({"is_demo_me_for_role": role}) or await db.users.find_one({"role": role})
         return clean(u)
     return None
@@ -48,15 +51,34 @@ async def require_viewer(request: Request, role: Optional[str] = None) -> Dict[s
     return me
 
 
+def _audit_entry(actor_id, action, target_type, target_id, meta, ip=None) -> Dict[str, Any]:
+    from security import request_id  # local: security imports auth, which imports database
+    return {
+        "actor_id": actor_id, "action": action, "target_type": target_type, "target_id": target_id,
+        "meta": meta or {}, "ip": ip, "request_id": request_id(), "created_at": datetime.now(timezone.utc),
+    }
+
+
 async def audit(actor_id: Optional[str], action: str, target_type: Optional[str] = None,
                 target_id: Optional[str] = None, meta: Optional[Dict[str, Any]] = None) -> None:
+    """Append-only entry in the ACTIVE COMMUNITY's audit log (what that community's admins see)."""
     try:
-        await db.audit_log.insert_one({
-            "actor_id": actor_id, "action": action, "target_type": target_type,
-            "target_id": target_id, "meta": meta or {}, "created_at": datetime.now(timezone.utc),
-        })
-    except Exception:  # noqa: BLE001
-        pass
+        await db.audit_log.insert_one(_audit_entry(actor_id, action, target_type, target_id, meta))
+    except Exception as exc:  # noqa: BLE001 -- auditing must never break the request it describes
+        logging.getLogger(__name__).error("audit write failed for %s: %s", action, exc)
+
+
+async def audit_platform(actor_id: Optional[str], action: str, target_type: Optional[str] = None,
+                         target_id: Optional[str] = None, meta: Optional[Dict[str, Any]] = None,
+                         request: Optional[Request] = None) -> None:
+    """Append-only entry in the PLATFORM audit log (hub database): sign-ins, account lifecycle, community
+    creation, platform-admin access, data export/deletion. This is the log an auditor asks for -- it
+    exists even when no community is selected (e.g. a login before any community is pinned)."""
+    try:
+        ip = client_ip(request) if request is not None else None
+        await hub_db().audit_log.insert_one(_audit_entry(actor_id, action, target_type, target_id, meta, ip))
+    except Exception as exc:  # noqa: BLE001
+        logging.getLogger(__name__).error("platform audit write failed for %s: %s", action, exc)
 
 
 def lower_set(*lists: Any) -> set:
@@ -97,7 +119,7 @@ def audience_ok(doc: Dict[str, Any], me: Optional[Dict[str, Any]]) -> bool:
     return member_type(me) in aud
 
 
-PRIVATE_FIELDS = ("email", "phone", "settings", "admin_notes", "mentor_ids", "hidden_from_directory")
+PRIVATE_FIELDS = ("email", "phone", "settings", "admin_notes", "mentor_ids", "hidden_from_directory", "saved_by")
 SENSITIVE_FOR_OUTSIDERS = ("traction", "revenue_funding_status")
 
 
@@ -125,3 +147,39 @@ def public_view(u: Dict[str, Any], viewer_user: Optional[Dict[str, Any]]) -> Dic
             for f in SENSITIVE_FOR_OUTSIDERS:
                 out.pop(f, None)
     return out
+
+
+def public_base_url(request: Request) -> str:
+    """The externally visible origin of THIS API (scheme://host), for building webhook URLs and
+    verifying signed webhooks behind Railway's proxy. PUBLIC_API_URL wins; otherwise X-Forwarded-*
+    headers; otherwise whatever the request itself says."""
+    import os
+    env = (os.environ.get("PUBLIC_API_URL") or "").strip().rstrip("/")
+    if env:
+        return env
+    proto = (request.headers.get("x-forwarded-proto") or request.url.scheme).split(",")[0].strip()
+    host = (request.headers.get("x-forwarded-host") or request.headers.get("host") or request.url.netloc).split(",")[0].strip()
+    return f"{proto}://{host}"
+
+
+def return_base_url(request: Request) -> str:
+    """Where the browser should land after leaving for a third party (e.g. Stripe Checkout) and coming
+    back: the page's own Origin when it is one of our allowed frontend origins (so a custom domain and
+    the default one both work), else the configured FRONTEND_URL, else this server."""
+    import os
+    allowed = {o.strip().rstrip("/") for o in (os.environ.get("CORS_ORIGINS") or "").split(",") if o.strip()}
+    origin = (request.headers.get("origin") or "").rstrip("/")
+    if origin and (origin in allowed or not allowed or "*" in allowed):
+        return origin
+    return ((os.environ.get("FRONTEND_URL") or "").strip() or str(request.base_url)).rstrip("/")
+
+
+# ---------- legal consent ----------
+# Bump when the Terms or Privacy Policy change materially (frontend/src/lib/legal.js carries the same
+# value). Every new account records which version it accepted and when.
+LEGAL_VERSION = "2026-10-06"
+TERMS_REQUIRED_MSG = "You need to accept the Terms of Service and Privacy Policy to create an account."
+
+
+def terms_stamp() -> Dict[str, Any]:
+    return {"terms_accepted_at": now_iso(), "terms_version": LEGAL_VERSION}

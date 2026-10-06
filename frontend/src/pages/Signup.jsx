@@ -1,8 +1,9 @@
 import React, { useEffect, useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { api, errMsg } from "../lib/api";
 import { useAuth } from "../lib/auth";
-import { AvatarUpload, Button, Card, Field, Input, Select, TagInput, Textarea, Wordmark, cx } from "../components/ui";
+import { applyBrand } from "../lib/theme";
+import { AvatarUpload, Button, Card, Field, Input, MembershipStatusCard, Select, TagInput, Textarea, TermsConsent, Wordmark, cx } from "../components/ui";
 import { SUGGEST } from "../lib/profile";
 import SocialAuthButtons from "../components/SocialAuthButtons";
 
@@ -34,7 +35,7 @@ function IntentPicker({ onPick }) {
 // Asked once, right after account creation — before landing in the hub or in the new community's
 // setup wizard — so every "request to join" from here on starts pre-filled instead of asking the
 // same standard questions (occupation, bio, skills, interests) fresh for each community.
-function BuildProfileStep({ account, onDone }) {
+function BuildProfileStep({ account, onDone, joinInfo }) {
   const [f, setF] = useState({
     name: account?.name || "", age: "", title: "", company: "", location: "", bio: "", skill_set: [], interests_hobbies: [], goals: [], support_needs: [],
     contact: { phone: "", linkedin: "", instagram: "", website: "" },
@@ -52,7 +53,7 @@ function BuildProfileStep({ account, onDone }) {
   };
   return (
     <div className="mx-auto flex min-h-screen max-w-lg flex-col justify-center px-4 py-10">
-      <span className="mb-6 text-2xl"><Wordmark name="Pathwai" brand={{}} /></span>
+      <span className="mb-6 text-2xl"><Wordmark name={joinInfo?.name || "Pathwai"} brand={joinInfo?.brand || {}} /></span>
       <h1 className="mb-1 text-2xl font-bold sm:text-3xl">Build your Pathwai profile</h1>
       <p className="mb-6 text-sm text-muted">A few standard questions, asked once. From here on, every community you apply to starts with this instead of asking again — you can still adjust it per community afterward.</p>
       <Card>
@@ -90,18 +91,47 @@ function BuildProfileStep({ account, onDone }) {
   );
 }
 
+// Same persistent "under review" card Login.jsx shows an existing member who re-logs-in while
+// still pending -- previously a brand-new signup only got a toast here, which vanishes, leaving
+// the Hub tile's pending pill as the only lasting sign the request actually went in. One card,
+// one set of words, wherever "pending" shows up in the join flow.
+function PendingStep({ communityName, onContinue }) {
+  return (
+    <div className="mx-auto flex min-h-screen max-w-lg flex-col justify-center px-4 py-10">
+      <span className="mb-6 text-2xl"><Wordmark name={communityName || "Pathwai"} brand={{}} /></span>
+      <h1 className="mb-1 text-2xl font-bold sm:text-3xl">Request sent</h1>
+      <p className="mb-6 text-sm text-muted">Your account is set up. Here's where things stand with {communityName || "the community"}.</p>
+      <MembershipStatusCard status="pending" communityName={communityName} testId="signup-pending-status" />
+      <Button className="mt-6 w-full" onClick={onContinue} data-testid="pending-continue">Go to your Hub</Button>
+    </div>
+  );
+}
+
 export default function Signup() {
   const { account, signup, applySession, refresh } = useAuth();
   const nav = useNavigate();
-  const [intent, setIntent] = useState(null); // null | "member" | "admin"
+  const [params] = useSearchParams();
+  const joinSlug = params.get("join") || null;
+  const [intent, setIntent] = useState(joinSlug ? "member" : null); // null | "member" | "admin"
   const [f, setF] = useState({ name: "", email: "", password: "" });
   const [community, setCommunity] = useState({ name: "", category: "other" });
   const [categories, setCategories] = useState([]);
   const [err, setErr] = useState("");
+  const [agreed, setAgreed] = useState(false); // "I agree to the Terms of Service and Privacy Policy"
   const [busy, setBusy] = useState(false);
   const [showProfile, setShowProfile] = useState(false); // account exists; standard-profile step before landing anywhere
+  const [showPending, setShowPending] = useState(false); // profile step done; join request came back pending approval
+  const [joinInfo, setJoinInfo] = useState(null); // the target community's public info, when arriving via a share link
+  const [joinResult, setJoinResult] = useState(null); // {slug, status} echoed back by signup when join_slug was sent
 
   useEffect(() => { api.get("/hub/community-categories").then((r) => setCategories(r.data.categories)).catch(() => {}); }, []);
+
+  useEffect(() => {
+    if (!joinSlug) return;
+    api.get(`/hub/communities/${joinSlug}/public`)
+      .then((r) => { setJoinInfo(r.data); applyBrand({ community_name: r.data.name, brand: r.data.brand }); })
+      .catch(() => {}); // bad/stale link -- fall back to the plain Pathwai signup, silently
+  }, [joinSlug]);
 
   const set = (k) => (e) => setF({ ...f, [k]: e.target.value });
   const setC = (k) => (e) => setCommunity({ ...community, [k]: e.target.value });
@@ -119,7 +149,15 @@ export default function Signup() {
       } catch (ex) { setErr(errMsg(ex)); setBusy(false); setShowProfile(false); }
     } else {
       await refresh(); // picks up whatever was just saved in the standard profile step
-      nav("/hub", { replace: true });
+      if (joinResult?.status === "approved") {
+        // signup already dropped the pw_community cookie for us -- straight into the community
+        nav("/", { replace: true });
+      } else if (joinResult?.status === "pending") {
+        setShowProfile(false);
+        setShowPending(true);
+      } else {
+        nav("/hub", { replace: true });
+      }
     }
   };
 
@@ -127,28 +165,35 @@ export default function Signup() {
     e.preventDefault(); setErr("");
     if (f.password.length < 10 || !/[A-Za-z]/.test(f.password) || !/\d/.test(f.password)) return setErr("Password needs 10+ characters with a letter and a number.");
     if (intent === "admin" && community.name.trim().length < 2) return setErr("Give your community a name.");
+    if (!agreed) return setErr("Please agree to the Terms of Service and Privacy Policy to create your account.");
     setBusy(true);
     try {
-      await signup(f);
+      const payload = { ...f, accepted_terms: true, ...(intent === "member" && joinSlug ? { join_slug: joinSlug } : {}) };
+      const data = await signup(payload);
+      setJoinResult(data?.joined || null);
       setShowProfile(true);
     } catch (ex) { setErr(errMsg(ex)); } finally { setBusy(false); }
   };
 
-  const onSocialSignedIn = (data) => { applySession(data); setShowProfile(true); };
+  const onSocialSignedIn = (data) => { applySession(data); setJoinResult(data?.joined || null); setShowProfile(true); };
 
-  if (showProfile) return <BuildProfileStep account={account} onDone={afterProfile} />;
+  if (showPending) return <PendingStep communityName={joinInfo?.name} onContinue={() => nav("/hub", { replace: true })} />;
+  if (showProfile) return <BuildProfileStep account={account} onDone={afterProfile} joinInfo={joinInfo} />;
   if (!intent) return <IntentPicker onPick={setIntent} />;
 
   return (
     <div className="mx-auto flex min-h-screen max-w-md flex-col justify-center px-4 py-10">
-      <span className="mb-6 text-2xl"><Wordmark name="Pathwai" brand={{}} /></span>
-      <button className="mb-3 w-fit text-xs font-medium text-muted underline" onClick={() => setIntent(null)} data-testid="intent-back">← Back</button>
+      <span className="mb-6 text-2xl"><Wordmark name={joinInfo?.name || "Pathwai"} brand={joinInfo?.brand || {}} /></span>
+      {!joinSlug && <button className="mb-3 w-fit text-xs font-medium text-muted underline" onClick={() => setIntent(null)} data-testid="intent-back">← Back</button>}
       <h1 className="mb-1 text-2xl font-bold sm:text-3xl">{intent === "admin" ? "Set up your community" : "Create your Pathwai account"}</h1>
       <p className="mb-6 text-sm text-muted">
-        {intent === "admin" ? "First your account, then a couple of quick choices for your community — you can change any of it later." : "One login for every community. After this you can browse communities and ask to join the ones that fit you."}
+        {joinInfo
+          // Every community requires admin approval now -- no community can auto-approve a join request.
+          ? <>You're creating your Pathwai account to join <strong>{joinInfo.name}</strong> — an admin will need to approve you.</>
+          : intent === "admin" ? "First your account, then a couple of quick choices for your community — you can change any of it later." : "One login for every community. After this you can browse communities and ask to join the ones that fit you."}
       </p>
       <Card>
-        <SocialAuthButtons onSignedIn={onSocialSignedIn} disabled={busy} />
+        <SocialAuthButtons onSignedIn={onSocialSignedIn} disabled={busy} joinSlug={joinSlug} acceptedTerms={agreed} />
         <div className="my-5 flex items-center gap-3 text-xs text-muted">
           <span className="h-px flex-1 bg-line" /> or with email <span className="h-px flex-1 bg-line" />
         </div>
@@ -165,6 +210,7 @@ export default function Signup() {
               </Field>
             </div>
           )}
+          <TermsConsent checked={agreed} onChange={(v) => { setAgreed(v); if (v) setErr(""); }} testId="signup-accept-terms" />
           {err && <p className="text-sm text-red-400" data-testid="signup-error">{err}</p>}
           <Button type="submit" loading={busy} className="w-full" data-testid="signup-submit">{intent === "admin" ? "Create account & community" : "Create account"}</Button>
         </form>

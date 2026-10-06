@@ -3,22 +3,25 @@ import { Link, useNavigate } from "react-router-dom";
 import { Bookmark, X } from "lucide-react";
 import { toast } from "sonner";
 import { api, errMsg, fmtDate } from "../lib/api";
-import { Avatar, Button, Card, Chip, Empty, Field, Modal, PageHeader, Spinner, Tabs, Textarea, Input } from "../components/ui";
+import { useAuth } from "../lib/auth";
+import { ReachOutModal } from "../components/ReachOutModal";
+import { Avatar, Button, Card, Chip, Empty, PageHeader, Spinner, Tabs } from "../components/ui";
 
 export default function Matches() {
   const nav = useNavigate();
+  const { config } = useAuth();
   const [tab, setTab] = useState("people");
   const [d, setD] = useState(null);
-  const [intro, setIntro] = useState(null);
-  const [topic, setTopic] = useState("");
-  const [note, setNote] = useState("");
+  const [intro, setIntro] = useState(null); // the match row the reach-out modal is open for
+  const [introMember, setIntroMember] = useState(null); // that person's full profile (has contact info)
   const load = useCallback(() => api.get("/matches").then((r) => setD(r.data)).catch((e) => toast.error(errMsg(e))), []);
   useEffect(() => { load(); }, [load]);
 
   const act = async (kind, id, action) => { try { await api.post("/matches/action", { kind, target_id: id, action }); if (action === "dismiss") toast("Dismissed — we'll show fewer like this"); if (action === "save") toast.success("Saved"); load(); } catch (e) { toast.error(errMsg(e)); } };
-  const sendIntro = async () => {
-    try { await api.post("/connect-requests", { recipient_id: intro.user.id, topic, note }); await api.post("/matches/action", { kind: "person", target_id: intro.user.id, action: "intro" }); toast.success(`Intro request sent to ${intro.user.name.split(" ")[0]}`); setIntro(null); setTopic(""); setNote(""); load(); } catch (e) { toast.error(errMsg(e)); }
-  };
+  // Fetch the full profile (not just the trimmed match-result fields) so the modal can offer their
+  // actual phone/email, then open it.
+  const openIntro = (m) => { setIntro(m); setIntroMember(null); api.get(`/users/${m.user.id}`).then((r) => setIntroMember(r.data)).catch(() => setIntroMember(m.user)); };
+  const introDone = () => act("person", intro.user.id, "intro");
   const Actions = ({ kind, id, state, primary }) => (
     <div className="mt-4 flex flex-wrap items-center gap-2">
       {primary}
@@ -58,7 +61,7 @@ export default function Matches() {
                   </div>
                 </div>
                 <p className="line-clamp-1 text-[9px] leading-tight text-muted"><span className="text-ink/50">Why · </span>{m.why}</p>
-                <ActionsCompact kind="person" id={m.user.id} state={m.state} primary={m.state === "intro" ? <Chip className="!px-1.5 !py-0.5 !text-[9px]">Requested</Chip> : <Button className="!flex !w-full !min-w-0 !px-1.5 !py-1 !text-[9px]" onClick={() => { setIntro(m); setTopic(m.can_help_you?.[0] || ""); }} data-testid="request-intro-mobile"><span className="truncate">{m.next_action}</span></Button>} />
+                <ActionsCompact kind="person" id={m.user.id} state={m.state} primary={m.state === "intro" ? <Chip className="!px-1.5 !py-0.5 !text-[9px]">Reached out</Chip> : <Button className="!flex !w-full !min-w-0 !px-1.5 !py-1 !text-[9px]" onClick={() => openIntro(m)} data-testid="request-intro-mobile"><span className="truncate">{m.next_action}</span></Button>} />
               </div>))}
             {tab === "events" && list.map((e) => (
               <div key={e.id} data-testid="match-tile" className="card card-hover !p-2 flex flex-col gap-1">
@@ -85,7 +88,7 @@ export default function Matches() {
                   <div><Link to={`/members/${m.user.id}`} className="font-medium hover:underline">{m.user.name}</Link><p className="text-xs text-muted">{m.user.title}{m.user.company ? ` · ${m.user.company}` : ""}</p></div></div>
                 <p className="mt-3 text-sm"><span className="text-muted">Why: </span>{m.why}</p>
                 <div className="mt-3 flex flex-wrap gap-1">{(m.matched_on || []).slice(0, 5).map((t) => <Chip key={t}>{t}</Chip>)}</div>
-                <Actions kind="person" id={m.user.id} state={m.state} primary={m.state === "intro" ? <Chip>Intro requested</Chip> : <Button onClick={() => { setIntro(m); setTopic(m.can_help_you?.[0] || ""); }} data-testid="request-intro">{m.next_action}</Button>} />
+                <Actions kind="person" id={m.user.id} state={m.state} primary={m.state === "intro" ? <Chip>Reached out</Chip> : <Button onClick={() => openIntro(m)} data-testid="request-intro">{m.next_action}</Button>} />
               </Card>))}
             {tab === "events" && list.map((e) => (
               <Card key={e.id}><span className="eyebrow">{e.match_type}</span><h3 className="mt-2 text-lg">{e.title}</h3><p className="text-sm text-muted">{fmtDate(e.starts_at)} · {e.location}</p>
@@ -97,11 +100,8 @@ export default function Matches() {
                 <Actions kind="resource" id={r.id} state={r.state} primary={<a className="btn-primary" href={r.url || r.external_url} target="_blank" rel="noreferrer" onClick={() => api.post(`/resources/${r.id}/open`).catch(() => {})}>Open resource</a>} /></Card>))}
           </div>
         </>)}
-      <Modal open={!!intro} onClose={() => setIntro(null)} title={`Request an intro to ${intro?.user.name || ""}`}>
-        <div className="space-y-4"><Field label="What would you like to talk about?"><Input value={topic} onChange={(e) => setTopic(e.target.value)} /></Field>
-          <Field label="Add a note (optional)"><Textarea value={note} onChange={(e) => setNote(e.target.value)} /></Field>
-          <Button onClick={sendIntro} disabled={!topic.trim()} data-testid="send-intro">Send request</Button></div>
-      </Modal>
+      <ReachOutModal open={!!intro} onClose={() => setIntro(null)} member={introMember} communityName={config?.community_name}
+        defaultTopic={intro?.can_help_you?.[0] || ""} onSent={introDone} />
     </div>
   );
 }

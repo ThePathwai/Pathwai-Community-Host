@@ -14,6 +14,21 @@ from dotenv import load_dotenv
 ROOT_DIR = Path(__file__).parent
 load_dotenv(ROOT_DIR / ".env")
 
+def demo_mode() -> bool:
+    """True for the throwaway demo/dev/test environment, False for a real deployment.
+
+    Demo mode is what seeds fake communities and members, creates the public "Try the demo" logins,
+    exposes the reseed endpoints and makes demo@/admin@yourcommunity.app a platform admin. A real
+    launch must have none of that, so it is OFF whenever the app talks to a real MongoDB
+    (USE_MOCK_DB unset/false) and only turns on there if DEMO_MODE=true is set explicitly -- e.g.
+    for a separate, public "poke around" instance. With the in-memory mock DB (local dev, tests,
+    the static preview) it defaults to on."""
+    v = os.environ.get("DEMO_MODE")
+    if v is not None and v.strip() != "":
+        return v.strip().lower() == "true"
+    return os.environ.get("USE_MOCK_DB", "false").lower() == "true"
+
+
 if os.environ.get("USE_MOCK_DB", "false").lower() == "true":
     from mongomock_motor import AsyncMongoMockClient
 
@@ -25,7 +40,9 @@ else:
 
 _BASE = os.environ.get("DB_NAME", "test_database")
 DEFAULT_COMMUNITY = "playr"
-COMMUNITY_SLUGS = ["playr", "grace", "the-village", "club-pto"]
+# The four built-ins only exist (and are only routable) in demo mode. A real deployment starts with no
+# communities at all: each one is created self-serve and registered from hub_db().communities at boot.
+COMMUNITY_SLUGS = ["playr", "grace", "the-village", "club-pto"] if demo_mode() else []
 _current: contextvars.ContextVar = contextvars.ContextVar("pathwai_community", default=DEFAULT_COMMUNITY)
 
 

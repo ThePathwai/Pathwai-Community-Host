@@ -35,14 +35,21 @@ def test_dashboard_cover_default_none(c):
 
 def test_admin_can_set_and_clear_dashboard_cover(c):
     login(c, "admin@yourcommunity.app")
-    r = c.patch("/api/community/config", json={"dashboard_cover_url": SMALL_JPEG})
-    assert r.status_code == 200
-    assert r.json()["dashboard_cover_url"] == SMALL_JPEG
-    assert c.get("/api/community/config").json()["dashboard_cover_url"] == SMALL_JPEG
+    # try/finally so a failed assertion mid-test still leaves dashboard_cover_url cleared --
+    # mongomock is a process-wide store for the whole pytest run (not reset per TestClient block),
+    # so an uncleared value here would otherwise leak into later test modules. Same risk class
+    # caught in test_hub_share.py/test_integrations.py/test_smoke.py.
+    try:
+        r = c.patch("/api/community/config", json={"dashboard_cover_url": SMALL_JPEG})
+        assert r.status_code == 200
+        assert r.json()["dashboard_cover_url"] == SMALL_JPEG
+        assert c.get("/api/community/config").json()["dashboard_cover_url"] == SMALL_JPEG
 
-    r = c.patch("/api/community/config", json={"dashboard_cover_url": ""})
-    assert r.status_code == 200
-    assert r.json()["dashboard_cover_url"] is None
+        r = c.patch("/api/community/config", json={"dashboard_cover_url": ""})
+        assert r.status_code == 200
+        assert r.json()["dashboard_cover_url"] is None
+    finally:
+        c.patch("/api/community/config", json={"dashboard_cover_url": ""})
 
 
 def test_dashboard_cover_reject_bad_url(c):

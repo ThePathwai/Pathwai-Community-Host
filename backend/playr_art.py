@@ -107,3 +107,10 @@ def png_data_uri(name: str) -> Optional[str]:
     if not p.exists():
         return None
     return "data:image/png;base64," + base64.b64encode(p.read_bytes()).decode()
+
+
+def jpg_data_uri(name: str) -> Optional[str]:
+    p = _ASSETS / name
+    if not p.exists():
+        return None
+    return "data:image/jpeg;base64," + base64.b64encode(p.read_bytes()).decode()

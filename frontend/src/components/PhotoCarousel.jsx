@@ -1,40 +1,82 @@
 import React, { useEffect, useRef, useState } from "react";
-import { ArrowLeft, ArrowRight, ImagePlus, Trash2 } from "lucide-react";
+import { ArrowLeft, ArrowRight, Expand, ImagePlus, Trash2 } from "lucide-react";
 import { Button, Input, PhotoCropModal, cx } from "./ui";
 
 // Auto-sliding display carousel — shown on the community dashboard once an admin has added photos.
+// Clicking a photo (or the expand hint) opens it full-size in a lightbox; the same prev/next/dots
+// controls work there too, so browsing doesn't reset back to the thumbnail strip.
 export function PhotoCarousel({ photos = [], intervalMs = 5000, className = "" }) {
   const [i, setI] = useState(0);
   const [paused, setPaused] = useState(false);
+  const [expanded, setExpanded] = useState(false);
+  const prev = () => setI((x) => (x - 1 + photos.length) % photos.length);
+  const next = () => setI((x) => (x + 1) % photos.length);
   useEffect(() => { if (i >= photos.length) setI(0); }, [photos.length]); // eslint-disable-line
   useEffect(() => {
-    if (photos.length < 2 || paused) return undefined;
-    const t = setInterval(() => setI((x) => (x + 1) % photos.length), intervalMs);
+    if (photos.length < 2 || paused || expanded) return undefined;
+    const t = setInterval(next, intervalMs);
     return () => clearInterval(t);
-  }, [photos.length, paused, intervalMs]);
+  }, [photos.length, paused, expanded, intervalMs]); // eslint-disable-line
+  useEffect(() => {
+    if (!expanded) return undefined;
+    const onKey = (e) => {
+      if (e.key === "Escape") setExpanded(false);
+      else if (e.key === "ArrowLeft") prev();
+      else if (e.key === "ArrowRight") next();
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [expanded, photos.length]); // eslint-disable-line
   if (photos.length === 0) return null;
   return (
-    <div className={cx("group relative overflow-hidden rounded-2xl bg-ink/5", className)} data-testid="dashboard-carousel"
-      onMouseEnter={() => setPaused(true)} onMouseLeave={() => setPaused(false)}>
-      {photos.map((src, idx) => (
-        <img key={idx} src={src} alt="" className="absolute inset-0 h-full w-full object-cover transition-opacity duration-700 ease-in-out" style={{ opacity: idx === i ? 1 : 0 }} />
-      ))}
-      <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/45 via-transparent to-transparent" />
-      {photos.length > 1 && (
-        <>
-          <button type="button" aria-label="Previous photo" data-testid="carousel-prev" onClick={() => setI((x) => (x - 1 + photos.length) % photos.length)}
-            className="absolute left-2 top-1/2 -translate-y-1/2 rounded-full bg-black/40 p-1.5 text-white opacity-0 transition group-hover:opacity-100 focus-visible:opacity-100"><ArrowLeft className="h-4 w-4" /></button>
-          <button type="button" aria-label="Next photo" data-testid="carousel-next" onClick={() => setI((x) => (x + 1) % photos.length)}
-            className="absolute right-2 top-1/2 -translate-y-1/2 rounded-full bg-black/40 p-1.5 text-white opacity-0 transition group-hover:opacity-100 focus-visible:opacity-100"><ArrowRight className="h-4 w-4" /></button>
-          <div className="absolute bottom-3 left-1/2 flex -translate-x-1/2 gap-1.5">
-            {photos.map((_, idx) => (
-              <button key={idx} type="button" aria-label={`Show photo ${idx + 1}`} data-testid="carousel-dot" onClick={() => setI(idx)}
-                className="h-1.5 rounded-full transition-all" style={{ width: idx === i ? "1.25rem" : "0.375rem", background: idx === i ? "#fff" : "rgba(255,255,255,.55)" }} />
-            ))}
-          </div>
-        </>
+    <>
+      <div className={cx("group relative overflow-hidden rounded-2xl bg-ink/5", className)} data-testid="dashboard-carousel"
+        onMouseEnter={() => setPaused(true)} onMouseLeave={() => setPaused(false)}>
+        {photos.map((src, idx) => (
+          <img key={idx} src={src} alt="" onClick={() => setExpanded(true)} data-testid="carousel-photo"
+            className="absolute inset-0 h-full w-full cursor-zoom-in object-cover transition-opacity duration-700 ease-in-out" style={{ opacity: idx === i ? 1 : 0 }} />
+        ))}
+        <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/45 via-transparent to-transparent" />
+        <span className="pointer-events-none absolute right-2 top-2 flex h-7 w-7 items-center justify-center rounded-full bg-black/40 text-white opacity-0 transition group-hover:opacity-100">
+          <Expand className="h-3.5 w-3.5" />
+        </span>
+        {photos.length > 1 && (
+          <>
+            <button type="button" aria-label="Previous photo" data-testid="carousel-prev" onClick={(e) => { e.stopPropagation(); prev(); }}
+              className="absolute left-2 top-1/2 -translate-y-1/2 rounded-full bg-black/40 p-1.5 text-white opacity-0 transition group-hover:opacity-100 focus-visible:opacity-100"><ArrowLeft className="h-4 w-4" /></button>
+            <button type="button" aria-label="Next photo" data-testid="carousel-next" onClick={(e) => { e.stopPropagation(); next(); }}
+              className="absolute right-2 top-1/2 -translate-y-1/2 rounded-full bg-black/40 p-1.5 text-white opacity-0 transition group-hover:opacity-100 focus-visible:opacity-100"><ArrowRight className="h-4 w-4" /></button>
+            <div className="absolute bottom-3 left-1/2 flex -translate-x-1/2 gap-1.5">
+              {photos.map((_, idx) => (
+                <button key={idx} type="button" aria-label={`Show photo ${idx + 1}`} data-testid="carousel-dot" onClick={(e) => { e.stopPropagation(); setI(idx); }}
+                  className="h-1.5 rounded-full transition-all" style={{ width: idx === i ? "1.25rem" : "0.375rem", background: idx === i ? "#fff" : "rgba(255,255,255,.55)" }} />
+              ))}
+            </div>
+          </>
+        )}
+      </div>
+      {expanded && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/85 p-4" onClick={() => setExpanded(false)} data-testid="carousel-lightbox">
+          <button type="button" aria-label="Close" data-testid="carousel-lightbox-close" onClick={() => setExpanded(false)}
+            className="absolute right-4 top-4 flex h-9 w-9 items-center justify-center rounded-full bg-white/10 text-white backdrop-blur hover:bg-white/20">✕</button>
+          <img src={photos[i]} alt="" onClick={(e) => e.stopPropagation()} className="max-h-[90vh] max-w-[92vw] rounded-lg object-contain shadow-2xl" />
+          {photos.length > 1 && (
+            <>
+              <button type="button" aria-label="Previous photo" data-testid="carousel-lightbox-prev" onClick={(e) => { e.stopPropagation(); prev(); }}
+                className="absolute left-3 top-1/2 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full bg-white/10 text-white backdrop-blur hover:bg-white/20 sm:left-6"><ArrowLeft className="h-5 w-5" /></button>
+              <button type="button" aria-label="Next photo" data-testid="carousel-lightbox-next" onClick={(e) => { e.stopPropagation(); next(); }}
+                className="absolute right-3 top-1/2 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full bg-white/10 text-white backdrop-blur hover:bg-white/20 sm:right-6"><ArrowRight className="h-5 w-5" /></button>
+              <div className="absolute bottom-6 left-1/2 flex -translate-x-1/2 gap-1.5" onClick={(e) => e.stopPropagation()}>
+                {photos.map((_, idx) => (
+                  <button key={idx} type="button" aria-label={`Show photo ${idx + 1}`} data-testid="carousel-lightbox-dot" onClick={() => setI(idx)}
+                    className="h-1.5 rounded-full transition-all" style={{ width: idx === i ? "1.25rem" : "0.375rem", background: idx === i ? "#fff" : "rgba(255,255,255,.55)" }} />
+                ))}
+              </div>
+            </>
+          )}
+        </div>
       )}
-    </div>
+    </>
   );
 }
 

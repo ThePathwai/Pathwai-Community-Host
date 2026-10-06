@@ -8,9 +8,10 @@ from fastapi import FastAPI, APIRouter, HTTPException, Query, Depends, Request, 
 from dotenv import load_dotenv
 from starlette.middleware.cors import CORSMiddleware
 import os
+import re
 import logging
 from pathlib import Path
-from pydantic import BaseModel, EmailStr, Field
+from pydantic import BaseModel, EmailStr, Field, field_validator
 from typing import Any, Dict, List, Optional
 from datetime import datetime, timezone, timedelta
 import uuid
@@ -68,6 +69,10 @@ from auth import (
     seed_demo_credentials,
     ensure_indexes,
     client_ip,
+    rate_limit,
+    check_password_strength,
+    session_revoked,
+    set_auth_cookies as _shared_set_auth_cookies,
     ACCESS_MIN,
     REFRESH_DAYS,
     DEMO_ROLE_TO_EMAIL,
@@ -80,10 +85,14 @@ load_dotenv(ROOT_DIR / '.env')
 
 # Shared Mongo client + strip_id helper live in database.py so route modules
 # can import them without a circular dependency on server.py.
-from database import client, db, strip_id, COMMUNITY_SLUGS, dbfor, hub_db, register_community_slug, set_community  # noqa: E402
-from directory import ensure_directory_indexes, find_all_for_email  # noqa: E402
+from database import client, current_community, db, strip_id, COMMUNITY_SLUGS, dbfor, hub_db, register_community_slug, set_community, demo_mode  # noqa: E402
+from directory import ensure_directory_indexes, find_all_for_email, reindex_email, revoke_sessions_for_email  # noqa: E402
+from security import SecurityMiddleware, install_log_request_id, request_id  # noqa: E402
 from seed_empty_communities import ensure_empty_demo_communities  # noqa: E402
-from routes.hub import router as hub_router, records_for, set_community_cookie  # noqa: E402
+from seed_cross_community_roles import ensure_cross_community_roles  # noqa: E402
+import routes.hub as hub_module  # noqa: E402
+from routes.account import router as account_router  # noqa: E402
+from routes.hub import router as hub_router, records_for, set_community_cookie, ensure_hub_social_indexes  # noqa: E402
 
 app = FastAPI(title="Pathwai API")
 app.state.db = db
@@ -102,6 +111,8 @@ from routes.profile_requests import router as profile_requests_router  # noqa: E
 from routes.connect_requests import router as connect_requests_router  # noqa: E402
 from routes.workspace import router as workspace_router  # noqa: E402
 from routes.support_requests import router as support_requests_router, ensure_indexes as ensure_support_indexes  # noqa: E402
+from routes.messages import router as messages_router, ensure_indexes as ensure_message_indexes  # noqa: E402
+from routes.saved import router as saved_router  # noqa: E402
 from routes.community_config import router as community_config_router  # noqa: E402
 from routes.notifications import router as notifications_router, ensure_indexes as ensure_notification_indexes  # noqa: E402
 from routes.uploads import router as uploads_router, init_storage as init_object_storage  # noqa: E402
@@ -111,7 +122,7 @@ from routes.admin_edit import router as admin_edit_router  # noqa: E402
 from routes.integrations import router as integrations_router  # noqa: E402
 from routes.blasts import router as blasts_router  # noqa: E402
 from routes.oauth import router as oauth_router  # noqa: E402
-from routes._common import public_view, member_type as _member_type  # noqa: E402
+from routes._common import TERMS_REQUIRED_MSG, terms_stamp, public_view, member_type as _member_type  # noqa: E402
 from seed_portal import seed_portal_demo  # noqa: E402
 from seed_playr import seed_playr  # noqa: E402
 
@@ -124,7 +135,8 @@ from seed_program_extras import ensure_program_extras  # noqa: E402
 from seed_support_requests import ensure_support_requests_seed  # noqa: E402
 
 
-logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+install_log_request_id()
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - [%(request_id)s] - %(message)s')
 logger = logging.getLogger(__name__)
 
 
@@ -184,21 +196,79 @@ async def _playr_startup_tail() -> None:
         logger.warning("object storage init at startup failed: %s", exc)
 
 
+async def _index_community(slug: str) -> None:
+    """Create the indexes one community's database needs (idempotent)."""
+    from routes.hub import in_community
+    with in_community(slug):
+        await ensure_indexes(db)
+        await ensure_message_indexes()
+        await ensure_support_indexes()
+        await ensure_notification_indexes()
+        await db.audit_log.create_index([("created_at", -1)])
+        await db.audit_log.create_index([("action", 1), ("created_at", -1)])
+
+
+hub_module.COMMUNITY_CREATED_HOOKS.append(_index_community)
+
+
+def validate_production_config() -> None:
+    """Refuse to boot a real deployment with settings that would make it unsafe (or silently broken).
+    Skipped in demo mode, where the defaults are deliberate (see database.demo_mode)."""
+    if demo_mode():
+        return
+    problems = []
+    secret = os.environ.get("JWT_SECRET", "")
+    if not secret or secret in ("dev-secret-change-me", "generate-a-long-random-string") or len(secret) < 32:
+        problems.append("JWT_SECRET must be set to a random string of at least 32 characters (e.g. `openssl rand -hex 32`).")
+    if not os.environ.get("INTEGRATIONS_SECRET") or os.environ.get("INTEGRATIONS_SECRET") == "change-me":
+        problems.append("INTEGRATIONS_SECRET must be set (it encrypts stored Stripe/Twilio/SendGrid/Airtable/Luma keys; changing it later makes saved keys unreadable).")
+    if os.environ.get("CORS_ORIGINS", "*").strip() in ("", "*"):
+        problems.append("CORS_ORIGINS must list your frontend origin(s), e.g. https://app.example.com (a wildcard is not allowed with login cookies).")
+    if os.environ.get("USE_MOCK_DB", "false").lower() != "true" and os.environ.get("MONGO_URL", "").startswith("mongodb://localhost"):
+        problems.append("MONGO_URL points at localhost -- set it to your MongoDB connection string.")
+    if problems:
+        raise RuntimeError("Unsafe production configuration:\n - " + "\n - ".join(problems))
+    if not os.environ.get("PLATFORM_ADMIN_EMAILS"):
+        logger.warning("PLATFORM_ADMIN_EMAILS is not set: nobody can enter every community as a platform admin.")
+    if not os.environ.get("SENDGRID_API_KEY"):
+        logger.warning("SENDGRID_API_KEY is not set: password-reset emails will only be logged, not sent.")
+    if not os.environ.get("FRONTEND_URL"):
+        logger.warning("FRONTEND_URL is not set: password-reset links will point at localhost.")
+
+
 @app.on_event("startup")
 async def on_startup():
+    validate_production_config()
     # Self-serve communities created via POST /hub/communities (see routes/hub.py) are registered
     # into COMMUNITY_SLUGS in-process at creation time; reload them here too so a restarted worker
     # still recognizes them instead of 404-ing every request into that community.
     async for doc in hub_db().communities.find({}):
         if doc.get("slug"):
             register_community_slug(doc["slug"])
-    await ensure_seeded()
-    await ensure_empty_demo_communities()
+    if demo_mode():
+        await ensure_seeded()
+        await ensure_empty_demo_communities()
+        if use_playr():  # the-village/club-pto (and the demo logins themselves) only exist in playr-demo mode
+            await ensure_cross_community_roles()
+    await ensure_directory_indexes()
+    await ensure_hub_social_indexes()
+    if not demo_mode():
+        # A real deployment: no fake data, no demo logins. Every community lives in its own database,
+        # so each one needs its own indexes (not just the default one) -- also run when a new
+        # community is created, via routes.hub.COMMUNITY_CREATED_HOOKS.
+        for _slug in list(COMMUNITY_SLUGS):
+            await _index_community(_slug)
+        try:
+            init_object_storage()
+        except Exception as exc:  # noqa: BLE001
+            logger.warning("object storage init at startup failed: %s", exc)
+        logger.info("Pathwai started in PRODUCTION mode (demo data and demo logins are disabled).")
+        return
     await ensure_indexes(db)
     await ensure_org_indexes(db)
     await ensure_mentor_indexes(db)
     await ensure_membership_indexes(db)
-    await ensure_directory_indexes()
+    await ensure_message_indexes()
     await seed_demo_credentials(db)
     if use_playr():
         await _playr_startup_tail()
@@ -411,39 +481,30 @@ async def seed_default_memberships(db) -> None:
 
 # ---------- audit log ----------
 async def write_audit(actor_id: Optional[str], action: str, target_type: Optional[str] = None, target_id: Optional[str] = None, meta: Optional[Dict[str, Any]] = None, request: Optional[Request] = None) -> None:
-    """Append an immutable audit entry for any sensitive write."""
+    """Append an immutable audit entry for any sensitive write.
+
+    Authentication events always go to the PLATFORM audit log (hub database) -- that is the log that exists
+    even when no community is selected -- and are also copied into the active community's log when a real
+    community is pinned, which is what its admins see on their Audit log screen."""
+    ip = client_ip(request) if request is not None else None
+    entry = {
+        "actor_id": actor_id, "action": action, "target_type": target_type, "target_id": target_id,
+        "meta": meta or {}, "ip": ip, "request_id": request_id(), "created_at": datetime.now(timezone.utc),
+    }
     try:
-        ip = client_ip(request) if request is not None else None
-        entry = {
-            "actor_id": actor_id,
-            "action": action,
-            "target_type": target_type,
-            "target_id": target_id,
-            "meta": meta or {},
-            "ip": ip,
-            "created_at": datetime.now(timezone.utc),
-        }
-        await db.audit_log.insert_one(entry)
-    except Exception as exc:  # noqa
-        logger.warning("audit log failed for %s: %s", action, exc)
+        if action.startswith("auth."):
+            await hub_db().audit_log.insert_one(dict(entry))
+        if not action.startswith("auth.") or current_community() in COMMUNITY_SLUGS:
+            await db.audit_log.insert_one(dict(entry))
+    except Exception as exc:  # noqa: BLE001 -- auditing must never break the request it describes
+        logger.error("audit log failed for %s: %s", action, exc)
 
 
 # ---------- auth cookie helpers ----------
-COOKIE_SECURE = os.environ.get("COOKIE_SECURE", "true").lower() == "true"
-COOKIE_SAMESITE = os.environ.get("COOKIE_SAMESITE", "lax").lower()
-
-
+# One implementation (auth.set_cookie) shared with routes/hub.py, oauth.py and invites.py so the
+# Secure / SameSite settings can never drift apart between login paths.
 def _set_auth_cookies(response: Response, access: str, refresh: str) -> None:
-    response.set_cookie(
-        key="access_token", value=access, httponly=True,
-        secure=COOKIE_SECURE, samesite=COOKIE_SAMESITE,
-        max_age=ACCESS_MIN * 60, path="/",
-    )
-    response.set_cookie(
-        key="refresh_token", value=refresh, httponly=True,
-        secure=COOKIE_SECURE, samesite=COOKIE_SAMESITE,
-        max_age=REFRESH_DAYS * 86400, path="/",
-    )
+    _shared_set_auth_cookies(response, access, refresh)
 
 
 def _clear_auth_cookies(response: Response) -> None:
@@ -548,6 +609,17 @@ async def root():
     return {"app": "Pathwai", "status": "ok"}
 
 
+@api_router.get("/health")
+async def health():
+    """Liveness + database reachability, for Railway's healthcheck / an uptime monitor."""
+    try:
+        await hub_db().command("ping")
+    except Exception as exc:  # noqa: BLE001
+        logger.error("health check: database unreachable: %s", exc)
+        raise HTTPException(status_code=503, detail="database unreachable")
+    return {"ok": True, "mode": "demo" if demo_mode() else "production"}
+
+
 # ===========================
 # AUTH
 # ===========================
@@ -563,6 +635,19 @@ class SignupRequest(BaseModel):
     tagline: Optional[str] = Field(default="", max_length=280)
     title: Optional[str] = Field(default="", max_length=120)
     join_reason: Optional[str] = Field(default="", max_length=600)
+    accepted_terms: bool = Field(default=False, validate_default=True)  # validate_default: an OMITTED field must fail too
+
+    @field_validator("accepted_terms")
+    @classmethod
+    def _accepted(cls, v: bool) -> bool:
+        if v is not True:
+            raise ValueError(TERMS_REQUIRED_MSG)
+        return v
+
+    @field_validator("password")
+    @classmethod
+    def _strong(cls, v: str) -> str:
+        return check_password_strength(v)
 
 
 @api_router.post("/auth/signup", status_code=201)
@@ -603,15 +688,18 @@ async def auth_signup(body: SignupRequest, request: Request, response: Response)
         "hidden_from_directory": False,
         "join_reason": (body.join_reason or "").strip(),
         "signup_source": "self",
+        **terms_stamp(),
         "created_at": now_iso,
         "updated_at": now_iso,
     }
-    cfg = await db.community_config.find_one({"_key": "singleton"}) or {}
-    needs_approval = cfg.get("require_approval", True)
+    # Policy: every community requires admin approval, full stop -- no community can auto-approve a
+    # join request. See routes/hub.py's _apply_to_community for the same rule on the hub-level flow.
+    needs_approval = True
     if needs_approval:
         doc["membership_status"] = "pending"
         doc["hidden_from_directory"] = True
     await db.users.insert_one(doc)
+    await reindex_email(email)
     if needs_approval:
         await write_audit(user_id, "membership.requested", "user", user_id, meta={"email": email}, request=request)
         try:
@@ -657,13 +745,13 @@ async def auth_login(body: LoginRequest, request: Request, response: Response):
     ip = client_ip(request)
     identifier = f"{ip}:{email}"
 
-    await check_lockout(db, identifier)
+    await check_lockout(hub_db(), identifier)
 
     hub, recs = await records_for(email)
     ok_recs = [(sl, d) for sl, d in recs if verify_password(body.password, d.get("password_hash") or "")]
     hub_ok = bool(hub and verify_password(body.password, hub.get("password_hash") or ""))
     if not hub_ok and not ok_recs:
-        await record_failed_login(db, identifier)
+        await record_failed_login(hub_db(), identifier)
         await write_audit(None, "auth.login_failed", "user", email, request=request)
         raise HTTPException(status_code=401, detail="Invalid email or password")
     approved = [(sl, d) for sl, d in ok_recs if (d.get("membership_status") or "approved") == "approved"]
@@ -671,9 +759,8 @@ async def auth_login(body: LoginRequest, request: Request, response: Response):
         if any(d.get("membership_status") == "pending" for _, d in ok_recs):
             raise HTTPException(status_code=403, detail="Your membership request is still awaiting approval. We'll let you know as soon as it's reviewed.")
         raise HTTPException(status_code=403, detail="Your membership request was not approved. Contact the team if you think this is a mistake.")
-    await clear_failed_logins(db, identifier)
+    await clear_failed_logins(hub_db(), identifier)
     uid = hub["id"] if hub_ok else ok_recs[0][1]["id"]
-    from database import current_community
     cur = current_community()
     pick = next(((sl, d) for sl, d in approved if sl == cur), approved[0] if approved else None)
     role = (pick[1].get("role") if pick else None) or "member"
@@ -695,7 +782,12 @@ class ForgotPasswordRequest(BaseModel):
 
 class ResetPasswordRequest(BaseModel):
     token: str
-    password: str = Field(min_length=8, max_length=200)
+    password: str = Field(min_length=10, max_length=128)
+
+    @field_validator("password")
+    @classmethod
+    def _strong(cls, v: str) -> str:
+        return check_password_strength(v)
 
 
 @api_router.post("/auth/forgot-password")
@@ -703,6 +795,8 @@ async def auth_forgot_password(body: ForgotPasswordRequest, request: Request):
     """Always returns the same generic message whether or not the email is registered, so this
     endpoint can't be used to check which emails have accounts."""
     email = body.email.strip().lower()
+    await rate_limit("forgot_email", email, 3, 3600, "Too many reset requests for that email. Try again in an hour.")
+    await rate_limit("forgot_ip", client_ip(request), 20, 3600)
     hub, recs = await records_for(email)
     if hub or recs:
         token = create_reset_token(email)
@@ -724,19 +818,13 @@ async def auth_reset_password(body: ResetPasswordRequest, request: Request):
         email = decode_reset_token(body.token)
     except (pyjwt.PyJWTError, ValueError):
         raise HTTPException(status_code=400, detail="This reset link is invalid or has expired. Request a new one.")
-    new_hash = hash_password(body.password)
-    hub = await hub_db().accounts.find_one({"email": email})
-    updated_any = False
-    if hub:
-        await hub_db().accounts.update_one({"id": hub["id"]}, {"$set": {"password_hash": new_hash}})
-        updated_any = True
-    updated_id = hub["id"] if hub else None
-    for slug, rec in await find_all_for_email(email):
-        await dbfor(slug).users.update_one({"id": rec["id"]}, {"$set": {"password_hash": new_hash}})
-        updated_any = True
-        updated_id = updated_id or rec["id"]
-    if not updated_any:
+    # Sets the new password on the platform account AND every community profile, and invalidates every
+    # session issued before now (a reset usually means the old password -- and so maybe a session -- leaked).
+    hub = await hub_db().accounts.find_one({"email": email}, {"id": 1})
+    recs = await find_all_for_email(email)
+    if not await revoke_sessions_for_email(email, hash_password(body.password)):
         raise HTTPException(status_code=400, detail="This reset link is invalid or has expired. Request a new one.")
+    updated_id = hub["id"] if hub else (recs[0][1]["id"] if recs else None)
     await write_audit(updated_id, "auth.password_reset", "user", email, request=request)
     return {"ok": True}
 
@@ -766,7 +854,16 @@ async def auth_refresh(request: Request, response: Response):
         raise HTTPException(status_code=401, detail="Invalid token type")
     user = await db.users.find_one({"id": payload["sub"]}, {"_id": 0, "password_hash": 0})
     if not user:
+        # A platform-only account (no community profile yet) refreshes against the hub record instead.
+        hub_acc = await hub_db().accounts.find_one({"id": payload["sub"]}, {"_id": 0, "password_hash": 0})
+        if hub_acc and not session_revoked(payload, hub_acc):
+            _set_auth_cookies(response, create_access_token(hub_acc["id"], "member"), create_refresh_token(hub_acc["id"]))
+            hub_acc.pop("sessions_valid_after", None)
+            return {"ok": True, "user": hub_acc}
         raise HTTPException(status_code=401, detail="User no longer exists")
+    if session_revoked(payload, user):
+        raise HTTPException(status_code=401, detail="Session was signed out. Please sign in again.")
+    user.pop("sessions_valid_after", None)
     access = create_access_token(user["id"], user.get("role", "member"))
     new_refresh = create_refresh_token(user["id"])
     _set_auth_cookies(response, access, new_refresh)
@@ -786,6 +883,8 @@ async def auth_demo_accounts():
     the community's configured `member_label_singular`) and the *admin* who
     can reconfigure the community.
     """
+    if not demo_mode():
+        return {"accounts": [], "password": ""}
     demo_pw = os.environ.get("DEMO_PASSWORD") or "Demo123!"
 
     # Pull the current community label so the "member" demo reads as
@@ -835,7 +934,10 @@ async def auth_demo_accounts():
 
 @api_router.post("/seed")
 async def reseed(_: dict = Depends(require_role("admin"))):
-    """Re-seed by clearing then refilling. Useful for demos. Admin-only."""
+    """Re-seed by clearing then refilling. Useful for demos. Admin-only -- and only in demo mode: on a
+    real deployment this would let any community admin wipe their own member list."""
+    if not demo_mode():
+        raise HTTPException(status_code=404, detail="Not found")
     for c in ["users", "events", "resources", "announcements", "slack_signals", "email_updates", "profile_requests", "connect_requests", "organizations", "mentors", "memberships", "applications"]:
         await db[c].delete_many({})
     if use_playr():
@@ -850,8 +952,9 @@ async def reseed(_: dict = Depends(require_role("admin"))):
 
 @api_router.post("/seed/public")
 async def reseed_public():
-    """Public reseed for the demo environment. Disabled when DEMO_PUBLIC_SEED is unset."""
-    if os.environ.get("DEMO_PUBLIC_SEED", "true").lower() != "true":
+    """Public (unauthenticated) reseed for the demo environment. Needs demo mode AND DEMO_PUBLIC_SEED=true
+    (the latter defaults to on in demo mode only), so it can never exist on a real deployment."""
+    if not demo_mode() or os.environ.get("DEMO_PUBLIC_SEED", "true").lower() != "true":
         raise HTTPException(status_code=404, detail="Not found")
     for c in ["users", "events", "resources", "announcements", "slack_signals", "email_updates", "profile_requests", "connect_requests", "organizations", "mentors", "memberships", "applications"]:
         await db[c].delete_many({})
@@ -1237,6 +1340,7 @@ async def list_users(
     stage: Optional[str] = None,
     location: Optional[str] = None,
     member_kind: Optional[str] = None,    # founder | mentor | alumni | partner | guest
+    saved: Optional[bool] = None,
     request: Request = None,
 ):
     """Community directory search.
@@ -1316,7 +1420,18 @@ async def list_users(
     if location and location != "all":
         query.setdefault("$and", []).append({"location": {"$regex": location, "$options": "i"}})
     me_v = await get_current_user_optional(request) if request else None
-    users = [public_view(strip_id(u), me_v) async for u in db.users.find(query)]
+    if saved and me_v:
+        query["saved_by"] = me_v["id"]
+    users = []
+    async for u in db.users.find(query):
+        # Bookmarking (see /users/{id}/save) -- computed from the raw doc before public_view strips
+        # saved_by for non-owner viewers, the same as resources.py's is_saved/save_count on perks.
+        is_saved = bool(me_v and me_v["id"] in (u.get("saved_by") or []))
+        save_count = len(u.get("saved_by") or [])
+        pv = public_view(strip_id(u), me_v)
+        pv["is_saved"] = is_saved
+        pv["save_count"] = save_count
+        users.append(pv)
     if member_kind and member_kind != "all":
         users = [u for u in users if _member_type(u) == member_kind]
     for u in users:
@@ -1368,9 +1483,43 @@ async def get_user(user_id: str, request: Request):
     user = await db.users.find_one({"id": user_id})
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
-    out = public_view(strip_id(user), await get_current_user_optional(request))
+    viewer = await get_current_user_optional(request)
+    is_saved = bool(viewer and viewer["id"] in (user.get("saved_by") or []))
+    save_count = len(user.get("saved_by") or [])
+    out = public_view(strip_id(user), viewer)
     out["member_type"] = _member_type(user)
+    out["is_saved"] = is_saved
+    out["save_count"] = save_count
+    # The personal photo gallery lives on the account-level hub profile (routes/hub.py's
+    # AccountProfileIn.photos), not on this community-scoped users doc -- merge it in by email
+    # rather than duplicating/syncing it onto every community membership record, so there's one
+    # place it can ever go stale.
+    if user.get("email"):
+        acct = await hub_db().accounts.find_one({"email": user["email"]})
+        if acct:
+            out["photos"] = acct.get("photos") or []
     return out
+
+
+@api_router.post("/users/{user_id}/save")
+async def toggle_save_user(user_id: str, me: dict = Depends(get_current_user)):
+    """Bookmark another member's profile -- same on/off-toggle pattern as a perk's save button
+    (resources.py), now shared by events.py too, so the Saved section of /profile can list bookmarks
+    across all three content types the same way."""
+    if user_id == me["id"]:
+        raise HTTPException(status_code=400, detail="You can't bookmark your own profile")
+    u = await db.users.find_one({"id": user_id})
+    if not u:
+        raise HTTPException(status_code=404, detail="User not found")
+    saved_by = list(u.get("saved_by") or [])
+    if me["id"] in saved_by:
+        saved_by.remove(me["id"])
+        saved = False
+    else:
+        saved_by.append(me["id"])
+        saved = True
+    await db.users.update_one({"id": user_id}, {"$set": {"saved_by": saved_by}})
+    return {"ok": True, "is_saved": saved, "save_count": len(saved_by)}
 
 
 @api_router.patch("/users/{user_id}")
@@ -1456,6 +1605,8 @@ api_router.include_router(profile_requests_router)
 api_router.include_router(connect_requests_router)
 api_router.include_router(workspace_router)
 api_router.include_router(support_requests_router)
+api_router.include_router(messages_router)
+api_router.include_router(saved_router)
 api_router.include_router(community_config_router)
 api_router.include_router(notifications_router)
 api_router.include_router(uploads_router)
@@ -1466,9 +1617,33 @@ api_router.include_router(integrations_router)
 api_router.include_router(blasts_router)
 api_router.include_router(oauth_router)
 api_router.include_router(hub_router)
+api_router.include_router(account_router)
 
 # Register router
 app.include_router(api_router)
+
+# ---------- single-service deploy: serve the built React app from this same server ----------
+# One service + one origin means login cookies are first-party (so they work in Safari and need no
+# CORS), uploads and webhooks share the same domain, and there is only one thing to deploy. The root
+# Dockerfile builds the frontend into ./static; with no build present (local dev, tests, a separate
+# frontend service) none of this is mounted.
+from fastapi.responses import FileResponse  # noqa: E402
+from fastapi.staticfiles import StaticFiles  # noqa: E402
+
+STATIC_DIR = Path(os.environ.get("STATIC_DIR") or (Path(__file__).parent / "static")).resolve()
+if (STATIC_DIR / "index.html").is_file():
+    if (STATIC_DIR / "static").is_dir():
+        app.mount("/static", StaticFiles(directory=STATIC_DIR / "static"), name="frontend-assets")
+
+    @app.get("/{full_path:path}", include_in_schema=False)
+    async def spa_fallback(full_path: str):
+        if full_path == "api" or full_path.startswith("api/"):
+            raise HTTPException(status_code=404, detail="Not found")
+        target = (STATIC_DIR / full_path).resolve()
+        if full_path and target.is_file() and STATIC_DIR in target.parents:
+            return FileResponse(target)
+        # client-side routes (/hub, /c/some-community, /events/123 ...) all get the app shell
+        return FileResponse(STATIC_DIR / "index.html", headers={"Cache-Control": "no-cache"})
 
 class CommunityMiddleware:
     """Pins each request to one community's database (cookie `pw_community` or header `X-Community`)."""
@@ -1490,6 +1665,14 @@ class CommunityMiddleware:
                     k, _, v = part.partition("=")
                     if k == "community":
                         slug = v
+            if slug and slug not in COMMUNITY_SLUGS and re.fullmatch(r"[a-z0-9][a-z0-9-]{0,80}", slug):
+                # A community created on another worker/replica after this one booted: the registry in
+                # MongoDB is the source of truth, the in-process list is just a cache of it.
+                try:
+                    if await hub_db().communities.find_one({"slug": slug}):
+                        register_community_slug(slug)
+                except Exception:  # noqa: BLE001
+                    pass
             set_community(slug or "")
         await self.inner(scope, receive, send)
 
@@ -1502,6 +1685,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 app.add_middleware(CommunityMiddleware)
+app.add_middleware(SecurityMiddleware)  # added last = outermost: headers + request id cover CORS preflights and errors too
 
 
 @app.on_event("shutdown")

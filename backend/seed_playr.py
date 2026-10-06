@@ -1,7 +1,14 @@
 """The Playr League demo community: members, coaches, teams, events, playbook, help board, news.
 
-Every member profile carries: name, age, photo, height, profession, skills, interests, goals and support needed.
-Portraits are generated illustrations (see playr_art.py); members replace them with real photos from their profile.
+Every member profile carries: name, age, height, profession, skills, interests, goals and support needed.
+No avatar_url is set here -- members just get Avatar.jsx's own initials-on-color fallback (see
+hueFromName/Avatar in components/ui.jsx), rather than a generated illustration: an illustrated
+"character creator" face read as out of place for a professional community platform, and a real
+stock-photo URL can't load inside the published preview anyway (only embedded/self-contained images
+do), so initials are the one option that looks clean everywhere. Each member's `art=` profile below
+(skin/hair/jersey/etc.) is now unused -- kept in case illustrated portraits are wanted again later,
+via playr_art.py's still-available `portrait()` -- rather than ripped out of 25 member entries for a
+purely cosmetic cleanup. Members can still replace the initials with a real photo from their profile.
 Runs once (marker in community_config) — set DEMO_DATASET=legacy to keep the old Pathwai sample data instead.
 """
 from __future__ import annotations
@@ -12,7 +19,7 @@ from datetime import datetime, timedelta, timezone
 from typing import Any, Dict, List
 
 from auth import hash_password
-from playr_art import BLACK, CREAM, RED, poster, png_data_uri, portrait
+from playr_art import BLACK, CREAM, RED, poster, png_data_uri
 
 WIPE = ["users", "events", "resources", "announcements", "slack_signals", "email_updates", "profile_requests", "connect_requests",
         "organizations", "mentors", "memberships", "applications", "support_requests", "member_requests",
@@ -281,7 +288,7 @@ def _member_doc(m: Dict[str, Any], pw_hash: str) -> Dict[str, Any]:
         "id": m["id"], "name": m["name"], "email": email_map.get(m["id"], f"{first}.{m['id'][2:]}@playr.example"), "password_hash": pw_hash if m["id"] in email_map else None,
         "settings": {"notifications": {"sms": sum(map(ord, m["id"])) % 3 != 0}},
         "role": m["role"], "member_type": m.get("mtype") or ("mentor" if m["role"] == "mentor" else "founder"),
-        "age": m["age"], "height": ht(*m["h"]), "avatar_url": portrait(**m["art"]),
+        "age": m["age"], "height": ht(*m["h"]), "avatar_url": None,
         "title": m["prof"], "company": m["emp"], "location": f"{m['hood']}, Toronto", "bio": m["bio"],
         "industry": None, "stage": None, "position": None, "cohort": None,
         "skill_set": m["skills"], "expertise": m["skills"], "interests_hobbies": m["interests"], "interests": m["interests"],
@@ -322,7 +329,7 @@ def _applicants(pw: str) -> List[Dict[str, Any]]:
     for uid, name, title, company, st, days, art, why, skills in rows:
         first = name.split()[0].lower()
         out.append({"id": uid, "name": name, "email": f"{first}.{uid[2:]}@example.com", "password_hash": pw, "role": "member", "member_type": "founder",
-                    "title": title, "company": company, "location": "Toronto", "bio": why, "join_reason": why, "avatar_url": portrait(number=uid, **art),
+                    "title": title, "company": company, "location": "Toronto", "bio": why, "join_reason": why, "avatar_url": None,
                     "skill_set": skills, "expertise": skills, "membership_status": st, "hidden_from_directory": True, "signup_source": "self",
                     "created_at": iso(days), "updated_at": iso(days),
                     **({"membership_decided_at": iso(-8), "membership_decided_by": "u-admin-me", "membership_decided_by_name": "Fife Ashley-Dejo",
@@ -399,7 +406,7 @@ def _resources() -> List[Dict[str, Any]]:
         slug = title.lower().replace(" ", "-").replace(":", "").replace("&", "and").replace("'", "").replace("(", "").replace(")", "").replace(",", "").replace("$", "")[:48]
         url = f"https://example.com/perks/{slug}"
         return {"id": f"res-{i}", "title": title, "description": desc, "source": "community", "type": typ, "category": cat, "format": "Perk" if typ == "perk" else "Guide",
-                "author": u["name"], "shared_by": {"id": uid, "name": u["name"], "avatar_url": portrait(**u["art"]), "title": u["prof"]}, "perk_value": perk, "how_to_claim": claim,
+                "author": u["name"], "shared_by": {"id": uid, "name": u["name"], "avatar_url": None, "title": u["prof"]}, "perk_value": perk, "how_to_claim": claim,
                 "duration_min": None, "cover_url": {1: poster("outdoor"), 8: poster("social"), 12: poster("clinic")}.get(i), "tags": tags, "is_featured": feat, "saved_by": list(saved), "published_at": iso(-i * 2), "url": url, "slug": slug, "external_url": url,
                 "cta_label": cta, "difficulty": None, "lesson_count": None, "format_summary": perk or cat, "learning_outcomes": [], "prerequisites": [], "last_updated": iso(-i),
                 "space_slug": "indoor-series", "status": status, "submitted_by": uid if status == "pending" else None, "submitted_by_name": u["name"] if status == "pending" else None}
@@ -466,7 +473,7 @@ def _help_board() -> List[Dict[str, Any]]:
 
     def snap(uid):
         u = users[uid]
-        return {"id": uid, "name": u["name"], "avatar_url": portrait(**u["art"]), "title": u["prof"], "company": u["emp"]}
+        return {"id": uid, "name": u["name"], "avatar_url": None, "title": u["prof"], "company": u["emp"]}
 
     def h(i, uid, title, desc, cat, urgency, tags, helpers=(), days=-1, space="indoor-series"):
         return {"id": f"help-{i}", "user_id": uid, "user_snapshot": snap(uid), "space_slug": space, "title": title, "description": desc, "category": cat,
@@ -567,10 +574,10 @@ async def seed_playr(db, force: bool = False) -> bool:
          "status": "pending", "created_at": iso(-1), "updated_at": iso(-1)}])
     await db.connect_requests.insert_many([
         {"id": str(uuid.uuid4()), "sender_id": "u-founder-me", "sender_name": me["name"], "sender_role": "founder", "sender_avatar_url": me["avatar_url"], "recipient_id": "u-dre",
-         "recipient_name": "Dre Whitfield", "recipient_role": "mentor", "recipient_avatar_url": portrait(**M[1]["art"]), "kind": "20-min-chat",
+         "recipient_name": "Dre Whitfield", "recipient_role": "mentor", "recipient_avatar_url": None, "kind": "20-min-chat",
          "kind_label": "20-min chat", "topic": "Fixing my shot before Div A assessment", "note": "Happy to trade physio advice for shooting notes.", "status": "pending", "source": "airtable",
          "created_at": iso(-2), "updated_at": iso(-2)},
-        {"id": str(uuid.uuid4()), "sender_id": "u-tariq", "sender_name": "Tariq Bello", "sender_role": "founder", "sender_avatar_url": portrait(**M[6]["art"]), "recipient_id": "u-founder-me",
+        {"id": str(uuid.uuid4()), "sender_id": "u-tariq", "sender_name": "Tariq Bello", "sender_role": "founder", "sender_avatar_url": None, "recipient_id": "u-founder-me",
          "recipient_name": me["name"], "recipient_role": "founder", "recipient_avatar_url": me["avatar_url"], "kind": "async-question", "kind_label": "Async question",
          "topic": "Desk posture: what should I stretch?", "note": "Tight shoulders after long days coding.", "status": "pending", "source": "app", "created_at": iso(-1), "updated_at": iso(-1)},
     ])

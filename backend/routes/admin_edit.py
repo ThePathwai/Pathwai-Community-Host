@@ -6,7 +6,7 @@ from pydantic import BaseModel
 
 from auth import require_role
 from database import db
-from ._common import audit, now_iso
+from ._common import audit, check_image, now_iso
 from .announcements import AnnouncementIn
 from .events import EventIn, TicketTier, _norm_tiers
 from .portal import _apply_profile_fields, mirror_fields
@@ -20,6 +20,11 @@ KINDS = {
     "announcements": ("announcements", AnnouncementIn, "announcement"),
 }
 EXTRA = {"status", "is_featured"}
+# events/resources take their cover photo in on `image_url` (EventIn/ResourceIn's own field) but
+# store it under `cover_url` once check_image has run on it -- see events.py's create_event /
+# resources.py's create_resource. announcements stores it as `image_url` on both ends, so it needs
+# no remapping. Without this, a generic PATCH with `image_url` silently wrote a field nothing reads.
+COVER_KINDS = {"events", "resources"}
 
 
 class Patch(BaseModel):
@@ -34,6 +39,8 @@ async def edit_content(kind: str, item_id: str, body: Patch, me: dict = Depends(
     coll = getattr(db, cname)
     allowed = set(model.model_fields) | EXTRA
     patch = {k: v for k, v in body.values.items() if k in allowed}
+    if kind in COVER_KINDS and "image_url" in patch:
+        patch["cover_url"] = check_image(patch.pop("image_url"))
     for k in ("tags", "agenda", "audience"):
         if isinstance(patch.get(k), str):
             patch[k] = [x.strip() for x in patch[k].replace("\n", ",").split(",") if x.strip()]

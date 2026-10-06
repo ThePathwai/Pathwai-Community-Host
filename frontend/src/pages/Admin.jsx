@@ -1,12 +1,14 @@
 import React, { useCallback, useEffect, useState } from "react";
 import { Link } from "react-router-dom";
+import { Link2, Ticket } from "lucide-react";
 import { toast } from "sonner";
 import { api, errMsg, fmtDate } from "../lib/api";
+import { useAuth } from "../lib/auth";
 import { Button, Card, Chip, Empty, Field, Input, PageHeader, Select, Spinner, Tabs, TagInput } from "../components/ui";
 import Branding from "./AdminBrand";
 import Integrations from "./AdminIntegrations";
 import MembershipRequests from "./AdminMembers";
-import { ActionCenter, AdminRequests, Moderation, SupportQueue } from "./AdminPortal";
+import { AdminRequests, Moderation, SupportQueue } from "./AdminPortal";
 
 function Overview() {
   const [o, setO] = useState(null);
@@ -51,18 +53,46 @@ function Config() {
 }
 
 function Invites() {
+  const { config } = useAuth();
   const [items, setItems] = useState(null);
   const [email, setEmail] = useState("");
   const load = useCallback(() => api.get("/invites").then((r) => setItems(r.data)), []);
   useEffect(() => { load(); }, [load]);
   const create = async () => { try { await api.post("/invites", { email: email || null }); setEmail(""); load(); } catch (e) { toast.error(errMsg(e)); } };
+  // The public, no-login landing page for this community (CommunityLanding.jsx at /c/:slug) --
+  // one link anyone can be sent, on or off Pathwai, that shows this community's own branding and
+  // a "Request to join"/"Join" button. Unlike the invite links below, it's not single-use and
+  // doesn't track who it was sent to -- it's the "post this on social / put it in a newsletter" link.
+  const shareUrl = config?.slug ? `${window.location.origin}/c/${config.slug}` : "";
   return (
     <div className="space-y-4">
+      {shareUrl && (
+        <Card className="flex items-center justify-between gap-3">
+          <div className="flex items-start gap-3">
+            <span className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-ink/5"><Link2 className="h-4 w-4 text-muted" /></span>
+            <div>
+              <p className="flex flex-wrap items-center gap-2 font-medium">Share your community <Chip accent>Reusable · never expires</Chip></p>
+              <p className="break-all text-sm text-muted">{shareUrl}</p>
+              <p className="mt-0.5 text-xs text-muted">Anyone who opens this can ask to join. Post it anywhere — it doesn't track who used it.</p>
+            </div>
+          </div>
+          <Button variant="ghost" onClick={() => { navigator.clipboard?.writeText(shareUrl); toast.success("Copied"); }} data-testid="copy-share-link">Copy link</Button>
+        </Card>
+      )}
       <Card className="flex gap-2"><Input placeholder="Email (optional)" value={email} onChange={(e) => setEmail(e.target.value)} /><Button onClick={create} data-testid="create-invite">Create invite link</Button></Card>
       {!items ? <Spinner /> : items.length === 0 ? <Empty title="No invites yet" /> : items.map((i) => {
         const url = `${window.location.origin}/join/${i.code}`;
-        return <Card key={i.id} className="flex items-center justify-between gap-3"><div><p className="break-all text-sm font-medium">{url}</p><p className="text-xs text-muted">{i.email || "Anyone with the link"} · {fmtDate(i.created_at)}</p></div>
-          <div className="flex items-center gap-2"><Chip>{i.status}</Chip><Button variant="ghost" onClick={() => { navigator.clipboard?.writeText(url); toast.success("Copied"); }}>Copy</Button></div></Card>;
+        return <Card key={i.id} className="flex items-center justify-between gap-3">
+          <div className="flex items-start gap-3">
+            <span className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-ink/5"><Ticket className="h-4 w-4 text-muted" /></span>
+            <div>
+              <p className="flex flex-wrap items-center gap-2 font-medium">Invite link <Chip>One-time use</Chip></p>
+              <p className="break-all text-sm text-muted">{url}</p>
+              <p className="mt-0.5 text-xs text-muted">{i.email || "Anyone with the link"} · dies after first use · {fmtDate(i.created_at)}</p>
+            </div>
+          </div>
+          <div className="flex items-center gap-2"><Chip>{i.status}</Chip><Button variant="ghost" onClick={() => { navigator.clipboard?.writeText(url); toast.success("Copied"); }}>Copy</Button></div>
+        </Card>;
       })}
     </div>
   );
@@ -79,19 +109,27 @@ function AuditLog() {
       <div className="mb-4 max-w-xs"><Select value={action} onChange={(e) => setAction(e.target.value)} options={[{ value: "all", label: "All actions" }, ...actions]} /></div>
       {!data ? <Spinner /> : data.entries.length === 0 ? <Empty title="No entries" /> : (
         <div className="overflow-x-auto rounded-xl2 border border-line bg-surface"><table className="w-full text-left text-sm">
-          <thead className="border-b border-line text-xs uppercase text-muted"><tr><th className="p-3">When</th><th className="p-3">Actor</th><th className="p-3">Action</th><th className="p-3">Target</th></tr></thead>
-          <tbody>{data.entries.map((e, i) => <tr key={i} className="border-b border-line last:border-0"><td className="p-3 text-xs">{fmtDate(e.created_at)}</td><td className="p-3">{data.actors[e.actor_id]?.name || e.actor_id || "—"}</td><td className="p-3"><Chip>{e.action}</Chip></td><td className="p-3 text-xs text-muted">{e.target_type} {e.target_id}</td></tr>)}</tbody></table></div>)}
+          <thead className="border-b border-line text-xs uppercase text-muted"><tr><th className="p-3">When</th><th className="p-3">Actor</th><th className="p-3">Action</th><th className="p-3">Target</th><th className="p-3">Details</th></tr></thead>
+          {/* "Details" surfaces a reported message's reason (and who sent it) right in the log --
+              see routes/messages.py's report_message, which is what writes a "message.reported"
+              entry with that in its meta -- so a conduct report is reviewable here without a
+              separate moderation queue. Any other action with a meta.reason shows the same way. */}
+          <tbody>{data.entries.map((e, i) => <tr key={i} className="border-b border-line last:border-0"><td className="p-3 text-xs">{fmtDate(e.created_at)}</td><td className="p-3">{data.actors[e.actor_id]?.name || e.actor_id || "—"}</td><td className="p-3"><Chip>{e.action}</Chip></td><td className="p-3 text-xs text-muted">{e.target_type} {e.target_id}</td><td className="p-3 text-xs text-muted">{e.meta?.reason ? <>“{e.meta.reason}”{e.meta.reported_user_name ? <> · about {e.meta.reported_user_name}</> : ""}</> : "—"}</td></tr>)}</tbody></table></div>)}
     </div>
   );
 }
 
 export default function Admin() {
-  const [tab, setTab] = useState(() => { try { const t = sessionStorage.getItem("pathwai.admintab"); sessionStorage.removeItem("pathwai.admintab"); return t || "action"; } catch { return "action"; } });
+  // The old Action center tab (a dashboard of pending-item tiles that just linked into these other
+  // tabs) was redundant with them and with Overview below -- removed; the one thing it added, an
+  // at-a-glance "does anything need me" signal, now lives as a badge on the Admin link in the
+  // account menu instead (see Layout.jsx). Overview is the landing tab now.
+  const [tab, setTab] = useState(() => { try { const t = sessionStorage.getItem("pathwai.admintab"); sessionStorage.removeItem("pathwai.admintab"); return t || "overview"; } catch { return "overview"; } });
   return (
     <div>
       <PageHeader title="Admin" subtitle="Configure your community and keep an eye on what's happening." />
-      <Tabs tabs={[{ value: "action", label: "Action center" }, { value: "members", label: "Members" }, { value: "requests", label: "Requests" }, { value: "moderation", label: "Approvals" }, { value: "support", label: "Support" }, { value: "overview", label: "Overview" }, { value: "brand", label: "Branding" }, { value: "integrations", label: "Integrations" }, { value: "config", label: "Community" }, { value: "invites", label: "Invites" }, { value: "audit", label: "Audit log" }]} value={tab} onChange={setTab} />
-      {tab === "action" && <ActionCenter go={setTab} />}{tab === "members" && <MembershipRequests />}{tab === "requests" && <AdminRequests />}{tab === "moderation" && <Moderation />}{tab === "support" && <SupportQueue />}{tab === "overview" && <Overview />}{tab === "brand" && <Branding />}{tab === "integrations" && <Integrations />}{tab === "config" && <Config />}{tab === "invites" && <Invites />}{tab === "audit" && <AuditLog />}
+      <Tabs tabs={[{ value: "overview", label: "Overview" }, { value: "members", label: "Members" }, { value: "requests", label: "Requests" }, { value: "moderation", label: "Approvals" }, { value: "support", label: "Support" }, { value: "brand", label: "Branding" }, { value: "integrations", label: "Integrations" }, { value: "config", label: "Community" }, { value: "invites", label: "Invites" }, { value: "audit", label: "Audit log" }]} value={tab} onChange={setTab} />
+      {tab === "members" && <MembershipRequests />}{tab === "requests" && <AdminRequests />}{tab === "moderation" && <Moderation />}{tab === "support" && <SupportQueue />}{tab === "overview" && <Overview />}{tab === "brand" && <Branding />}{tab === "integrations" && <Integrations />}{tab === "config" && <Config />}{tab === "invites" && <Invites />}{tab === "audit" && <AuditLog />}
     </div>
   );
 }

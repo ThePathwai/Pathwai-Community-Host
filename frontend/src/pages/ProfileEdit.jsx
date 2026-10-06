@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { toast } from "sonner";
-import { api, errMsg, fmtDate, timeAgo } from "../lib/api";
+import { api, errMsg, timeAgo } from "../lib/api";
 import { useAuth } from "../lib/auth";
 import { Link } from "react-router-dom";
 import { AvatarUpload, Button, Card, Field, Input, PageHeader, ProgressBar, SectionCard, Select, Spinner, StatusBadge, TagInput, Textarea } from "../components/ui";

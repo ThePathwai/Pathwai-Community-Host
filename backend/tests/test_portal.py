@@ -131,7 +131,7 @@ def test_membership_approval_flow():
     from fastapi.testclient import TestClient
     import server
     with TestClient(server.app) as c:
-        r = c.post("/api/auth/signup", json={"email": "newbie@example.com", "password": "Sup3rSecret99", "name": "New Person", "title": "Designer", "join_reason": "Keen to meet founders"})
+        r = c.post("/api/auth/signup", json={"accepted_terms": True, "email": "newbie@example.com", "password": "Sup3rSecret99", "name": "New Person", "title": "Designer", "join_reason": "Keen to meet founders"})
         assert r.status_code == 201 and r.json()["pending"] is True
         # cannot sign in yet
         assert c.post("/api/auth/login", json={"email": "newbie@example.com", "password": "Sup3rSecret99"}).status_code == 403
@@ -167,8 +167,15 @@ def test_post_photos():
         assert c.post("/api/support-requests", json={"title": "bad", "image_url": "data:text/html;base64,PHNjcmlwdD4="}).status_code == 400
         p = c.post("/api/resources", json={"title": "Free logo tweak", "category": "Free access", "image_url": tiny})
         assert p.status_code == 201 and p.json()["cover_url"] == tiny
+        # Events are admin-only now (members no longer suggest events) -- confirmed below -- so this
+        # one's posted as admin, then back to demo for the announcement.
+        assert c.post("/api/events", json={"title": "Coffee", "starts_at": "2026-11-01T10:00:00Z"}).status_code == 403
+        c.post("/api/auth/logout")
+        c.post("/api/auth/login", json={"email": "admin@yourcommunity.app", "password": "Demo123!"})
         e = c.post("/api/events", json={"title": "Coffee", "starts_at": "2026-11-01T10:00:00Z", "image_url": tiny})
         assert e.status_code == 201 and e.json()["cover_url"] == tiny
+        c.post("/api/auth/logout")
+        c.post("/api/auth/login", json={"email": "demo@yourcommunity.app", "password": "Demo123!"})
         a = c.post("/api/announcements", json={"title": "Hi", "body": "there", "image_url": tiny})
         assert a.status_code == 201 and a.json()["image_url"] == tiny
 
@@ -181,8 +188,14 @@ def test_multi_community_hub():
         assert r.status_code == 200
         hub = c.get("/api/hub/communities").json()["communities"]
         st = {x["slug"]: x["my"]["status"] for x in hub}
-        assert st == {"playr": "approved", "grace": "approved", "the-village": "none", "club-pto": "approved"}
-        assert c.get("/api/community/config").json()["community_name"] == "Playr"
+        # Subset check, not equality: the hub also lists the empty demo communities (see
+        # seed_empty_communities.py) and toronto-tech-collective (see seed_cross_community_roles.py),
+        # which demo@yourcommunity.app has no membership status worth pinning down here.
+        assert {k: st[k] for k in ("playr", "grace", "the-village", "club-pto")} == {"playr": "approved", "grace": "approved", "the-village": "none", "club-pto": "approved"}
+        # Pre-existing stale assertion, unrelated to this window's work: DEFAULT_CONFIG's
+        # community_name has been "The Playr League" (see routes/community_config.py) since before
+        # this test was written, and seed_playr.py never overrides it, so this never matched.
+        assert c.get("/api/community/config").json()["community_name"] == "The Playr League"
         assert c.post("/api/hub/enter", json={"slug": "the-village"}).status_code == 403
         assert c.post("/api/hub/enter", json={"slug": "grace"}).status_code == 200
         cfg = c.get("/api/community/config").json()
@@ -205,7 +218,7 @@ def test_multi_community_hub():
         assert c.get("/api/community/config").json()["community_name"] == "The Village"
         c.post("/api/auth/logout")
         # brand-new Pathwai account: no communities yet, can apply
-        assert c.post("/api/hub/signup", json={"email": "fresh@example.com", "password": "Sup3rSecret99", "name": "Fresh Face"}).status_code == 201
+        assert c.post("/api/hub/signup", json={"accepted_terms": True, "email": "fresh@example.com", "password": "Sup3rSecret99", "name": "Fresh Face"}).status_code == 201
         assert all(x["my"]["status"] == "none" for x in c.get("/api/hub/communities").json()["communities"])
         assert c.post("/api/hub/communities/grace/apply", json={"message": "New to the area"}).status_code == 201
 
@@ -280,3 +293,161 @@ def test_ticket_tiers_traffic_and_sales():
         assert tiers[early["id"]]["sold"] == 1 and tiers[ga["id"]]["sold"] == 0
         assert sales["traffic"]["unique_viewers"] == 1 and sales["traffic"]["views"] == 2
         assert sales["traffic"]["conversion_rate"] == 1.0
+
+
+def test_support_board_edit_delete_permissions():
+    # Help board posts (see Support.jsx's "Member board" tab): the author can edit or delete their
+    # own post, an admin can delete anyone's post, and any other member can do neither.
+    from fastapi.testclient import TestClient
+    import server
+    with TestClient(server.app) as c:
+        c.post("/api/auth/login", json={"email": "demo@yourcommunity.app", "password": "Demo123!"})
+        post = c.post("/api/support-requests", json={"title": "Looking for a running buddy", "category": "Other"}).json()
+        rid = post["id"]
+        upd = c.patch(f"/api/support-requests/{rid}", json={"title": "Looking for a running buddy (updated)"}).json()
+        assert upd["title"] == "Looking for a running buddy (updated)"
+
+        c.post("/api/auth/logout")
+        signup = c.post("/api/auth/signup", json={"accepted_terms": True, "email": "otherboard@example.com", "password": "Sup3rSecret99", "name": "Other Member", "title": "Member", "join_reason": "curious"})
+        assert signup.status_code == 201
+        c.post("/api/auth/login", json={"email": "admin@yourcommunity.app", "password": "Demo123!"})
+        uid = next(x["id"] for x in c.get("/api/admin/membership-requests?status=pending").json()["requests"] if x["email"] == "otherboard@example.com")
+        assert c.post(f"/api/admin/membership-requests/{uid}/decision", json={"decision": "approve"}).status_code == 200
+
+        c.post("/api/auth/logout")
+        c.post("/api/auth/login", json={"email": "otherboard@example.com", "password": "Sup3rSecret99"})
+        assert c.patch(f"/api/support-requests/{rid}", json={"title": "hijacked"}).status_code == 403
+        assert c.delete(f"/api/support-requests/{rid}").status_code == 403
+
+        c.post("/api/auth/logout")
+        c.post("/api/auth/login", json={"email": "admin@yourcommunity.app", "password": "Demo123!"})
+        assert c.delete(f"/api/support-requests/{rid}").status_code == 200
+        assert not any(x["id"] == rid for x in c.get("/api/support-requests?status=all").json())
+
+
+def test_message_delete_and_report():
+    # The inbox's per-message Delete and Report actions (Inbox.jsx's DeleteMessageButton /
+    # ReportMessageButton): the sender (or an admin) can delete a message; anyone else in the
+    # thread gets 403. Reporting notifies admins and lands in the audit log for review there,
+    # without removing the message (only Delete does that).
+    from fastapi.testclient import TestClient
+    import server
+    with TestClient(server.app) as c:
+        c.post("/api/auth/login", json={"email": "admin@yourcommunity.app", "password": "Demo123!"})
+        admin_id = c.get("/api/auth/me").json()["id"]
+
+        c.post("/api/auth/logout")
+        signup = c.post("/api/auth/signup", json={"accepted_terms": True, "email": "msgother@example.com", "password": "Sup3rSecret99", "name": "Other Messager", "title": "Member", "join_reason": "curious"})
+        assert signup.status_code == 201
+        c.post("/api/auth/login", json={"email": "admin@yourcommunity.app", "password": "Demo123!"})
+        other_id = next(x["id"] for x in c.get("/api/admin/membership-requests?status=pending").json()["requests"] if x["email"] == "msgother@example.com")
+        assert c.post(f"/api/admin/membership-requests/{other_id}/decision", json={"decision": "approve"}).status_code == 200
+
+        # demo starts a thread addressed to both admin and the new member
+        c.post("/api/auth/logout")
+        c.post("/api/auth/login", json={"email": "demo@yourcommunity.app", "password": "Demo123!"})
+        t = c.post("/api/messages/threads", json={"recipient_ids": [admin_id, other_id], "subject": "Group chat", "body": "Hello both"}).json()
+        tid = t["id"]
+        msg_id = next(m for m in c.get(f"/api/messages/threads/{tid}").json()["messages"])["id"]
+
+        # a third participant who isn't the sender or an admin can't delete demo's message
+        c.post("/api/auth/logout")
+        c.post("/api/auth/login", json={"email": "msgother@example.com", "password": "Sup3rSecret99"})
+        assert c.delete(f"/api/messages/threads/{tid}/messages/{msg_id}").status_code == 403
+        # ...but can report it
+        assert c.post(f"/api/messages/threads/{tid}/messages/{msg_id}/report", json={"reason": "Spam"}).status_code == 201
+
+        # admin sees the report in the audit log, then deletes the message as an admin override
+        c.post("/api/auth/logout")
+        c.post("/api/auth/login", json={"email": "admin@yourcommunity.app", "password": "Demo123!"})
+        entries = c.get("/api/admin/audit-log", params={"action": "message.reported"}).json()["entries"]
+        assert any(e["target_id"] == msg_id and e["meta"]["reason"] == "Spam" for e in entries)
+        assert c.delete(f"/api/messages/threads/{tid}/messages/{msg_id}").status_code == 200
+        assert c.get(f"/api/messages/threads/{tid}").json()["messages"] == []
+
+
+def test_blast_pathwai_internal_and_history_filters():
+    # Pathwai Internal (BlastComposer.jsx's third "Send by" option): an in-app notification blast
+    # that needs no Twilio/SendGrid connection and isn't gated by anyone's SMS/email opt-in, so it
+    # can go out entirely on its own (channel="none"). History is then filterable by audience and
+    # by date, same as /admin/audit-log's own filters.
+    from fastapi.testclient import TestClient
+    import server
+    with TestClient(server.app) as c:
+        c.post("/api/auth/login", json={"email": "admin@yourcommunity.app", "password": "Demo123!"})
+        # no channel chosen at all -> rejected
+        assert c.post("/api/admin/blasts/send", json={"message": "hi", "channel": "none", "internal": False}).status_code == 400
+        r = c.post("/api/admin/blasts/send", json={"message": "Court closed for maintenance", "channel": "none", "internal": True, "audience": {"type": "all"}}).json()
+        assert r["channel"] == "none" and r["internal"] is True and r["internal_sent"] > 0 and r["sms_sent"] == 0 and r["email_sent"] == 0
+
+        # the recipients actually got a notification
+        c.post("/api/auth/logout")
+        c.post("/api/auth/login", json={"email": "demo@yourcommunity.app", "password": "Demo123!"})
+        notifs = c.get("/api/notifications").json()["notifications"]
+        assert any(n["kind"] == "blast" and "Court closed" in n["body"] for n in notifs)
+
+        # a second blast, to admins only, for the history filter to tell apart from the first
+        c.post("/api/auth/logout")
+        c.post("/api/auth/login", json={"email": "admin@yourcommunity.app", "password": "Demo123!"})
+        c.post("/api/admin/blasts/send", json={"message": "Admins: new policy doc", "channel": "none", "internal": True, "audience": {"type": "admins"}})
+
+        all_hist = c.get("/api/admin/blasts/history").json()["blasts"]
+        assert len(all_hist) >= 2
+        admins_only = c.get("/api/admin/blasts/history", params={"audience_type": "admins"}).json()["blasts"]
+        assert all(b["audience"]["type"] == "admins" for b in admins_only) and len(admins_only) >= 1
+        future_only = c.get("/api/admin/blasts/history", params={"since": "2999-01-01"}).json()["blasts"]
+        assert future_only == []
+
+
+def test_hub_unified_messages_merges_across_communities():
+    # The pre-community-entry "Messages centre" on the Hub page (Hub.jsx): one merged list of every
+    # joined community's threads, each tagged with community_slug, sorted newest-first across all of
+    # them, with one combined unread count. demo@yourcommunity.app is seeded as a real cross-community
+    # member -- a plain member of playr (the default community) and also the founding admin of
+    # toronto-tech-collective (see seed_cross_community_roles.py) -- so this exercises two genuinely
+    # different communities' databases, not one community queried twice.
+    from fastapi.testclient import TestClient
+    import server
+    with TestClient(server.app) as c:
+        TTC = "toronto-tech-collective"
+
+        # demo's own id differs per community -- fetch both before anyone messages demo.
+        c.post("/api/auth/login", json={"email": "demo@yourcommunity.app", "password": "Demo123!"})
+        demo_id_playr = c.get("/api/auth/me").json()["id"]
+        c.post("/api/auth/logout")
+        c.post("/api/auth/login", json={"email": "demo@yourcommunity.app", "password": "Demo123!"}, headers={"X-Community": TTC})
+        demo_id_ttc = c.get("/api/auth/me", headers={"X-Community": TTC}).json()["id"]
+        c.post("/api/auth/logout")
+
+        # playr's admin persona messages demo in playr (the default community -- no header needed).
+        c.post("/api/auth/login", json={"email": "admin@yourcommunity.app", "password": "Demo123!"})
+        r1 = c.post("/api/messages/threads", json={"recipient_ids": [demo_id_playr], "subject": "Playr ping", "body": "Hello from playr"})
+        assert r1.status_code == 201, r1.text
+        c.post("/api/auth/logout")
+
+        # grace's admin (also a plain member of Toronto Tech Collective) messages demo there.
+        c.post("/api/auth/login", json={"email": "pastor@c3.example", "password": "Demo123!"}, headers={"X-Community": TTC})
+        r2 = c.post("/api/messages/threads", json={"recipient_ids": [demo_id_ttc], "subject": "TTC ping", "body": "Hello from TTC"}, headers={"X-Community": TTC})
+        assert r2.status_code == 201, r2.text
+        c.post("/api/auth/logout", headers={"X-Community": TTC})
+
+        # demo signs in once (no X-Community -- this is the platform-level account view) and sees both.
+        c.post("/api/auth/login", json={"email": "demo@yourcommunity.app", "password": "Demo123!"})
+        hub_msgs = c.get("/api/hub/messages").json()
+        slugs = {t["community_slug"] for t in hub_msgs["threads"]}
+        assert {"playr", TTC} <= slugs
+        assert hub_msgs["unread"] >= 2
+        playr_thread = next(t for t in hub_msgs["threads"] if t["community_slug"] == "playr" and t["subject"] == "Playr ping")
+        ttc_thread = next(t for t in hub_msgs["threads"] if t["community_slug"] == TTC and t["subject"] == "TTC ping")
+        assert playr_thread["unread"] is True and ttc_thread["unread"] is True
+        assert playr_thread["other"]["name"] and ttc_thread["other"]["name"]  # each resolved against its OWN community's users
+        # newest-first across both communities' own last_message_at, not grouped by community.
+        at = [t["last_message_at"] for t in hub_msgs["threads"]]
+        assert at == sorted(at, reverse=True)
+
+
+def test_hub_unified_messages_requires_auth():
+    from fastapi.testclient import TestClient
+    import server
+    with TestClient(server.app) as anon:
+        assert anon.get("/api/hub/messages").status_code == 401

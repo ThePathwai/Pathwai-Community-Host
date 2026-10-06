@@ -69,7 +69,10 @@ def _build(i: int, space: str) -> Dict[str, Any]:
         "product_description": oneliner + ".",
         "industry": sector,
         "location": ["Toronto, ON", "Montreal, QC", "Calgary, AB", "Waterloo, ON", "Halifax, NS", "Ottawa, ON"][i % 6],
-        "avatar_url": f"https://i.pravatar.cc/200?u={uid}",
+        # No avatar_url: a pravatar.cc URL can't load inside the published preview (only
+        # embedded/self-contained images do there), so it would just show as a broken image --
+        # Avatar.jsx's own initials-on-color fallback (ui.jsx) covers every simulated member instead.
+        "avatar_url": None,
         "bio": f"{name} is building {startup}: {oneliner.lower()}. Active in the {space.replace('-', ' ')} community.",
         "expertise": expertise,
         "skill_set": expertise,

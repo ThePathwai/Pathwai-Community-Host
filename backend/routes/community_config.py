@@ -4,7 +4,7 @@ from typing import Any, Dict
 from fastapi import APIRouter, Body, Depends, HTTPException
 
 from auth import require_role
-from database import db
+from database import current_community, db
 from ._common import audit, now_iso
 
 router = APIRouter(tags=["community"])
@@ -65,6 +65,7 @@ DEFAULT_CONFIG: Dict[str, Any] = {
         {"key": "events", "label": "Events", "enabled": True}, {"key": "resources", "label": "Perks", "enabled": True},
         {"key": "updates", "label": "News", "enabled": True}, {"key": "requests", "label": "To-do", "enabled": True},
         {"key": "support", "label": "Help board", "enabled": True},
+        {"key": "inbox", "label": "Messages", "enabled": True},
     ],
     "custom_links": [],
     "setup_completed": True,
@@ -93,7 +94,7 @@ THEME_PRESETS = [
 HEADING_FONTS = ["Plus Jakarta Sans", "Playfair Display", "Lora", "Inter", "Montserrat", "Anton", "Bebas Neue", "Oswald", "Archivo Black"]
 FONTS = ["Plus Jakarta Sans", "Inter", "Space Grotesk", "DM Sans", "Manrope", "Poppins", "Montserrat", "Work Sans", "IBM Plex Sans", "Playfair Display", "Lora"]
 HEX = re.compile(r"^#[0-9a-fA-F]{6}$")
-NAV_KEYS = {"members", "matches", "events", "resources", "updates", "requests", "support"}
+NAV_KEYS = {"members", "matches", "events", "resources", "updates", "requests", "support", "inbox"}
 
 
 def _validate(clean: Dict[str, Any]) -> None:
@@ -183,6 +184,10 @@ async def get_config() -> Dict[str, Any]:
     if "nav" in doc:  # keep newly added modules visible for older saved configs
         have = {n["key"] for n in doc["nav"]}
         out["nav"] = doc["nav"] + [n for n in DEFAULT_CONFIG["nav"] if n["key"] not in have]
+    # Not stored on the doc itself -- this whole lookup is already scoped to one community via the
+    # `db` contextvar proxy, so the slug is just whichever one that is. Admin's "Share your
+    # community" panel needs it to build the external /c/:slug link without a second round trip.
+    out["slug"] = current_community()
     return out
 
 
@@ -198,7 +203,11 @@ async def presets():
 
 @router.patch("/community/config")
 async def patch_config(patch: Dict[str, Any] = Body(...), me: dict = Depends(require_role("admin"))):
-    allowed = set(DEFAULT_CONFIG.keys())
+    # Policy: every community requires admin approval, full stop -- there's no admin-facing way to
+    # turn that off, so `require_approval` is excluded here even though it's still a DEFAULT_CONFIG
+    # key (routes/hub.py's _apply_to_community and server.py's auth_signup both hardcode it anyway;
+    # this just keeps the stored config from claiming otherwise).
+    allowed = set(DEFAULT_CONFIG.keys()) - {"require_approval"}
     clean = {k: v for k, v in patch.items() if k in allowed}
     _validate(clean)
     if "brand" in clean:  # keep the legacy theme accent in sync

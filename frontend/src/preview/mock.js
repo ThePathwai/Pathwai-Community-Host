@@ -9,8 +9,12 @@ const slugOf = () => S.community || "playr";
 // The active community's recorded data. `member` and `admin` both point at the signed-in person's view, so shared helpers keep working.
 Object.defineProperty(S, "data", { get() { const b = book(); const v = (S.email && b.logins[S.email]) || {}; return { public: b.public, member: v, admin: v }; } });
 const ACCOUNTS = { "demo@yourcommunity.app": { name: "Fife Ashley-Dejo", role: "member" }, "admin@yourcommunity.app": { name: "Fife Ashley-Dejo", role: "admin" }, "host@thevillage.example": { name: "Camille Laurent", role: "host" } };
-const BASE = { "demo@yourcommunity.app": { playr: "approved", grace: "approved", "club-pto": "approved" }, "admin@yourcommunity.app": { playr: "approved", grace: "approved", "the-village": "approved", "club-pto": "approved", unity: "approved" }, "host@thevillage.example": { "the-village": "approved" } };
-const ADMIN_OF = { "admin@yourcommunity.app": ["playr", "grace", "the-village", "club-pto", "unity"], "host@thevillage.example": ["the-village"] };
+// A role is per-community, not global: admin@ is the actual admin of playr/the-village/club-pto/unity
+// but just a plain member of grace (grace's real admin is a separate persona, pastor@c3.example, same
+// as the real backend's seed_communities.py); demo@ is a plain member everywhere except Toronto Tech
+// Collective, where it's the founding admin — the "vice versa" half. See ADMIN_OF below.
+const BASE = { "demo@yourcommunity.app": { playr: "approved", grace: "approved", "club-pto": "approved", "toronto-tech-collective": "approved" }, "admin@yourcommunity.app": { playr: "approved", grace: "approved", "the-village": "approved", "club-pto": "approved", unity: "approved" }, "host@thevillage.example": { "the-village": "approved" } };
+const ADMIN_OF = { "admin@yourcommunity.app": ["playr", "the-village", "club-pto", "unity"], "demo@yourcommunity.app": ["toronto-tech-collective"], "host@thevillage.example": ["the-village"] };
 const memStatus = (email, slug) => (S.extra.join || {})[email + "|" + slug] || (BASE[email] || {})[slug] || "none";
 const isAdminHere = () => (ADMIN_OF[S.email] || []).includes(slugOf());
 const appsHere = () => ((S.extra.apps || {})[slugOf()] || []);
@@ -182,6 +186,20 @@ function sharedRsvp() {
   bk.shared.rsvp = bk.shared.rsvp || { byUser: {}, delta: {} }; // byUser: {eventId: {email: status}}, delta: {eventId: net change}
   return bk.shared.rsvp;
 }
+// A live stand-in for the real backend's db.audit_log -- mirrors routes/_common.py's audit() so
+// anything created during the preview (right now: a deleted/reported message) shows up in Admin's
+// Audit log tab (GET /admin/audit-log below) right alongside the recorded fixture entries, instead
+// of only existing in this session's memory.
+function auditLog() {
+  const bk = book();
+  bk.shared = bk.shared || {};
+  bk.shared.auditLog = bk.shared.auditLog || [];
+  return bk.shared.auditLog;
+}
+function addAudit(action, target_type, target_id, meta) {
+  const me = view()["/auth/me"];
+  auditLog().unshift({ actor_id: me?.id || null, action, target_type, target_id, meta: meta || {}, created_at: new Date().toISOString() });
+}
 const HIDDEN_STATUSES = ["pending", "rejected", "changes_requested"];
 function applyEdit(item, kind) {
   if (!item) return item;
@@ -220,18 +238,25 @@ function deriveEventPricing(tiers, orders) {
 // member-facing list (mirrors the real backend's approved_q, which hides them from everyone).
 function mergedList(base, kind, filterPending = true) {
   const ov = sharedContent(kind);
-  let created = ov.created.map((x) => applyEdit(x, kind));
+  let created = ov.created.filter((x) => !ov.deleted[x.id]).map((x) => applyEdit(x, kind));
   if (filterPending) created = created.filter((x) => !HIDDEN_STATUSES.includes(x.status));
   const rest = (base || []).filter((x) => !ov.deleted[x.id]).map((x) => applyEdit(x, kind));
   return [...created, ...rest];
 }
 // Bookmarking is personal, not shared — keyed by the viewer, so it applies cleanly to both a
-// recorded fixture resource and one someone created live this session.
-function savedSet() {
+// recorded fixture item and one someone created live this session. Namespaced by `kind` (resources,
+// events, users) since the three id spaces are independent and this feeds the Saved section of
+// /profile split the same way (see routes/saved.py's /me/saved).
+function savedSet(kind = "resources") {
   const bk = book();
   bk.shared = bk.shared || {};
   bk.shared.saved = bk.shared.saved || {};
-  return (bk.shared.saved[S.email] = bk.shared.saved[S.email] || {});
+  bk.shared.saved[kind] = bk.shared.saved[kind] || {};
+  return (bk.shared.saved[kind][S.email] = bk.shared.saved[kind][S.email] || {});
+}
+function isSaved(kind, item) {
+  const sv = savedSet(kind);
+  return Object.prototype.hasOwnProperty.call(sv, item.id) ? sv[item.id] : !!item.is_saved;
 }
 function withRsvpFields(e) {
   if (!e || !e.id) return e;
@@ -240,6 +265,119 @@ function withRsvpFields(e) {
   const my_rsvp = mine !== undefined ? mine : e.my_rsvp ?? null;
   const attendee_count = Math.max(0, (e.attendee_count || 0) + (rv.delta[e.id] || 0));
   return { ...e, my_rsvp, is_attending: my_rsvp === "yes", attendee_count };
+}
+
+// ---- messaging (email-style in-app threads; see routes/messages.py) ----
+// Stored the same way as events/resources: one shared bucket per community book, so every login
+// (member, admin, coach) that opens the same community sees the same threads and the same replies.
+// Unlike those, a thread carries its own `messages` array right on the record (simpler than two
+// linked collections for a mock), and there's no per-login recorded fixture for it at all — like
+// /admin/blasts/history below, this is answered live rather than looked up from a captured snapshot.
+function threadStore() { return sharedContent("message_threads"); }
+function threadUserById(id) {
+  const all = mergedList(view()["/users"] || [], "users", false);
+  return all.find((u) => u.id === id) || { id, name: "Former member", avatar_url: null, title: null };
+}
+function threadOut(t) {
+  const me = view()["/auth/me"];
+  // `role` rides along so the inbox can filter "who's it with" by Members vs. Admin & team (see
+  // Inbox.jsx's filter bar and RecipientPicker's contact filter, same as routes/messages.py's
+  // _thread_out does for the real backend).
+  const others = t.participant_ids.filter((pid) => pid !== me.id).map(threadUserById)
+    .map((u) => ({ id: u.id, name: u.name, avatar_url: u.avatar_url || null, title: u.title || null, role: u.role || null }));
+  const last = t.messages[t.messages.length - 1];
+  const myReadAt = (t.read_at || {})[me.id];
+  const unread = !!(last && last.sender_id !== me.id && (!myReadAt || myReadAt < last.created_at));
+  return {
+    id: t.id, participant_ids: t.participant_ids, subject: t.subject, context: t.context || null,
+    created_at: t.created_at, last_message_at: last ? last.created_at : t.created_at,
+    last_message_preview: last ? (last.body.length > 140 ? last.body.slice(0, 139) + "…" : last.body) : "",
+    last_sender_id: last ? last.sender_id : null,
+    others, other: others[0] || null, unread,
+  };
+}
+
+// ---- platform-wide people: follow, public profiles, DMs that don't need a shared community ----
+// Mirrors routes/hub.py's /hub/people*, /hub/following, /hub/followers and /hub/messages/threads*,
+// which are all backed by directory.person_by_email/list_all_people (merge-by-email across every
+// community) and hub_db()'s follows/platform_threads/platform_messages collections. The preview has
+// no real per-community `users` collections to scan, so it approximates the same merge over the
+// recorded fixtures: every one of the 5 fully-recorded communities' member roster (plus anyone a live
+// admin approval added to it this session), plus every hub-signup account and its saved Pathwai
+// profile. Only the 5 recorded slugs are scanned (not every card on the "Discover" grid) since those
+// are the only ones with an actual member roster to merge — same as `memStatus`/`BASE` already
+// assume throughout this file.
+function realCommunitySlugs() { return Array.from(new Set([...Object.keys(fixtures.communities), ...Object.keys(S.books)])); }
+function communityRoster(slug) {
+  const tmpl = fixtures.communities[slug];
+  const base = tmpl ? (Object.values(tmpl.logins).find((l) => l["/users"])?.["/users"] || []) : [];
+  const live = (S.books[slug]?.shared?.users?.created) || [];
+  const seen = new Set(); const out = [];
+  for (const u of [...live, ...base]) {
+    const email = (u.email || "").trim().toLowerCase();
+    if (email && !seen.has(email)) { seen.add(email); out.push(u); }
+  }
+  return out;
+}
+// One platform-wide identity per email -- hub-signup accounts (and their saved Pathwai profile) are
+// the most authoritative copy where they exist, same precedence directory.person_by_email gives
+// hub_db().accounts over a community's own `users` doc.
+function platformDirectory() {
+  const byEmail = {};
+  for (const slug of realCommunitySlugs()) {
+    for (const u of communityRoster(slug)) {
+      const email = (u.email || "").trim().toLowerCase();
+      if (!byEmail[email]) byEmail[email] = { email, name: u.name, avatar_url: u.avatar_url || null, title: u.title || "", company: u.company || "", bio: u.bio || "", photos: u.photos || [] };
+    }
+  }
+  for (const [email, acct] of Object.entries({ ...ACCOUNTS, ...(S.extra.accounts || {}) })) {
+    const prof = (S.extra.acctProfile || {})[email] || {};
+    const existing = byEmail[email] || {};
+    byEmail[email] = { email, name: prof.name || acct.name || existing.name || email, avatar_url: prof.avatar_url || existing.avatar_url || null,
+      title: prof.title || existing.title || "", company: prof.company || existing.company || "", bio: prof.bio || existing.bio || "",
+      photos: (prof.photos || existing.photos || []).slice(0, 9) };
+  }
+  return byEmail;
+}
+function personByEmail(email) {
+  email = (email || "").trim().toLowerCase();
+  if (!email) return null;
+  return platformDirectory()[email] || null;
+}
+// The public-profile shape of _public_communities: every community this email is an approved member
+// of, by name/logo/colors (not the fuller fixtures.communities template, which only exists for the 5
+// recorded slugs — fixtures.hub has the summary card for every slug, recorded or Discover-only).
+function personCommunities(email) {
+  const hubEntries = [...fixtures.hub, ...(S.extra.createdCommunities || [])];
+  // Membership here is "this email has a `users` doc in this community" -- same test the real
+  // backend's find_all_for_email makes. A seeded fixture persona (most of this directory) is a member
+  // just by being in that community's recorded roster; memStatus/BASE only covers the handful of demo
+  // personas whose join status can change live during the preview (and is still checked, so e.g.
+  // demo@'s overlay-approved memberships show up too).
+  return realCommunitySlugs()
+    .filter((slug) => communityRoster(slug).some((u) => (u.email || "").trim().toLowerCase() === email) || memStatus(email, slug) === "approved")
+    .map((slug) => {
+      const h = hubEntries.find((c) => c.slug === slug);
+      return { slug, name: h?.name || slug, logo_url: h?.brand?.logo_url || null, colors: h?.brand?.colors || {} };
+    });
+}
+const followKey = (follower, followee) => `${follower}|${followee}`;
+function platformThreadStore() { return (S.extra.platformThreads = S.extra.platformThreads || { created: [] }); }
+function platformThreadOut(t, meEmail) {
+  const others = t.participant_emails.filter((e) => e !== meEmail).map((e) => {
+    const p = personByEmail(e);
+    return p ? { email: p.email, name: p.name, avatar_url: p.avatar_url || null, title: p.title || null, company: p.company || null } : { email: e, name: e, avatar_url: null, title: null, company: null };
+  });
+  const last = t.messages[t.messages.length - 1];
+  const myReadAt = (t.read_at || {})[meEmail];
+  const unread = !!(last && last.sender_email !== meEmail && (!myReadAt || myReadAt < last.created_at));
+  return {
+    id: t.id, subject: t.subject, context: t.context || null, created_at: t.created_at,
+    last_message_at: last ? last.created_at : t.created_at,
+    last_message_preview: last ? (last.body.length > 140 ? last.body.slice(0, 139) + "…" : last.body) : "",
+    last_sender_email: last ? last.sender_email : null,
+    others, other: others[0] || null, unread, community_slug: null,
+  };
 }
 
 function hubList() {
@@ -264,10 +402,59 @@ function hubList() {
   });
 }
 
+// GET /hub/communities/{slug}/public (no auth) -- mirrors the real backend's _summary(slug): the
+// static Discover-grid fixture as the base (name/tagline/kind/brand/counts), overlaid with whatever
+// an admin edited live this session in Config/Branding, which writes into that community's own book
+// (S.books[slug]), the same per-community scoping book()/S.data already give the currently-entered
+// community. Returns null for an unknown slug so the caller can 404, same as the real endpoint.
+function communityPublicInfo(slug) {
+  const hubEntries = [...fixtures.hub, ...(S.extra.createdCommunities || [])];
+  const fixture = hubEntries.find((c) => c.slug === slug);
+  if (!fixture) return null;
+  let cfg = null;
+  if (fixtures.communities[slug] || S.books[slug]) {
+    const saved = S.community;
+    S.community = slug;
+    cfg = S.data.public["/community/config"];
+    S.community = saved;
+  }
+  const liveMembers = (S.books[slug]?.shared?.users?.created?.length) || 0;
+  return {
+    slug, name: cfg?.community_name || fixture.name, tagline: cfg?.tagline ?? fixture.tagline ?? "",
+    kind: cfg?.community_kind || fixture.kind || "Community", about: cfg?.about || fixture.about || cfg?.tagline || fixture.tagline || "",
+    cover: cfg?.hub_cover ?? fixture.cover ?? null, apply_questions: cfg?.apply_questions || fixture.apply_questions || [],
+    // Always true -- mirrors backend/routes/hub.py's _summary(), which hardcodes this rather than
+    // reading it from config, since a stale config doc could otherwise claim otherwise.
+    require_approval: true, brand: cfg?.brand || fixture.brand || {},
+    members: (fixture.members || 0) + liveMembers, upcoming_events: fixture.upcoming_events || 0,
+  };
+}
+// Shared by the standalone POST /hub/communities/{slug}/apply and a signup's join_slug (below) --
+// mirrors the real backend factoring both hub_apply and hub_signup's join path through
+// _apply_to_community. Always lands on "pending" here regardless of the community's require_approval
+// flag, same simplification the plain apply handler already made before this -- every fixture and
+// freshly-created community seeds require_approval: true, so this is never visibly inconsistent in
+// the demo.
+function applyToCommunity(slug, { title, message, answers } = {}) {
+  const existing = memStatus(S.email, slug);
+  if (existing !== "none") return { status: existing };
+  const prof = (S.extra.acctProfile || {})[S.email] || {};
+  const name = prof.name || (ACCOUNTS[S.email] || (S.extra.accounts || {})[S.email] || {}).name || S.email;
+  const why = [message, ...Object.entries(answers || {}).map(([k, v]) => `${k}: ${v}`)].filter(Boolean).join("\n");
+  ((S.extra.apps = S.extra.apps || {})[slug] = S.extra.apps[slug] || []).unshift({ id: "app-" + S.email, name, email: S.email, title: title || prof.title || null, company: prof.company || null, bio: prof.bio || null, tagline: null, join_reason: why || null, avatar_url: prof.avatar_url || null, location: prof.location || null, age: prof.age || null, status: "pending", requested_at: new Date().toISOString(), decided_at: null, decided_by_name: null, note: null, skill_set: prof.skill_set || [], interests_hobbies: prof.interests_hobbies || [], goals: prof.goals || [], support_needs: prof.support_needs || [], photos: prof.photos || [], linkedin: (prof.contact || {}).linkedin || null, phone: (prof.contact || {}).phone || null, instagram: (prof.contact || {}).instagram || null, website: (prof.contact || {}).website || null });
+  (S.extra.join = S.extra.join || {})[S.email + "|" + slug] = "pending";
+  return { status: "pending" };
+}
 const sum = (id) => String(id).split("").reduce((a, c) => a + c.charCodeAt(0), 0);
 const t_sold_out = (tier, orders) => tier.capacity != null && orders.filter((o) => o.tier_id === tier.id).length >= tier.capacity;
 function get(path, p, config) {
-  if (path === "/admin/blasts/history") return ok(config, { blasts: S.extra.blasts || [] });
+  if (path === "/admin/blasts/history") {
+    let blasts = S.extra.blasts || [];
+    if (p.audience_type) blasts = blasts.filter((b) => b.audience?.type === p.audience_type);
+    if (p.since) blasts = blasts.filter((b) => b.at >= p.since);
+    if (p.until) blasts = blasts.filter((b) => b.at <= p.until);
+    return ok(config, { blasts });
+  }
   const sl = path.match(/^\/admin\/events\/([^/]+)\/sales$/);
   if (sl) {
     const ev = withRsvpFields(applyEdit([...sharedContent("events").created, ...((view()["/events"]) || [])].find((x) => x.id === sl[1]), "events")) || {};
@@ -287,15 +474,129 @@ function get(path, p, config) {
     });
   }
   if (path === "/auth/oauth/providers") return ok(config, { google: { label: "Google", client_id: null, configured: false }, apple: { label: "Apple", client_id: null, configured: false } });
+  if (path === "/hub/account/export") return ok(config, { exported_at: new Date().toISOString(), notes: "Preview: sample export", account: { email: S.email }, communities: [] });
   if (path === "/hub/community-categories") return ok(config, { categories: Object.entries(CATEGORY_PRESETS).map(([key, v]) => ({ key, label: v.label })) });
   if (path === "/hub/me") {
     const prof = (S.extra.acctProfile || {})[S.email] || {};
     const baseName = (ACCOUNTS[S.email] || (S.extra.accounts || {})[S.email] || {}).name;
     return ok(config, { account: S.role ? { id: "acct-" + S.email, name: baseName, email: S.email, avatar_url: null, age: null,
-      title: "", company: "", location: "", bio: "", skill_set: [], interests_hobbies: [], goals: [], support_needs: [],
+      title: "", company: "", location: "", bio: "", skill_set: [], interests_hobbies: [], goals: [], support_needs: [], photos: [],
       contact: { phone: "", linkedin: "", instagram: "", website: "" }, ...prof, name: prof.name || baseName } : null, active: S.community });
   }
   if (path === "/hub/communities") return S.role ? ok(config, { communities: hubList(), active: S.community }) : fail(config, 401, "Not authenticated");
+  const invGet = path.match(/^\/invites\/([^/]+)$/);
+  if (invGet) {
+    // No-auth, same as the real backend's GET /invites/{code} (routes/invites.py) -- the admin's
+    // single-use invite link (JoinCommunity.jsx) is followed by someone who has no account yet, so
+    // this has to work before the blanket !S.role gate below. S.extra.invites (set when the admin
+    // creates one, see the POST /invites handler in write()) is a plain session-level store rather
+    // than view()["/invites"], since view() only resolves while S.role is truthy.
+    const inv = (S.extra.invites || {})[invGet[1]];
+    if (!inv || inv.status !== "pending") return fail(config, 404, "Invite not found or already used");
+    const saved = S.community;
+    S.community = inv.slug;
+    const cfg = S.data.public["/community/config"];
+    S.community = saved;
+    return ok(config, { code: inv.code, email: inv.email, role: inv.role, community_name: cfg.community_name, signup_fields: cfg.signup_fields, member_label_singular: cfg.member_label_singular });
+  }
+  const cpub = path.match(/^\/hub\/communities\/([^/]+)\/public$/);
+  if (cpub) {
+    // The external share-link landing page's one call (CommunityLanding.jsx at /c/:slug) --
+    // deliberately no S.role check, same as the real backend's hub_community_public having no
+    // Depends(require_account): the whole point is that someone with no account can open it.
+    const info = communityPublicInfo(decodeURIComponent(cpub[1]));
+    return info ? ok(config, info) : fail(config, 404, "Community not found");
+  }
+  if (path === "/hub/messages") {
+    // The Hub page's unified "Messages centre" (see Hub.jsx's HubInbox): one merged list of every
+    // approved community's own message threads, tagged with community_slug. Each community keeps
+    // its threads on its own book (threadStore() reads off S.community, same as a real per-community
+    // database would), so this walks every community this login is approved in, switching S.community
+    // just long enough to read that one book's threads and "me" id for it, then restores whichever
+    // community was actually active -- mirroring routes/hub.py's hub_messages(), which does the same
+    // fan-out across real per-community databases via in_community(slug).
+    if (!S.role) return fail(config, 401, "Not authenticated");
+    const savedCommunity = S.community;
+    const candidates = Array.from(new Set([...Object.keys(fixtures.communities), ...Object.keys(S.books)]));
+    const threads = [];
+    candidates.filter((slug) => memStatus(S.email, slug) === "approved").forEach((slug) => {
+      S.community = slug;
+      const me = view()["/auth/me"];
+      if (me) threadStore().created.filter((t) => t.participant_ids.includes(me.id)).forEach((t) => threads.push({ ...threadOut(t), community_slug: slug }));
+    });
+    S.community = savedCommunity;
+    // Platform-level DMs (community_slug: null) merge into the same unified list -- see
+    // platformThreadStore() above, mirroring routes/hub.py's hub_messages fan-out across both
+    // per-community message_threads and hub_db().platform_threads.
+    platformThreadStore().created.filter((t) => t.participant_emails.includes(S.email)).forEach((t) => threads.push(platformThreadOut(t, S.email)));
+    threads.sort((a, b) => (b.last_message_at || "").localeCompare(a.last_message_at || ""));
+    return ok(config, { threads, unread: threads.filter((t) => t.unread).length });
+  }
+  if (path === "/hub/people") {
+    // Platform-wide search for following -- not any one community's member list. See
+    // platformDirectory() above for why this draws from every recorded community's roster, not just
+    // hub-signup accounts.
+    if (!S.role) return fail(config, 401, "Not authenticated");
+    const meEmail = S.email;
+    const follows = S.extra.follows || {};
+    const s = q(p.q);
+    let out = Object.values(platformDirectory()).filter((person) => person.email !== meEmail);
+    if (s) out = out.filter((person) => [person.name, person.title, person.company].some((v) => (v || "").toLowerCase().includes(s)));
+    out = out.map((person) => ({ email: person.email, name: person.name, avatar_url: person.avatar_url || null, title: person.title || null, company: person.company || null, photos: (person.photos || []).slice(0, 9), is_following: !!follows[followKey(meEmail, person.email)] }));
+    out.sort((a, b) => (a.name || "").localeCompare(b.name || ""));
+    return ok(config, { people: out.slice(0, 50) });
+  }
+  if (path === "/hub/following" || path === "/hub/followers") {
+    if (!S.role) return fail(config, 401, "Not authenticated");
+    const meEmail = S.email;
+    const follows = S.extra.follows || {};
+    const emails = Object.keys(follows)
+      .filter((k) => (path === "/hub/following" ? k.startsWith(meEmail + "|") : k.endsWith("|" + meEmail)))
+      .map((k) => (path === "/hub/following" ? k.slice(meEmail.length + 1) : k.slice(0, k.length - meEmail.length - 1)));
+    const people = emails.map(personByEmail).filter(Boolean).map((p) => ({ email: p.email, name: p.name, avatar_url: p.avatar_url || null, title: p.title || null, company: p.company || null, photos: (p.photos || []).slice(0, 9) }));
+    return ok(config, { people });
+  }
+  const ppm = path.match(/^\/hub\/people\/([^/]+)$/);
+  if (ppm) {
+    if (!S.role) return fail(config, 401, "Not authenticated");
+    const email = decodeURIComponent(ppm[1]).trim().toLowerCase();
+    const p2 = personByEmail(email);
+    if (!p2) return fail(config, 404, "Person not found");
+    const meEmail = S.email;
+    const follows = S.extra.follows || {};
+    const followers = Object.keys(follows).filter((k) => k.endsWith("|" + email)).length;
+    const following = Object.keys(follows).filter((k) => k.startsWith(email + "|")).length;
+    return ok(config, {
+      email: p2.email, name: p2.name, avatar_url: p2.avatar_url || null, title: p2.title || null, company: p2.company || null, bio: p2.bio || null,
+      photos: (p2.photos || []).slice(0, 9), communities: personCommunities(email), is_self: email === meEmail,
+      is_following: !!follows[followKey(meEmail, email)], is_followed_by: !!follows[followKey(email, meEmail)], followers, following,
+    });
+  }
+  const pdm = path.match(/^\/hub\/messages\/threads\/([^/]+)$/);
+  if (pdm) {
+    if (!S.role) return fail(config, 401, "Not authenticated");
+    const meEmail = S.email;
+    const t = platformThreadStore().created.find((x) => x.id === pdm[1]);
+    if (!t || !t.participant_emails.includes(meEmail)) return fail(config, 404, "Conversation not found");
+    t.read_at = { ...(t.read_at || {}), [meEmail]: new Date().toISOString() };
+    return ok(config, { ...platformThreadOut(t, meEmail), messages: clone(t.messages) });
+  }
+  const cev = path.match(/^\/hub\/communities\/([^/]+)\/events$/);
+  if (cev) {
+    // Scoped to communities you're actually approved in, same guard /hub/enter uses -- lets the
+    // platform message composer's attach-picker list real events without "entering" anywhere first.
+    if (!S.role) return fail(config, 401, "Not authenticated");
+    const slug = cev[1];
+    if (!fixtures.communities[slug] && !S.books[slug]) return fail(config, 404, "Community not found");
+    if (memStatus(S.email, slug) !== "approved") return fail(config, 403, "You're not a member of this community");
+    const savedCommunity = S.community;
+    S.community = slug;
+    const events = mergedList(view()["/events"] || [], "events").map(withRsvpFields).filter((e) => !e.is_past)
+      .sort((a, b) => (a.starts_at || "").localeCompare(b.starts_at || "")).slice(0, 20)
+      .map((e) => ({ id: e.id, title: e.title, starts_at: e.starts_at }));
+    S.community = savedCommunity;
+    return ok(config, { events });
+  }
   if (path === "/auth/me") return S.role && S.community ? ok(config, view()["/auth/me"]) : fail(config, 401, "Not authenticated");
   if (!S.role && !path.startsWith("/community") && !path.startsWith("/auth") && !path.startsWith("/organizations") &&
       !path.startsWith("/discover") && !path.startsWith("/mentors") && !path.startsWith("/chat")) {
@@ -307,6 +608,44 @@ function get(path, p, config) {
     return ok(config, { enabled: !!stripeOn(), plans: stripeOn() ? PLANS : [], status: cur ? "active" : null, plan: cur ? cur.description : null, payments: pay, currency: "cad" });
   }
   if (path === "/admin/integrations") return ok(config, { integrations: integ() });
+  if (path === "/messages/threads") {
+    const me = view()["/auth/me"];
+    if (!me) return fail(config, 401, "Not authenticated");
+    const ts = threadStore().created.filter((t) => t.participant_ids.includes(me.id)).map(threadOut)
+      .sort((a, b) => (b.last_message_at || "").localeCompare(a.last_message_at || ""));
+    return ok(config, { threads: ts, unread: ts.filter((t) => t.unread).length });
+  }
+  const tdm = path.match(/^\/messages\/threads\/([^/]+)$/);
+  if (tdm) {
+    const me = view()["/auth/me"];
+    const t = threadStore().created.find((x) => x.id === tdm[1]);
+    if (!t || !me || !t.participant_ids.includes(me.id)) return fail(config, 404, "Conversation not found");
+    t.read_at = { ...(t.read_at || {}), [me.id]: new Date().toISOString() };
+    return ok(config, { ...threadOut(t), messages: clone(t.messages) });
+  }
+  if (path === "/me/saved") {
+    // Gathers bookmarks across the three save-able content types for the Saved tab on /profile (see
+    // routes/saved.py's /me/saved) -- answered live like the messaging endpoints above, since it's a
+    // view over this session's savedSet() overlays rather than anything captured in a fixture.
+    const me = view()["/auth/me"];
+    const events = mergedList(view()["/events"] || [], "events").map(withRsvpFields).filter((e) => isSaved("events", e))
+      .sort((a, b) => (b.starts_at || "").localeCompare(a.starts_at || ""))
+      .map((e) => ({ id: e.id, title: e.title, starts_at: e.starts_at, location: e.location, virtual_url: e.virtual_url, cover_url: e.cover_url, category: e.category, is_past: e.is_past }));
+    const members = mergedList(view()["/users"] || [], "users", false).filter((u) => u.id !== me.id && isSaved("users", u))
+      .sort((a, b) => (a.name || "").localeCompare(b.name || ""))
+      .map((u) => ({ id: u.id, name: u.name, avatar_url: u.avatar_url, title: u.title, company: u.company }));
+    const resources = mergedList(view()["/resources"] || [], "resources").filter((r) => isSaved("resources", r))
+      .sort((a, b) => (b.published_at || "").localeCompare(a.published_at || ""))
+      .map((r) => ({ id: r.id, title: r.title, category: r.category, perk_value: r.perk_value, url: r.url, cover_url: r.cover_url }));
+    return ok(config, { events, members, resources });
+  }
+  if (path === "/community/config") {
+    // Not stored on the doc itself -- mirrors the real backend's get_config() adding
+    // out["slug"] = current_community(): Admin's "Share your community" card needs it to build the
+    // external /c/:slug link without a second round trip.
+    if (!S.role || !S.community) return fail(config, 404, "This link is not available.");
+    return ok(config, { ...clone(S.data.public["/community/config"]), slug: S.community });
+  }
   let d = lookup(path);
   if (d === undefined) return fail(config, 404, "This link is not available.");
   d = clone(d);
@@ -369,39 +708,42 @@ function get(path, p, config) {
     return ok(config, d);
   }
   if (path === "/users") {
-    d = mergedList(d, "users", false);
+    d = mergedList(d, "users", false).map((u) => (u.id === (view()["/auth/me"] || {}).id ? u : { ...u, is_saved: isSaved("users", u) }));
     const s = q(p.q);
     if (s) d = d.filter((u) => has([u.name, u.company, u.bio, u.expertise, u.services_offered, u.startup_one_liner], s));
     for (const [k, fields] of [["offer", ["services_offered", "topics_can_advise_on", "expertise", "open_to"]], ["looking_for", ["needs_seeking", "growing_in", "goals"]], ["interest", ["interests_hobbies"]]]) {
       if (p[k] && p[k] !== "all") d = d.filter((u) => fields.some((f) => has(u[f] || [], q(p[k]))));
     }
+    if (p.saved) d = d.filter((u) => u.is_saved);
     return ok(config, d);
   }
-  if (path.match(/^\/users\/[^/]+$/)) return ok(config, applyEdit(d, "users"));
+  if (path.match(/^\/users\/[^/]+$/)) { const u = applyEdit(d, "users"); return ok(config, { ...u, is_saved: isSaved("users", u) }); }
   if (path === "/events") {
-    d = mergedList(d, "events").map(withRsvpFields);
+    d = mergedList(d, "events").map(withRsvpFields).map((e) => ({ ...e, is_saved: isSaved("events", e) }));
     if (p.upcoming === true || p.upcoming === "true") d = d.filter((e) => !e.is_past);
     if (p.upcoming === false || p.upcoming === "false") d = d.filter((e) => e.is_past);
+    if (p.saved) d = d.filter((e) => e.is_saved);
     return ok(config, d);
   }
   if (path.match(/^\/events\/[^/]+$/)) {
     if (sharedContent("events").deleted[d.id]) return fail(config, 404, "This event was removed.");
-    return ok(config, withRsvpFields(applyEdit(d, "events")));
+    const ev = withRsvpFields(applyEdit(d, "events"));
+    // Defensive fallback: EventDetail.jsx reads e.attendees.length with no optional-chain guard, so
+    // this can never come back undefined (see the matching comment on event creation above).
+    return ok(config, { attendees: [], ...ev, is_saved: isSaved("events", ev) });
   }
   if (path === "/resources") {
-    const sv = savedSet();
-    d = mergedList(d, "resources").map((r) => ({ ...r, is_saved: Object.prototype.hasOwnProperty.call(sv, r.id) ? sv[r.id] : !!r.is_saved }));
+    d = mergedList(d, "resources").map((r) => ({ ...r, is_saved: isSaved("resources", r) }));
     if (p.q) d = d.filter((r) => has([r.title, r.description, r.tags], q(p.q)));
     if (p.source && p.source !== "all") d = d.filter((r) => r.source === p.source);
     if (p.saved) d = d.filter((r) => r.is_saved);
     return ok(config, d);
   }
   if (path === "/support-requests") {
-    const all = [...(S.extra.requests || []), ...d];
     const me = view()["/auth/me"];
-    let r = all;
-    if (p.mine) r = all.filter((x) => x.user_id === me.id);
-    else if (p.status && p.status !== "all") r = all.filter((x) => x.status === p.status);
+    let r = mergedList(d, "support_requests", false);
+    if (p.mine) r = r.filter((x) => x.user_id === me.id);
+    else if (p.status && p.status !== "all") r = r.filter((x) => x.status === p.status);
     return ok(config, r);
   }
   if (path === "/discover") {
@@ -421,9 +763,22 @@ function get(path, p, config) {
     if (p.region && p.region !== "all") o = o.filter((x) => x.region === p.region);
     return ok(config, { organizations: o, total: o.length });
   }
+  if (path === "/admin/audit-log/actions") {
+    const live = new Set(auditLog().map((e) => e.action));
+    return ok(config, { actions: [...new Set([...(d.actions || []), ...live])].filter(Boolean).sort() });
+  }
   if (path === "/admin/audit-log") {
-    if (p.action && p.action !== "all") d.entries = d.entries.filter((e) => e.action === p.action);
-    return ok(config, d);
+    let entries = [...auditLog(), ...d.entries].sort((a, b) => (b.created_at || "").localeCompare(a.created_at || ""));
+    if (p.action && p.action !== "all") entries = entries.filter((e) => e.action === p.action);
+    const actors = { ...d.actors };
+    const users = mergedList(view()["/users"] || [], "users", false);
+    for (const e of entries) {
+      if (e.actor_id && !actors[e.actor_id]) {
+        const u = users.find((x) => x.id === e.actor_id);
+        if (u) actors[e.actor_id] = { id: u.id, name: u.name, role: u.role };
+      }
+    }
+    return ok(config, { entries, actors, total: entries.length });
   }
   return ok(config, d);
 }
@@ -465,18 +820,40 @@ function write(method, path, body, config) {
   if (path === "/auth/oauth/google" || path === "/auth/oauth/apple") {
     // Real Google/Apple SDKs can't load inside this bundled preview, so both buttons simulate
     // signing in as the member demo persona — same account the "Try the demo" button uses.
+    // The first social sign-in on a page load plays out as a brand-new person: like the real backend, it
+    // answers 428 until the Terms/Privacy agreement is sent along, so the preview shows that step too.
+    if (!S.extra.socialSeen) {
+      if (!body.accepted_terms) return fail(config, 428, { error: "You need to accept the Terms of Service and Privacy Policy to create an account.", code: "terms_required" });
+      S.extra.socialSeen = true;
+    }
     const email = "demo@yourcommunity.app";
     const acct = ACCOUNTS[email];
     S.role = acct.role; S.email = email;
     const first = ["playr", "grace", "the-village", "club-pto"].find((k) => memStatus(email, k) === "approved");
     S.community = first || null;
-    return ok(config, { ok: true, user: S.community ? view()["/auth/me"] : null, account: { id: "acct-" + email, name: acct.name, email }, new_account: false });
+    // Same share-link join as /hub/signup's join_slug -- carries a community's "I'm here to join
+    // X" context through social sign-in instead of silently dropping it just because the person
+    // chose Google/Apple over the email form. Mirrors backend/routes/oauth.py's oauth_login,
+    // which added this for the same reason: every community requires approval, so this never
+    // seats anyone immediately -- it just makes sure a request actually gets filed.
+    let joined = null;
+    if (body.join_slug && communityPublicInfo(body.join_slug)) {
+      joined = { slug: body.join_slug, ...applyToCommunity(body.join_slug) };
+    }
+    return ok(config, { ok: true, user: S.community ? view()["/auth/me"] : null, account: { id: "acct-" + email, name: acct.name, email }, new_account: false, joined });
   }
   if (path === "/hub/signup") {
+    if (body.accepted_terms !== true) return fail(config, 422, "You need to accept the Terms of Service and Privacy Policy to create an account.");
     if (ACCOUNTS[body.email] || (S.extra.accounts || {})[body.email]) return fail(config, 409, "An account with that email already exists. Sign in instead.");
     (S.extra.accounts = S.extra.accounts || {})[body.email] = { name: body.name, role: "member", pw: body.password };
     S.role = "member"; S.email = body.email; S.community = null;
-    return ok(config, { ok: true, account: { id: "acct-" + body.email, name: body.name, email: body.email } }, 201);
+    // Came from a community's external share link (/c/:slug -> "Request to join"/"Join") --
+    // silently ignored, same as the real backend, if the slug is unknown or stale.
+    let joined = null;
+    if (body.join_slug && communityPublicInfo(body.join_slug)) {
+      joined = { slug: body.join_slug, ...applyToCommunity(body.join_slug) };
+    }
+    return ok(config, { ok: true, account: { id: "acct-" + body.email, name: body.name, email: body.email }, joined }, 201);
   }
   if (path === "/hub/communities" && method === "post") {
     if (!S.role || !S.email) return fail(config, 401, "Not authenticated");
@@ -523,7 +900,7 @@ function write(method, path, body, config) {
     login["/auth/me"] = { ...login["/auth/me"], id: "u-" + slug + "-founder", name: founderName, email: S.email, role: "admin", member_type: "founder",
       company: name, title: "Founder", location: prof.location || "", bio: prof.bio || "", age: prof.age || null, skill_set: prof.skill_set || [], expertise: prof.skill_set || [],
       interests_hobbies: prof.interests_hobbies || [], interests: prof.interests_hobbies || [], goals: prof.goals || [], support_needs: prof.support_needs || [],
-      needs_seeking: prof.support_needs || [], avatar_url: prof.avatar_url || null, contact: { email: S.email, ...(prof.contact || {}) }, memberships_space_slugs: [slug],
+      needs_seeking: prof.support_needs || [], avatar_url: prof.avatar_url || null, photos: prof.photos || [], contact: { email: S.email, ...(prof.contact || {}) }, memberships_space_slugs: [slug],
       active_space_slug: null, platform_admin: false, header_stats: [], created_at: now, updated_at: now };
     login["/dashboard"] = { ...login["/dashboard"], me: login["/auth/me"], community_name: name };
     login["/admin/overview"] = { members: 1, events: 0, resources: 0, open_support_requests: 0, pending_applications: 0, invites: 0 };
@@ -541,16 +918,11 @@ function write(method, path, body, config) {
   }
   if (/^\/hub\/communities\/[^/]+\/apply$/.test(path)) {
     const slug = path.split("/")[3];
-    if (memStatus(S.email, slug) !== "none") return ok(config, { ok: true, status: memStatus(S.email, slug) }, 201);
-    const prof = (S.extra.acctProfile || {})[S.email] || {};
-    const name = prof.name || (ACCOUNTS[S.email] || (S.extra.accounts || {})[S.email] || {}).name || S.email;
-    const why = [body.message, ...Object.entries(body.answers || {}).map(([k, v]) => `${k}: ${v}`)].filter(Boolean).join("\n");
-    // Pre-filled from the standard Pathwai profile saved via PATCH /hub/profile, same as the real backend's hub_apply.
-    // Carries every onboarding field through to the application record — the admin reviewing this
-    // request should see the same profile the applicant already built, not a trimmed-down copy of it.
-    ((S.extra.apps = S.extra.apps || {})[slug] = S.extra.apps[slug] || []).unshift({ id: "app-" + S.email, name, email: S.email, title: body.title || prof.title || null, company: prof.company || null, bio: prof.bio || null, tagline: null, join_reason: why || null, avatar_url: prof.avatar_url || null, location: prof.location || null, age: prof.age || null, status: "pending", requested_at: new Date().toISOString(), decided_at: null, decided_by_name: null, note: null, skill_set: prof.skill_set || [], interests_hobbies: prof.interests_hobbies || [], goals: prof.goals || [], support_needs: prof.support_needs || [], linkedin: (prof.contact || {}).linkedin || null, phone: (prof.contact || {}).phone || null, instagram: (prof.contact || {}).instagram || null, website: (prof.contact || {}).website || null });
-    (S.extra.join = S.extra.join || {})[S.email + "|" + slug] = "pending";
-    return ok(config, { ok: true, status: "pending" }, 201);
+    // Pre-filled from the standard Pathwai profile saved via PATCH /hub/profile, same as the real
+    // backend's hub_apply -- applyToCommunity() above is shared with a signup's join_slug path, same
+    // reasoning as the real backend factoring both through _apply_to_community.
+    const { status } = applyToCommunity(slug, { title: body.title, message: body.message, answers: body.answers });
+    return ok(config, { ok: true, status }, 201);
   }
   if (path === "/hub/enter") {
     if (memStatus(S.email, body.slug) !== "approved") return fail(config, 403, "You're not a member of this community yet.");
@@ -561,8 +933,81 @@ function write(method, path, body, config) {
   if (path === "/hub/profile" && method === "patch") {
     if (!S.role || !S.email) return fail(config, 401, "Not authenticated");
     const prof = { ...((S.extra.acctProfile || {})[S.email] || {}), ...body, profile_completed: true };
+    if (prof.photos) prof.photos = prof.photos.filter(Boolean).slice(0, 9); // mirrors routes/hub.py's MAX_PROFILE_PHOTOS
     (S.extra.acctProfile = S.extra.acctProfile || {})[S.email] = prof;
     return ok(config, { ok: true, account: { id: "acct-" + S.email, name: (ACCOUNTS[S.email] || (S.extra.accounts || {})[S.email] || {}).name, email: S.email, ...prof } });
+  }
+  const flw = path.match(/^\/hub\/people\/([^/]+)\/follow$/);
+  if (flw && (method === "post" || method === "delete")) {
+    if (!S.role) return fail(config, 401, "Not authenticated");
+    const email = decodeURIComponent(flw[1]).trim().toLowerCase();
+    const meEmail = S.email;
+    S.extra.follows = S.extra.follows || {};
+    if (method === "delete") { delete S.extra.follows[followKey(meEmail, email)]; return ok(config, { ok: true, is_following: false }); }
+    if (email === meEmail) return fail(config, 400, "You can't follow yourself");
+    if (!personByEmail(email)) return fail(config, 404, "Person not found");
+    S.extra.follows[followKey(meEmail, email)] = true;
+    return ok(config, { ok: true, is_following: true }, 201);
+  }
+  if (path === "/hub/messages/threads" && method === "post") {
+    // Platform-level DM/invite/share -- doesn't need a shared community, unlike /messages/threads
+    // below. See platformThreadStore() above.
+    if (!S.role) return fail(config, 401, "Not authenticated");
+    if (!(body.body || "").trim()) return fail(config, 400, "Write a message");
+    const meEmail = S.email;
+    const recipients = [...new Set((body.recipient_emails || []).map((e) => String(e).trim().toLowerCase()).filter((e) => e && e !== meEmail))];
+    if (!recipients.length) return fail(config, 400, "Add at least one recipient");
+    for (const r of recipients) if (!personByEmail(r)) return fail(config, 404, "One of the people you added isn't on Pathwai");
+    const participants = [...new Set([meEmail, ...recipients])].sort();
+    const store = platformThreadStore();
+    let t = store.created.find((x) => { const ps = x.participant_emails.slice().sort(); return ps.length === participants.length && ps.every((v, i) => v === participants[i]); });
+    const now = new Date().toISOString();
+    if (!t) {
+      t = { id: "pthread-" + Date.now(), participant_emails: participants, subject: (body.subject || "").trim().slice(0, 140) || "New message", context: body.context || null, created_at: now, read_at: { [meEmail]: now }, messages: [] };
+      store.created.unshift(t);
+    }
+    t.messages.push({ id: "pmsg-" + Date.now(), sender_email: meEmail, body: body.body.trim(), created_at: now });
+    t.read_at = { ...(t.read_at || {}), [meEmail]: now };
+    return ok(config, platformThreadOut(t, meEmail), 201);
+  }
+  const ptrm = path.match(/^\/hub\/messages\/threads\/([^/]+)\/reply$/);
+  if (ptrm && method === "post") {
+    if (!S.role) return fail(config, 401, "Not authenticated");
+    if (!(body.body || "").trim()) return fail(config, 400, "Write a message");
+    const meEmail = S.email;
+    const t = platformThreadStore().created.find((x) => x.id === ptrm[1]);
+    if (!t || !t.participant_emails.includes(meEmail)) return fail(config, 404, "Conversation not found");
+    const now = new Date().toISOString();
+    t.messages.push({ id: "pmsg-" + Date.now(), sender_email: meEmail, body: body.body.trim(), created_at: now });
+    t.read_at = { ...(t.read_at || {}), [meEmail]: now };
+    return ok(config, { ok: true }, 201);
+  }
+  // Same delete/report pair the community thread handlers above have (delm/the message-report
+  // match) -- mirrors routes/hub.py's delete_platform_message/report_platform_message, since a
+  // platform DM had no equivalent until now.
+  const pdelm = path.match(/^\/hub\/messages\/threads\/([^/]+)\/messages\/([^/]+)$/);
+  if (pdelm && method === "delete") {
+    if (!S.role) return fail(config, 401, "Not authenticated");
+    const meEmail = S.email;
+    const t = platformThreadStore().created.find((x) => x.id === pdelm[1]);
+    if (!t || !t.participant_emails.includes(meEmail)) return fail(config, 404, "Conversation not found");
+    const m = t.messages.find((x) => x.id === pdelm[2]);
+    if (!m) return fail(config, 404, "Message not found");
+    if (m.sender_email !== meEmail) return fail(config, 403, "Only the sender can delete this message");
+    t.messages = t.messages.filter((x) => x.id !== pdelm[2]);
+    return ok(config, { ok: true });
+  }
+  const prepm = path.match(/^\/hub\/messages\/threads\/([^/]+)\/messages\/([^/]+)\/report$/);
+  if (prepm && method === "post") {
+    if (!S.role) return fail(config, 401, "Not authenticated");
+    const meEmail = S.email;
+    const t = platformThreadStore().created.find((x) => x.id === prepm[1]);
+    if (!t || !t.participant_emails.includes(meEmail)) return fail(config, 404, "Conversation not found");
+    const m = t.messages.find((x) => x.id === prepm[2]);
+    if (!m) return fail(config, 404, "Message not found");
+    if (!(body.reason || "").trim()) return fail(config, 400, "Tell the team why you're reporting this message");
+    (S.extra.platformReports = S.extra.platformReports || []).push({ id: "prep-" + Date.now(), thread_id: t.id, message_id: m.id, reported_by: meEmail, reported_user_email: m.sender_email, reason: body.reason.trim() });
+    return ok(config, { ok: true }, 201);
   }
   if (path.endsWith("/rsvp")) {
     const id = path.split("/")[2];
@@ -601,7 +1046,12 @@ function write(method, path, body, config) {
     for (const k of Object.keys(body)) cur[k] = body[k] && typeof body[k] === "object" ? { ...cur[k], ...body[k], ...(body[k].kinds ? { kinds: { ...cur[k].kinds, ...body[k].kinds } } : {}) } : body[k];
     S.extra.settings = cur; return ok(config, { settings: cur });
   }
-  if (path === "/me/change-password") return body.current_password === "Demo123!" ? ok(config, { ok: true }) : fail(config, 400, "Your current password is not correct.");
+  if (path === "/me/change-password") {
+    if (body.current_password !== "Demo123!") return fail(config, 400, "Your current password is not correct.");
+    return /^(?=.*[A-Za-z])(?=.*\d).{10,}$/.test(body.new_password || "") ? ok(config, { ok: true }) : fail(config, 400, "Password needs 10+ characters with a letter and a number.");
+  }
+  if (path === "/hub/account/sign-out-everywhere") return ok(config, { ok: true });
+  if (path === "/hub/account/delete") return (body.confirm || "").toUpperCase() === "DELETE" ? ok(config, { ok: true }) : fail(config, 400, "Type DELETE to confirm.");
   if (path === "/me/profile" && method === "patch") {
     const vals = { ...body.values };
     if (vals.age !== undefined) vals.age = parseInt(vals.age, 10) || null;
@@ -639,6 +1089,10 @@ function write(method, path, body, config) {
           id: "u-" + app.email.split("@")[0].replace(/[^a-z0-9]/gi, "-"), name: app.name, email: app.email, role: "member", member_type: "member",
           title: app.title || "", company: app.company || "", bio: app.bio || "", location: app.location || "", avatar_url: app.avatar_url || null,
           skill_set: app.skill_set || [], expertise: app.skill_set || [], interests_hobbies: [], goals: [], support_needs: [], needs_seeking: [], open_to: [],
+          // Personal photo gallery from the applicant's account-level profile (same field the real
+          // backend now merges onto community member records from hub_db().accounts) -- otherwise an
+          // approved member's own photos would only ever show up in the platform-wide People panel.
+          photos: app.photos || [],
           contact: { email: app.email }, contact_visibility: "members", hidden_from_directory: false, created_at: new Date().toISOString(),
         });
       }
@@ -658,16 +1112,35 @@ function write(method, path, body, config) {
   }
   if ((path === "/events" || path === "/resources" || path === "/announcements") && method === "post") {
     const admin = isAdminHere();
+    // Adding an event is admin-only now (see routes/events.py's create_event) -- the "Suggest an
+    // event" entry point was removed from Events.jsx for members, mirrored here so the preview
+    // matches even if this endpoint were hit directly.
+    if (path === "/events" && !admin) return fail(config, 403, "Only admins can add events");
     const kind = path.slice(1);
     const me = view()["/auth/me"];
     const doc = { id: "sub-" + Date.now(), ...body, status: admin ? "approved" : "pending", published_at: new Date().toISOString(), author: me.name, submitted_by: me.id, submitted_by_name: me.name };
     doc.cover_url = body.image_url || null;
     if (kind === "resources") Object.assign(doc, { shared_by: { id: me.id, name: me.name, avatar_url: me.avatar_url, title: me.title }, category: body.category || "Discount", is_saved: false, tags: body.tags || [] });
-    if (kind === "events") Object.assign(doc, { is_past: false, attendee_count: 0, my_rsvp: null }, admin ? deriveEventPricing(body.ticket_tiers, []) : { ticket_tiers: [], price_cents: null, tier_summary: { has_tiers: false } });
+    // A recorded fixture event always carries attendees/attendee_ids/rsvps/related_resources/etc.
+    // (the real backend's get_event always fills them in, even empty) -- EventDetail.jsx reads some
+    // of these without an optional-chain guard (e.g. `e.attendees.length`), so a freshly created
+    // event missing them crashed the detail page blank the moment you opened it (no error shown,
+    // just an unresponsive page -- reported as "new events don't generate an accessible page, icon
+    // click goes nowhere"). Give a new event the same full shape as a recorded one from the start.
+    if (kind === "events") Object.assign(doc, { is_past: false, attendee_count: 0, my_rsvp: null, attendees: [], attendee_ids: [], rsvps: {}, maybe_count: 0, is_attending: false, attended: false, is_saved: false, save_count: 0, related_resources: [], agenda: body.agenda || [] }, admin ? deriveEventPricing(body.ticket_tiers, []) : { ticket_tiers: [], price_cents: null, tier_summary: { has_tiers: false } });
     // Shared per community (not per login) so it shows up for every login that visits — admin-posted
     // content is visible immediately; a member's submission waits, pending, for admin's moderation.
     sharedContent(kind).created.unshift(doc);
     return ok(config, doc, 201);
+  }
+  if (path.endsWith("/extract-pdf")) {
+    // The real endpoint (routes/profile_requests.py's extract_pdf) calls a language model to read
+    // the uploaded PDF, same as /chat/message above -- the preview doesn't include one. The old
+    // mock had no handler, fell through to the generic {ok:true} default, and ProfileEdit.jsx's
+    // success toast fired over an empty draft with nothing actually filled in. Failing honestly
+    // here (like chat does, just as an error instead of a reply bubble) matches the two LLM-backed
+    // mocks that already say so, rather than quietly faking success.
+    return fail(config, 503, "Reading PDFs uses a language model, which the preview doesn't include. Fill in the fields yourself below.");
   }
   if (path === "/chat/message") {
     const m = (body.message || "").toLowerCase();
@@ -676,22 +1149,129 @@ function write(method, path, body, config) {
     return ok(config, { session_id: body.session_id || "preview", actions: actions.length ? actions : [{ label: "See your matches", to: "/matches" }, { label: "View your requests", to: "/requests" }],
       reply: "This is the offline preview, so Ask can't reach a language model here. In the running app it answers from your members, events and perks. The buttons below still take you to the right place." });
   }
-  if (path.endsWith("/save")) {
-    const id = path.split("/")[2];
-    const base = (view()["/resources"] || []).find((x) => x.id === id) || sharedContent("resources").created.find((x) => x.id === id);
+  const svm = path.match(/^\/(resources|events|users)\/([^/]+)\/save$/);
+  if (svm) {
+    const [, kind, id] = svm;
+    const me = view()["/auth/me"];
+    if (kind === "users" && id === me.id) return fail(config, 400, "You can't bookmark your own profile");
+    const base = mergedList(view()[`/${kind}`] || [], kind, kind !== "users").find((x) => x.id === id);
     if (!base) return fail(config, 404, "Not found");
-    const sv = savedSet();
-    const was = Object.prototype.hasOwnProperty.call(sv, id) ? sv[id] : !!base.is_saved;
-    sv[id] = !was;
+    const sv = savedSet(kind);
+    sv[id] = !isSaved(kind, base);
     return ok(config, { ok: true, is_saved: sv[id] });
   }
   if (path === "/support-requests" && method === "post") {
     const me = view()["/auth/me"];
-    const doc = { id: "new-" + Date.now(), user_id: me.id, user_snapshot: { name: me.name, avatar_url: null }, status: "open", helpers: [], helper_count: 0, created_at: new Date().toISOString(), ...body };
-    (S.extra.requests = S.extra.requests || []).unshift(doc);
+    const doc = { id: "new-" + Date.now(), user_id: me.id, user_snapshot: { id: me.id, name: me.name, avatar_url: me.avatar_url, title: me.title, company: me.company }, status: "open", is_featured: false, helpers: [], helper_count: 0, i_offered: false, created_at: new Date().toISOString(), updated_at: new Date().toISOString(), resolved_at: null, ...body };
+    sharedContent("support_requests").created.unshift(doc);
     return ok(config, doc, 201);
   }
-  if (path.endsWith("/offer-help")) return ok(config, { ok: true, helper_count: 1 });
+  // A board post can be edited or deleted by its author, or deleted (not edited) by an admin --
+  // mirrors routes/support_requests.py's patch_request/delete_request. Uses the same
+  // sharedContent/applyEdit pattern as events/resources/announcements so an edit or delete made
+  // here is visible to every login reading this community for the rest of the preview session.
+  const srm = path.match(/^\/support-requests\/([^/]+)$/);
+  if (srm && (method === "patch" || method === "delete")) {
+    const id = srm[1];
+    const me = view()["/auth/me"];
+    const ov = sharedContent("support_requests");
+    if (ov.deleted[id]) return fail(config, 404, "Request not found");
+    const created = ov.created.find((x) => x.id === id);
+    const base = created ? applyEdit(created, "support_requests") : applyEdit((view()["/support-requests"] || []).find((x) => x.id === id), "support_requests");
+    if (!base) return fail(config, 404, "Request not found");
+    const mayEdit = base.user_id === me.id || isAdminHere();
+    if (!mayEdit) return fail(config, 403, method === "delete" ? "Only the author can delete" : "Only the author can edit");
+    if (method === "delete") { ov.deleted[id] = true; return ok(config, { ok: true }); }
+    const patch = { ...body };
+    if (patch.status === "resolved") patch.resolved_at = new Date().toISOString();
+    patch.updated_at = new Date().toISOString();
+    ov.edits[id] = { ...(ov.edits[id] || {}), ...patch };
+    if (created) Object.assign(created, patch);
+    return ok(config, { ...base, ...patch });
+  }
+  if (path === "/messages/threads" && method === "post") {
+    const me = view()["/auth/me"];
+    if (!me) return fail(config, 401, "Not authenticated");
+    if (!(body.body || "").trim()) return fail(config, 400, "Write a message");
+    const recipientIds = [...new Set((body.recipient_ids || []).filter((r) => r && r !== me.id))];
+    if (!recipientIds.length) return fail(config, 400, "Add at least one recipient");
+    const store = threadStore();
+    const now = new Date().toISOString();
+    const participants = [...new Set([me.id, ...recipientIds])].sort();
+    let t = store.created.find((x) => {
+      const p = x.participant_ids.slice().sort();
+      return p.length === participants.length && p.every((v, i) => v === participants[i]);
+    });
+    if (!t) {
+      t = { id: "thread-" + Date.now(), participant_ids: participants, subject: (body.subject || "").trim().slice(0, 140) || "New message", context: body.context || null, created_at: now, read_at: { [me.id]: now }, messages: [] };
+      store.created.unshift(t);
+    }
+    t.messages.push({ id: "msg-" + Date.now(), thread_id: t.id, sender_id: me.id, body: body.body.trim(), created_at: now });
+    t.read_at = { ...(t.read_at || {}), [me.id]: now };
+    return ok(config, threadOut(t), 201);
+  }
+  const trm = path.match(/^\/messages\/threads\/([^/]+)\/reply$/);
+  if (trm && method === "post") {
+    const me = view()["/auth/me"];
+    if (!me) return fail(config, 401, "Not authenticated");
+    if (!(body.body || "").trim()) return fail(config, 400, "Write a message");
+    const t = threadStore().created.find((x) => x.id === trm[1]);
+    if (!t || !t.participant_ids.includes(me.id)) return fail(config, 404, "Conversation not found");
+    const now = new Date().toISOString();
+    const msg = { id: "msg-" + Date.now(), thread_id: t.id, sender_id: me.id, body: body.body.trim(), created_at: now };
+    t.messages.push(msg);
+    t.read_at = { ...(t.read_at || {}), [me.id]: now };
+    return ok(config, msg, 201);
+  }
+  const rptm = path.match(/^\/messages\/threads\/([^/]+)\/messages\/([^/]+)\/report$/);
+  if (rptm && method === "post") {
+    const me = view()["/auth/me"];
+    if (!me) return fail(config, 401, "Not authenticated");
+    const t = threadStore().created.find((x) => x.id === rptm[1]);
+    if (!t || !t.participant_ids.includes(me.id)) return fail(config, 404, "Conversation not found");
+    const m = t.messages.find((x) => x.id === rptm[2]);
+    if (!m) return fail(config, 404, "Message not found");
+    const reason = (body.reason || "").trim();
+    if (!reason) return fail(config, 400, "Tell the team why you're reporting this message");
+    const reportedUser = threadUserById(m.sender_id);
+    addAudit("message.reported", "message", m.id, { thread_id: t.id, reason, message_preview: m.body.slice(0, 140), reported_user_id: m.sender_id, reported_user_name: reportedUser?.name });
+    return ok(config, { ok: true }, 201);
+  }
+  const delm = path.match(/^\/messages\/threads\/([^/]+)\/messages\/([^/]+)$/);
+  if (delm && method === "delete") {
+    const me = view()["/auth/me"];
+    if (!me) return fail(config, 401, "Not authenticated");
+    const t = threadStore().created.find((x) => x.id === delm[1]);
+    if (!t || !t.participant_ids.includes(me.id)) return fail(config, 404, "Conversation not found");
+    const m = t.messages.find((x) => x.id === delm[2]);
+    if (!m) return fail(config, 404, "Message not found");
+    if (m.sender_id !== me.id && !isAdminHere()) return fail(config, 403, "Only the sender can delete this message");
+    // threadOut() always reads its "last message" straight off t.messages, so simply shrinking the
+    // array (unlike the real backend, which caches last_message_at/preview on the thread doc and
+    // has to explicitly resync them -- see _resync_thread_summary in routes/messages.py) is already
+    // enough for the inbox list row to stop showing a deleted message.
+    t.messages = t.messages.filter((x) => x.id !== delm[2]);
+    addAudit("message.deleted", "message", m.id, { thread_id: t.id, by_admin: m.sender_id !== me.id });
+    return ok(config, { ok: true });
+  }
+  const ohm = path.match(/^\/support-requests\/([^/]+)\/offer-help$/);
+  if (ohm) {
+    // Mirrors routes/support_requests.py's offer_help: records the offer as an edit patch (the
+    // same sharedContent/applyEdit mechanism PATCH/DELETE already use above) so it's visible on
+    // the very next GET, instead of the old no-op that returned a fixed {helper_count:1} and let
+    // Support.jsx's reload right after show no change.
+    const id = ohm[1];
+    const me = view()["/auth/me"];
+    const ov = sharedContent("support_requests");
+    if (ov.deleted[id]) return fail(config, 404, "Request not found");
+    const created = ov.created.find((x) => x.id === id);
+    const base = created ? applyEdit(created, "support_requests") : applyEdit((view()["/support-requests"] || []).find((x) => x.id === id), "support_requests");
+    if (!base) return fail(config, 404, "Request not found");
+    if (base.user_id === me.id) return fail(config, 400, "You can't offer help on your own request");
+    const helpers = [...new Set([...(base.helpers || []), me.id])];
+    ov.edits[id] = { ...(ov.edits[id] || {}), helpers, helper_count: helpers.length, i_offered: true };
+    return ok(config, { ok: true, helper_count: helpers.length });
+  }
   if (path.includes("/programs/") && path.endsWith("/apply")) {
     const org = S.data.public[`/organizations/${path.split("/")[2]}`];
     const prog = S.data.public[path.replace(/\/apply$/, "")]?.program;
@@ -700,12 +1280,54 @@ function write(method, path, body, config) {
     return ok(config, { ok: true, already: false, application: { org_name: org?.name } });
   }
   if (path.endsWith("/apply")) return ok(config, { ok: true });
-  if (path === "/notifications/read") { view()["/notifications"].unread = 0; view()["/notifications"].notifications.forEach((n) => (n.read = true)); return ok(config, { ok: true, unread: 0 }); }
+  if (path === "/notifications/read") {
+    // Mirrors routes/notifications.py's mark_read: {ids:[...]} marks only those, an empty/omitted
+    // ids marks everything read -- the old version always did the latter, so clicking a single
+    // notification (Notifications.jsx sends {ids:[n.id]}) wrongly cleared every unread badge.
+    const notifs = view()["/notifications"];
+    const ids = Array.isArray(body?.ids) ? body.ids : null;
+    notifs.notifications.forEach((n) => { if (!ids || ids.includes(n.id)) n.read = true; });
+    notifs.unread = notifs.notifications.filter((n) => !n.read).length;
+    return ok(config, { ok: true, unread: notifs.unread });
+  }
+  const ndel = path.match(/^\/notifications\/([^/]+)$/);
+  if (ndel && method === "delete") {
+    // Mirrors routes/notifications.py's delete_notification -- the old mock had no handler at all
+    // for this, so it fell through to the generic {ok:true} default and the dismissed notification
+    // reappeared on the next load.
+    const notifs = view()["/notifications"];
+    notifs.notifications = notifs.notifications.filter((n) => n.id !== ndel[1]);
+    notifs.unread = notifs.notifications.filter((n) => !n.read).length;
+    return ok(config, { ok: true });
+  }
   if (path.startsWith("/admin/audits/")) return ok(config, { reply: "Audits call the language model, which the preview doesn't include." });
   if (path === "/invites") {
-    const inv = { id: "inv-" + Date.now(), code: Math.random().toString(36).slice(2, 10), email: body.email, status: "pending", created_at: new Date().toISOString() };
+    const inv = { id: "inv-" + Date.now(), code: Math.random().toString(36).slice(2, 10), email: body.email, role: body.role || "member", status: "pending", created_at: new Date().toISOString() };
     view()["/invites"].unshift(inv);
+    // Also kept in a plain session-level store, keyed by code and tagged with which community it
+    // belongs to -- GET /invites/{code} and POST /invites/{code}/accept (below) run with no one
+    // logged in yet, so they can't reach this same invite through view()["/invites"] (view()
+    // resolves only while S.role is truthy).
+    (S.extra.invites = S.extra.invites || {})[inv.code] = { ...inv, slug: S.community };
     return ok(config, inv, 201);
+  }
+  const invAccept = path.match(/^\/invites\/([^/]+)\/accept$/);
+  if (invAccept) {
+    // No-auth, same as the real backend's POST /invites/{code}/accept (routes/invites.py) --
+    // mirrors /hub/signup's account-creation shape, but seats the person straight into the
+    // inviting community as "approved" rather than filing a pending request: an invite is already
+    // admin-issued, so (unlike a public share-link join) there's no approval step left to run.
+    const inv = (S.extra.invites || {})[invAccept[1]];
+    if (!inv || inv.status !== "pending") return fail(config, 404, "Invite not found or already used");
+    const email = (body.email || "").trim().toLowerCase();
+    if (ACCOUNTS[email] || (S.extra.accounts || {})[email]) return fail(config, 409, "An account with that email already exists");
+    if (body.accepted_terms !== true) return fail(config, 422, "You need to accept the Terms of Service and Privacy Policy to create an account.");
+    if ((body.password || "").length < 10) return fail(config, 400, "Password must be at least 10 characters");
+    inv.status = "accepted";
+    (S.extra.accounts = S.extra.accounts || {})[email] = { name: body.name, role: inv.role || "member", pw: body.password };
+    (S.extra.join = S.extra.join || {})[email + "|" + inv.slug] = "approved";
+    S.role = inv.role || "member"; S.email = email; S.community = inv.slug;
+    return ok(config, { ok: true, user: { id: "acct-" + email, name: body.name, email, role: inv.role || "member" } }, 201);
   }
   const ce = path.match(/^\/admin\/content\/(events|resources|announcements)\/([^/]+)$/);
   if (ce) {
@@ -797,14 +1419,20 @@ function write(method, path, body, config) {
   if (path === "/admin/blasts/send") {
     const tw = integ().find((x) => x.provider === "twilio"), sg = integ().find((x) => x.provider === "sendgrid");
     const wantSms = body.channel === "sms" || body.channel === "both", wantEmail = body.channel === "email" || body.channel === "both";
+    const wantInternal = !!body.internal;
+    if (!wantSms && !wantEmail && !wantInternal) return fail(config, 400, "Choose at least one way to send this: text, email or Pathwai Internal.");
     if (wantSms && !tw?.enabled) return fail(config, 400, "Connect Twilio first (Admin → Integrations) to send texts.");
     if (wantEmail && !sg?.enabled) return fail(config, 400, "Connect SendGrid first (Admin → Integrations) to send email.");
     const allUsers = mergedList(view()["/users"] || [], "users", false);
     const smsUsers = allUsers.filter((u) => sum(u.id) % 3 !== 0);
     const emailUsers = allUsers.filter((u) => sum(u.id) % 5 !== 0);
     const n = (list) => body.audience.type === "admins" ? 1 : body.audience.type === "event" ? Math.min(list.length, 8) : list.length;
+    // Pathwai Internal reaches everyone in the audience (no opt-in gate, no integration needed) --
+    // same "notify every member" shape as the real backend's notify() fan-out, just simulated here.
+    const internalCount = body.audience.type === "admins" ? 1 : body.audience.type === "event" ? Math.min(allUsers.length, 8) : allUsers.length;
     const b = {
       id: "blast-" + Date.now(), message: body.message.trim(), subject: body.subject || null, channel: body.channel, audience: body.audience,
+      internal: wantInternal, internal_sent: wantInternal ? internalCount : 0,
       sms_sent: wantSms ? n(smsUsers) : 0, sms_failed: 0, email_sent: wantEmail ? n(emailUsers) : 0, email_failed: 0,
       demo: true, at: new Date().toISOString(),
     };
@@ -812,7 +1440,13 @@ function write(method, path, body, config) {
     return ok(config, b);
   }
   if (path === "/community/config" && method === "patch") {
-    Object.assign(S.data.public["/community/config"], body);
+    // Policy: every community requires admin approval, full stop -- mirrors backend/routes/
+    // community_config.py's patch_config excluding require_approval from its allowed-fields set.
+    // applyToCommunity() already always returns "pending" regardless of this flag, so this is
+    // defense in depth, not a behavior change -- but it keeps the mock consistent with the real
+    // backend if anything ever PATCHes this field again.
+    const { require_approval, ...rest } = body;
+    Object.assign(S.data.public["/community/config"], rest);
     return ok(config, S.data.public["/community/config"]);
   }
   return ok(config, { ok: true });

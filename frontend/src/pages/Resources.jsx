@@ -31,7 +31,9 @@ export default function Resources() {
   const reset = () => { setQ(""); setCat("all"); setSaved(false); };
   return (
     <div>
-      <PageHeader k="resources" title="Community perks" subtitle="Discounts, free access and know-how that members share with each other." actions={<><Button variant="ghost" onClick={() => setReq(true)}>Ask for a perk</Button><Button variant="ghost" onClick={() => setOpen(true)} data-testid="submit-resource">Share a perk</Button></>} />
+      {/* "Ask for a perk" (a request sent to the team) is admin-only -- a member can still share a
+          perk with the community, just not put in a request for one. */}
+      <PageHeader k="resources" title="Community perks" subtitle="Discounts, free access and know-how that members share with each other." actions={<>{user.role === "admin" && <Button variant="ghost" onClick={() => setReq(true)}>Ask for a perk</Button>}<Button variant="ghost" onClick={() => setOpen(true)} data-testid="submit-resource">Share a perk</Button></>} />
       <div className="mb-3 flex flex-wrap gap-2">
         {["all", ...CATS].map((c) => <button key={c} onClick={() => setCat(c)} className={`rounded-full border px-3 py-1 text-sm ${cat === c ? "bg-accent text-on-accent" : ""}`} style={cat === c ? { background: "var(--accent)", color: "var(--on-accent)" } : {}}>{c === "all" ? "All" : c}</button>)}
       </div>

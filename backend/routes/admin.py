@@ -7,6 +7,7 @@ from pydantic import BaseModel
 import audits
 from auth import hash_password, require_role
 from database import db
+from directory import reindex_email
 from ._common import audit, clean, now_iso
 
 router = APIRouter(tags=["admin"])
@@ -97,6 +98,7 @@ async def admin_create_user(body: AdminUserIn, me: dict = Depends(require_role("
            "password_hash": hash_password(body.password), "hidden_from_directory": body.hidden_from_directory,
            "created_at": now_iso(), "updated_at": now_iso()}
     await db.users.insert_one(dict(doc))
+    await reindex_email(email)
     await audit(me["id"], "admin.user_created", "user", doc["id"])
     doc.pop("password_hash")
     return doc

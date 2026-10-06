@@ -7,12 +7,13 @@ import uuid
 from datetime import datetime, timedelta, timezone
 from typing import Any, Dict, List, Optional
 
-from fastapi import APIRouter, Depends, HTTPException, Request
+from fastapi import APIRouter, Depends, HTTPException, Request, Response
 from pydantic import BaseModel
 
-from auth import get_current_user, hash_password, require_role, verify_password
+from auth import check_password_strength, client_ip, create_access_token, create_refresh_token, get_current_user, hash_password, require_role, set_auth_cookies, verify_password
+from directory import revoke_sessions_for_email
 from database import db
-from ._common import HIDDEN_STATUSES, MEMBER_TYPES, audit, clean, member_type, now_iso
+from ._common import HIDDEN_STATUSES, MEMBER_TYPES, audit, audit_platform, clean, member_type, now_iso
 from .notifications import notify
 from .integrations import push_member
 
@@ -203,14 +204,20 @@ async def patch_settings(body: SettingsPatch, me: dict = Depends(get_current_use
 
 
 @router.post("/me/change-password")
-async def change_password(body: PasswordIn, me: dict = Depends(get_current_user)):
+async def change_password(body: PasswordIn, request: Request, response: Response, me: dict = Depends(get_current_user)):
     u = await db.users.find_one({"id": me["id"]}) or {}
     if not verify_password(body.current_password, u.get("password_hash", "")):
         raise HTTPException(status_code=400, detail="Your current password is not correct.")
-    if len(body.new_password) < 8:
-        raise HTTPException(status_code=400, detail="Choose a password with at least 8 characters.")
-    await db.users.update_one({"id": me["id"]}, {"$set": {"password_hash": hash_password(body.new_password)}})
-    await audit(me["id"], "auth.password_changed", "user", me["id"])
+    try:
+        check_password_strength(body.new_password)
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc))
+    # One password for the person everywhere (platform account + every community profile), and every
+    # session issued before now -- including a thief's -- stops working; this device is re-issued below.
+    await revoke_sessions_for_email(u.get("email") or me["email"], hash_password(body.new_password))
+    set_auth_cookies(response, create_access_token(me["id"], me.get("role") or "member"), create_refresh_token(me["id"]))
+    await audit(me["id"], "auth.password_changed", "user", me["id"], {"sessions_revoked": True})
+    await audit_platform(me["id"], "auth.password_changed", "user", me["id"], request=request)
     return {"ok": True}
 
 

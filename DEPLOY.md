@@ -1,151 +1,239 @@
-# Deploying Pathwai to Railway
+# Launching Pathwai
 
-This walks through taking Pathwai from "runs on my machine" to a real URL people can sign up on.
-It assumes Railway (railway.app) — Render and Fly work too, since both services ship as plain
-Dockerfiles (`backend/Dockerfile`, `frontend/Dockerfile`), but the click-by-click steps below are
-Railway's.
+This is the checklist for putting Pathwai on the internet so real people can sign up, and for connecting
+the integrations (Stripe, Twilio, SendGrid, Airtable, Luma, Google sign-in) to real accounts.
 
-Budget about 20–30 minutes for the first deploy, most of it waiting for builds.
+**What you end up with:** one Railway project containing three things — the Pathwai service (API + web app
+together, from the `Dockerfile` in the repo root), a MongoDB database, and a Volume for uploaded photos.
+One service means one web address, which is what makes login work on iPhones/Safari and keeps webhooks
+simple. Budget roughly 45–60 minutes the first time.
 
-## 0. What you'll end up with
+Anything marked **(you)** needs your own account or a secret that only you should hold.
 
-Two Railway services in one project — `backend` (FastAPI) and `frontend` (the React build, served
-as static files) — plus a MongoDB database. Each service gets its own `*.up.railway.app` URL for
-free; a custom domain is a later, optional step (see the bottom of this doc).
+For the security posture and what a SOC 2 audit would ask of you, see [`SOC2_READINESS.md`](SOC2_READINESS.md).
 
-## 1. Push this code to GitHub
+---
 
-Railway deploys from a GitHub repo. This folder is already a git repository with one commit.
+## 0. What's different in production
 
-1. Create a new empty repo on GitHub (no README/license — this folder already has one).
-2. `git remote add origin <your-repo-url>`
-3. `git push -u origin main`
+The code runs in one of two modes, decided by whether it is talking to a real MongoDB:
 
-## 2. Create the Railway project + database
+| | Demo / dev (`USE_MOCK_DB=true`, or `DEMO_MODE=true`) | **Production (default with a real `MONGO_URL`)** |
+|---|---|---|
+| Fake communities and members | seeded on boot | **none** — you start empty |
+| "Try the demo" logins (`Demo123!`) | shown on the login page | **gone** |
+| `/api/seed`, `/api/seed/public` (wipe + reseed) | available | **404** |
+| Anonymous "preview as admin/founder" dashboards | on | **off** |
+| `admin@yourcommunity.app` is a platform admin | yes | **no** — only emails you list in `PLATFORM_ADMIN_EMAILS` |
+| Cookies | `Secure` optional | **`Secure` by default** |
+| Weak/missing secrets | tolerated | **the server refuses to start** |
+| HSTS (browsers insist on HTTPS) | off | **on** (other hardening headers are always on) |
 
-1. Sign up at railway.app (GitHub login is easiest, since you'll be connecting a repo anyway).
-2. **New Project → Deploy from GitHub repo** → pick the repo you just pushed.
-3. Railway will try to auto-detect a service from the repo root and likely get it wrong (there
-   are two apps in one repo). Delete whatever it creates automatically — you'll add the two
-   services by hand in the next step, so this one doesn't matter.
-4. In the project, **+ New → Database → Add MongoDB**. Railway provisions it and gives it a
-   `MONGO_URL`-shaped connection variable automatically.
+Never set `DEMO_MODE=true` on the instance real people use.
 
-## 3. Deploy the backend
+---
 
-1. **+ New → GitHub Repo** → same repo again.
-2. Open the new service's **Settings**:
-   - **Root Directory**: `backend`
-   - Railway will detect the `Dockerfile` there automatically — leave the builder as Dockerfile.
-3. **Variables** tab — add these (copy the shape from `backend/.env.example`):
+## 1. Put the code on GitHub (you)
 
-   | Variable | Value |
-   |---|---|
-   | `MONGO_URL` | Click "Add Reference" → pick the Mongo service's connection variable, instead of typing it by hand |
-   | `DB_NAME` | `pathwai` |
-   | `USE_MOCK_DB` | `false` |
-   | `JWT_SECRET` | a long random string — generate one with `openssl rand -hex 32` |
-   | `COOKIE_SECURE` | `true` |
-   | `COOKIE_SAMESITE` | `lax` |
-   | `CORS_ORIGINS` | leave as `*` for now — you'll come back and lock this to the frontend's real URL in step 5 |
-   | `FRONTEND_URL` | same — placeholder for now, fixed in step 5 |
-   | `DEMO_PASSWORD` | `Demo123!` (or change it — this only matters if you keep the demo logins enabled) |
-   | `DEMO_PUBLIC_SEED` | `true` while you're still testing; consider `false` once real users start signing up, so the seeded demo communities don't show up next to real ones |
-   | `ENABLE_AI_CHAT` | `false` — leave off until you wire up a real OpenAI/Anthropic key (see "AI chat" below) |
-   | `INTEGRATIONS_SECRET` | another random string (`openssl rand -hex 32`) — encrypts any Stripe/Airtable/Luma keys a community admin adds later |
+Commit and push this repository to GitHub (a private repo is fine). Railway deploys from it.
 
-   Leave `SENDGRID_API_KEY` unset for now — see "Email" below.
+## 2. Create the Railway project (you)
 
-4. **Deploy**. Once it's live, open the service's **Settings → Networking** and click **Generate
-   Domain** to get its public URL (something like `pathwai-backend-production.up.railway.app`).
-   Copy this URL — the frontend needs it next.
+1. <https://railway.com> → **New Project → Deploy from GitHub repo** → pick the repo.
+2. Railway reads `railway.json` and builds the root `Dockerfile` (React build + Python API in one image).
+   The first build takes a few minutes. It will fail to *start* until you add the variables below — that is expected.
+3. In the project, **+ New → Database → MongoDB** (Railway's own MongoDB is fine to start; you can move to
+   MongoDB Atlas later). Turn on backups for it if your plan offers them.
+4. On the Pathwai service: **Settings → Volumes → Add Volume**, mount path `/data`. Uploaded profile photos and
+   covers are stored here; without a volume they are erased on every deploy.
 
-## 4. Deploy the frontend
+## 3. Variables on the Pathwai service (you)
 
-1. **+ New → GitHub Repo** → same repo again.
-2. **Settings → Root Directory**: `frontend`. Dockerfile builder again.
-3. **Variables** — these get baked into the JS bundle at *build* time, so Railway needs them as
-   **Build Variables** (there's a separate toggle/tab from the runtime Variables — look for
-   "Build Args" or a checkbox next to each variable marking it available at build time):
-   - `REACT_APP_BACKEND_URL` = `https://<your-backend-domain-from-step-3>` (include `https://`)
-   - `REACT_APP_AI_CHAT_ENABLED` = `false`
-4. **Deploy**. Once live, **Settings → Networking → Generate Domain** for this service too. This
-   is the URL you'll actually give people.
+Service → **Variables**. Generate secrets with `openssl rand -hex 32` (or any password manager).
 
-## 5. Close the loop: point the backend at the real frontend URL
+| Variable | Value | Notes |
+|---|---|---|
+| `MONGO_URL` | `${{MongoDB.MONGO_URL}}` | Railway "reference" to the database you added. For Atlas paste its connection string. |
+| `DB_NAME` | `pathwai` | |
+| `JWT_SECRET` | *random, 32+ chars* | **Required.** Signs login sessions. Changing it logs everyone out. |
+| `INTEGRATIONS_SECRET` | *a different random string* | **Required.** Encrypts the Stripe/Twilio/SendGrid/Airtable/Luma keys your admins save. **Changing or losing it makes every saved key unreadable** — store it in your password manager. |
+| `PLATFORM_ADMIN_EMAILS` | `you@yourdomain.com` | Comma-separated. These accounts can enter and edit *every* community. Sign up with this email first (step 7). |
+| `FRONTEND_URL` | `https://<your-domain>` | Used in password-reset emails and as the Stripe return address. No trailing slash. |
+| `CORS_ORIGINS` | `https://<your-domain>` | Same value. The server refuses to start with `*`. |
+| `PUBLIC_API_URL` | `https://<your-domain>` | Same value. Used to show the correct webhook URLs to admins and to verify Twilio's signature behind Railway's proxy. |
+| `UPLOADS_DIR` | `/data/uploads` | Must be inside the volume from step 2. |
+| `SENDGRID_API_KEY` | *(step 5)* | Without it, password-reset emails are only written to the log. **Required for real signups.** |
+| `MAIL_FROM_EMAIL` | an address you verified in SendGrid | e.g. `no-reply@yourdomain.com` |
+| `MAIL_FROM_NAME` | `Pathwai` (or your brand) | |
+| `GOOGLE_CLIENT_ID` | *(step 6, optional)* | Shows the "Continue with Google" button. |
+| `APPLE_CLIENT_ID` | *(optional)* | Same for Apple. Leave blank to hide it. |
+| `REACT_APP_LEGAL_EMAIL` | `privacy@yourdomain.com` | **Build-time** variable (Railway passes it to the build). The contact address printed on the Terms and Privacy pages. Defaults to a placeholder — set it. |
+| `REACT_APP_LEGAL_ENTITY` | `Your Company Inc.` | **Build-time.** The legal name that operates the service, printed on both pages. |
+| `ENABLE_AI_CHAT` | `false` | Leave off unless you add an `OPENAI_API_KEY`. |
 
-Now that both URLs exist, go back to the **backend** service's Variables and update:
+Do **not** set: `USE_MOCK_DB`, `DEMO_MODE`, `DEMO_PASSWORD`, `DEMO_PUBLIC_SEED`, `COOKIE_SECURE`, `COOKIE_SAMESITE`
+(the production defaults are the safe ones).
 
-- `CORS_ORIGINS` → `https://<your-frontend-domain>` (exact, no trailing slash — this is what
-  makes cookie-based login work cross-origin; leaving it as `*` will silently break login once a
-  real browser enforces CORS)
-- `FRONTEND_URL` → same value — this is what gets used to build the link inside password-reset
-  emails
+Keep the service at **1 replica** (it is set that way in `railway.json`).
 
-Both services redeploy automatically when you save a variable.
+## 4. Domain (you)
 
-## 6. Verify it actually works
+Service → **Settings → Networking**:
 
-Open the frontend URL and walk through: sign up a new account → create a community (or apply to
-one) → log out → forgot password → (see "Email" below for where the link goes) → log back in.
-This exercises the real backend + real Mongo, not the mock preview you've been testing against —
-worth doing once, carefully, before telling anyone the link.
+* **Quick start:** *Generate Domain* gives you `something.up.railway.app`. Use that for `FRONTEND_URL`,
+  `CORS_ORIGINS` and `PUBLIC_API_URL`, then redeploy. This is enough to launch and test.
+* **Your own domain:** *Custom Domain* → add `app.yourdomain.com` (or the bare domain), create the CNAME record
+  Railway shows at your DNS provider, wait for the green tick, then change the three variables to the new
+  address. Do this before you share the link widely: Stripe/Twilio webhook URLs and Google sign-in origins
+  contain the domain, so changing it later means re-entering them.
 
-## Things that are stubbed until you connect a real provider
+## 5. Email — SendGrid (you)
 
-**Email** (password reset links, eventually welcome mail). Nothing bounces or hangs without a
-provider — every outgoing email is just logged to the backend's console instead of sent
-(`backend/emailer.py`). That's fine for you to test with (Railway's **Deployments → logs** tab
-shows it), but a real user who clicks "forgot password" gets nothing. To send for real: create a
-SendGrid account (or swap in another provider — the send function is one small file), verify a
-sender identity, and set `SENDGRID_API_KEY` (plus optionally `MAIL_FROM_EMAIL` /
-`MAIL_FROM_NAME`) on the backend service.
+Password resets, and everything an admin sends as an "email blast", go through SendGrid.
 
-**AI chat** ("Ask the League"). Off by default (`ENABLE_AI_CHAT=false`) per your call — it's built
-and tested, just hidden from the nav, header, and dashboard, and the backend won't mount its
-routes. To turn it on: get an OpenAI (or Anthropic) API key, set `OPENAI_API_KEY` on the backend
-service, set `ENABLE_AI_CHAT=true` there, and set `REACT_APP_AI_CHAT_ENABLED=true` as a **build**
-variable on the frontend (then redeploy the frontend so the flag gets baked into the bundle).
-`backend/chatbot.py` currently calls a model named `gpt-5.2` — check that name is still current
-before flipping this on, or point it at whichever model you want.
+1. <https://sendgrid.com> → create an account.
+2. **Settings → Sender Authentication**: either *Authenticate your domain* (best — add the DNS records it shows) or
+   *Single Sender Verification* for one address (quick start; click the email it sends you).
+3. **Settings → API Keys → Create** with "Mail Send" permission (full access is not needed). Copy it once.
+4. Set `SENDGRID_API_KEY` and `MAIL_FROM_EMAIL` (must be the verified sender/domain — otherwise SendGrid answers
+   403 "does not match a verified Sender Identity" and resets silently fail; the error is in the Railway logs).
+5. Test: *Forgot password* with your own address.
 
-**File uploads** (`backend/uploads_data/`). These write to local disk on the backend container.
-Railway containers are ephemeral by default — a redeploy wipes this directory. Two options:
-add a Railway **Volume** mounted at `/app/uploads_data` on the backend service (simplest, keeps
-the current code as-is), or move to S3-compatible object storage (Cloudflare R2, AWS S3) if you
-expect enough upload volume that a single-container disk won't keep up. A volume is the right
-call to start.
+Each community can also connect **its own** SendGrid account in Admin → Integrations for member blasts (below).
 
-**Stripe / Twilio / SendGrid for a specific community.** These are already built as a
-per-community, admin-configured integration (Admin → Integrations) — a community's own admin adds
-their own keys whenever they want payments or texting for their members. Nothing you need to set
-up platform-wide.
+## 6. Google sign-in (you, optional but recommended)
 
-**"Sign in with Google" / "Sign in with Apple."** Fully built (`backend/routes/oauth.py` +
-`frontend/src/components/SocialAuthButtons.jsx`) — the login/signup pages already call
-`GET /auth/oauth/providers` and only show a provider's button once it's configured, so there's
-nothing to toggle on the frontend. To turn Google on: Google Cloud Console → create an OAuth
-consent screen → **Credentials → Create Credentials → OAuth client ID** (type: Web application) →
-add every domain people will log in from as an **Authorized JavaScript origin** (your Railway
-frontend domain, and any custom domain from below) → no redirect URI needed, this is a
-client-side ID-token flow, not a server callback → copy the Client ID and set `GOOGLE_CLIENT_ID`
-on the **backend** service. No client secret required. Apple works the same way with a Services
-ID and `APPLE_CLIENT_ID` — see Apple's "Sign in with Apple" setup in the developer portal. Add a
-domain to the origin list later (e.g. after the custom-domain step below) any time without
-touching code — the backend picks it up on next boot, no redeploy needed on the frontend.
+1. <https://console.cloud.google.com> → create a project → **APIs & Services → OAuth consent screen**
+   (External; app name, support email; add your domain; publish it so it isn't limited to test users).
+2. **Credentials → Create credentials → OAuth client ID → Web application**.
+   *Authorized JavaScript origins*: `https://<your-domain>` (and `http://localhost:3000` if you develop locally).
+   There is no redirect URI and no client secret — Pathwai uses Google's ID-token flow.
+3. Copy the Client ID into `GOOGLE_CLIENT_ID`, redeploy. The button appears on the login and signup pages.
 
-## Custom domain (optional, once the above is solid)
+Apple works the same way with a Services ID (`APPLE_CLIENT_ID`) and needs a paid Apple Developer account —
+skip it for launch.
 
-Railway → service → **Settings → Networking → Custom Domain**, then add the CNAME record it gives
-you at your domain registrar. Do this for the frontend service; the backend can stay on its
-Railway subdomain since users never see that URL directly (the frontend calls it via
-`REACT_APP_BACKEND_URL`). If you move the frontend to a custom domain, update the backend's
-`CORS_ORIGINS` / `FRONTEND_URL` to match, same as step 5.
+## 7. First launch checks
 
-## If you'd rather I drive this myself
+1. Open `https://<your-domain>/api/health` → should show `{"ok":true,"mode":"production"}`.
+   If the service won't start, open **Deployments → View logs**: it prints exactly which setting is wrong.
+2. Open the site. The login page should **not** offer demo accounts.
+3. **Sign up with the email you put in `PLATFORM_ADMIN_EMAILS` — before you share the link with anyone.**
+4. On signup choose *I'm starting a community* and create **Toronto Player League** (or whichever community
+   you're launching). You land in its setup wizard (branding, event types, questions for applicants).
+5. Share the link from **Admin → Invites → Share your community** (it looks like `https://<your-domain>/c/<slug>`).
+6. Test the whole path with a second email address: open that link in a private window → sign up → "Request sent"
+   → in your admin tab, **Admin → Members** → approve → sign in with the second account.
 
-I can run the Railway CLI directly from here instead of you clicking through the dashboard: create
-a Railway account, generate a project API token (Railway → Account Settings → Tokens), and paste
-it into the chat. I'll treat it like any other credential — used only for this deploy, not stored
-anywhere beyond this session. Same offer applies to a SendGrid API key once you're ready to make
-password reset emails real.
+Everything someone does to join a community needs an admin's approval — that is enforced by the server.
+
+## 8. Integrations — connecting real accounts
+
+Admins do this per community under **Admin → Integrations**. Each tile has *Save*, *Test connection* and (where
+relevant) *Sync now*. Always press **Test connection** first; the message tells you what's wrong in plain words.
+(Typing `demo` as the key still switches a tile into a simulated sandbox — fine for rehearsing, never for real use.)
+
+### Stripe — membership dues and paid event tickets
+1. Use **test mode** first: <https://dashboard.stripe.com/test/apikeys> → copy the *Secret key* (`sk_test_…`).
+2. In Pathwai → Stripe: paste the key, set currency (`cad`) and add your plans (name, amount, monthly/yearly/once). Save. *Test connection*.
+3. In Stripe → **Developers → Webhooks → Add endpoint**. Paste the **Webhook endpoint** URL shown on the Pathwai tile
+   (it ends in `?community=<slug>` — keep that part, it tells Pathwai which community the event belongs to).
+   Select events: `checkout.session.completed`, `invoice.paid`, `invoice.payment_failed`,
+   `customer.subscription.updated`, `customer.subscription.deleted`.
+4. Copy the endpoint's **Signing secret** (`whsec_…`) back into the Pathwai tile and Save.
+5. Test as a member: Settings → pick a plan → pay with card `4242 4242 4242 4242`, any future date/CVC.
+   Their status should flip to **active** within seconds. Create a paid event and buy a ticket the same way.
+6. Go live: repeat with live keys (`sk_live_…`) and a *live-mode* webhook endpoint (live and test have separate
+   endpoints and signing secrets).
+
+*One Stripe account can serve several communities* — add one webhook endpoint per community (each has its own `?community=`).
+
+### Twilio — text-message blasts
+1. <https://console.twilio.com> → copy **Account SID** and **Auth token**; buy/verify a sending number.
+2. Pathwai → Twilio: paste both, enter the number (`+1416…`) or a Messaging Service SID. Save → *Test connection*.
+3. In Twilio, open the number → *Messaging* → "A message comes in" → **Webhook, HTTP POST** → paste the **Webhook
+   endpoint** URL shown on the Pathwai tile. This is what makes a member's `STOP` reply switch their texts off.
+4. Members only receive texts if they turned on SMS in Settings → Notifications and gave a phone number.
+5. **Carrier registration:** US numbers must complete A2P 10DLC registration, and toll-free numbers need
+   verification, or carriers block the messages. Canadian numbers: you need express consent (CASL) — Pathwai's opt-in
+   toggle and the "Reply STOP" line cover the mechanics, but keep your own record of consent.
+   Twilio's console walks you through registration; allow a few days.
+
+### SendGrid — community email blasts
+Same SendGrid account as step 5 (or the community's own). In Pathwai → SendGrid: paste an API key (Mail Send), set
+**From email** to a *verified* sender/domain, optionally From name. Save → *Test connection*. Every blast
+email carries a footer explaining how to turn emails off.
+
+### Airtable — member import and write-back
+1. <https://airtable.com/create/tokens> → create a **Personal access token** with scopes `data.records:read` and
+   `data.records:write`, granted on the one base you want to use.
+2. Pathwai → Airtable: token, **Base ID** (starts `app…`, in the base's URL), **Table name**. Save → *Test connection*.
+3. Columns are matched by name: `Name`, `Email`, `Company`, `Title`, `Stage`, `Industry`, `Bio`. *Sync now* imports
+   people (new people are created, existing ones only get *empty* fields filled — nothing a member typed is overwritten).
+4. Tick *Write changes back to Airtable* to push member profile edits and request answers back to the matching row.
+
+### Luma — events
+1. A Luma **Plus** calendar is required for API access. In Luma: calendar → **Settings → Developer → API keys**.
+2. Pathwai → Luma: paste the key. Save → *Test connection* → *Sync now*. Upcoming events are imported into Events and
+   guests whose Luma email matches a member are marked as going.
+
+### Typeform / Google Forms / Jotform
+Link-only: an admin pastes a form link into a member request. No keys.
+
+## 9. Operating it
+
+* **Backups:** turn on automatic backups on the database (Railway plan feature or Atlas). Do a restore drill once.
+* **Uptime:** point UptimeRobot (free) at `https://<your-domain>/api/health` — it also checks the database.
+* **Logs:** Railway → Deployments → View logs. Failed emails, failed payments webhooks and integration errors show up here
+  and, per integration, in the admin tile's log.
+* **Reports:** a member reporting a platform message is stored in the `platform_reports` collection of the `…__hub`
+  database; there is no admin screen for them yet — check it (Railway's database → Data tab) until one exists.
+* **Updating:** push to GitHub; Railway rebuilds and redeploys. Existing data is untouched. Brief downtime during a deploy.
+* **Audit logs:** platform admins (emails in `PLATFORM_ADMIN_EMAILS`) can read the platform log at `/api/hub/admin/audit-log` (sign-ins, failures,
+  resets, account deletions, community creation, platform-admin access); each community's admins see theirs under Audit log. Every entry has a
+  request id matching the `X-Request-ID` response header and the server log line. Keep logs at least 12 months.
+* **Member data requests:** members can download or delete their own data and sign out of every device from **Settings → Your data and security**
+  (API: `/api/hub/account/export`, `/delete`, `/sign-out-everywhere`). Changing or resetting a password signs out all other devices.
+* **Dependencies:** `ci-templates/github-ci.yml` runs the tests and vulnerability scans on every push, and `github-dependabot.yml` proposes updates weekly — copy them to `.github/workflows/ci.yml` and `.github/dependabot.yml` to switch them on, then review and merge the update PRs.
+* **Scaling:** stay at one replica — uploaded files live on a single Volume, which can only attach to one instance.
+
+## 10. Known gaps to be aware of before a big public launch
+
+* **No email verification at signup.** Anyone can create an account with someone else's email address; a member
+  approval is by email, so admins should still eyeball applicants. Google sign-in *is* verified. Adding a
+  "confirm your email" step is the next hardening item.
+* **The Terms of Service and Privacy Policy are a starting draft, not legal advice.** They are live at `/terms` and
+  `/privacy`, and every new account must tick agreement (email signup, invite links, first-time Google/Apple); the
+  server records the version and date. You collect names, emails, phone numbers, photos and messages from people in
+  Canada — have a lawyer review the wording (it lives in `frontend/src/lib/legal.js`). When it changes materially, bump
+  `LEGAL_VERSION` there **and** in `backend/routes/_common.py`. Existing members are not asked to re-accept yet.
+* **No multi-factor authentication in the app** for admins yet. Turn on MFA for your GitHub, Railway, database, email and Stripe accounts now (see `SOC2_READINESS.md`).
+* **Reports have no admin screen** (see above).
+* **Rate limits** exist for login, signup and password-reset; there is no general API throttle or CAPTCHA yet.
+
+## 11. Optional: two services instead of one
+
+If you want the frontend and API on separate services, `backend/Dockerfile` and `frontend/Dockerfile` still work, but
+login cookies then cross sites: you **must** put both on subdomains of the **same** custom domain
+(`app.yourdomain.com` and `api.yourdomain.com`), set `REACT_APP_BACKEND_URL=https://api.yourdomain.com` as a *build*
+variable on the frontend, and set `CORS_ORIGINS` to the app origin on the API. Using the two default
+`*.up.railway.app` domains will not work in Safari/iPhone. The single-service setup above avoids all of this.
+
+## 12. Optional: a separate public demo instance
+
+To let people poke around with fake data, deploy a **second, independent** project with its own database and set
+`DEMO_MODE=true` and `DEMO_PASSWORD=<something>`. It seeds sample communities and shows "Try the demo" logins
+(`demo@yourcommunity.app` / `admin@yourcommunity.app`). Never point it at the real database.
+
+## Troubleshooting
+
+| Symptom | Likely cause |
+|---|---|
+| Service crashes on start, log says *Unsafe production configuration* | A required variable is missing/weak — the message lists which. |
+| You can sign in but are logged out on refresh | `FRONTEND_URL`/domain mismatch, or two-service setup on `*.up.railway.app` (see 11). |
+| Password-reset email never arrives | `SENDGRID_API_KEY` unset, or `MAIL_FROM_EMAIL` not a verified sender. Check logs for `SendGrid send … failed`. |
+| Photos disappear after a deploy | No Volume, or `UPLOADS_DIR` isn't inside it. |
+| Stripe tile says "Invalid signature" in the webhook log | Wrong signing secret, or the webhook was added for a different community/mode (test vs live). |
+| STOP replies don't turn texts off | Twilio webhook URL missing/typo, or `PUBLIC_API_URL` isn't your real public address. |
+| Google button missing | `GOOGLE_CLIENT_ID` unset, or the page origin isn't in the OAuth client's *Authorized JavaScript origins*. |
+| Saved integration keys stopped working | `INTEGRATIONS_SECRET` was changed. Restore the old value, or re-enter the keys. |

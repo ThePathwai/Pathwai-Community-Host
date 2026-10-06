@@ -3,7 +3,7 @@ import wordmarkWhite from "../assets/wordmark-white.png";
 import stackedWhite from "../assets/logo-stacked-white.png";
 import React from "react";
 import { Inline } from "./EditKit";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../lib/auth";
 import { Loader2 } from "lucide-react";
 
@@ -46,6 +46,50 @@ export function PhotoField({ value, onChange, label = "Photo (optional)" }) {
   );
 }
 export const Chip = ({ children, className, accent }) => <span className={cx("chip", accent && "chip-accent", className)}>{children}</span>;
+
+// A small multi-photo gallery editor -- what turns a profile into something people actually browse
+// (see the Hub's account profile editor and the People panel's profile view) instead of just a name
+// and a bio. Deliberately simple: a 3-up grid, add via a hidden multi-file input, remove via a hover
+// button -- no reordering or cropping, unlike AvatarUpload, since a portfolio-style grid doesn't need
+// pixel-perfect framing the way a single avatar does.
+export function PhotoGallery({ value = [], onChange, max = 9, label = "Photos", hint }) {
+  const ref = React.useRef(null);
+  const [busy, setBusy] = React.useState(false);
+  const [err, setErr] = React.useState("");
+  const pick = async (e) => {
+    const files = Array.from(e.target.files || []); e.target.value = "";
+    if (!files.length) return;
+    setErr(""); setBusy(true);
+    try {
+      const { resizePhoto } = await import("../lib/profile");
+      const room = Math.max(0, max - value.length);
+      const next = await Promise.all(files.slice(0, room).map((f) => resizePhoto(f, 900)));
+      onChange([...value, ...next]);
+    } catch (ex) { setErr(ex.message || "Couldn't read one of those photos"); }
+    finally { setBusy(false); }
+  };
+  return (
+    <Field label={label} hint={hint || `Up to ${max} — shown on your profile and in the People feed.`}>
+      <input ref={ref} type="file" accept="image/*" multiple className="sr-only" onChange={pick} data-testid="gallery-input" />
+      <div className="grid grid-cols-3 gap-2 sm:grid-cols-4">
+        {value.map((src, i) => (
+          <div key={i} className="group relative aspect-square overflow-hidden rounded-lg border border-line" data-testid="gallery-photo">
+            <img src={src} alt="" className="h-full w-full object-cover" />
+            <button type="button" onClick={() => onChange(value.filter((_, j) => j !== i))} data-testid="gallery-remove" aria-label="Remove photo"
+              className="absolute right-1 top-1 flex h-5 w-5 items-center justify-center rounded-full bg-black/70 text-xs text-white opacity-0 transition group-hover:opacity-100 focus:opacity-100">×</button>
+          </div>
+        ))}
+        {value.length < max && (
+          <button type="button" onClick={() => ref.current?.click()} disabled={busy} data-testid="gallery-add"
+            className="flex aspect-square items-center justify-center rounded-lg border border-dashed border-line text-muted hover:bg-ink/5 disabled:opacity-60">
+            {busy ? <span className="text-xs">…</span> : <span aria-hidden className="text-xl">+</span>}
+          </button>
+        )}
+      </div>
+      {err && <p className="mt-1 text-xs text-red-500">{err}</p>}
+    </Field>
+  );
+}
 
 export const Field = ({ label, children, hint }) => (
   <label className="block">
@@ -307,9 +351,21 @@ export const Wordmark = ({ name, className = "", brand }) => {
   );
 };
 export const PoweredBy = ({ className = "" }) => (
-  <p className={"eyebrow inline-flex items-center justify-center gap-2 " + className}>
-    Powered by <img src={markWhite} alt="" className="h-3 w-auto" style={{ filter: "var(--mark-filter, none)" }} /><span className="font-black text-ink">Pathwai</span>
+  <p className={"eyebrow flex flex-wrap items-center justify-center gap-x-2 gap-y-1 " + className}>
+    <span className="inline-flex items-center gap-2">Powered by <img src={markWhite} alt="" className="h-3 w-auto" style={{ filter: "var(--mark-filter, none)" }} /><span className="font-black text-ink">Pathwai</span></span>
+    <span aria-hidden>·</span>
+    <Link to="/terms" className="underline-offset-2 hover:underline" data-testid="footer-terms">Terms</Link>
+    <span aria-hidden>·</span>
+    <Link to="/privacy" className="underline-offset-2 hover:underline" data-testid="footer-privacy">Privacy</Link>
   </p>
+);
+// "I agree to the Terms of Service and Privacy Policy" -- the required tick on every account-creating
+// form. The links open in a new tab so nobody loses what they've typed.
+export const TermsConsent = ({ checked, onChange, testId = "terms-consent", className = "" }) => (
+  <label className={"flex cursor-pointer items-start gap-2.5 text-sm leading-snug " + className}>
+    <input type="checkbox" className="mt-0.5 h-4 w-4 shrink-0 accent-accent" checked={!!checked} onChange={(e) => onChange(e.target.checked)} data-testid={testId} />
+    <span>I agree to the <Link to="/terms" target="_blank" rel="noreferrer" className="underline" data-testid="consent-terms-link">Terms of Service</Link> and <Link to="/privacy" target="_blank" rel="noreferrer" className="underline" data-testid="consent-privacy-link">Privacy Policy</Link>.</span>
+  </label>
 );
 export const StackedLogo = ({ className = "" }) => <img src={stackedWhite} alt="Pathwai" className={className} style={{ filter: "var(--mark-filter, none)" }} />;
 
@@ -324,6 +380,24 @@ export const StatusBadge = ({ status }) => (
   <span className={cx("inline-flex items-center rounded-full border px-2.5 py-0.5 text-[10px] font-medium uppercase", STATUS_STYLE[status] || "border-line text-muted")} style={{ letterSpacing: "0.12em" }}>
     {(status || "").replace(/_/g, " ")}
   </span>
+);
+
+// A join request's "what happens next" state, shared by every place someone can land in it right
+// after asking to join a community: an existing member logging back in while still pending
+// (Login.jsx's go()), AND a brand-new signup/join (Signup.jsx, Login.jsx's share-link apply, and
+// the OAuth join flow in both) -- previously only Login's re-login path showed this card at all;
+// everywhere else just fired a toast that vanished, leaving the Hub tile's pending pill as the
+// only lasting sign anything happened. One card, one set of words, wherever "pending" shows up.
+export const MembershipStatusCard = ({ status, communityName, testId = "membership-status" }) => (
+  <div className="rounded-xl border border-line bg-ink/5 p-4 text-sm" data-testid={testId}>
+    <p className="font-semibold">{status === "pending" ? "Your request is under review" : "Your request wasn't approved"}</p>
+    {communityName && <p className="mt-0.5 text-xs text-muted">{communityName}</p>}
+    <ol className="mt-3 space-y-2 text-xs text-muted">
+      <li className="flex items-center gap-2"><span className="h-2 w-2 rounded-full" style={{ background: "var(--accent)" }} />Request submitted</li>
+      <li className="flex items-center gap-2"><span className={"h-2 w-2 rounded-full " + (status === "pending" ? "animate-pulse" : "")} style={{ background: status === "pending" ? "#F5A524" : "#ef4444" }} />{status === "pending" ? "The team is reviewing it" : "Reviewed by the team"}</li>
+      <li className="flex items-center gap-2"><span className="h-2 w-2 rounded-full bg-ink/20" />{status === "pending" ? "You'll get a notification and can sign in once approved" : "Contact the team if you think this is a mistake"}</li>
+    </ol>
+  </div>
 );
 
 export const ProgressBar = ({ value }) => (

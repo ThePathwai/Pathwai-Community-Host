@@ -3,10 +3,11 @@ import { Link, useParams } from "react-router-dom";
 import { toast } from "sonner";
 import { api, errMsg } from "../lib/api";
 import { EditMemberButton } from "../components/EditKit";
+import { ReachOutModal } from "../components/ReachOutModal";
 import { useAuth } from "../lib/auth";
 import { fieldLabel, fieldOn, typeLabel } from "../lib/profile";
-import { Globe, Instagram, Linkedin, Mail, MessageCircle, Phone } from "lucide-react";
-import { Avatar, Button, Card, Chip, Field, Modal, Select, Spinner, Textarea, Input } from "../components/ui";
+import { Bookmark, Globe, Instagram, Linkedin, Mail, MessageCircle, Phone } from "lucide-react";
+import { Avatar, Button, Card, Chip, Spinner } from "../components/ui";
 
 const List = ({ title, items, accent }) => items?.length ? (
   <Card style={accent ? { borderColor: "var(--accent)" } : undefined}><h3 className="label" style={accent ? { color: "var(--accent)" } : undefined}>{title}</h3><div className="flex flex-wrap gap-1.5">{items.map((x) => { const t = typeof x === "string" ? x : x.name || x.label; return <Chip key={t} accent={accent}>{t}</Chip>; })}</div></Card>
@@ -43,16 +44,14 @@ export default function MemberProfile() {
   const [u, setU] = useState(null);
   const [missing, setMissing] = useState(false);
   const [open, setOpen] = useState(false);
-  const [kinds, setKinds] = useState([]);
-  const [f, setF] = useState({ kind: "20-min-chat", topic: "", note: "" });
 
-  useEffect(() => { setU(null); setMissing(false); api.get(`/users/${id}`).then((r) => setU(r.data)).catch(() => setMissing(true)); api.get("/connect-requests/kinds").then((r) => setKinds(r.data.kinds)); }, [id]);
+  const load = () => api.get(`/users/${id}`).then((r) => setU(r.data));
+  useEffect(() => { setU(null); setMissing(false); load().catch(() => setMissing(true)); }, [id]); // eslint-disable-line
   if (missing) return <div className="py-20 text-center"><p className="font-display text-xl">This profile is not available.</p><p className="mt-2 text-sm text-muted">This player may have hidden their card.</p></div>;
   if (!u) return <Spinner />;
-
-  const send = async () => {
-    try { await api.post("/connect-requests", { recipient_id: u.id, ...f }); toast.success("Request sent"); setOpen(false); } catch (e) { toast.error(errMsg(e)); }
-  };
+  // Bookmarking a member, same on/off toggle as a perk's save button (Resources.jsx) and an event's
+  // (EventDetail.jsx) -- feeds the Saved section of /profile.
+  const toggleSave = async () => { try { await api.post(`/users/${id}/save`); load(); } catch (e) { toast.error(errMsg(e)); } };
 
   const stats = [["age", u.age && `${u.age}`], ["height", u.height], ["title", u.title]].filter(([k, v]) => v && fieldOn(config, k));
   return (
@@ -70,8 +69,17 @@ export default function MemberProfile() {
                 <p className="mt-1 text-sm text-muted">{[u.company, u.location].filter(Boolean).join(" · ")}</p>
               </div>
               <div className="flex gap-2">
-                <EditMemberButton member={u} onChanged={() => api.get(`/users/${id}`).then((r) => setU(r.data))} />
-                {user.id !== u.id ? <Button onClick={() => setOpen(true)} data-testid="connect-btn">Say hi</Button> : <Link to="/profile" className="btn-ghost" data-testid="edit-my-profile">Edit my card</Link>}
+                <EditMemberButton member={u} onChanged={load} />
+                {user.id !== u.id && <button className="btn-ghost" onClick={toggleSave} aria-label="Save" data-testid="member-save"><Bookmark className={`h-4 w-4 ${u.is_saved ? "fill-current" : ""}`} />{u.is_saved ? "Saved" : "Save"}</button>}
+                {/* Bridges this community-scoped card to the platform-wide People panel (Hub.jsx/
+                    HubPeople.jsx) -- same person, same email, but People is where follow, cross-
+                    community visibility and platform messaging actually live, and there was
+                    previously no way to get from one to the other. Uses u.contact.email (the same
+                    field ContactCard already shows) rather than a bare u.email, which the backend
+                    strips for anyone who hasn't turned on "show my email" -- so this link appears
+                    exactly when this member's email is already visible on the page. */}
+                {user.id !== u.id && u.contact?.email && <Link to={`/hub?person=${encodeURIComponent(u.contact.email)}`} className="btn-ghost" data-testid="view-on-people">View on People</Link>}
+                {user.id !== u.id ? <Button onClick={() => setOpen(true)} data-testid="connect-btn">Reach out</Button> : <Link to="/profile" className="btn-ghost" data-testid="edit-my-profile">Edit my card</Link>}
               </div>
             </div>
             <dl className="grid grid-cols-3 gap-px overflow-hidden border border-line bg-line" style={{ borderRadius: "var(--r-card)" }}>
@@ -85,20 +93,25 @@ export default function MemberProfile() {
         </div>
       </Card>
       <ContactCard u={u} self={user.id === u.id} />
+      {/* Same personal photo grid as the platform-wide People profile panel (HubPeople.jsx) --
+          the account-level gallery (routes/hub.py's AccountProfileIn.photos) wasn't reaching this
+          community member card before, so it only ever showed up for someone browsing cross-
+          community People, never for a fellow member of this specific community. */}
+      {u.photos?.length > 0 && (
+        <Card data-testid="member-photos">
+          <h3 className="label">Photos</h3>
+          <div className="grid grid-cols-3 gap-1.5 sm:grid-cols-4 md:grid-cols-6">
+            {u.photos.map((src, i) => <img key={i} src={src} alt="" className="aspect-square w-full rounded-lg object-cover" data-testid="member-photo" />)}
+          </div>
+        </Card>
+      )}
       <div className="grid gap-4 md:grid-cols-2">
         {fieldOn(config, "skill_set") && <List title={fieldLabel(config, "skill_set")} items={u.skill_set} />}
         {fieldOn(config, "interests_hobbies") && <List title={fieldLabel(config, "interests_hobbies")} items={u.interests_hobbies} />}
         {fieldOn(config, "goals") && <List title={fieldLabel(config, "goals")} items={u.goals} />}
         {fieldOn(config, "support_needs") && <List title={fieldLabel(config, "support_needs")} items={u.support_needs} accent />}
       </div>
-      <Modal open={open} onClose={() => setOpen(false)} title={`Say hi to ${u.name.split(" ")[0]}`}>
-        <div className="space-y-4">
-          <Field label="What kind of connection?"><Select value={f.kind} onChange={(e) => setF({ ...f, kind: e.target.value })} options={kinds.map((k) => ({ value: k.kind, label: k.label }))} /></Field>
-          <Field label="What do you want to talk about?"><Input data-testid="connect-topic" value={f.topic} onChange={(e) => setF({ ...f, topic: e.target.value })} maxLength={240} /></Field>
-          <Field label="Note (optional)"><Textarea value={f.note} onChange={(e) => setF({ ...f, note: e.target.value })} /></Field>
-          <Button onClick={send} disabled={!f.topic.trim()} data-testid="connect-send">Send</Button>
-        </div>
-      </Modal>
+      <ReachOutModal open={open} onClose={() => setOpen(false)} member={u} communityName={config?.community_name} />
     </div>
   );
 }

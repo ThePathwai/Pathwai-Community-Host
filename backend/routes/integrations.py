@@ -25,7 +25,8 @@ from pydantic import BaseModel
 
 from auth import JWT_SECRET, get_current_user, require_role
 from database import current_community, db
-from ._common import audit, clean, now_iso
+from directory import reindex_email
+from ._common import public_base_url, return_base_url, audit, clean, now_iso
 from .notifications import notify
 
 router = APIRouter(tags=["integrations"])
@@ -173,6 +174,12 @@ def _demo_luma() -> List[Dict[str, Any]]:
 
 
 # --------------------------------------------------------------------------- Airtable
+def _at_quote(v: str) -> str:
+    """Escape a value for use inside a single-quoted Airtable formula string (an email like o'brien@x.com
+    would otherwise break -- or inject into -- the filterByFormula expression)."""
+    return str(v).replace("\\", "\\\\").replace("'", "\\'")
+
+
 def _airtable_headers(c):
     return {"Authorization": f"Bearer {c['api_key']}"}
 
@@ -225,6 +232,7 @@ async def airtable_sync(c, s) -> Dict[str, Any]:
             await db.users.insert_one({"id": str(uuid.uuid4()), "email": email, "name": vals.pop("name", email.split("@")[0]), "role": "founder", "member_type": "founder",
                                        "password_hash": "!imported", "imported_from": "airtable", "airtable_record_id": rec["id"], "is_imported": True,
                                        "created_at": now_iso(), "updated_at": now_iso(), **vals})
+            await reindex_email(email)
             created += 1
     return {"created": created, "updated": updated, "skipped": skipped}
 
@@ -248,7 +256,7 @@ async def push_member(user_id: str, extra: Optional[Dict[str, Any]] = None) -> N
             await _log("airtable", "info", f"[demo] would update Airtable record for {u['email']}: {', '.join(fields)}")
             return
         url = _at_url(s)
-        found = await _http("GET", url, headers=_airtable_headers(c), params={"filterByFormula": f"LOWER({{{fm['email']}}})='{u['email'].lower()}'", "maxRecords": 1}, what="Airtable")
+        found = await _http("GET", url, headers=_airtable_headers(c), params={"filterByFormula": f"LOWER({{{fm['email']}}})='{_at_quote(u['email'].lower())}'", "maxRecords": 1}, what="Airtable")
         if found.get("records"):
             await _http("PATCH", f"{url}/{found['records'][0]['id']}", headers=_airtable_headers(c), json_body={"fields": fields, "typecast": True}, what="Airtable")
         else:
@@ -259,32 +267,85 @@ async def push_member(user_id: str, extra: Optional[Dict[str, Any]] = None) -> N
 
 
 # --------------------------------------------------------------------------- Luma
-LUMA = "https://api.lu.ma/public/v1"
+# Luma's current API lives at public-api.luma.com (calendars/events/list, events/guests/list; flat
+# entries, cursor pagination). The older api.lu.ma/public/v1 surface is kept as a fallback for keys/
+# accounts still on it: we try the current one first and only fall back if it answers "not found".
+LUMA = "https://public-api.luma.com/v1"
+LUMA_LEGACY = "https://api.lu.ma/public/v1"
+
+
+def _luma_headers(c):
+    return {"x-luma-api-key": c["api_key"], "accept": "application/json"}
+
+
+async def _luma_pages(url: str, h, params: Dict[str, Any], max_pages: int = 10) -> List[Dict[str, Any]]:
+    out: List[Dict[str, Any]] = []
+    cursor = None
+    for _ in range(max_pages):
+        j = await _http("GET", url, headers=h, params={**params, **({"pagination_cursor": cursor} if cursor else {})}, what="Luma")
+        out += j.get("entries", [])
+        if not j.get("has_more") or not j.get("next_cursor"):
+            break
+        cursor = j["next_cursor"]
+    return out
+
+
+async def _luma_events(c, limit: int = 50, after: Optional[str] = None, max_pages: int = 4):
+    """Returns (events, mode) where mode is "current" or "legacy" -- guest lookups must use the same API."""
+    h = _luma_headers(c)
+    params: Dict[str, Any] = {"pagination_limit": limit, **({"after": after} if after else {})}
+    try:
+        return await _luma_pages(f"{LUMA}/calendars/events/list", h, params, max_pages=max_pages), "current"
+    except IntegrationError as first:
+        if "couldn't find that resource" not in str(first):
+            raise
+        try:
+            return await _luma_pages(f"{LUMA_LEGACY}/calendar/list-events", h, params, max_pages=max_pages), "legacy"
+        except IntegrationError:
+            raise first
+
+
+async def _luma_guest_emails(c, event_id: str, mode: str) -> List[str]:
+    h = _luma_headers(c)
+    if mode == "current":
+        rows = await _luma_pages(f"{LUMA}/events/guests/list", h, {"event_id": event_id, "approval_status": "approved", "pagination_limit": 200})
+    else:
+        rows = await _luma_pages(f"{LUMA_LEGACY}/event/get-guests", h, {"event_api_id": event_id, "pagination_limit": 200})
+    out = []
+    for x in rows:
+        g = x.get("guest", x)
+        if (g.get("approval_status") or "approved") != "approved":
+            continue
+        email = (g.get("email") or g.get("user_email") or "").strip().lower()
+        if email:
+            out.append(email)
+    return out
 
 
 async def luma_fetch(c) -> List[Dict[str, Any]]:
     if _is_demo(c):
         return _demo_luma()
-    h = {"x-luma-api-key": c["api_key"]}
-    j = await _http("GET", f"{LUMA}/calendar/list-events", headers=h, params={"after": datetime.now(timezone.utc).isoformat(), "pagination_limit": 50}, what="Luma")
+    entries, mode = await _luma_events(c, 50, after=datetime.now(timezone.utc).isoformat())
     out = []
-    for entry in j.get("entries", []):
-        ev = entry.get("event", entry)
-        guests: List[str] = []
+    for entry in entries:
+        ev = entry.get("event", entry)  # current API: flat; legacy API: {"api_id", "event": {...}}
+        eid = ev.get("id") or ev.get("api_id") or entry.get("api_id")
+        if not eid:
+            continue
+        ev = {**ev, "api_id": eid}
         try:
-            g = await _http("GET", f"{LUMA}/event/get-guests", headers=h, params={"event_api_id": ev["api_id"], "pagination_limit": 200}, what="Luma")
-            guests = [x.get("guest", x).get("email", "").lower() for x in g.get("entries", []) if x.get("guest", x).get("approval_status", "approved") == "approved"]
+            guests = await _luma_guest_emails(c, eid, mode)
         except IntegrationError:
-            pass
-        out.append({"api_id": ev["api_id"], "event": ev, "guests": guests})
+            guests = []  # an unreadable guest list shouldn't block importing the event itself
+        out.append({"api_id": eid, "event": ev, "guests": guests})
     return out
 
 
 async def luma_test(c, s) -> str:
     if _is_demo(c):
         return "Demo mode: connected to a sample calendar (2 upcoming events)."
-    j = await _http("GET", f"{LUMA}/calendar/list-events", headers={"x-luma-api-key": c["api_key"]}, params={"pagination_limit": 1}, what="Luma")
-    return f"Connected. Calendar is readable ({len(j.get('entries', []))} sample event)."
+    entries, _mode = await _luma_events(c, 1, max_pages=1)
+    return f"Connected. Calendar is readable ({len(entries)} sample event)."
 
 
 async def luma_sync(c, s) -> Dict[str, Any]:
@@ -375,9 +436,12 @@ async def stripe_webhook(request: Request):
     obj = (ev.get("data") or {}).get("object") or {}
     typ = ev.get("type", "")
     md = obj.get("metadata") or {}
-    uid = md.get("user_id") or obj.get("client_reference_id")
+    uid = md.get("user_id") or obj.get("client_reference_id") or ((obj.get("subscription_details") or {}).get("metadata") or {}).get("user_id")
     if not await db.stripe_events.find_one({"id": ev.get("id")}):
-        await db.stripe_events.insert_one({"id": ev.get("id"), "type": typ, "at": now_iso()})
+        # Recorded only AFTER it was handled (below): Stripe retries a failed delivery, and a retry must
+        # not be skipped as "already seen" when the first attempt blew up half way.
+        if typ == "checkout.session.completed" and obj.get("payment_status") not in (None, "paid", "no_payment_required"):
+            return {"received": True, "skipped": "payment not completed yet"}
         if typ == "checkout.session.completed" and uid:
             if md.get("event_id"):
                 await db.events.update_one({"id": md["event_id"]}, {"$set": {f"rsvps.{uid}": "yes"}, "$addToSet": {"attendee_ids": uid}})
@@ -393,6 +457,7 @@ async def stripe_webhook(request: Request):
             if u:
                 status = {"invoice.paid": "active", "invoice.payment_failed": "past_due", "customer.subscription.deleted": "canceled"}.get(typ) or obj.get("status", "active")
                 await _set_paid(u["id"], None, status)
+        await db.stripe_events.insert_one({"id": ev.get("id"), "type": typ, "at": now_iso()})
         await _log("stripe", "info", f"Webhook {typ}")
     return {"received": True}
 
@@ -428,10 +493,14 @@ async def membership_checkout(body: CheckoutIn, request: Request, me: dict = Dep
         await _set_paid(me["id"], plan["label"])
         await db.payments.insert_one({"id": str(uuid.uuid4()), "user_id": me["id"], "kind": "membership", "plan": plan["label"], "amount": plan.get("amount_cents"), "currency": s.get("currency"), "at": now_iso(), "demo": True})
         return {"url": None, "demo": True, "message": "Demo mode: payment simulated and your membership is now active."}
-    origin = request.headers.get("origin") or str(request.base_url).rstrip("/")
+    origin = return_base_url(request)
     form = {"mode": "subscription" if plan.get("interval") in ("month", "year") else "payment", "success_url": f"{origin}/settings?paid=1", "cancel_url": f"{origin}/settings",
             "client_reference_id": me["id"], "customer_email": me.get("email"), "metadata[user_id]": me["id"], "metadata[plan_key]": plan["key"],
             "line_items[0][quantity]": "1"}
+    if form["mode"] == "subscription":
+        # Subscription events (renewals, cancellations) carry the subscription's own metadata, not the
+        # checkout session's -- without this the webhook can't tell whose subscription changed.
+        form.update({"subscription_data[metadata][user_id]": me["id"], "subscription_data[metadata][plan_key]": plan["key"]})
     if plan.get("price_id"):
         form["line_items[0][price]"] = plan["price_id"]
     else:
@@ -439,7 +508,7 @@ async def membership_checkout(body: CheckoutIn, request: Request, me: dict = Dep
                      "line_items[0][price_data][product_data][name]": plan["label"]})
         if form["mode"] == "subscription":
             form["line_items[0][price_data][recurring][interval]"] = plan["interval"]
-    j = await _http("POST", f"{STRIPE}/checkout/sessions", headers=_sh(c), data=form, what="Stripe")
+    j = await _http("POST", f"{STRIPE}/checkout/sessions", headers=_sh(c), data={k: v for k, v in form.items() if v not in (None, "")}, what="Stripe")
     return {"url": j.get("url")}
 
 
@@ -479,13 +548,13 @@ async def ticket_checkout(event_id: str, request: Request, body: TicketCheckoutI
         await db.payments.insert_one({"id": str(uuid.uuid4()), "user_id": me["id"], "kind": "ticket", "event_id": event_id, "tier_id": tier["id"] if tier else None,
                                       "tier_name": label, "amount": price, "currency": e.get("currency") or s.get("currency"), "at": now_iso(), "demo": True})
         return {"url": None, "demo": True, "message": "Demo mode: ticket purchase simulated — you're registered."}
-    origin = request.headers.get("origin") or str(request.base_url).rstrip("/")
+    origin = return_base_url(request)
     form = {"mode": "payment", "success_url": f"{origin}/events/{event_id}?paid=1", "cancel_url": f"{origin}/events/{event_id}", "client_reference_id": me["id"],
             "customer_email": me.get("email"), "metadata[user_id]": me["id"], "metadata[event_id]": event_id, "metadata[tier_id]": tier["id"] if tier else "",
             "metadata[tier_name]": label, "line_items[0][quantity]": "1",
             "line_items[0][price_data][currency]": e.get("currency") or s.get("currency") or "cad", "line_items[0][price_data][unit_amount]": str(int(price)),
             "line_items[0][price_data][product_data][name]": f"{e.get('title', 'Event ticket')} — {label}" if tier else e.get("title", "Event ticket")}
-    j = await _http("POST", f"{STRIPE}/checkout/sessions", headers=_sh(c), data=form, what="Stripe")
+    j = await _http("POST", f"{STRIPE}/checkout/sessions", headers=_sh(c), data={k: v for k, v in form.items() if v not in (None, "")}, what="Stripe")
     return {"url": j.get("url")}
 
 
@@ -520,7 +589,7 @@ SYNCS = {"airtable": airtable_sync, "luma": luma_sync, "stripe": stripe_sync}
 WEBHOOKS = {"stripe": "/api/webhooks/stripe", "twilio": "/api/webhooks/twilio"}  # sendgrid has no inbound webhook yet
 
 
-def _public(provider: str, d: Dict[str, Any]) -> Dict[str, Any]:
+def _public(provider: str, d: Dict[str, Any], base: str = "") -> Dict[str, Any]:
     meta = PROVIDERS[provider]
     creds = {k: dec(v) for k, v in (d.get("credentials") or {}).items()}
     return {"provider": provider, "label": meta["label"], "kind": meta["kind"], "description": meta["description"], "capabilities": meta["capabilities"],
@@ -528,7 +597,8 @@ def _public(provider: str, d: Dict[str, Any]) -> Dict[str, Any]:
             "enabled": bool(d.get("enabled")), "status": d.get("status", "disconnected"), "demo": _is_demo(creds), "masked": {k: mask(v) for k, v in creds.items()},
             "settings": {**meta["defaults"], **(d.get("settings") or {})}, "last_sync_at": d.get("last_sync_at"), "last_result": d.get("last_result"),
             "last_error": d.get("last_error"), "log": (d.get("log") or [])[-8:][::-1],
-            "webhook_path": (f"{WEBHOOKS[provider]}?community={current_community()}" if provider in WEBHOOKS else None)}
+            "webhook_path": (f"{WEBHOOKS[provider]}?community={current_community()}" if provider in WEBHOOKS else None),
+            "webhook_url": (f"{base}{WEBHOOKS[provider]}?community={current_community()}" if provider in WEBHOOKS and base else None)}
 
 
 class IntegrationIn(BaseModel):
@@ -538,13 +608,14 @@ class IntegrationIn(BaseModel):
 
 
 @router.get("/admin/integrations")
-async def list_integrations(_: dict = Depends(require_role("admin"))):
+async def list_integrations(request: Request, _: dict = Depends(require_role("admin"))):
     docs = {d["provider"]: d async for d in db.integrations.find({})}
-    return {"integrations": [_public(p, docs.get(p, {})) for p in PROVIDERS]}
+    base = public_base_url(request)
+    return {"integrations": [_public(p, docs.get(p, {}), base) for p in PROVIDERS]}
 
 
 @router.put("/admin/integrations/{provider}")
-async def save_integration(provider: str, body: IntegrationIn, me: dict = Depends(require_role("admin"))):
+async def save_integration(provider: str, body: IntegrationIn, request: Request, me: dict = Depends(require_role("admin"))):
     if provider not in PROVIDERS:
         raise HTTPException(status_code=404, detail="Unknown integration")
     meta = PROVIDERS[provider]
@@ -572,7 +643,7 @@ async def save_integration(provider: str, body: IntegrationIn, me: dict = Depend
     await db.integrations.update_one({"provider": provider}, {"$set": {"provider": provider, "label": meta["label"], "credentials": creds, "settings": settings,
                                      "enabled": enabled, "status": "saved" if enabled else "disconnected", "updated_at": now_iso()}}, upsert=True)
     await audit(me["id"], "integration.saved", "integration", provider, {"enabled": enabled})
-    return _public(provider, await _doc(provider))
+    return _public(provider, await _doc(provider), public_base_url(request))
 
 
 @router.post("/admin/integrations/{provider}/test")

@@ -77,7 +77,12 @@ def test_new_person_gets_a_fresh_platform_account(c, monkeypatch, keypair):
     token = _token(priv, email="brand.new@gmail.com", sub="goog-new-1")
 
     c.post("/api/auth/logout")
+    # a first-ever sign-in would create an account, so it must carry the Terms/Privacy agreement:
+    # without it the server answers 428 and creates nothing (the client then asks and retries)
     r = c.post("/api/auth/oauth/google", json={"credential": token})
+    assert r.status_code == 428 and r.json()["detail"]["code"] == "terms_required", r.text
+    assert c.get("/api/hub/me").json()["account"] is None
+    r = c.post("/api/auth/oauth/google", json={"credential": token, "accepted_terms": True})
     assert r.status_code == 200, r.text
     body = r.json()
     assert body["new_account"] is True

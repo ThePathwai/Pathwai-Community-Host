@@ -1,3 +1,4 @@
+import os
 import uuid
 from pathlib import Path
 
@@ -7,7 +8,8 @@ from fastapi.responses import FileResponse
 from auth import get_current_user
 
 router = APIRouter(tags=["uploads"])
-STORE = Path(__file__).resolve().parent.parent / "uploads_data"
+# On Railway the container disk is wiped on every deploy: mount a Volume and point UPLOADS_DIR at it.
+STORE = Path(os.environ.get("UPLOADS_DIR") or (Path(__file__).resolve().parent.parent / "uploads_data"))
 ALLOWED = {".png", ".jpg", ".jpeg", ".gif", ".webp", ".pdf"}
 MAX_BYTES = 5 * 1024 * 1024
 
