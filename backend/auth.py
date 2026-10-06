@@ -102,11 +102,11 @@ def create_refresh_token(user_id: str) -> str:
     return _token(user_id, "refresh", timedelta(days=REFRESH_DAYS))
 
 
-def create_reset_token(email: str) -> str:
+def create_reset_token(email: str, days: Optional[int] = None) -> str:
     """Short-lived, single-purpose token for the forgot-password link — subject is the email
     itself (not a user id) since one email can map to a hub account and/or several per-community
     user records, and reset needs to update all of them together."""
-    return _token(email, "reset", timedelta(minutes=RESET_TOKEN_MIN))
+    return _token(email, "reset", timedelta(days=days) if days else timedelta(minutes=RESET_TOKEN_MIN))
 
 
 def decode_reset_token(token: str) -> str:

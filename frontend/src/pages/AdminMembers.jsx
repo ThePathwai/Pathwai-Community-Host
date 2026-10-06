@@ -2,6 +2,7 @@ import React, { useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
 import { api, errMsg, fmtDate } from "../lib/api";
 import { useLive } from "../lib/live";
+import MemberImport from "../components/MemberImport";
 import { Avatar, Button, Card, Chip, Empty, Modal, Spinner, Textarea } from "../components/ui";
 
 const FILTERS = [["pending", "Pending"], ["approved", "Approved"], ["rejected", "Declined"]];
@@ -35,6 +36,8 @@ export default function MembershipRequests({ onChanged }) {
         <Chip>Always on</Chip>
       </Card>
 
+      <MemberImport onDone={() => { load(); onChanged?.(); }} />
+
       <div className="inline-flex rounded-full bg-ink/5 p-1">
         {FILTERS.map(([v, l]) => (
           <button key={v} onClick={() => { setStatus(v); setD(null); }} data-testid={`mr-${v}`} className={"rounded-full px-4 py-1.5 text-sm " + (status === v ? "bg-surface font-medium shadow-sm" : "text-muted")}>
@@ -50,7 +53,7 @@ export default function MembershipRequests({ onChanged }) {
                 <div className="min-w-0 flex-1">
                   <div className="flex flex-wrap items-center gap-2"><p className="text-lg font-semibold">{r.name}</p>{status !== "pending" && <Chip accent={r.status === "approved"}>{r.status === "approved" ? "Approved" : "Declined"}</Chip>}</div>
                   <p className="text-sm text-muted">{[r.title, r.company].filter(Boolean).join(" · ") || "No profession given"}</p>
-                  <p className="text-xs text-muted">{r.email} · requested {fmtDate(r.requested_at)}</p>
+                  <p className="text-xs text-muted">{r.email || "No email"} · requested {fmtDate(r.requested_at)}</p>
                 </div>
               </div>
               {r.join_reason && <div className="rounded-2xl bg-ink/5 p-4"><p className="eyebrow mb-1">Why they want to join</p><p className="text-sm">{r.join_reason}</p></div>}
@@ -79,7 +82,7 @@ export default function MembershipRequests({ onChanged }) {
                 </div>
                 <p className="text-sm text-muted">{[previewing.title, previewing.company].filter(Boolean).join(" · ") || "No profession given"}</p>
                 <p className="text-sm text-muted">{[previewing.location, previewing.age ? `${previewing.age} years old` : null].filter(Boolean).join(" · ")}</p>
-                <p className="mt-1 text-xs text-muted">{previewing.email} · requested {fmtDate(previewing.requested_at)}</p>
+                <p className="mt-1 text-xs text-muted">{previewing.email || "No email"} · requested {fmtDate(previewing.requested_at)}</p>
               </div>
             </div>
             {(previewing.linkedin || previewing.phone || previewing.instagram || previewing.website) && (

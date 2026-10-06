@@ -109,7 +109,7 @@ def _req_view(u: dict) -> dict:
     # Mirrors every field the onboarding profile (BuildProfileStep / AccountProfileForm) collects, so an
     # admin reviewing an application sees the same profile the applicant already built — not a trimmed copy.
     contact = u.get("contact") or {}
-    return {"id": u["id"], "name": u.get("name"), "email": u.get("email"), "title": u.get("title"), "company": u.get("company"),
+    return {"id": u["id"], "name": u.get("name"), "email": None if u.get("email_missing") else u.get("email"), "title": u.get("title"), "company": u.get("company"),
             "bio": u.get("bio"), "tagline": u.get("tagline"), "join_reason": u.get("join_reason"), "avatar_url": u.get("avatar_url"),
             "location": u.get("location"), "age": u.get("age"), "status": u.get("membership_status", "approved"), "requested_at": u.get("created_at"),
             "decided_at": u.get("membership_decided_at"), "decided_by_name": u.get("membership_decided_by_name"), "note": u.get("membership_note"),

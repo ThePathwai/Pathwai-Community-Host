@@ -99,7 +99,7 @@ async def resolve(aud: Audience) -> Dict[str, Any]:
         else:
             sms_not_opted += 1
         addr = u.get("email")
-        if notifs.get("email", True) and addr:
+        if notifs.get("email", True) and addr and not u.get("email_missing"):
             email.append({"id": u["id"], "name": u.get("name"), "email": addr})
         elif not notifs.get("email", True):
             email_not_opted += 1

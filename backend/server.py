@@ -94,6 +94,7 @@ import routes.hub as hub_module  # noqa: E402
 import realtime  # noqa: E402
 from routes.account import router as account_router  # noqa: E402
 from routes.live import router as live_router  # noqa: E402
+from routes.member_import import router as member_import_router  # noqa: E402
 from routes.push import router as push_router, ensure_indexes as ensure_push_indexes  # noqa: E402
 from routes.hub import router as hub_router, records_for, set_community_cookie, ensure_hub_social_indexes  # noqa: E402
 
@@ -1616,6 +1617,7 @@ api_router.include_router(community_config_router)
 api_router.include_router(notifications_router)
 api_router.include_router(push_router)
 api_router.include_router(live_router)
+api_router.include_router(member_import_router)
 api_router.include_router(uploads_router)
 api_router.include_router(invites_router)
 api_router.include_router(portal_router)
@@ -1702,7 +1704,7 @@ def live_topic(path: str):
     if seg in _LIVE_SKIP or (seg == "events" and parts[-1] in ("view", "feedback")):
         return None
     if seg == "admin":
-        return "members" if len(parts) > 2 and parts[2] == "membership-requests" else "admin"
+        return "members" if len(parts) > 2 and parts[2] in ("membership-requests", "members") else "admin"
     return _LIVE_TOPIC.get(seg, seg)
 
 

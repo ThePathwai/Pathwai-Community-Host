@@ -1076,6 +1076,12 @@ function write(method, path, body, config) {
   if (path.startsWith("/admin/team-support/")) { const id = path.split("/")[3]; const u = (S.extra.teamUpd = S.extra.teamUpd || {}); u[id] = { ...(u[id] || {}), ...(body.status ? { status: body.status } : {}), ...(body.assignee_id ? { assignee_id: body.assignee_id, status: u[id]?.status || "assigned" } : {}), ...(body.response ? { last_response: body.response } : {}) }; return ok(config, { ok: true }); }
   if (path.startsWith("/admin/member-requests/") && path.endsWith("/review")) { const id = path.split("/")[3]; (S.extra.reqs = S.extra.reqs || {})[id] = { ...(S.extra.reqs[id] || {}), status: body.status }; return ok(config, { ok: true }); }
   if (path === "/admin/member-requests") { return ok(config, { created: 3, ids: [] }, 201); }
+  if (path === "/admin/members/import") {
+    // Demo only: a rough read of the pasted/uploaded text (name,email per line) so the screen can be tried.
+    const lines = String(body.csv || "").split(/\r?\n/).filter((l) => l.trim());
+    const rows = lines.slice(1).map((l, i) => { const [name, email] = l.split(/[,;\t]/).map((x) => (x || "").trim()); return { line: i + 2, name: name || "Unnamed member", email: email || "", notes: email ? [] : ["no email: they can't sign in until you add one"], status: body.dry_run ? "will_create" : "created" }; });
+    return ok(config, { dry_run: !!body.dry_run, total: rows.length, created: rows.length, skipped: 0, without_email: rows.filter((r) => !r.email).length, already_have_login: 0, with_notes: 0, columns_used: ["name", "email"], columns_ignored: [], emailed: 0, email_configured: false, link_days: 7, rows: body.dry_run ? rows : rows.map((r) => (r.email ? { ...r, link: "https://example.com/reset-password?token=demo" } : r)) });
+  }
   if (/^\/admin\/membership-requests\/[^/]+\/decision$/.test(path)) {
     const id = path.split("/")[3]; const okd = body.decision === "approve";
     const app = appsHere().find((x) => x.id === id);
