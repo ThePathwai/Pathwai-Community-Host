@@ -18,7 +18,7 @@ pyjwt>=2.10.1
 pymongo==4.18.2
 pypdf>=6.0.0
 pytest>=8.0.0
-python-dotenv>=1.0.1
+python-dotenv>=1.2.4
 python-multipart>=0.0.9
 requests-oauthlib>=2.0.0
 requests>=2.31.0
