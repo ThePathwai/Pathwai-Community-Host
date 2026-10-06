@@ -5,6 +5,7 @@ import { applyBrand, effectiveMode, setModePref } from "../lib/theme";
 import { AI_CHAT_ENABLED } from "../lib/features";
 import { useAuth } from "../lib/auth";
 import { api } from "../lib/api";
+import { startNotificationWatch } from "../lib/webNotify";
 import { Avatar, BackButton, PoweredBy, Wordmark, cx } from "./ui";
 import { BrandDrawer, EditBar, Inline, useEdit } from "./EditKit";
 
@@ -32,9 +33,10 @@ export default function Layout({ children }) {
   // them, without a standalone dashboard tab for it.
   useEffect(() => { if (user?.role === "admin") api.get("/admin/action-center").then((r) => setAdminAttn(["pending_memberships", "awaiting_review", "overdue_requests", "support_needing_action", "pending_moderation", "open_requests"].reduce((sum, k) => sum + (r.data[k] || 0), 0))).catch(() => {}); }, [loc.pathname, user?.role]);
 
-  useEffect(() => {
-    api.get("/notifications", { params: { limit: 1 } }).then((r) => setUnread(r.data.unread)).catch(() => {});
-  }, []);
+  // Keeps the bell count live and shows a browser pop-up for each new notification (new event, new
+  // member, approval...) once the person has turned desktop alerts on. See lib/webNotify.js.
+  useEffect(() => startNotificationWatch({ onUnread: setUnread, onOpen: (n) => nav(n.link || "/notifications") }), [nav]);
+  useEffect(() => { api.get("/notifications", { params: { limit: 1, sync: false } }).then((r) => setUnread(r.data.unread)).catch(() => {}); }, [loc.pathname]);
 
   useEffect(() => { api.get("/me/requests", { params: { status: "open" } }).then((r) => setOpenReqs(r.data.open)).catch(() => {}); }, [loc.pathname]);
   useEffect(() => { api.get("/messages/threads").then((r) => setInboxUnread(r.data.unread || 0)).catch(() => {}); }, [loc.pathname]);

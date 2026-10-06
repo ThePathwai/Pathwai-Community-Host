@@ -758,9 +758,11 @@ async def _apply_to_community(slug: str, acc: Dict[str, Any], title: str = "", m
     await d.users.insert_one(doc)
     await reindex_email(acc["email"])
     if needs:
-        async for a in d.users.find({"role": "admin"}):
-            await d.notifications.insert_one({"id": str(uuid.uuid4()), "user_id": a["id"], "kind": "membership_request", "title": "New membership request",
-                                              "body": f'{acc["name"]} wants to join {cfg.get("community_name") or slug}.', "link": "/admin", "meta": {}, "read": False, "created_at": now})
+        from .notifications import notify
+        with in_community(slug):  # notify() writes to the pinned community, and sends the admins a push
+            async for a in d.users.find({"role": "admin"}):
+                await notify(a["id"], "membership_request", "New membership request",
+                             f'{acc["name"]} wants to join {cfg.get("community_name") or slug}.', "/admin?tab=members")
     return {"ok": True, "status": doc["membership_status"]}
 
 

@@ -1280,6 +1280,8 @@ function write(method, path, body, config) {
     return ok(config, { ok: true, already: false, application: { org_name: org?.name } });
   }
   if (path.endsWith("/apply")) return ok(config, { ok: true });
+  // Push notifications need a real server + service worker; the static preview just says "no key".
+  if (path.startsWith("/push/")) return ok(config, { ok: true, key: null });
   if (path === "/notifications/read") {
     // Mirrors routes/notifications.py's mark_read: {ids:[...]} marks only those, an empty/omitted
     // ids marks everything read -- the old version always did the latter, so clicking a single

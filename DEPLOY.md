@@ -180,6 +180,12 @@ email carries a footer explaining how to turn emails off.
 ### Typeform / Google Forms / Jotform
 Link-only: an admin pastes a form link into a member request. No keys.
 
+### Pop-up alerts (new events, new members, approvals)
+
+Members can turn on pop-up alerts in **Settings → Notifications** (or from the banner on the Notifications page). On a phone or computer it works even when Pathwai isn't open (browser push); on an iPhone or iPad the person first has to **Share → Add to Home Screen** and open Pathwai from that icon (Apple's rule). It needs HTTPS, which Railway provides.
+
+There is nothing to set up: Pathwai creates its own push key the first time it's needed and stores it encrypted in the platform database. Optional variables if you ever want to control it: `VAPID_PRIVATE_KEY` (a PEM key, to keep the same key across a database reset) and `VAPID_SUBJECT` (a `mailto:` address, defaults to your legal email). If the key is lost, people just tap **Turn on** again.
+
 ## 9. Operating it
 
 * **Backups:** turn on automatic backups on the database (Railway plan feature or Atlas). Do a restore drill once.

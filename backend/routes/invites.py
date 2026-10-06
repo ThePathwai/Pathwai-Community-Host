@@ -90,6 +90,9 @@ async def accept(code: str, body: AcceptIn, response: Response):
     await db.users.insert_one(dict(doc))
     await reindex_email(email)
     await db.invites.update_one({"code": code}, {"$set": {"status": "accepted", "accepted_by": uid, "accepted_at": now_iso()}})
+    from .notifications import notify_members
+    await notify_members("members", "member_joined", f"{doc['name']} joined the community", "Say hello.",
+                         link=f"/members/{uid}", meta={"user_id": uid}, exclude=[uid])
     access, refresh = create_access_token(uid, doc["role"]), create_refresh_token(uid)
     set_auth_cookies(response, access, refresh)
     doc.pop("password_hash")

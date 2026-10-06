@@ -156,6 +156,12 @@ async def create_event(body: EventIn, me: dict = Depends(get_current_user)):
            "status": "approved", "submitted_by": me["id"], "submitted_by_name": me.get("name"), "created_at": now_iso()}
     await db.events.insert_one(dict(doc))
     await audit(me["id"], "event.created", "event", doc["id"])
+    # Everyone in the community hears about it (members who muted "Events" in Settings don't).
+    from .notifications import notify_members
+    when = (body.starts_at or "")[:10]
+    await notify_members("events", "event_new", f"New event: {body.title}",
+                         " · ".join(x for x in (when, body.location or "") if x), link=f"/events/{doc['id']}",
+                         meta={"event_id": doc["id"]}, exclude=[me["id"]])
     return doc
 
 

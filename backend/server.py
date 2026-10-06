@@ -92,6 +92,7 @@ from seed_empty_communities import ensure_empty_demo_communities  # noqa: E402
 from seed_cross_community_roles import ensure_cross_community_roles  # noqa: E402
 import routes.hub as hub_module  # noqa: E402
 from routes.account import router as account_router  # noqa: E402
+from routes.push import router as push_router, ensure_indexes as ensure_push_indexes  # noqa: E402
 from routes.hub import router as hub_router, records_for, set_community_cookie, ensure_hub_social_indexes  # noqa: E402
 
 app = FastAPI(title="Pathwai API")
@@ -189,6 +190,7 @@ async def ensure_seeded():
 async def _playr_startup_tail() -> None:
     await ensure_support_indexes()
     await ensure_notification_indexes()
+    await ensure_push_indexes()
     await _sync_admin_company_with_community(db)
     try:
         init_object_storage()
@@ -204,6 +206,7 @@ async def _index_community(slug: str) -> None:
         await ensure_message_indexes()
         await ensure_support_indexes()
         await ensure_notification_indexes()
+        await ensure_push_indexes()
         await db.audit_log.create_index([("created_at", -1)])
         await db.audit_log.create_index([("action", 1), ("created_at", -1)])
 
@@ -1609,6 +1612,7 @@ api_router.include_router(messages_router)
 api_router.include_router(saved_router)
 api_router.include_router(community_config_router)
 api_router.include_router(notifications_router)
+api_router.include_router(push_router)
 api_router.include_router(uploads_router)
 api_router.include_router(invites_router)
 api_router.include_router(portal_router)

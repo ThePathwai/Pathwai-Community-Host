@@ -156,7 +156,7 @@ async def engagement(me: dict = Depends(get_current_user)):
 # --------------------------------------------------------------------------- settings
 DEFAULT_SETTINGS = {
     "notifications": {"in_app": True, "email": True, "slack": False, "whatsapp": False, "sms": False,
-                      "kinds": {"requests": True, "events": True, "matches": True, "announcements": True, "support": True}},
+                      "kinds": {"requests": True, "events": True, "matches": True, "announcements": True, "support": True, "members": True}},
     "privacy": {"visible_in_directory": True, "show_email": False, "show_phone": False},
     "calendar_link": None,
 }

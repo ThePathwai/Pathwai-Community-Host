@@ -149,7 +149,12 @@ async def decide_membership(uid: str, body: MembershipDecision, me: dict = Depen
         "membership_decided_at": now_iso(), "membership_decided_by": me["id"], "membership_decided_by_name": me.get("name"),
         "membership_note": (body.note or "").strip() or None}})
     await audit(me["id"], "membership.approved" if approved else "membership.rejected", "user", uid, {"note": body.note})
+    from .notifications import notify, notify_members
     if approved:
-        from .notifications import notify
         await notify(uid, "membership", "Welcome to the community", "Your membership request was approved. You can now sign in.", "/")
+        # ...and the rest of the community hears someone new has joined.
+        await notify_members("members", "member_joined", f"{u.get('name') or 'Someone'} joined the community", "Say hello.",
+                             link=f"/members/{uid}", meta={"user_id": uid}, exclude=[uid, me["id"]])
+    else:
+        await notify(uid, "membership", "Your membership request wasn't approved", "The community team reviewed your request and wasn't able to approve it this time.", "/")
     return {"ok": True, "status": "approved" if approved else "rejected"}

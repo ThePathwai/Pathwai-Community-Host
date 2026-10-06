@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { api, errMsg } from "../lib/api";
+import DesktopAlerts from "../components/DesktopAlerts";
 import { Button, Card, Chip, StatusBadge, Field, Input, PageHeader, SectionCard, Spinner } from "../components/ui";
 
 const Toggle = ({ label, hint, checked, onChange, testid }) => (
@@ -65,12 +66,13 @@ export default function SettingsPage() {
         <p className="mt-2 text-xs text-muted">10+ characters with a letter and a number. Changing it signs you out of your other devices.</p>
       </SectionCard>
       <SectionCard title="Notifications">
+        <div className="mb-3"><DesktopAlerts /></div>
         <Toggle label="In-app notifications" checked={n.in_app} onChange={(v) => patch({ notifications: { in_app: v } })} />
         <Toggle label="Email" checked={n.email} onChange={(v) => patch({ notifications: { email: v } })} />
         <Toggle label="Slack" hint="Available when your community connects Slack" checked={n.slack} onChange={(v) => patch({ notifications: { slack: v } })} />
         <Toggle label="Text messages (SMS)" hint="Event reminders and news from your community. Uses the phone number on your profile. Reply STOP any time." checked={!!n.sms} onChange={(v) => patch({ notifications: { sms: v } })} />
         <p className="label mt-4">What to notify me about</p>
-        {["requests", "events", "matches", "announcements", "support"].map((k) => <Toggle key={k} label={k[0].toUpperCase() + k.slice(1)} checked={n.kinds?.[k]} onChange={(v) => patch({ notifications: { kinds: { [k]: v } } })} />)}
+        {["requests", "events", "members", "matches", "announcements", "support"].map((k) => <Toggle key={k} label={k === "members" ? "New members" : k === "events" ? "New events" : k[0].toUpperCase() + k.slice(1)} checked={n.kinds?.[k] !== false} onChange={(v) => patch({ notifications: { kinds: { [k]: v } } })} testid={`kind-${k}`} />)}
       </SectionCard>
       <SectionCard title="Privacy">
         <Toggle label="Show me in the directory" hint="Other members can find your profile" checked={s.privacy.visible_in_directory} onChange={(v) => patch({ privacy: { visible_in_directory: v } })} testid="privacy-directory" />
