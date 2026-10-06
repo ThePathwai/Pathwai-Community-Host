@@ -125,6 +125,45 @@ async def unsubscribe(body: UnsubscribeIn, me: dict = Depends(get_current_user))
     return {"ok": True}
 
 
+@router.get("/push/status")
+async def status(me: dict = Depends(get_current_user)):
+    """What the server knows about my registered devices and how the last push to each went."""
+    devices = [{"host": _host(d["endpoint"]), "added": d.get("created_at"), "last_status": d.get("last_status"),
+                "last_detail": d.get("last_detail"), "last_at": d.get("last_at")}
+               async for d in db.push_subscriptions.find({"user_id": me["id"]})]
+    return {"devices": devices}
+
+
+class TestIn(BaseModel):
+    endpoint: Optional[str] = None
+
+
+@router.post("/push/test")
+async def push_test(body: TestIn = TestIn(), me: dict = Depends(get_current_user)):
+    """Send a real push right now and report exactly what each push service answered. Unlike the bell
+    test, this can't be faked by the page being open, so it proves push itself works."""
+    from auth import rate_limit
+
+    await rate_limit("push_test", me["id"], 20, 3600, "That's plenty of tests for now. Try again in a little while.")
+    q: Dict[str, Any] = {"user_id": me["id"]}
+    if body.endpoint:
+        q["endpoint"] = body.endpoint
+    subs = [d async for d in db.push_subscriptions.find(q)]
+    if not subs:
+        return {"devices": [], "message": "This device isn't registered for push yet."}
+    key = await vapid()
+    payload = json.dumps({"title": "Push test", "body": "If you can see this, push works on this device.", "url": "/notifications", "tag": "push-test-" + os.urandom(3).hex()})
+    out = []
+    for sub in subs:
+        status_code, detail = _unpack(await asyncio.to_thread(_send_one, sub, payload, key))
+        if status_code in (404, 410):
+            await db.push_subscriptions.delete_one({"endpoint": sub["endpoint"]})
+        else:
+            await db.push_subscriptions.update_one({"endpoint": sub["endpoint"]}, {"$set": {"last_status": status_code, "last_detail": detail, "last_at": now_iso()}})
+        out.append({"host": _host(sub["endpoint"]), "endpoint": sub["endpoint"], "status": status_code, "detail": detail, "ok": 200 <= status_code < 300})
+    return {"devices": out}
+
+
 async def ensure_indexes() -> None:
     await db.push_subscriptions.create_index([("endpoint", 1)], unique=True)
     await db.push_subscriptions.create_index([("user_id", 1)])
@@ -132,16 +171,30 @@ async def ensure_indexes() -> None:
 
 # --------------------------------------------------------------------------- sending
 def _send_one(sub: Dict[str, Any], payload: str, key: Dict[str, str]):
-    """Blocking send to one device (run in a thread). Returns the HTTP status."""
+    """Blocking send to one device (run in a thread). Returns (HTTP status, short detail); status 0 means
+    we never got an answer (network error, bad key...). High urgency so a locked, sleeping phone is woken
+    right away instead of the message waiting for the phone's next battery-saver check-in."""
     from py_vapid import Vapid
     from pywebpush import WebPushException, webpush
 
     try:
         r = webpush(subscription_info={"endpoint": sub["endpoint"], "keys": sub["keys"]}, data=payload,
-                    vapid_private_key=Vapid.from_pem(key["private"].encode()), vapid_claims={"sub": key["subject"]}, ttl=86400, timeout=10)
-        return getattr(r, "status_code", 201)
+                    vapid_private_key=Vapid.from_pem(key["private"].encode()), vapid_claims={"sub": key["subject"]},
+                    ttl=86400, timeout=10, headers={"Urgency": "high"})
+        return getattr(r, "status_code", 201), ""
     except WebPushException as exc:
-        return getattr(getattr(exc, "response", None), "status_code", None) or 0
+        resp = getattr(exc, "response", None)
+        return (getattr(resp, "status_code", None) or 0), (getattr(resp, "text", "") or str(exc))[:200]
+    except Exception as exc:  # noqa: BLE001
+        return 0, f"{type(exc).__name__}: {exc}"[:200]
+
+
+def _unpack(result) -> tuple:
+    return result if isinstance(result, tuple) else (result, "")
+
+
+def _host(endpoint: str) -> str:
+    return urlparse(endpoint).hostname or "?"
 
 
 async def _deliver(rows: List[Dict[str, Any]]) -> None:
@@ -160,11 +213,13 @@ async def _deliver(rows: List[Dict[str, Any]]) -> None:
 
         async def one(sub, payload):
             async with limit:
-                status = await asyncio.to_thread(_send_one, sub, payload, key)
+                status, detail = _unpack(await asyncio.to_thread(_send_one, sub, payload, key))
             if status in (404, 410):  # the device uninstalled / revoked it
                 await db.push_subscriptions.delete_one({"endpoint": sub["endpoint"]})
-            elif status and status >= 400:
-                logger.info("push to a device failed with %s", status)
+                return
+            if not 200 <= status < 300:
+                logger.warning("push to a %s device failed: status %s %s", _host(sub["endpoint"]), status, detail)
+            await db.push_subscriptions.update_one({"endpoint": sub["endpoint"]}, {"$set": {"last_status": status, "last_detail": detail, "last_at": now_iso()}})
 
         jobs = []
         for r in rows:

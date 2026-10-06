@@ -1,6 +1,8 @@
 import React, { useState } from "react";
 import { Bell } from "lucide-react";
-import { alertsState, enableAlerts } from "../lib/webNotify";
+import { toast } from "sonner";
+import { api, errMsg } from "../lib/api";
+import { alertsState, diagnosePush, enableAlerts } from "../lib/webNotify";
 import { Button } from "./ui";
 
 // "Turn on pop-up alerts" -- asks the browser for permission and registers this device for push, so
@@ -8,8 +10,18 @@ import { Button } from "./ui";
 // it's on (used as a banner on the Notifications page).
 export default function DesktopAlerts({ compact = false }) {
   const [state, setState] = useState(alertsState());
+  const [check, setCheck] = useState(null); // { busy } | { ok, message }
   if (state === "unsupported" || (compact && state === "granted")) return null;
   const turnOn = async () => setState(await enableAlerts());
+  // Admins are never alerted about their own actions, so this is how they see a pop-up work.
+  const sendTest = async () => {
+    try {
+      await api.post("/notifications/test");
+      toast.success("Test sent. A pop-up should appear in a few seconds.");
+      window.dispatchEvent(new Event("pw:check-notifications"));
+    } catch (e) { toast.error(errMsg(e)); }
+  };
+  const runCheck = async () => { setCheck({ busy: true }); setCheck(await diagnosePush()); };
   return (
     <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-line bg-surface p-3" data-testid="desktop-alerts">
       <div className="flex items-start gap-3">
@@ -25,6 +37,12 @@ export default function DesktopAlerts({ compact = false }) {
         </div>
       </div>
       {state === "default" && <Button onClick={turnOn} data-testid="enable-desktop-alerts">Turn on</Button>}
+      {state === "granted" && (
+        <div className="flex flex-wrap gap-2">
+          <Button variant="ghost" onClick={runCheck} loading={!!check?.busy} data-testid="check-push">Check this device</Button>
+          <Button variant="ghost" onClick={sendTest} data-testid="send-test-alert">Send me a test</Button>
+        </div>)}
+      {check && !check.busy && <p className={`w-full text-xs ${check.ok ? "text-green-600" : "text-red-600"}`} data-testid="check-push-result">{check.message}</p>}
     </div>
   );
 }

@@ -4,7 +4,7 @@ from typing import List, Optional
 from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel
 
-from auth import get_current_user
+from auth import get_current_user, rate_limit
 from database import db
 from ._common import clean, now_iso
 
@@ -16,7 +16,15 @@ async def ensure_indexes() -> None:
 
 
 def _push(rows: List[dict]) -> None:
-    """Also send each new notification to the person's phones/computers (see routes/push.py)."""
+    """Also send each new notification to the person's phones/computers (see routes/push.py), and make
+    any page they have open pick it up straight away (see realtime.py)."""
+    try:
+        import realtime
+        from database import current_community
+        for r in rows:
+            realtime.publish(current_community(), "notifications", user_id=r["user_id"])
+    except Exception:  # noqa: BLE001
+        pass
     try:
         from .push import schedule_push
         schedule_push(rows)
@@ -61,6 +69,15 @@ async def notify_members(kind_key: str, kind: str, title: str, body: str = "", l
         import logging
         logging.getLogger(__name__).warning("notify_members failed for %s", kind, exc_info=True)
         return 0
+
+
+@router.post("/notifications/test")
+async def send_test(me: dict = Depends(get_current_user)):
+    """"Send me a test": the one way an admin can see a pop-up work, since you're never alerted about
+    your own actions (adding an event, approving someone)."""
+    await rate_limit("notify_test", me["id"], 10, 3600, "That's plenty of tests for now. Try again in a little while.")
+    await notify(me["id"], "test", "Test notification", "If this popped up, alerts are working on this device.", "/notifications")
+    return {"ok": True}
 
 
 class ReadIn(BaseModel):

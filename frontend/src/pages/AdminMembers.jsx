@@ -1,6 +1,7 @@
 import React, { useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
 import { api, errMsg, fmtDate } from "../lib/api";
+import { useLive } from "../lib/live";
 import { Avatar, Button, Card, Chip, Empty, Modal, Spinner, Textarea } from "../components/ui";
 
 const FILTERS = [["pending", "Pending"], ["approved", "Approved"], ["rejected", "Declined"]];
@@ -14,6 +15,7 @@ export default function MembershipRequests({ onChanged }) {
   const [previewing, setPreviewing] = useState(null); // the request whose full profile is open in the preview modal
   const load = useCallback(() => api.get("/admin/membership-requests", { params: { status } }).then((r) => setD(r.data)).catch((e) => toast.error(errMsg(e))), [status]);
   useEffect(() => { load(); }, [load]);
+  useLive(["members"], load);
 
   const decide = async (id, decision) => {
     setBusy(id);

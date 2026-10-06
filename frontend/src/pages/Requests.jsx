@@ -2,6 +2,7 @@ import React, { useCallback, useEffect, useState } from "react";
 import { ExternalLink } from "lucide-react";
 import { toast } from "sonner";
 import { api, errMsg } from "../lib/api";
+import { useLive } from "../lib/live";
 import { Button, Card, Empty, Field, Input, Modal, PageHeader, Select, Spinner, StatusBadge, Tabs, TagInput, Textarea } from "../components/ui";
 
 function FieldInput({ f, value, onChange }) {
@@ -51,6 +52,7 @@ export default function Requests() {
   const [openId, setOpenId] = useState(null);
   const load = useCallback(() => api.get("/me/requests").then((r) => setD(r.data)).catch((e) => toast.error(errMsg(e))), []);
   useEffect(() => { load(); }, [load]);
+  useLive(["requests", "admin"], load);
   const items = (d?.requests || []).filter((r) => (tab === "open" ? ["not_started", "in_progress", "overdue"].includes(r.effective_status) : tab === "done" ? ["submitted", "reviewed", "resolved"].includes(r.effective_status) : true));
   return (
     <div>

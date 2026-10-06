@@ -42,20 +42,69 @@ async function registration() {
 }
 
 // Subscribes this device to push and tells the server. Safe to call repeatedly (it's how a device is
-// re-registered after signing in again). Returns true when the server has this device.
+// re-registered after signing in again). Returns { ok, reason, detail, endpoint } so the "Check this
+// device" button can say exactly which step failed.
 export async function syncPush() {
+  let step = "support";
   try {
-    if (!pushSupported() || Notification.permission !== "granted") return false;
+    if (!pushSupported()) return { ok: false, reason: "support" };
+    if (Notification.permission !== "granted") return { ok: false, reason: "permission" };
+    step = "worker";
     const reg = await registration();
-    if (!reg) return false;
+    if (!reg) return { ok: false, reason: "worker" };
     await navigator.serviceWorker.ready;
+    step = "key";
     const { data } = await api.get("/push/public-key");
-    if (!data?.key) return false;
+    if (!data?.key) return { ok: false, reason: "key" };
+    step = "subscribe";
     const sub = (await reg.pushManager.getSubscription()) || (await reg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: toKey(data.key) }));
     const j = sub.toJSON();
+    step = "server";
     await api.post("/push/subscribe", { endpoint: j.endpoint, keys: j.keys });
-    return true;
-  } catch { return false; }
+    return { ok: true, endpoint: j.endpoint };
+  } catch (e) {
+    return { ok: false, reason: step, detail: e?.response?.data?.detail || e?.message || String(e) };
+  }
+}
+
+async function dropLocalSubscription() {
+  try {
+    const reg = await navigator.serviceWorker?.getRegistration("/");
+    const sub = await reg?.pushManager?.getSubscription();
+    if (sub) await sub.unsubscribe();
+  } catch { /* nothing to drop */ }
+}
+
+// "Check this device": registers it, sends a real push, and explains the result in plain words.
+// If the push service says the registration is stale (401/403/404/410) it re-registers once and retries.
+export async function diagnosePush() {
+  if (!notificationsSupported()) return { ok: false, message: isIos() ? "Your iPhone only allows this once Pathwai is on your Home Screen: tap Share, then Add to Home Screen, and open Pathwai from the new icon." : "This browser doesn't support notifications." };
+  if (Notification.permission !== "granted") return { ok: false, message: "Notifications aren't allowed for Pathwai on this device. Allow them in your browser or phone settings, then try again." };
+  if (!pushSupported()) return { ok: false, message: isIos() ? "Open Pathwai from the Home Screen icon (not Safari) and try again." : "This browser can't receive alerts when it's closed. Try Chrome." };
+  const explain = {
+    worker: "Couldn't start Pathwai's background helper on this device. Reload the page and try again.",
+    key: "The server didn't hand out its push key. It may still be deploying: wait a minute and try again.",
+    subscribe: "Your browser refused to set up push. Make sure you're not in a private tab, and on Android that Google Play services is on. Brave and some other browsers block push.",
+    server: "Pathwai's server refused this device's registration.",
+  };
+  const attempt = async () => {
+    const r = await syncPush();
+    if (!r.ok) return { ok: false, message: `${explain[r.reason] || "Couldn't register this device."}${r.detail ? ` (${r.detail})` : ""}` };
+    const { data } = await api.post("/push/test", { endpoint: r.endpoint });
+    const d = data.devices?.[0];
+    if (!d) return { ok: false, message: "The server doesn't have this device registered yet. Try again." };
+    return { ...d, endpoint: r.endpoint };
+  };
+  try {
+    let d = await attempt();
+    if (d.ok === false && d.status === undefined) return d;
+    if (!d.ok && [401, 403, 404, 410].includes(d.status)) { await dropLocalSubscription(); d = await attempt(); if (d.ok === false && d.status === undefined) return d; }
+    if (d.ok) return { ok: true, message: `Push works: ${d.host} accepted it. If no pop-up appeared on this phone, check that Do Not Disturb or Focus is off and that notifications are allowed for this browser (or the Pathwai icon) in your phone's Settings.` };
+    if (d.status === 0) return { ok: false, message: `The server couldn't reach the push service (${d.detail || "network error"}). Try again in a minute.` };
+    return { ok: false, message: `The push service refused it (code ${d.status}${d.detail ? `: ${d.detail}` : ""}). Tap the button again; if it still fails, send this message to support.` };
+  } catch (e) {
+    return { ok: false, message: e?.response?.data?.detail || e?.message || "Couldn't run the check." };
+  }
 }
 
 // Called on sign-out so the next person on a shared device doesn't receive this person's alerts.
@@ -112,5 +161,6 @@ export function startNotificationWatch({ onUnread, onOpen }) {
   const timer = setInterval(tick, POLL_MS);
   const onVisible = () => { if (!document.hidden) tick(); };
   document.addEventListener("visibilitychange", onVisible);
-  return () => { stopped = true; clearInterval(timer); document.removeEventListener("visibilitychange", onVisible); };
+  window.addEventListener("pw:check-notifications", tick);  // "Send me a test" asks for an immediate check
+  return () => { stopped = true; clearInterval(timer); document.removeEventListener("visibilitychange", onVisible); window.removeEventListener("pw:check-notifications", tick); };
 }

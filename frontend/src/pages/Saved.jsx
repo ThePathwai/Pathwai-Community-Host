@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { Bookmark } from "lucide-react";
 import { toast } from "sonner";
 import { api, errMsg, fmtDate } from "../lib/api";
+import { useLive } from "../lib/live";
 import { Avatar, PageHeader, SectionCard, Spinner } from "../components/ui";
 
 // Everything bookmarked across the app -- the Bookmark button on an event, a member's card and a
@@ -27,6 +28,7 @@ export default function Saved() {
   const [saved, setSaved] = useState(null);
   const load = useCallback(() => api.get("/me/saved").then((r) => setSaved(r.data)).catch((e) => toast.error(errMsg(e))), []);
   useEffect(() => { load(); }, [load]);
+  useLive(["saved", "events", "resources"], load);
   const unsave = async (kind, id) => { try { await api.post(`/${kind}/${id}/save`); load(); } catch (e) { toast.error(errMsg(e)); } };
 
   return (

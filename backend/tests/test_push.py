@@ -77,7 +77,7 @@ def test_vapid_keys_are_generated_once_and_reused(c):
 
 def test_a_new_notification_is_pushed_to_the_persons_devices_only(c, monkeypatch):
     sent = []
-    monkeypatch.setattr(push_mod, "_send_one", lambda sub, payload, key: sent.append((sub["endpoint"], json.loads(payload))) or 201)
+    monkeypatch.setattr(push_mod, "_send_one", lambda sub, payload, key: sent.append((sub["endpoint"], json.loads(payload))) or (201, ""))
     login(c, "demo@yourcommunity.app")
     c.post("/api/push/subscribe", json=_device("https://fcm.googleapis.com/fcm/send/demo-device-1111111"))
     login(c, "admin@yourcommunity.app")
@@ -129,9 +129,29 @@ def test_real_encrypted_push_reaches_the_push_service_and_decrypts(c):
     sub = {"endpoint": f"http://127.0.0.1:{srv.server_port}/push/abc", "keys": {"p256dh": b64(pub), "auth": b64(auth)}}
     login(c, "demo@yourcommunity.app")
     key = __import__("asyncio").run(push_mod.vapid())
-    status = push_mod._send_one(sub, json.dumps({"title": "Hello", "body": "World", "url": "/x", "tag": "t"}), key)
+    status, detail = push_mod._send_one(sub, json.dumps({"title": "Hello", "body": "World", "url": "/x", "tag": "t"}), key)
     srv.shutdown()
     assert status == 201
-    assert got["headers"]["content-encoding"] == "aes128gcm" and got["headers"]["authorization"].startswith("vapid ")
+    assert got["headers"]["urgency"] == "high" and got["headers"]["content-encoding"] == "aes128gcm" and got["headers"]["authorization"].startswith("vapid ")
     plain = http_ece.decrypt(got["body"], private_key=priv, auth_secret=auth, version="aes128gcm")
     assert json.loads(plain)["title"] == "Hello"
+
+
+def test_push_test_and_status_report_what_the_push_service_said(c, monkeypatch):
+    calls = []
+    answers = iter([(201, ""), (403, "UnauthorizedRegistration"), (410, "gone")])
+    monkeypatch.setattr(push_mod, "_send_one", lambda sub, payload, key: calls.append(json.loads(payload)) or next(answers))
+    login(c, "demo@yourcommunity.app")
+    assert c.post("/api/push/test", json={}).json()["devices"] == []  # nothing registered yet
+    dev = _device("https://fcm.googleapis.com/fcm/send/status-device-2222222")
+    c.post("/api/push/subscribe", json=dev)
+    r = c.post("/api/push/test", json={"endpoint": dev["endpoint"]}).json()["devices"][0]
+    assert r["ok"] and r["status"] == 201 and r["host"] == "fcm.googleapis.com" and calls[0]["title"] == "Push test"
+    st = c.get("/api/push/status").json()["devices"][0]
+    assert st["last_status"] == 201 and "endpoint" not in st  # the full push address is never echoed back
+    r = c.post("/api/push/test", json={}).json()["devices"][0]
+    assert not r["ok"] and r["status"] == 403 and r["detail"] == "UnauthorizedRegistration"
+    assert c.get("/api/push/status").json()["devices"][0]["last_status"] == 403
+    # the push service saying "gone" removes the dead registration
+    c.post("/api/push/test", json={})
+    assert c.get("/api/push/status").json()["devices"] == []

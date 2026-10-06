@@ -3,6 +3,7 @@ import { Link, useNavigate, useParams } from "react-router-dom";
 import { Flag, PenSquare, Send, Trash2, X } from "lucide-react";
 import { toast } from "sonner";
 import { api, errMsg, fmtDate, timeAgo } from "../lib/api";
+import { useLive } from "../lib/live";
 import { useAuth } from "../lib/auth";
 import { Avatar, Button, Empty, Input, PageHeader, Select, Spinner, Tabs, cx } from "../components/ui";
 import { ComposeModal } from "../components/ComposeModal";
@@ -78,6 +79,11 @@ export default function Inbox() {
 
   const loadList = useCallback(() => api.get("/messages/threads").then((r) => setList(r.data.threads)).catch((e) => toast.error(errMsg(e))), []);
   useEffect(() => { loadList(); }, [loadList]);
+  // A new message: refresh the list and the open conversation in place (the composer is left alone).
+  useLive(["messages"], () => {
+    loadList();
+    if (threadId) api.get(`/messages/threads/${threadId}`).then((r) => setThread(r.data)).catch(() => {});
+  });
 
   useEffect(() => {
     if (!threadId) { setThread(null); return; }

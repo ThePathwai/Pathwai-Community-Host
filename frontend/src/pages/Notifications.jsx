@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { api, timeAgo } from "../lib/api";
+import { useLive } from "../lib/live";
 import DesktopAlerts from "../components/DesktopAlerts";
 import { Button, Card, Empty, PageHeader, Spinner } from "../components/ui";
 
@@ -9,6 +10,7 @@ export default function Notifications() {
   const [d, setD] = useState(null);
   const load = () => api.get("/notifications").then((r) => setD(r.data));
   useEffect(() => { load(); }, []);
+  useLive(["notifications"], load);
   const readAll = async () => { await api.post("/notifications/read", {}); load(); };
   const del = async (id) => { await api.delete(`/notifications/${id}`); load(); };
   return (

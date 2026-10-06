@@ -91,7 +91,9 @@ from security import SecurityMiddleware, install_log_request_id, request_id  # n
 from seed_empty_communities import ensure_empty_demo_communities  # noqa: E402
 from seed_cross_community_roles import ensure_cross_community_roles  # noqa: E402
 import routes.hub as hub_module  # noqa: E402
+import realtime  # noqa: E402
 from routes.account import router as account_router  # noqa: E402
+from routes.live import router as live_router  # noqa: E402
 from routes.push import router as push_router, ensure_indexes as ensure_push_indexes  # noqa: E402
 from routes.hub import router as hub_router, records_for, set_community_cookie, ensure_hub_social_indexes  # noqa: E402
 
@@ -1613,6 +1615,7 @@ api_router.include_router(saved_router)
 api_router.include_router(community_config_router)
 api_router.include_router(notifications_router)
 api_router.include_router(push_router)
+api_router.include_router(live_router)
 api_router.include_router(uploads_router)
 api_router.include_router(invites_router)
 api_router.include_router(portal_router)
@@ -1681,6 +1684,55 @@ class CommunityMiddleware:
         await self.inner(scope, receive, send)
 
 
+# Which topic a write belongs to, for live refresh (realtime.py). The first path segment after /api,
+# with a few renamed so pages can subscribe by what they show.
+_LIVE_TOPIC = {"events": "events", "announcements": "updates", "resources": "resources", "users": "members", "messages": "messages",
+               "member-requests": "requests", "me": "requests", "support-requests": "support", "connect-requests": "support",
+               "team-support": "support", "matches": "matches", "saved": "saved", "invites": "admin", "blasts": "updates",
+               "hub": "members", "community": "admin", "integrations": "admin"}
+_LIVE_SKIP = ("auth", "push", "live", "notifications", "webhooks", "health", "oauth")
+
+
+def live_topic(path: str):
+    """Topic for a changed /api path, or None for writes that nobody else needs to see."""
+    parts = [x for x in path.split("/") if x]
+    if len(parts) < 2 or parts[0] != "api":
+        return None
+    seg = parts[1]
+    if seg in _LIVE_SKIP or (seg == "events" and parts[-1] in ("view", "feedback")):
+        return None
+    if seg == "admin":
+        return "members" if len(parts) > 2 and parts[2] == "membership-requests" else "admin"
+    return _LIVE_TOPIC.get(seg, seg)
+
+
+class LiveChangeMiddleware:
+    """After any successful write, tell the community's other open tabs what changed (see realtime.py)."""
+
+    def __init__(self, app):
+        self.inner = app
+
+    async def __call__(self, scope, receive, send):
+        if scope["type"] != "http" or scope["method"] in ("GET", "HEAD", "OPTIONS"):
+            await self.inner(scope, receive, send)
+            return
+        status = {"code": 0}
+
+        async def watch(message):
+            if message["type"] == "http.response.start":
+                status["code"] = message["status"]
+            await send(message)
+
+        await self.inner(scope, receive, watch)
+        try:
+            topic = live_topic(scope["path"])
+            if topic and 200 <= status["code"] < 300:
+                origin = next((v.decode("latin-1") for k, v in scope["headers"] if k == b"x-client-id"), None)
+                realtime.publish(current_community(), topic, origin=(origin or None) and origin[:40])
+        except Exception:  # noqa: BLE001 - live refresh must never affect a request
+            logger.warning("live publish failed", exc_info=True)
+
+
 app.add_middleware(
     CORSMiddleware,
     allow_credentials=True,
@@ -1688,6 +1740,7 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+app.add_middleware(LiveChangeMiddleware)  # inside CommunityMiddleware, so it still sees which community the request was pinned to
 app.add_middleware(CommunityMiddleware)
 app.add_middleware(SecurityMiddleware)  # added last = outermost: headers + request id cover CORS preflights and errors too
 

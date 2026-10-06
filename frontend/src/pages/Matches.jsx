@@ -3,6 +3,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { Bookmark, X } from "lucide-react";
 import { toast } from "sonner";
 import { api, errMsg, fmtDate } from "../lib/api";
+import { useLive } from "../lib/live";
 import { useAuth } from "../lib/auth";
 import { ReachOutModal } from "../components/ReachOutModal";
 import { Avatar, Button, Card, Chip, Empty, PageHeader, Spinner, Tabs } from "../components/ui";
@@ -16,6 +17,7 @@ export default function Matches() {
   const [introMember, setIntroMember] = useState(null); // that person's full profile (has contact info)
   const load = useCallback(() => api.get("/matches").then((r) => setD(r.data)).catch((e) => toast.error(errMsg(e))), []);
   useEffect(() => { load(); }, [load]);
+  useLive(["matches", "members"], load);
 
   const act = async (kind, id, action) => { try { await api.post("/matches/action", { kind, target_id: id, action }); if (action === "dismiss") toast("Dismissed — we'll show fewer like this"); if (action === "save") toast.success("Saved"); load(); } catch (e) { toast.error(errMsg(e)); } };
   // Fetch the full profile (not just the trimmed match-result fields) so the modal can offer their

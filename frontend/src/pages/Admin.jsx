@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { Link2, Ticket } from "lucide-react";
 import { toast } from "sonner";
 import { api, errMsg, fmtDate } from "../lib/api";
+import { useLive } from "../lib/live";
 import { useAuth } from "../lib/auth";
 import { Button, Card, Chip, Empty, Field, Input, PageHeader, Select, Spinner, Tabs, TagInput } from "../components/ui";
 import Branding from "./AdminBrand";
@@ -14,7 +15,9 @@ function Overview() {
   const [o, setO] = useState(null);
   const [kinds, setKinds] = useState([]);
   const [run, setRun] = useState({});
-  useEffect(() => { api.get("/admin/overview").then((r) => setO(r.data)); api.get("/admin/audits").then((r) => setKinds(r.data.audits || [])); }, []);
+  const loadOverview = useCallback(() => { api.get("/admin/overview").then((r) => setO(r.data)).catch(() => {}); api.get("/admin/audits").then((r) => setKinds(r.data.audits || [])).catch(() => {}); }, []);
+  useEffect(() => { loadOverview(); }, [loadOverview]);
+  useLive(["members", "events", "admin", "requests"], loadOverview);
   if (!o) return <Spinner />;
   const runAudit = async (kind) => { setRun((x) => ({ ...x, [kind]: { loading: true } })); try { const { data } = await api.post(`/admin/audits/${kind}`, {}); setRun((x) => ({ ...x, [kind]: data })); } catch (e) { setRun((x) => ({ ...x, [kind]: { error: errMsg(e) } })); } };
   return (
@@ -58,6 +61,7 @@ function Invites() {
   const [email, setEmail] = useState("");
   const load = useCallback(() => api.get("/invites").then((r) => setItems(r.data)), []);
   useEffect(() => { load(); }, [load]);
+  useLive(["admin"], load);
   const create = async () => { try { await api.post("/invites", { email: email || null }); setEmail(""); load(); } catch (e) { toast.error(errMsg(e)); } };
   // The public, no-login landing page for this community (CommunityLanding.jsx at /c/:slug) --
   // one link anyone can be sent, on or off Pathwai, that shows this community's own branding and

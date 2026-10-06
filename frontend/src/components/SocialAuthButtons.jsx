@@ -109,7 +109,10 @@ export default function SocialAuthButtons({ onSignedIn, disabled, joinSlug, acce
     }
   };
 
-  const showGoogleFallback = PREVIEW || !providers.google?.configured;
+  // A live site only shows a provider once its client ID is set (see DEPLOY.md section 6): a button that
+  // can only answer "isn't configured" would just confuse people. The preview keeps simulated buttons.
+  const showGoogleFallback = PREVIEW;
+  const showApple = PREVIEW || !!providers.apple?.configured;
 
   return (
     <div className="space-y-2.5">
@@ -120,10 +123,10 @@ export default function SocialAuthButtons({ onSignedIn, disabled, joinSlug, acce
         </button>
       )}
       <div ref={googleBoxRef} className={cx("flex justify-center", (PREVIEW || !providers.google?.configured) && "hidden")} />
-      <button type="button" onClick={clickApple} disabled={disabled || busy === "apple"} data-testid="oauth-apple"
+      {showApple && <button type="button" onClick={clickApple} disabled={disabled || busy === "apple"} data-testid="oauth-apple"
         className={cx("flex w-full items-center justify-center gap-2.5 rounded-xl border border-line bg-ink py-2.5 text-sm font-medium text-paper transition hover:opacity-90", (disabled || busy === "apple") && "cursor-not-allowed opacity-60")}>
         <AppleMark /> Continue with iCloud
-      </button>
+      </button>}
       {consent && (
         <div className="space-y-3 rounded-xl border border-line bg-ink/5 p-3.5" data-testid="oauth-consent">
           <p className="text-sm font-medium">One more step</p>

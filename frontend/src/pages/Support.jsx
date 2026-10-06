@@ -2,6 +2,7 @@ import React, { useCallback, useEffect, useState } from "react";
 import { Pencil, Trash2, X } from "lucide-react";
 import { toast } from "sonner";
 import { api, errMsg, timeAgo } from "../lib/api";
+import { useLive } from "../lib/live";
 import { useAuth } from "../lib/auth";
 import { Avatar, Button, Card, Chip, Empty, Field, Input, Modal, PageHeader, PhotoField, Select, Spinner, StatusBadge, TagInput, Tabs, Textarea } from "../components/ui";
 import { ReachOutModal } from "../components/ReachOutModal";
@@ -46,6 +47,7 @@ export default function Support() {
     setItems((await api.get("/support-requests", { params })).data);
   }, [tab]);
   useEffect(() => { setItems(null); load(); }, [load]);
+  useLive(["support"], () => { load(); loadTeam(); });
   useEffect(() => { api.get("/connect-requests", { params: { scope: "received" } }).then((r) => setConn(r.data.requests)).catch(() => {}); }, []);
 
   const openCreate = () => { setEditingId(null); setF({ title: "", description: "", category: config?.support_categories?.[0] || "Career advice", tags: [], urgency: "normal", image_url: "" }); setOpen(true); };

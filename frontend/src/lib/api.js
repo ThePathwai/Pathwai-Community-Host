@@ -1,7 +1,10 @@
 import axios from "axios";
 
 const base = (process.env.REACT_APP_BACKEND_URL || "").replace(/\/$/, "");
-export const api = axios.create({ baseURL: `${base}/api`, withCredentials: true });
+export const API_BASE = base;
+// Identifies this browser tab, so live refresh doesn't bounce my own change back at me (lib/live.js).
+export const CLIENT_ID = (typeof crypto !== "undefined" && crypto.randomUUID ? crypto.randomUUID() : String(Math.random()).slice(2) + Date.now()).replace(/[^a-zA-Z0-9-]/g, "").slice(0, 36);
+export const api = axios.create({ baseURL: `${base}/api`, withCredentials: true, headers: { "X-Client-Id": CLIENT_ID } });
 
 if (process.env.REACT_APP_PREVIEW === "true") {
   // static preview build: answer from recorded fixtures instead of a server

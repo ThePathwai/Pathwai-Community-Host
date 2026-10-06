@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { Bookmark } from "lucide-react";
 import { toast } from "sonner";
 import { api, errMsg } from "../lib/api";
+import { useLive } from "../lib/live";
 import { useAuth } from "../lib/auth";
 import { fieldLabel, fieldOn, typeLabel } from "../lib/profile";
 import { Chip, Empty, Input, PageHeader, Select, Spinner, hueFromName } from "../components/ui";
@@ -21,6 +22,7 @@ export default function Members() {
   const load = () => api.get("/users", { params: { q: q || undefined, offer, looking_for: seeking, interest, member_kind: kind } }).then((r) => setUsers(r.data));
   useEffect(() => { api.get("/users/filters").then((r) => setFilters(r.data)); }, []);
   useEffect(() => { const t = setTimeout(load, 200); return () => clearTimeout(t); }, [q, offer, seeking, interest, kind]); // eslint-disable-line
+  useLive(["members"], load);
   // Bookmarking a member, same on/off toggle as a perk's save button (Resources.jsx) -- feeds the
   // Saved section of /profile.
   const toggleSave = async (id) => { try { await api.post(`/users/${id}/save`); load(); } catch (e) { toast.error(errMsg(e)); } };

@@ -1,7 +1,8 @@
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import { api, errMsg, fmtDate, timeAgo } from "../lib/api";
+import { useLive } from "../lib/live";
 import { useAuth } from "../lib/auth";
 import { Inline, useEdit } from "../components/EditKit";
 import { Avatar, Chip, Spinner, StatusBadge } from "../components/ui";
@@ -23,7 +24,9 @@ export default function Dashboard() {
   const [d, setD] = useState(null);
   const nav = useNavigate();
   const goMembers = () => { try { sessionStorage.setItem("pathwai.admintab", "members"); } catch {} nav("/admin"); };
-  useEffect(() => { api.get("/dashboard", { params: { role: user.role } }).then((r) => setD(r.data)).catch((e) => toast.error(errMsg(e))); }, [user.role]);
+  const load = useCallback(() => api.get("/dashboard", { params: { role: user.role } }).then((r) => setD(r.data)).catch((e) => toast.error(errMsg(e))), [user.role]);
+  useEffect(() => { load(); }, [load]);
+  useLive(null, load);
   if (!d) return <Spinner />;
   const pc = d.profile_completion;
   const me = d.me || user;

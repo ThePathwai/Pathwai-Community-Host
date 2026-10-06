@@ -3,6 +3,7 @@ import { Bookmark } from "lucide-react";
 import { Link } from "react-router-dom";
 import { toast } from "sonner";
 import { api, errMsg } from "../lib/api";
+import { useLive } from "../lib/live";
 import { Avatar, Button, Card, Chip, Empty, Field, Input, Modal, PageHeader, PhotoField, Select, Spinner, TagInput, Textarea } from "../components/ui";
 import { ItemTools } from "../components/EditKit";
 import { useAuth } from "../lib/auth";
@@ -16,6 +17,7 @@ export default function Resources() {
   const [saved, setSaved] = useState(false);
   const load = () => api.get("/resources", { params: { q: q || undefined, saved: saved || undefined } }).then((r) => setItems(r.data));
   useEffect(() => { const t = setTimeout(load, 200); return () => clearTimeout(t); }, [q, saved]); // eslint-disable-line
+  useLive(["resources"], load);
 
   const { user } = useAuth();
   const [open, setOpen] = useState(false);

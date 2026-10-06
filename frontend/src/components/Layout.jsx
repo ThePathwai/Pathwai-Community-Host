@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import { Link, NavLink, useLocation, useNavigate } from "react-router-dom";
 import { Bell, Bookmark, Calendar, CheckSquare, ChevronDown, Gift, Home as HomeIcon, Layers, LifeBuoy, LogOut, Megaphone, MessageSquare, Moon, Settings, Sparkles, Sun, User, UserPlus, Users } from "lucide-react";
 import { applyBrand, effectiveMode, setModePref } from "../lib/theme";
@@ -6,6 +6,8 @@ import { AI_CHAT_ENABLED } from "../lib/features";
 import { useAuth } from "../lib/auth";
 import { api } from "../lib/api";
 import { startNotificationWatch } from "../lib/webNotify";
+import { startLive, useLive } from "../lib/live";
+import AlertsPrompt from "./AlertsPrompt";
 import { Avatar, BackButton, PoweredBy, Wordmark, cx } from "./ui";
 import { BrandDrawer, EditBar, Inline, useEdit } from "./EditKit";
 
@@ -31,15 +33,26 @@ export default function Layout({ children }) {
   // requests, support needing a reply, pending approvals, open requests) as one badge on the Admin
   // link here instead -- an admin sees at a glance, from the account menu, whether anything needs
   // them, without a standalone dashboard tab for it.
-  useEffect(() => { if (user?.role === "admin") api.get("/admin/action-center").then((r) => setAdminAttn(["pending_memberships", "awaiting_review", "overdue_requests", "support_needing_action", "pending_moderation", "open_requests"].reduce((sum, k) => sum + (r.data[k] || 0), 0))).catch(() => {}); }, [loc.pathname, user?.role]);
+  const isAdmin = user?.role === "admin";
+  const refreshBadges = useCallback(() => {
+    if (isAdmin) api.get("/admin/action-center").then((r) => setAdminAttn(["pending_memberships", "awaiting_review", "overdue_requests", "support_needing_action", "pending_moderation", "open_requests"].reduce((sum, k) => sum + (r.data[k] || 0), 0))).catch(() => {});
+    api.get("/notifications", { params: { limit: 1, sync: false } }).then((r) => setUnread(r.data.unread)).catch(() => {});
+    api.get("/me/requests", { params: { status: "open" } }).then((r) => setOpenReqs(r.data.open)).catch(() => {});
+    api.get("/messages/threads").then((r) => setInboxUnread(r.data.unread || 0)).catch(() => {});
+  }, [isAdmin]);
+  useEffect(() => { refreshBadges(); }, [loc.pathname, refreshBadges]);
 
   // Keeps the bell count live and shows a browser pop-up for each new notification (new event, new
   // member, approval...) once the person has turned desktop alerts on. See lib/webNotify.js.
   useEffect(() => startNotificationWatch({ onUnread: setUnread, onOpen: (n) => nav(n.link || "/notifications") }), [nav]);
-  useEffect(() => { api.get("/notifications", { params: { limit: 1, sync: false } }).then((r) => setUnread(r.data.unread)).catch(() => {}); }, [loc.pathname]);
 
-  useEffect(() => { api.get("/me/requests", { params: { status: "open" } }).then((r) => setOpenReqs(r.data.open)).catch(() => {}); }, [loc.pathname]);
-  useEffect(() => { api.get("/messages/threads").then((r) => setInboxUnread(r.data.unread || 0)).catch(() => {}); }, [loc.pathname]);
+  // Live refresh (lib/live.js): the server pings when something changes in the community, so the badges
+  // update straight away and a new notification pops up without waiting for the 30-second check.
+  useEffect(() => startLive(), []);
+  useLive(["notifications", "messages", "requests", "members", "support", "admin"], () => {
+    refreshBadges();
+    window.dispatchEvent(new Event("pw:check-notifications"));
+  });
 
   useEffect(() => { window.scrollTo(0, 0); }, [loc.pathname]);
   const detail = /^\/(members|events|organizations)\/[^/]+/.exec(loc.pathname);
@@ -58,6 +71,7 @@ export default function Layout({ children }) {
 
   return (
     <div className="min-h-screen">
+      <AlertsPrompt />
       <header className="sticky top-0 z-40 border-b border-line/60 bg-paper/70 backdrop-blur-xl backdrop-saturate-150">
         <EditBar />
         <div className="mx-auto flex max-w-[1600px] items-center gap-2 px-4 py-2 sm:gap-4 lg:px-10">

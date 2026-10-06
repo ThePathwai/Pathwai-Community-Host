@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { api, errMsg, fmtDate } from "../lib/api";
+import { useLive } from "../lib/live";
 import { ItemTools } from "../components/EditKit";
 import { useAuth } from "../lib/auth";
 import { Button, Card, Chip, Empty, Field, Input, Modal, PageHeader, PhotoField, Select, Spinner, Textarea } from "../components/ui";
@@ -15,6 +16,7 @@ export default function Updates() {
   const [f, setF] = useState({ title: "", body: "", category: "Community news", cta_label: "", cta_url: "", image_url: "" });
   const load = () => api.get("/announcements").then((r) => setItems(r.data)).catch((e) => toast.error(errMsg(e)));
   useEffect(() => { load(); }, []);
+  useLive(["updates"], load);
   const submit = async () => {
     try { const { data } = await api.post("/announcements", { ...f, cta_label: f.cta_label || null, cta_url: f.cta_url || null }); toast.success(data.status === "pending" ? "Sent to the team for approval" : "Published"); setOpen(false); setF({ ...f, title: "", body: "", image_url: "" }); load(); } catch (e) { toast.error(errMsg(e)); }
   };

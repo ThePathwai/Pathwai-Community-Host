@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { Bookmark } from "lucide-react";
 import { toast } from "sonner";
 import { api, errMsg, fmtDate } from "../lib/api";
+import { useLive } from "../lib/live";
 import { Avatar, Button, Chip, Empty, Field, Input, Modal, PageHeader, PhotoField, Select, Spinner, Tabs, TagInput, Textarea, cx } from "../components/ui";
 import { useAuth } from "../lib/auth";
 import { ItemTools, TierEditor } from "../components/EditKit";
@@ -23,6 +24,7 @@ export default function Events() {
   const [items, setItems] = useState(null);
   const load = useCallback(() => api.get("/events", { params: { upcoming: tab === "upcoming" } }).then((r) => setItems(r.data)), [tab]);
   useEffect(() => { setItems(null); load(); }, [load]);
+  useLive(["events"], load);
 
   const { config, user } = useAuth();
   const [open, setOpen] = useState(false);

@@ -103,12 +103,18 @@ Each community can also connect **its own** SendGrid account in Admin → Integr
 
 ## 6. Google sign-in (you, optional but recommended)
 
-1. <https://console.cloud.google.com> → create a project → **APIs & Services → OAuth consent screen**
-   (External; app name, support email; add your domain; publish it so it isn't limited to test users).
-2. **Credentials → Create credentials → OAuth client ID → Web application**.
-   *Authorized JavaScript origins*: `https://<your-domain>` (and `http://localhost:3000` if you develop locally).
-   There is no redirect URI and no client secret — Pathwai uses Google's ID-token flow.
-3. Copy the Client ID into `GOOGLE_CLIENT_ID`, redeploy. The button appears on the login and signup pages.
+1. <https://console.cloud.google.com> → project menu (top left) → **New project** → name it Pathwai → **Create**.
+2. Left menu → **APIs & Services → OAuth consent screen** (Google may call this **Google Auth Platform**) → **Get started**:
+   app name Pathwai, your support email, audience **External**, your contact email, agree → **Create**.
+   Add your site's `/privacy` and `/terms` links on the **Branding** page if it asks.
+3. **Audience → Publish app** (so it says *In production*, not *Testing*). Left in Testing, only people you list by hand can sign in.
+   Pathwai only asks for name, email and picture, which don't need Google's extra review.
+4. **Clients → Create client → Web application**. Under *Authorized JavaScript origins* add
+   `https://<your-domain>` exactly (no trailing slash, no path). Leave *Authorized redirect URIs* empty.
+   Pathwai uses Google's ID-token flow, so there is no redirect URI and no client secret. **Create**, then copy the **Client ID**
+   (ends in `.apps.googleusercontent.com`).
+5. Railway → Pathwai → **Variables** → set `GOOGLE_CLIENT_ID` to that Client ID → **Deploy**. The button appears on the login and
+   signup pages (a provider's button only shows once its ID is set). Change of domain later? Add the new origin in step 4 too.
 
 Apple works the same way with a Services ID (`APPLE_CLIENT_ID`) and needs a paid Apple Developer account —
 skip it for launch.

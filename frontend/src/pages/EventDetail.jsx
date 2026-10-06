@@ -5,6 +5,7 @@ import { Link, useNavigate, useParams } from "react-router-dom";
 import { Bookmark, CalendarPlus, ExternalLink } from "lucide-react";
 import { toast } from "sonner";
 import { api, errMsg, fmtDate } from "../lib/api";
+import { useLive } from "../lib/live";
 import { Avatar, Button, Card, Chip, cx, Field, PageHeader, SectionCard, Select, Spinner, Textarea } from "../components/ui";
 
 export const RsvpButtons = ({ value, onChange, size, className }) => (
@@ -27,6 +28,7 @@ export default function EventDetail() {
   const [tierId, setTierId] = useState("");
   const load = useCallback(() => api.get(`/events/${id}`).then((r) => setE(r.data)).catch(() => setE(false)), [id]);
   useEffect(() => { load(); }, [load]);
+  useLive(["events"], load);
   useEffect(() => { api.post(`/events/${id}/view`).catch(() => {}); }, [id]);
   useEffect(() => { if (user?.role === "admin" && e && (e.price_cents || e.tier_summary?.has_tiers)) api.get(`/admin/events/${id}/sales`).then((r) => setSales(r.data)).catch(() => {}); }, [user, id, e]);
   useEffect(() => { if (e?.tier_summary?.has_tiers && !tierId) { const first = e.tier_summary.tiers.find((t) => !t.sold_out); if (first) setTierId(first.id); } }, [e]); // eslint-disable-line

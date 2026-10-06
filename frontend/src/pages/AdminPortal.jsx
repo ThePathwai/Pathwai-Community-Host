@@ -2,6 +2,7 @@ import React, { useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
 import { Check } from "lucide-react";
 import { api, errMsg, fmtDate, timeAgo } from "../lib/api";
+import { useLive } from "../lib/live";
 import { Avatar, Button, Card, Chip, cx, Empty, Field, Input, Select, Spinner, StatusBadge, Textarea } from "../components/ui";
 
 // Search-and-pick list of members, for requests aimed at specific people rather than a whole
@@ -50,6 +51,7 @@ export function AdminRequests() {
   const [members, setMembers] = useState([]);
   const load = useCallback(() => api.get("/admin/member-requests", { params: { status } }).then((r) => setD(r.data)), [status]);
   useEffect(() => { load(); }, [load]);
+  useLive(["requests", "admin"], load);
   useEffect(() => { api.get("/member-requests/kinds").then((r) => setKinds(r.data)); }, []);
   const isWaiver = f.kind === "waiver";
   const create = async () => {
@@ -106,6 +108,7 @@ export function Moderation() {
   const [note, setNote] = useState({});
   const load = useCallback(() => api.get("/admin/moderation").then((r) => setItems(r.data.items)), []);
   useEffect(() => { load(); }, [load]);
+  useLive(["admin"], load);
   const decide = async (it, decision) => { try { await api.post(`/admin/moderation/${it.kind}/${it.id}`, { decision, note: note[it.id] || null }); toast.success(decision === "approve" ? "Approved and published" : decision === "reject" ? "Rejected" : "Changes requested"); load(); } catch (e) { toast.error(errMsg(e)); } };
   if (!items) return <Spinner />;
   if (items.length === 0) return <Empty title="Nothing waiting for approval" hint="Member-submitted events, resources and updates will appear here." />;
@@ -123,6 +126,7 @@ export function SupportQueue() {
   const [resp, setResp] = useState({});
   const load = useCallback(() => api.get("/admin/team-support").then((r) => setD(r.data)), []);
   useEffect(() => { load(); }, [load]);
+  useLive(["support", "admin"], load);
   const update = async (id, body) => { try { await api.post(`/admin/team-support/${id}`, body); toast.success("Member notified"); setResp({ ...resp, [id]: "" }); load(); } catch (e) { toast.error(errMsg(e)); } };
   if (!d) return <Spinner />;
   if (d.requests.length === 0) return <Empty title="No support requests" />;
