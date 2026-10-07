@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { Bookmark } from "lucide-react";
 import { toast } from "sonner";
 import { api, errMsg, fmtDate } from "../lib/api";
+import CalendarSubscribe from "../components/CalendarSubscribe";
 import { useLive } from "../lib/live";
 import { Avatar, Button, Chip, Empty, Field, Input, Modal, PageHeader, PhotoField, Select, Spinner, Tabs, TagInput, Textarea, cx } from "../components/ui";
 import { useAuth } from "../lib/auth";
@@ -67,7 +68,7 @@ export default function Events() {
       {/* Adding an event is admin-only -- members can browse, RSVP and bookmark, but no longer get a
           "Suggest an event" entry point here (see routes/events.py's create_event, which now rejects
           a non-admin POST too). */}
-      <PageHeader k="events" title="Events" subtitle="Networking, workshops and wellness sessions." actions={user.role === "admin" ? <Button variant="ghost" onClick={() => setOpen(true)} data-testid="suggest-event">Add an event</Button> : undefined} />
+      <PageHeader k="events" title="Events" subtitle="Networking, workshops and wellness sessions." actions={<><CalendarSubscribe />{user.role === "admin" && <Button variant="ghost" onClick={() => setOpen(true)} data-testid="suggest-event">Add an event</Button>}</>} />
       <Tabs tabs={[{ value: "upcoming", label: "Upcoming" }, { value: "past", label: "Past" }]} value={tab} onChange={setTab} />
       {items && items.length > 0 && (
         <div className="mb-3 flex flex-wrap items-end gap-2">

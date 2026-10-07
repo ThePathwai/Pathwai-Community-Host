@@ -675,6 +675,8 @@ function get(path, p, config) {
     d.counts = d.requests.reduce((a, r) => ({ ...a, [r.effective_status]: (a[r.effective_status] || 0) + 1 }), {});
     return ok(config, d);
   }
+  if (path === "/me/calendar") { const feed = "https://pathwai.example/api/calendar/feed/demo-token.ics?community=" + slugOf(); return ok(config, { feed_url: feed, webcal_url: feed.replace("https://", "webcal://"), google_url: "https://calendar.google.com/calendar/r?cid=" + encodeURIComponent(feed.replace("https://", "webcal://")) }); }
+  if (path === "/admin/google-forms/setup") { const u = "https://pathwai.example/api/webhooks/google-forms/demo-secret?community=" + slugOf(); return ok(config, { webhook_url: u, script: "function onFormSubmit(e) {\n  UrlFetchApp.fetch(\"" + u + "\", { method: \"post\" });\n}\n" }); }
   if (path === "/admin/membership-requests") {
     const ov = S.extra.mship || {};
     let rows = [...appsHere(), ...d.requests].map((r) => (ov[r.id] ? { ...r, ...ov[r.id] } : r));
@@ -1076,6 +1078,8 @@ function write(method, path, body, config) {
   if (path.startsWith("/admin/team-support/")) { const id = path.split("/")[3]; const u = (S.extra.teamUpd = S.extra.teamUpd || {}); u[id] = { ...(u[id] || {}), ...(body.status ? { status: body.status } : {}), ...(body.assignee_id ? { assignee_id: body.assignee_id, status: u[id]?.status || "assigned" } : {}), ...(body.response ? { last_response: body.response } : {}) }; return ok(config, { ok: true }); }
   if (path.startsWith("/admin/member-requests/") && path.endsWith("/review")) { const id = path.split("/")[3]; (S.extra.reqs = S.extra.reqs || {})[id] = { ...(S.extra.reqs[id] || {}), status: body.status }; return ok(config, { ok: true }); }
   if (path === "/admin/member-requests") { return ok(config, { created: 3, ids: [] }, 201); }
+  if (path === "/me/calendar" || path === "/me/calendar/reset") { const feed = "https://pathwai.example/api/calendar/feed/demo-token.ics?community=" + slugOf(); return ok(config, { feed_url: feed, webcal_url: feed.replace("https://", "webcal://"), google_url: "https://calendar.google.com/calendar/r?cid=" + encodeURIComponent(feed.replace("https://", "webcal://")) }); }
+  if (path === "/admin/google-forms/setup" || path === "/admin/google-forms/reset") { const u = "https://pathwai.example/api/webhooks/google-forms/demo-secret?community=" + slugOf(); return ok(config, { webhook_url: u, script: "function onFormSubmit(e) {\n  UrlFetchApp.fetch(\"" + u + "\", { method: \"post\" });\n}\n" }); }
   if (path === "/admin/members/import") {
     // Demo only: a rough read of the pasted/uploaded text (name,email per line) so the screen can be tried.
     const lines = String(body.csv || "").split(/\r?\n/).filter((l) => l.trim());

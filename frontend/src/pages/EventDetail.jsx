@@ -17,6 +17,17 @@ export const RsvpButtons = ({ value, onChange, size, className }) => (
   </div>
 );
 
+// Opens Google Calendar's "new event" screen with this event already filled in (no sign-in or API needed).
+function googleCalUrl(e) {
+  const start = new Date(e.starts_at);
+  if (isNaN(start)) return "https://calendar.google.com/calendar/r/eventedit";
+  let end = e.ends_at ? new Date(e.ends_at) : new Date(start.getTime() + 3600000);
+  if (isNaN(end) || end <= start) end = new Date(start.getTime() + 3600000);
+  const f = (d) => d.toISOString().replace(/[-:]/g, "").replace(/\.\d{3}/, "");
+  const q = new URLSearchParams({ action: "TEMPLATE", text: e.title || "Event", dates: `${f(start)}/${f(end)}`, details: `${(e.description || "").slice(0, 600)}\n\n${window.location.href}`.trim(), location: e.location || e.virtual_url || "" });
+  return `https://calendar.google.com/calendar/render?${q.toString()}`;
+}
+
 export default function EventDetail() {
   const { id } = useParams();
   const nav = useNavigate();
@@ -47,7 +58,7 @@ export default function EventDetail() {
   return (
     <div>
       <PageHeader title={e.title} subtitle={`${fmtDate(e.starts_at)} · ${e.location || (e.virtual_url ? "Virtual" : "")} · hosted by ${e.host || "The Playr League"}`}
-        actions={<><ItemTools kind="events" item={e} onChanged={load} /><button className="btn-ghost" onClick={toggleSave} aria-label="Save" data-testid="event-detail-save"><Bookmark className={`h-4 w-4 ${e.is_saved ? "fill-current" : ""}`} />{e.is_saved ? "Saved" : "Save"}</button><a className="btn-ghost" href={`${api.defaults.baseURL}/events/${e.id}/ics`} onClick={addToCalendar} data-testid="add-to-calendar"><CalendarPlus className="h-4 w-4" />Add to calendar</a></>} />
+        actions={<><ItemTools kind="events" item={e} onChanged={load} /><button className="btn-ghost" onClick={toggleSave} aria-label="Save" data-testid="event-detail-save"><Bookmark className={`h-4 w-4 ${e.is_saved ? "fill-current" : ""}`} />{e.is_saved ? "Saved" : "Save"}</button><a className="btn-ghost" href={googleCalUrl(e)} target="_blank" rel="noreferrer" data-testid="add-to-google-calendar"><CalendarPlus className="h-4 w-4" />Google Calendar</a><a className="btn-ghost" href={`${api.defaults.baseURL}/events/${e.id}/ics`} onClick={addToCalendar} data-testid="add-to-calendar"><CalendarPlus className="h-4 w-4" />Apple / Outlook</a></>} />
       {e.cover_url && (
         <div className="mb-6 overflow-hidden rounded-xl2 border border-line bg-ink/5" data-testid="event-cover">
           <img src={e.cover_url} alt={e.title} className="aspect-[16/10] w-full object-cover sm:aspect-[21/9] sm:max-h-[420px]" />

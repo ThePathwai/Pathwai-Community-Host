@@ -2,6 +2,7 @@
 settings, team support, match actions, engagement history, reminders and the admin Action Center."""
 from __future__ import annotations
 
+import re
 import secrets
 import uuid
 from datetime import datetime, timedelta, timezone
@@ -407,6 +408,8 @@ async def admin_create_requests(body: RequestCreate, me: dict = Depends(require_
         targets = [u for u in targets if member_type(u) == body.member_type]
     if not targets:
         raise HTTPException(status_code=400, detail="No members match that selection.")
+    if body.external_url and not re.match(r"^https?://\S+$", body.external_url.strip()):
+        raise HTTPException(status_code=400, detail="That form link should start with https://")
     meta = REQUEST_KINDS[body.kind]
     created = []
     for u in targets:

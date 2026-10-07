@@ -3,6 +3,7 @@ import { Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { api, errMsg, timeAgo } from "../lib/api";
 import { Button, Card, Chip, Field, Input, Select, Spinner } from "../components/ui";
+import GoogleFormsSetup from "../components/GoogleFormsSetup";
 
 const STATUS = { connected: "Connected", demo: "Demo mode", saved: "Saved, not tested", error: "Needs attention", disconnected: "Not connected" };
 
@@ -45,6 +46,7 @@ function Provider({ p, reload }) {
       </div>
       {p.last_error && <p className="mt-3 rounded-lg border border-red-400/40 bg-red-500/10 p-3 text-sm text-red-400">{p.last_error}</p>}
       {p.last_sync_at && !p.last_error && <p className="mt-3 text-xs text-muted">Last sync {timeAgo(p.last_sync_at)} · {Object.entries(p.last_result || {}).map(([k, v]) => `${k.replace(/_/g, " ")} ${v}`).join(", ")}</p>}
+      {p.provider === "google_forms" && p.enabled && <GoogleFormsSetup />}
       {p.kind === "api" && open && (
         <div className="mt-4 space-y-4 border-t border-line pt-4">
           {p.credential_fields.map((f) => (
