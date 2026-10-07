@@ -176,7 +176,7 @@ export default function Inbox() {
             <Link key={t.id} to={`/inbox/${t.id}`} data-testid="thread-row"
               className={cx("card card-hover !p-3 flex items-center gap-3", threadId === t.id && "!border-ink")}>
               <span className="relative shrink-0"><ThreadAvatar others={t.others} />
-                {t.unread && <span className="absolute -right-0.5 -top-0.5 h-2.5 w-2.5 rounded-full border-2 border-[rgb(var(--c-surface))]" style={{ background: "var(--accent)" }} />}</span>
+                {t.unread && <span className="absolute -right-0.5 -top-0.5 h-2.5 w-2.5 rounded-full border-2 border-[rgb(var(--c-surface))] bg-red-600" data-testid="inbox-unread-dot" />}</span>
               <div className="min-w-0 flex-1">
                 <div className="flex items-baseline justify-between gap-2"><p className={cx("truncate text-sm", t.unread ? "font-semibold" : "font-medium")}>{otherNames(t)}</p>
                   <span className="shrink-0 text-[10px] text-muted">{timeAgo(t.last_message_at)}</span></div>

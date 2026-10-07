@@ -41,7 +41,7 @@ export default function MembershipRequests({ onChanged }) {
       <div className="inline-flex rounded-full bg-ink/5 p-1">
         {FILTERS.map(([v, l]) => (
           <button key={v} onClick={() => { setStatus(v); setD(null); }} data-testid={`mr-${v}`} className={"rounded-full px-4 py-1.5 text-sm " + (status === v ? "bg-surface font-medium shadow-sm" : "text-muted")}>
-            {l}{d?.counts ? ` · ${d.counts[v]}` : ""}</button>))}
+            {l}{d?.counts ? (v === "pending" && d.counts[v] > 0 ? <span className="ml-1.5 rounded-full bg-red-600 px-1.5 text-[10px] font-bold text-white" data-testid="pending-count">{d.counts[v]}</span> : ` · ${d.counts[v]}`) : ""}</button>))}
       </div>
 
       {!d ? <Spinner /> : d.requests.length === 0 ? <Empty title={status === "pending" ? "No requests waiting" : "Nothing here yet"} hint={status === "pending" ? "New sign-ups will show up here for your review." : undefined} /> : (

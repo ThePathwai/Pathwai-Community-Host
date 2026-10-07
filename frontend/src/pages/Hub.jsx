@@ -234,7 +234,7 @@ function HubInbox({ open, onClose, loading, data, communities, onOpenThread }) {
                     <p className="truncate text-xs text-muted">{t.last_message_preview}</p>
                   </div>
                 </div>
-                {t.unread && <span className="mt-1.5 h-2 w-2 shrink-0 rounded-full" style={{ background: "var(--accent)" }} aria-hidden data-testid="hub-inbox-unread-dot" />}
+                {t.unread && <span className="mt-1.5 h-2.5 w-2.5 shrink-0 rounded-full bg-red-600" aria-hidden data-testid="hub-inbox-unread-dot" />}
               </button>
             );
           })}

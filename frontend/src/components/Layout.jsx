@@ -79,7 +79,7 @@ export default function Layout({ children }) {
           {editing && <button className="hidden whitespace-nowrap rounded-full border border-dashed border-ink/40 px-2 py-0.5 text-[10px] uppercase tracking-widest text-muted hover:text-ink sm:inline" onClick={() => setDrawer(true)} data-testid="edit-logo">Edit logo</button>}
           <nav className="ml-2 hidden min-w-0 flex-1 gap-1 xl:flex">
             {NAV.map(([to, label]) => (
-              <NavLink key={to} to={to} end={to === "/"} className={({ isActive }) => cx("whitespace-nowrap rounded-lg px-3 py-1.5 text-sm", isActive ? "bg-ink text-paper font-semibold" : "text-muted hover:bg-ink/5 hover:text-ink")}>{label}{editing && <span role="button" className="ml-1.5 text-[10px] opacity-60 hover:opacity-100" title="Rename in Branding & menu" onClick={(e) => { e.preventDefault(); setDrawer(true); }}>✎</span>}{to === "/requests" && openReqs > 0 && <span className="ml-1.5 rounded-full bg-ink/15 px-1.5 text-[10px]">{openReqs}</span>}{to === "/inbox" && inboxUnread > 0 && <span className="ml-1.5 rounded-full bg-red-600 px-1.5 text-[10px] text-white">{inboxUnread}</span>}</NavLink>
+              <NavLink key={to} to={to} end={to === "/"} className={({ isActive }) => cx("whitespace-nowrap rounded-lg px-3 py-1.5 text-sm", isActive ? "bg-ink text-paper font-semibold" : "text-muted hover:bg-ink/5 hover:text-ink")}>{label}{editing && <span role="button" className="ml-1.5 text-[10px] opacity-60 hover:opacity-100" title="Rename in Branding & menu" onClick={(e) => { e.preventDefault(); setDrawer(true); }}>✎</span>}{to === "/requests" && openReqs > 0 && <span className="ml-1.5 rounded-full bg-red-600 px-1.5 text-[10px] font-bold text-white" data-testid="badge-requests">{openReqs}</span>}{to === "/inbox" && inboxUnread > 0 && <span className="ml-1.5 rounded-full bg-red-600 px-1.5 text-[10px] font-bold text-white" data-testid="badge-inbox">{inboxUnread}</span>}</NavLink>
             ))}
             {custom.map((l) => <a key={l.url} href={l.url} target="_blank" rel="noreferrer" className="whitespace-nowrap rounded-lg px-3 py-1.5 text-sm text-muted hover:bg-ink/5">{l.label} ↗</a>)}
           </nav>
@@ -87,8 +87,8 @@ export default function Layout({ children }) {
             <button className="btn-ghost !px-2 sm:!px-3" data-testid="mode-toggle" aria-label={mode === "dark" ? "Switch to light mode" : "Switch to dark mode"} title={mode === "dark" ? "Light mode" : "Dark mode"} onClick={() => { const n = mode === "dark" ? "light" : "dark"; setModePref(n); applyBrand(config); setMode(n); }}>{mode === "dark" ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}</button>
             {AI_CHAT_ENABLED && <Link to="/ask" className="btn-ghost !px-2 sm:!px-3" title="Ask the League"><Sparkles className="h-4 w-4" /><span className="hidden sm:inline">Ask</span></Link>}
             <Link to="/notifications" className="relative btn-ghost !px-2 sm:!px-3" data-testid="bell" aria-label="Notifications">
-              <Bell className="h-4 w-4" />
-              {unread > 0 && <span className="absolute -right-1 -top-1 rounded-full bg-red-600 px-1.5 text-[10px] text-white">{unread}</span>}
+              <Bell className={cx("h-4 w-4", unread > 0 && "text-red-500")} fill={unread > 0 ? "currentColor" : "none"} />
+              {unread > 0 && <span className="absolute -right-1.5 -top-1.5 min-w-[18px] rounded-full bg-red-600 px-1.5 text-center text-[10px] font-bold leading-[18px] text-white" data-testid="badge-bell">{unread > 99 ? "99+" : unread}</span>}
             </Link>
             <div className="relative">
               <button className="flex items-center gap-2" onClick={() => setMenu(!menu)} data-testid="user-menu-trigger">
@@ -104,7 +104,7 @@ export default function Layout({ children }) {
                     return (
                       <Link key={to} className="flex items-center gap-2 rounded-lg px-3 py-2 text-sm hover:bg-ink/5" to={to} data-testid={`user-menu-${n.key}`}>
                         {Icon && <Icon className="h-4 w-4" />}{n.label}
-                        {badge > 0 && <span className={cx("ml-auto rounded-full px-1.5 text-[10px]", to === "/inbox" ? "bg-red-600 text-white" : "bg-ink/15")}>{badge}</span>}
+                        {badge > 0 && <span className={"ml-auto rounded-full bg-red-600 px-1.5 text-[10px] font-bold text-white"}>{badge}</span>}
                       </Link>
                     );
                   })}
@@ -137,7 +137,7 @@ export default function Layout({ children }) {
                 the "/requests"/"/inbox" NavLinks) -- shown as numbers here too, not just a bare dot,
                 so a phone and a desktop browser tell you the same thing at a glance. */}
             {({ isActive }) => (<>{Icon && <Icon className="h-5 w-5" strokeWidth={isActive ? 2.5 : 2} aria-hidden />}<span className="truncate px-1">{label}</span>
-              {to === "/requests" && openReqs > 0 && <span className="absolute right-[calc(50%-22px)] top-0.5 min-w-[15px] rounded-full bg-ink/15 px-[3px] text-center text-[9px] font-bold leading-[15px] text-ink" aria-hidden>{openReqs}</span>}
+              {to === "/requests" && openReqs > 0 && <span className="absolute right-[calc(50%-22px)] top-0.5 min-w-[15px] rounded-full bg-red-600 px-[3px] text-center text-[9px] font-bold leading-[15px] text-white" aria-hidden>{openReqs}</span>}
               {to === "/inbox" && inboxUnread > 0 && <span className="absolute right-[calc(50%-22px)] top-0.5 min-w-[15px] rounded-full bg-red-600 px-[3px] text-center text-[9px] font-bold leading-[15px] text-white" aria-hidden>{inboxUnread}</span>}
               {isActive && <span className="absolute left-1/2 top-0 h-0.5 w-8 -translate-x-1/2 rounded-full" style={{ background: "var(--accent)" }} aria-hidden />}</>)}
           </NavLink>
