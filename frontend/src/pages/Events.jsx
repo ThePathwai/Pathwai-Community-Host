@@ -96,6 +96,7 @@ export default function Events() {
               const soldOut = e.tier_summary?.has_tiers ? e.tier_summary.all_sold_out : e.capacity && e.attendee_count >= e.capacity;
               return (
                 <div key={e.id} className="card card-hover !p-2 flex flex-col gap-1" data-testid="event-tile">
+                  {e.cover_url && <Link to={`/events/${e.id}`} className="-mx-0 block overflow-hidden rounded-md" data-testid="event-tile-cover" aria-hidden tabIndex={-1}><img src={e.cover_url} alt="" loading="lazy" className="aspect-[16/10] w-full object-cover" /></Link>}
                   <div className="flex items-center justify-between gap-1">
                     <ItemTools kind="events" item={e} onChanged={load} />
                     <button onClick={() => toggleSave(e.id)} aria-label="Save" data-testid="event-save-mobile" className="shrink-0 rounded p-0.5 text-muted hover:bg-ink/5"><Bookmark className={`h-3 w-3 ${e.is_saved ? "fill-current" : ""}`} /></button>

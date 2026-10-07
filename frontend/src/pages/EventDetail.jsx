@@ -48,6 +48,10 @@ export default function EventDetail() {
     <div>
       <PageHeader title={e.title} subtitle={`${fmtDate(e.starts_at)} · ${e.location || (e.virtual_url ? "Virtual" : "")} · hosted by ${e.host || "The Playr League"}`}
         actions={<><ItemTools kind="events" item={e} onChanged={load} /><button className="btn-ghost" onClick={toggleSave} aria-label="Save" data-testid="event-detail-save"><Bookmark className={`h-4 w-4 ${e.is_saved ? "fill-current" : ""}`} />{e.is_saved ? "Saved" : "Save"}</button><a className="btn-ghost" href={`${api.defaults.baseURL}/events/${e.id}/ics`} onClick={addToCalendar} data-testid="add-to-calendar"><CalendarPlus className="h-4 w-4" />Add to calendar</a></>} />
+      {e.cover_url && (
+        <div className="mb-6 overflow-hidden rounded-xl2 border border-line bg-ink/5" data-testid="event-cover">
+          <img src={e.cover_url} alt={e.title} className="aspect-[16/10] w-full object-cover sm:aspect-[21/9] sm:max-h-[420px]" />
+        </div>)}
       <div className="mb-6 flex flex-wrap items-center gap-3"><Chip>{e.category}</Chip>
         {e.is_past ? <Chip>Past event</Chip> : e.tier_summary?.has_tiers ? null : e.price_cents && e.my_rsvp !== "yes" ? (e.capacity && e.attendee_count >= e.capacity ? <Chip>Sold out</Chip> : <Button onClick={buy} data-testid="buy-ticket">Buy ticket · ${(e.price_cents / 100).toFixed(2)}</Button>) : e.source === "luma" && e.url && e.my_rsvp !== "yes" ? <a className="btn-primary" href={e.url} target="_blank" rel="noreferrer" data-testid="luma-register">Register on Luma</a> : <RsvpButtons value={e.my_rsvp} onChange={rsvp} />}
         <span className="text-sm text-muted">{e.attendee_count}{e.capacity ? ` / ${e.capacity}` : ""} going{e.maybe_count ? ` · ${e.maybe_count} maybe` : ""}</span>
