@@ -4,7 +4,7 @@ import { Mail, Users } from "lucide-react";
 import { toast } from "sonner";
 import { api, errMsg, timeAgo } from "../lib/api";
 import { useAuth } from "../lib/auth";
-import { SUGGEST } from "../lib/profile";
+import { SUGGEST, ageFromBirthday, oldestISO, todayISO } from "../lib/profile";
 import crowd from "../assets/crowd.jpg";
 import { Avatar, AvatarUpload, Button, Field, Input, Modal, PhotoGallery, PoweredBy, Select, Spinner, TagInput, Textarea, Wordmark, cx } from "../components/ui";
 import HubPeople from "../components/HubPeople";
@@ -147,10 +147,9 @@ function AccountProfileForm({ f, setF, photo, setPhoto }) {
   return (
     <div className="space-y-4">
       <AvatarUpload photo={photo} onChange={setPhoto} name={f.name} testId="account-profile-photo-upload" />
-      <div className="grid gap-4 sm:grid-cols-[1fr_7rem]">
-        <Field label="Name"><Input data-testid="account-profile-name" value={f.name} onChange={set("name")} required minLength={2} maxLength={120} /></Field>
-        <Field label="Age"><Input data-testid="account-profile-age" type="number" min={13} max={120} value={f.age} onChange={set("age")} placeholder="e.g. 29" /></Field>
-      </div>
+      <Field label="Name"><Input data-testid="account-profile-name" value={f.name} onChange={set("name")} required minLength={2} maxLength={120} /></Field>
+      <Field label="Birthday"><Input data-testid="account-profile-birthday" type="date" min={oldestISO()} max={todayISO()} value={f.birthday} onChange={set("birthday")} /></Field>
+      <p className="-mt-2 text-xs text-muted">{ageFromBirthday(f.birthday) !== null ? `You're ${ageFromBirthday(f.birthday)}. ` : ""}Your age is worked out from this and updates on its own. Other members see your age, never your birthday.</p>
       <Field label="What do you do?"><Input value={f.title} onChange={set("title")} placeholder="e.g. Physiotherapist, teacher, chef" maxLength={120} /></Field>
       <Field label="Employer or school"><Input value={f.company} onChange={set("company")} maxLength={120} /></Field>
       <Field label="Neighbourhood or city"><Input value={f.location} onChange={set("location")} maxLength={120} /></Field>
@@ -173,7 +172,7 @@ function AccountProfileForm({ f, setF, photo, setPhoto }) {
   );
 }
 
-const BLANK_PROFILE = { name: "", age: "", title: "", company: "", location: "", bio: "", skill_set: [], interests_hobbies: [], goals: [], support_needs: [],
+const BLANK_PROFILE = { name: "", birthday: "", title: "", company: "", location: "", bio: "", skill_set: [], interests_hobbies: [], goals: [], support_needs: [],
   photos: [], contact: { phone: "", linkedin: "", instagram: "", website: "" } };
 
 // The "Messages centre" from the Hub page: one merged inbox across every community you've joined
@@ -293,7 +292,7 @@ export default function Hub() {
   if (!account) return <Navigate to="/login" replace />;
 
   const openProfileEditor = () => {
-    setPf({ name: account.name || "", age: account.age || "", title: account.title || "", company: account.company || "", location: account.location || "", bio: account.bio || "",
+    setPf({ name: account.name || "", birthday: account.birthday || "", title: account.title || "", company: account.company || "", location: account.location || "", bio: account.bio || "",
             skill_set: account.skill_set || [], interests_hobbies: account.interests_hobbies || [], goals: account.goals || [], support_needs: account.support_needs || [],
             photos: account.photos || [], contact: { phone: "", linkedin: "", instagram: "", website: "", ...(account.contact || {}) } });
     setPPhoto(account.avatar_url || "");
@@ -302,7 +301,10 @@ export default function Hub() {
   const saveProfile = async () => {
     if (pf.name.trim().length < 2) return toast.error("Enter your name.");
     setPBusy(true);
-    try { await api.patch("/hub/profile", { ...pf, age: pf.age ? parseInt(pf.age, 10) : null, avatar_url: pPhoto || null }); await refresh(); toast.success("Profile saved"); setEditingProfile(false); }
+    const yrs = ageFromBirthday(pf.birthday);
+    if (pf.birthday && (yrs === null || yrs > 120)) return toast.error("Check the year of your birthday.");
+    if (pf.birthday && yrs < 13) return toast.error("You need to be at least 13 to use Pathwai.");
+    try { await api.patch("/hub/profile", { ...pf, avatar_url: pPhoto || null }); await refresh(); toast.success("Profile saved"); setEditingProfile(false); }
     catch (e) { toast.error(errMsg(e)); } finally { setPBusy(false); }
   };
 

@@ -4,7 +4,7 @@ import { api, errMsg, timeAgo } from "../lib/api";
 import { useAuth } from "../lib/auth";
 import { Link } from "react-router-dom";
 import { AvatarUpload, Button, Card, Field, Input, PageHeader, ProgressBar, SectionCard, Select, Spinner, StatusBadge, TagInput, Textarea } from "../components/ui";
-import { fieldLabel, SUGGEST } from "../lib/profile";
+import { fieldLabel, fieldOn, prettyDate, SUGGEST, oldestISO, todayISO } from "../lib/profile";
 
 const ARR = ["expertise", "services_offered", "topics_can_advise_on", "needs_seeking", "interests_hobbies"];
 const STR = ["name", "title", "company", "location", "bio", "venture_tagline", "startup_name", "startup_one_liner"];
@@ -38,7 +38,7 @@ function RequestCard({ r, onDone }) {
 }
 
 const sections = (cfg) => [
-  ["About you", [["name", "Name"], ["age", fieldLabel(cfg, "age"), "number"], ["height", fieldLabel(cfg, "height"), "text", "5'10\" or 178 cm"], ["title", fieldLabel(cfg, "title")], ["company", "Employer or school"], ["location", "Neighbourhood"], ["bio", "About you", "longtext"]]],
+  ["About you", [["name", "Name"], ...(fieldOn(cfg, "age") ? [["birthday", "Birthday", "date", "Others see your age, not this date"]] : []), ["height", fieldLabel(cfg, "height"), "text", "5'10\" or 178 cm"], ["title", fieldLabel(cfg, "title")], ["company", "Employer or school"], ["location", "Neighbourhood"], ["bio", "About you", "longtext"]]],
   ["Skills & interests", [["skill_set", fieldLabel(cfg, "skill_set"), "tags"], ["interests_hobbies", fieldLabel(cfg, "interests_hobbies"), "tags"]]],
   ["Goals & support", [["goals", fieldLabel(cfg, "goals"), "tags"], ["support_needs", fieldLabel(cfg, "support_needs"), "tags"]]],
 ];
@@ -49,6 +49,7 @@ function Value({ v, type }) {
   // Short fields (name, email, a URL…) sit in a 2-up grid on mobile now, so they need to truncate
   // instead of overflowing into the next column — longtext (bio) is the one type that still needs
   // to wrap and show in full.
+  if (type === "date") return <span className="block truncate text-sm">{prettyDate(v)}</span>;
   return type === "longtext" ? <span className="whitespace-pre-wrap text-sm">{v}</span> : <span className="block truncate text-sm">{v}</span>;
 }
 
@@ -68,7 +69,7 @@ function Section({ title, fields, data, onSaved }) {
                 {type === "longtext" ? <Textarea value={vals[k] || ""} onChange={(e) => setVals({ ...vals, [k]: e.target.value })} />
                   : type === "tags" ? <TagInput value={Array.isArray(vals[k]) ? vals[k] : []} suggestions={SUGGEST[k]} onChange={(v) => setVals({ ...vals, [k]: v })} />
                   : type === "level" ? <Select value={vals[k] || ""} onChange={(e) => setVals({ ...vals, [k]: e.target.value })} options={[{ value: "", label: "Choose…" }, ...LEVELS]} />
-                  : <Input data-testid={`profile-${k}`} type={type === "number" ? "number" : type === "url" ? "url" : "text"} placeholder={ph} value={vals[k] ?? ""} onChange={(e) => setVals({ ...vals, [k]: e.target.value })} />}
+                  : <Input data-testid={`profile-${k}`} type={type === "number" ? "number" : type === "url" ? "url" : type === "date" ? "date" : "text"} placeholder={ph} {...(type === "date" ? { min: oldestISO(), max: todayISO() } : {})} value={vals[k] ?? ""} onChange={(e) => setVals({ ...vals, [k]: e.target.value })} />}
               </Field>
             ) : (<><p className="label truncate">{label}</p><Value v={data[k]} type={type} /></>)}
           </div>))}

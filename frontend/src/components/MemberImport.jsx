@@ -9,10 +9,10 @@ import { Button, Card, Chip, Textarea } from "./ui";
 // backend/routes/member_import.py for the rules.
 
 const TEMPLATE = [
-  ["name", "email", "phone", "title", "company", "location", "bio", "linkedin", "instagram", "website", "skills", "interests", "goals"],
-  ["Ada Okafor", "ada@example.com", "+1 416 555 0101", "Founder", "Okafor Labs", "Toronto", "Building tools for small shops", "https://linkedin.com/in/ada", "@ada", "https://okaforlabs.com", "Product; Fundraising", "Running; Jazz", "Find a CTO"],
-  ["Marcus Bell", "marcus@example.com", "", "", "", "Mississauga", "", "", "", "", "", "", ""],
-  ["", "sam.lee@example.com", "", "", "", "", "", "", "", "", "", "", ""],
+  ["name", "email", "phone", "birthday", "title", "company", "location", "bio", "linkedin", "instagram", "website", "skills", "interests", "goals"],
+  ["Ada Okafor", "ada@example.com", "+1 416 555 0101", "1990-04-23", "Founder", "Okafor Labs", "Toronto", "Building tools for small shops", "https://linkedin.com/in/ada", "@ada", "https://okaforlabs.com", "Product; Fundraising", "Running; Jazz", "Find a CTO"],
+  ["Marcus Bell", "marcus@example.com", "", "", "", "", "Mississauga", "", "", "", "", "", "", ""],
+  ["", "sam.lee@example.com", "", "", "", "", "", "", "", "", "", "", "", ""],
 ];
 const toCsv = (rows) => rows.map((r) => r.map((c) => (/[",\n]/.test(c) ? `"${String(c).replace(/"/g, '""')}"` : c)).join(",")).join("\n");
 
@@ -99,7 +99,7 @@ export default function MemberImport({ onDone }) {
                   <summary className="cursor-pointer text-muted">Or paste rows from a spreadsheet</summary>
                   <Textarea rows={6} className="mt-2 font-mono text-xs" placeholder={"name,email\nAda Okafor,ada@example.com"} value={text} onChange={(e) => { setText(e.target.value); setFileName(""); }} data-testid="member-import-text" />
                 </details>
-                <p className="text-xs text-muted">Columns it understands: name (or first and last name), email, phone, title, company, location, bio, tagline, linkedin, instagram, website, skills, interests, goals. Other columns are ignored. Up to 1,000 people per file.</p>
+                <p className="text-xs text-muted">Columns it understands: name (or first and last name), email, phone, birthday (like 1990-04-23; age is worked out from it), title, company, location, bio, tagline, linkedin, instagram, website, skills, interests, goals. Other columns are ignored. Up to 1,000 people per file.</p>
                 <div className="flex justify-end"><Button onClick={check} loading={busy} disabled={!text.trim()} data-testid="member-import-preview">Preview</Button></div>
               </div>)}
 

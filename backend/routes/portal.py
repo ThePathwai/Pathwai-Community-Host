@@ -11,6 +11,7 @@ from typing import Any, Dict, List, Optional
 from fastapi import APIRouter, Depends, HTTPException, Request, Response
 from pydantic import BaseModel
 
+from birthday import BirthdayError, age_from, clean_birthday
 from auth import check_password_strength, client_ip, create_access_token, create_refresh_token, get_current_user, hash_password, require_role, set_auth_cookies, verify_password
 from directory import revoke_sessions_for_email
 from database import db
@@ -23,12 +24,12 @@ router = APIRouter(tags=["portal"])
 
 # --------------------------------------------------------------------------- profile sections
 PROFILE_SECTIONS: Dict[str, List[str]] = {
-    "About you": ["name", "avatar_url", "title", "location", "bio"],
+    "About you": ["name", "avatar_url", "birthday", "title", "location", "bio"],
     "Skills & interests": ["skill_set", "interests_hobbies"],
     "Goals & support": ["goals", "support_needs"],
 }
 FIELD_LABELS = {
-    "name": "Name", "avatar_url": "Photo", "age": "Age", "height": "Height", "title": "Profession", "location": "Neighbourhood / city",
+    "name": "Name", "avatar_url": "Photo", "age": "Age", "birthday": "Birthday", "height": "Height", "title": "Profession", "location": "Neighbourhood / city",
     "bio": "Bio", "industry": "Main sport", "stage": "Level", "position": "Position / role", "cohort": "Division / team",
     "skill_set": "Skills", "interests_hobbies": "Interests", "goals": "Goals", "support_needs": "Support needed",
     "phone": "Phone number", "booking_link": "Booking link", "company": "Employer", "expertise": "Strengths",
@@ -76,12 +77,20 @@ def _apply_profile_fields(values: Dict[str, Any]) -> Dict[str, Any]:
                 continue
             if len(v) > 400_000:
                 raise HTTPException(status_code=400, detail="That photo is too large")
+        elif k == "birthday":
+            try:
+                v = clean_birthday(v)
+            except BirthdayError as e:
+                raise HTTPException(status_code=400, detail=str(e))
+            out["age"] = age_from(v)  # age always follows the birthday (a cleared birthday clears it)
         elif k == "age":
             try:
                 v = int(v) if str(v).strip() else None
             except (TypeError, ValueError):
                 continue
             if v is not None and not 5 <= v <= 110:
+                continue
+            if "birthday" in values:  # the birthday decides the age
                 continue
         elif isinstance(v, str):
             v = v.strip()

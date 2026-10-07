@@ -935,6 +935,10 @@ function write(method, path, body, config) {
   if (path === "/hub/profile" && method === "patch") {
     if (!S.role || !S.email) return fail(config, 401, "Not authenticated");
     const prof = { ...((S.extra.acctProfile || {})[S.email] || {}), ...body, profile_completed: true };
+    if ("birthday" in body) { // mirrors routes/hub.py: age follows the birthday
+      const b = /^(\d{4})-(\d{2})-(\d{2})/.exec(body.birthday || ""); const t = new Date();
+      prof.age = b ? t.getFullYear() - +b[1] - ((t.getMonth() + 1 < +b[2] || (t.getMonth() + 1 === +b[2] && t.getDate() < +b[3])) ? 1 : 0) : null;
+    }
     if (prof.photos) prof.photos = prof.photos.filter(Boolean).slice(0, 9); // mirrors routes/hub.py's MAX_PROFILE_PHOTOS
     (S.extra.acctProfile = S.extra.acctProfile || {})[S.email] = prof;
     return ok(config, { ok: true, account: { id: "acct-" + S.email, name: (ACCOUNTS[S.email] || (S.extra.accounts || {})[S.email] || {}).name, email: S.email, ...prof } });

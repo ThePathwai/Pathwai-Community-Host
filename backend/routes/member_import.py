@@ -33,6 +33,7 @@ from pydantic import BaseModel, Field
 import emailer
 from auth import create_reset_token, rate_limit, require_role
 from database import COMMUNITY_SLUGS, current_community, db, dbfor, hub_db
+from birthday import BirthdayError, age_from, clean_birthday
 from directory import record_membership
 from ._common import audit, now_iso, return_base_url
 
@@ -57,6 +58,7 @@ ALIASES: Dict[str, List[str]] = {
     "location": ["location", "city", "city province", "city state", "region", "address", "town", "country"],
     "bio": ["bio", "about", "about me", "description", "summary", "notes", "introduction"],
     "tagline": ["tagline", "one liner", "slogan"],
+    "birthday": ["birthday", "birth day", "birthdate", "birth date", "date of birth", "dob", "born", "bday", "b day"],
     "linkedin": ["linkedin", "linkedin url", "linkedin profile", "linked in"],
     "instagram": ["instagram", "instagram handle", "ig", "insta"],
     "website": ["website", "web site", "url", "site", "portfolio", "link"],
@@ -65,7 +67,7 @@ ALIASES: Dict[str, List[str]] = {
     "goals": ["goals", "looking for", "seeking", "needs", "support needs", "wants"],
 }
 _LOOKUP = {a: field for field, names in ALIASES.items() for a in names}
-TEMPLATE_HEADER = ["name", "email", "phone", "title", "company", "location", "bio", "linkedin", "instagram", "website", "skills", "interests", "goals"]
+TEMPLATE_HEADER = ["name", "email", "phone", "birthday", "title", "company", "location", "bio", "linkedin", "instagram", "website", "skills", "interests", "goals"]
 
 
 def _norm_header(h: str) -> str:
@@ -173,7 +175,14 @@ def build_profile(row: Dict[str, Any]):
             notes.append("no email: they can't sign in until you add one")
     phone = (row.get("phone") or "")[:40]
     contact = {"phone": phone, "linkedin": _clean_url(row.get("linkedin", "")), "instagram": _handle(row.get("instagram", "")), "website": _clean_url(row.get("website", ""))}
+    birthday = None
+    if (row.get("birthday") or "").strip():
+        try:
+            birthday = clean_birthday(row.get("birthday"))
+        except BirthdayError as e:
+            notes.append(f"birthday “{row.get('birthday')[:30]}” skipped: {e}")
     fields = {
+        "birthday": birthday, "age": age_from(birthday),
         "title": (row.get("title") or "")[:120], "company": (row.get("company") or "")[:120], "location": (row.get("location") or "")[:120],
         "bio": (row.get("bio") or "")[:1000], "tagline": (row.get("tagline") or "")[:160],
         "skill_set": _split_list(row.get("skills", "")), "interests_hobbies": _split_list(row.get("interests", "")), "goals": _split_list(row.get("goals", "")),
@@ -193,10 +202,10 @@ class ImportIn(BaseModel):
 @router.get("/admin/members/import/template")
 async def template(_: dict = Depends(require_role("admin"))):
     sample = [
-        ["Ada Okafor", "ada@example.com", "+1 416 555 0101", "Founder", "Okafor Labs", "Toronto", "Building tools for small shops", "https://linkedin.com/in/ada", "@ada", "https://okaforlabs.com", "Product; Fundraising", "Running; Jazz", "Find a CTO"],
-        ["Marcus Bell", "marcus@example.com", "", "", "", "Mississauga", "", "", "", "", "", "", ""],
-        ["", "sam.lee@example.com", "", "", "", "", "", "", "", "", "", "", ""],
-        ["Priya N.", "", "", "Designer", "", "", "", "", "", "", "", "", ""],
+        ["Ada Okafor", "ada@example.com", "+1 416 555 0101", "1990-04-23", "Founder", "Okafor Labs", "Toronto", "Building tools for small shops", "https://linkedin.com/in/ada", "@ada", "https://okaforlabs.com", "Product; Fundraising", "Running; Jazz", "Find a CTO"],
+        ["Marcus Bell", "marcus@example.com", "", "", "", "", "Mississauga", "", "", "", "", "", "", ""],
+        ["", "sam.lee@example.com", "", "", "", "", "", "", "", "", "", "", "", ""],
+        ["Priya N.", "", "", "", "Designer", "", "", "", "", "", "", "", "", ""],
     ]
     return {"header": TEMPLATE_HEADER, "rows": sample, "tip": "Only one of name or email is needed. Leave anything you don't have blank."}
 
@@ -263,7 +272,7 @@ async def import_members(body: ImportIn, request: Request, me: dict = Depends(re
         doc = {
             "id": uid, "name": name, "email": email or _placeholder(uid), "password_hash": pw, "role": "member", "member_type": "founder",
             "tagline": fields["tagline"], "bio": fields["bio"], "title": fields["title"], "company": fields["company"], "location": fields["location"],
-            "age": None, "avatar_url": "", "cover_url": "", "expertise": [], "skill_set": fields["skill_set"], "focus_areas": [], "open_to": [],
+            "age": fields["age"], "birthday": fields["birthday"], "avatar_url": "", "cover_url": "", "expertise": [], "skill_set": fields["skill_set"], "focus_areas": [], "open_to": [],
             "services_offered": [], "topics_can_advise_on": [], "interests_hobbies": fields["interests_hobbies"], "goals": fields["goals"],
             "support_needs": [], "needs_seeking": [], "custom_fields": {}, "contact": contact, "contact_visibility": "members",
             "hidden_from_directory": False, "membership_status": "approved", "membership_decided_at": stamp, "membership_decided_by_name": me.get("name"),

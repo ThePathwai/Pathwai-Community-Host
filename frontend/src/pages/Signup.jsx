@@ -4,7 +4,7 @@ import { api, errMsg } from "../lib/api";
 import { useAuth } from "../lib/auth";
 import { applyBrand } from "../lib/theme";
 import { AvatarUpload, Button, Card, Field, Input, MembershipStatusCard, Select, TagInput, Textarea, TermsConsent, Wordmark, cx } from "../components/ui";
-import { SUGGEST } from "../lib/profile";
+import { SUGGEST, ageFromBirthday, oldestISO, todayISO } from "../lib/profile";
 import SocialAuthButtons from "../components/SocialAuthButtons";
 
 const INTENTS = [
@@ -37,7 +37,7 @@ function IntentPicker({ onPick }) {
 // same standard questions (occupation, bio, skills, interests) fresh for each community.
 function BuildProfileStep({ account, onDone, joinInfo }) {
   const [f, setF] = useState({
-    name: account?.name || "", age: "", title: "", company: "", location: "", bio: "", skill_set: [], interests_hobbies: [], goals: [], support_needs: [],
+    name: account?.name || "", birthday: "", title: "", company: "", location: "", bio: "", skill_set: [], interests_hobbies: [], goals: [], support_needs: [],
     contact: { phone: "", linkedin: "", instagram: "", website: "" },
   });
   const [photo, setPhoto] = useState(account?.avatar_url || "");
@@ -47,8 +47,12 @@ function BuildProfileStep({ account, onDone, joinInfo }) {
   const setContact = (k) => (e) => setF({ ...f, contact: { ...f.contact, [k]: e.target.value } });
   const save = async () => {
     if (f.name.trim().length < 2) return setErr("Enter your name.");
+    if (!f.birthday) return setErr("Enter your birthday.");
+    const yrs = ageFromBirthday(f.birthday);
+    if (yrs === null || yrs > 120) return setErr("Check the year of your birthday.");
+    if (yrs < 13) return setErr("You need to be at least 13 to use Pathwai.");
     setBusy(true); setErr("");
-    try { await api.patch("/hub/profile", { ...f, age: f.age ? parseInt(f.age, 10) : null, avatar_url: photo || null }); onDone(); }
+    try { await api.patch("/hub/profile", { ...f, avatar_url: photo || null }); onDone(); }
     catch (ex) { setErr(errMsg(ex)); } finally { setBusy(false); }
   };
   return (
@@ -59,10 +63,9 @@ function BuildProfileStep({ account, onDone, joinInfo }) {
       <Card>
         <div className="space-y-4">
           <AvatarUpload photo={photo} onChange={setPhoto} name={f.name} testId="profile-photo-upload" />
-          <div className="grid gap-4 sm:grid-cols-[1fr_7rem]">
-            <Field label="Name"><Input data-testid="profile-name" value={f.name} onChange={set("name")} required minLength={2} maxLength={120} /></Field>
-            <Field label="Age"><Input data-testid="profile-age" type="number" min={13} max={120} value={f.age} onChange={set("age")} placeholder="e.g. 29" /></Field>
-          </div>
+          <Field label="Name"><Input data-testid="profile-name" value={f.name} onChange={set("name")} required minLength={2} maxLength={120} /></Field>
+          <Field label="Birthday *"><Input data-testid="profile-birthday" type="date" min={oldestISO()} max={todayISO()} value={f.birthday} onChange={set("birthday")} required /></Field>
+          <p className="-mt-2 text-xs text-muted">Your age is worked out from this and keeps updating on its own. Other members see your age, never your birthday.</p>
           <Field label="What do you do?"><Input data-testid="profile-title" value={f.title} onChange={set("title")} placeholder="e.g. Physiotherapist, teacher, chef" maxLength={120} /></Field>
           <Field label="Employer or school"><Input data-testid="profile-company" value={f.company} onChange={set("company")} maxLength={120} /></Field>
           <Field label="Neighbourhood or city"><Input data-testid="profile-location" value={f.location} onChange={set("location")} maxLength={120} /></Field>
@@ -81,8 +84,7 @@ function BuildProfileStep({ account, onDone, joinInfo }) {
             </div>
           </div>
           {err && <p className="text-sm text-red-400" data-testid="profile-error">{err}</p>}
-          <div className="flex items-center justify-between gap-3 pt-1">
-            <button type="button" className="text-xs font-medium text-muted underline" onClick={onDone} data-testid="profile-skip">Skip for now</button>
+          <div className="flex items-center justify-end gap-3 pt-1">
             <Button onClick={save} loading={busy} data-testid="profile-submit">Save and continue</Button>
           </div>
         </div>

@@ -119,7 +119,7 @@ def audience_ok(doc: Dict[str, Any], me: Optional[Dict[str, Any]]) -> bool:
     return member_type(me) in aud
 
 
-PRIVATE_FIELDS = ("email", "phone", "settings", "admin_notes", "mentor_ids", "hidden_from_directory", "saved_by")
+PRIVATE_FIELDS = ("email", "phone", "birthday", "settings", "admin_notes", "mentor_ids", "hidden_from_directory", "saved_by")
 SENSITIVE_FOR_OUTSIDERS = ("traction", "revenue_funding_status")
 
 

@@ -23,6 +23,7 @@ from database import COMMUNITY_SLUGS, current_community, db, dbfor, demo_mode, h
 from directory import find_all_for_email, find_by_id, list_all_people, person_by_email, reindex_email
 from .community_config import DEFAULT_CONFIG, THEME_PRESETS
 from .messages import _preview, _thread_out
+from birthday import BirthdayError, age_from, clean_birthday
 from ._common import TERMS_REQUIRED_MSG, audit, audit_platform, terms_stamp
 
 router = APIRouter(tags=["hub"])
@@ -207,6 +208,7 @@ class ContactIn(BaseModel):
 class AccountProfileIn(BaseModel):
     name: Optional[str] = Field(default=None, min_length=2, max_length=120)
     age: Optional[int] = Field(default=None, ge=13, le=120)
+    birthday: Optional[str] = Field(default=None, max_length=40)  # age is worked out from this
     avatar_url: Optional[str] = None
     title: Optional[str] = Field(default="", max_length=120)
     company: Optional[str] = Field(default="", max_length=120)
@@ -266,6 +268,12 @@ async def hub_update_profile(body: AccountProfileIn, acc: dict = Depends(require
     for k in ("title", "company", "location", "bio"):
         if k in values:
             values[k] = values[k].strip()
+    if "birthday" in values:
+        try:
+            values["birthday"] = clean_birthday(values["birthday"])
+        except BirthdayError as e:
+            raise HTTPException(status_code=400, detail=str(e))
+        values["age"] = age_from(values["birthday"])  # a cleared birthday clears the age too
     if "photos" in values:
         values["photos"] = [p for p in values["photos"] if p][:MAX_PROFILE_PHOTOS]
     values["profile_completed"] = True
@@ -329,7 +337,7 @@ async def create_community(body: CreateCommunityIn, request: Request, response: 
     contact = {"email": acc["email"], **{k: v for k, v in (src.get("contact") or {}).items() if v}}
     await d.users.insert_one({
         "id": acc["id"], "name": acc["name"], "email": acc["email"], "password_hash": src.get("password_hash"), "role": "admin", "member_type": "founder",
-        "tagline": "", "bio": src.get("bio") or "", "title": "Founder", "company": name, "location": src.get("location") or "", "age": src.get("age"),
+        "tagline": "", "bio": src.get("bio") or "", "title": "Founder", "company": name, "location": src.get("location") or "", "age": age_from(src.get("birthday")) or src.get("age"), "birthday": src.get("birthday"),
         "avatar_url": acc.get("avatar_url") or "", "cover_url": "",
         "expertise": [], "skill_set": list(src.get("skill_set") or []), "focus_areas": [], "open_to": [], "services_offered": [], "topics_can_advise_on": [],
         "interests_hobbies": list(src.get("interests_hobbies") or []), "goals": list(src.get("goals") or []), "support_needs": list(src.get("support_needs") or []),
@@ -748,7 +756,7 @@ async def _apply_to_community(slug: str, acc: Dict[str, Any], title: str = "", m
     doc = {
         "id": acc["id"], "name": acc["name"], "email": acc["email"], "password_hash": src.get("password_hash"), "role": "member", "member_type": "founder",
         "tagline": "", "bio": src.get("bio") or "", "title": (title or "").strip() or src.get("title") or "", "company": src.get("company") or "",
-        "location": src.get("location") or "", "age": src.get("age"), "avatar_url": acc.get("avatar_url") or "", "cover_url": "",
+        "location": src.get("location") or "", "age": age_from(src.get("birthday")) or src.get("age"), "birthday": src.get("birthday"), "avatar_url": acc.get("avatar_url") or "", "cover_url": "",
         "expertise": [], "skill_set": list(src.get("skill_set") or []), "focus_areas": [], "open_to": [], "services_offered": [], "topics_can_advise_on": [],
         "interests_hobbies": list(src.get("interests_hobbies") or []), "goals": list(src.get("goals") or []),
         "support_needs": list(src.get("support_needs") or []), "needs_seeking": [], "custom_fields": {}, "contact": contact, "contact_visibility": "members",

@@ -4,6 +4,16 @@ export const DEFAULT_FIELDS = [
   { key: "skill_set", label: "Skills", enabled: true }, { key: "interests_hobbies", label: "Interests", enabled: true },
   { key: "goals", label: "Goals", enabled: true }, { key: "support_needs", label: "Support needed", enabled: true },
 ];
+// Birthdays are what we store; age is worked out from them (the server also refreshes it daily).
+export const todayISO = () => new Date().toISOString().slice(0, 10);
+export const oldestISO = () => `${new Date().getFullYear() - 120}-01-01`;
+export const ageFromBirthday = (b) => {
+  const m = /^(\d{4})-(\d{2})-(\d{2})/.exec(b || ""); if (!m) return null;
+  const t = new Date(); let a = t.getFullYear() - +m[1];
+  if (t.getMonth() + 1 < +m[2] || (t.getMonth() + 1 === +m[2] && t.getDate() < +m[3])) a -= 1;
+  return a >= 0 ? a : null;
+};
+export const prettyDate = (b) => { const d = new Date(`${b}T12:00:00`); return isNaN(d) ? b : d.toLocaleDateString(undefined, { year: "numeric", month: "long", day: "numeric" }); };
 export const profileFields = (config) => (config?.profile?.fields?.length ? config.profile.fields : DEFAULT_FIELDS);
 export const fieldLabel = (config, key) => profileFields(config).find((f) => f.key === key)?.label || DEFAULT_FIELDS.find((f) => f.key === key)?.label || key;
 export const fieldOn = (config, key) => profileFields(config).find((f) => f.key === key)?.enabled !== false;

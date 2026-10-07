@@ -7,6 +7,7 @@ except ImportError:  # private package unavailable -> local stand-in
 from fastapi import FastAPI, APIRouter, HTTPException, Query, Depends, Request, Response
 from dotenv import load_dotenv
 from starlette.middleware.cors import CORSMiddleware
+import asyncio
 import os
 import re
 import logging
@@ -96,6 +97,7 @@ from routes.account import router as account_router  # noqa: E402
 from routes.live import router as live_router  # noqa: E402
 from routes.calendar_feed import router as calendar_router  # noqa: E402
 from routes.form_hooks import router as form_hooks_router  # noqa: E402
+from birthday import BirthdayError, age_from, age_loop, clean_birthday  # noqa: E402
 from routes.member_import import router as member_import_router  # noqa: E402
 from routes.push import router as push_router, ensure_indexes as ensure_push_indexes  # noqa: E402
 from routes.hub import router as hub_router, records_for, set_community_cookie, ensure_hub_social_indexes  # noqa: E402
@@ -244,9 +246,14 @@ def validate_production_config() -> None:
         logger.warning("FRONTEND_URL is not set: password-reset links will point at localhost.")
 
 
+_BACKGROUND: list = []
+
+
 @app.on_event("startup")
 async def on_startup():
     validate_production_config()
+    # Ages are worked out from birthdays and ticked over daily; see birthday.py.
+    _BACKGROUND.append(asyncio.create_task(age_loop()))
     # Self-serve communities created via POST /hub/communities (see routes/hub.py) are registered
     # into COMMUNITY_SLUGS in-process at creation time; reload them here too so a restarted worker
     # still recognizes them instead of 404-ing every request into that community.
@@ -560,6 +567,7 @@ class UserUpdate(BaseModel):
     # ---- Unified Pathwai profile (Layer 3): fields the user carries to every community they apply to
     business_industry_focus: Optional[str] = None
     age: Optional[int] = None
+    birthday: Optional[str] = None
     height: Optional[str] = None
     position: Optional[str] = None
     stage: Optional[str] = None
@@ -1559,6 +1567,15 @@ async def update_user(user_id: str, body: UserUpdate, request: Request, me: dict
                 merged_custom[k] = v
         update_set["custom_fields"] = merged_custom
         patch.pop("custom_fields")
+    if patch.get("birthday") is not None:
+        try:
+            update_set["birthday"] = clean_birthday(patch.pop("birthday"))
+        except BirthdayError as e:
+            raise HTTPException(status_code=400, detail=str(e))
+        update_set["age"] = age_from(update_set["birthday"])  # age follows the birthday
+        patch.pop("age", None)
+    else:
+        patch.pop("birthday", None)
     for k, v in patch.items():
         if v is None:
             continue
