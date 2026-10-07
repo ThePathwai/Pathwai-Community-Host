@@ -321,18 +321,22 @@ export const Modal = ({ open, onClose, title, children }) =>
 export const TagInput = ({ value = [], onChange, placeholder, suggestions = [] }) => {
   const [t, setT] = React.useState("");
   const add = () => { const v = t.trim(); if (v && !value.includes(v)) onChange([...value, v]); setT(""); };
+  // Every TagInput sits inside a <Field>, which is a <label>. A click on a button inside a label is
+  // forwarded by the browser to the label's FIRST button, so tapping a "Quick add" suggestion added the
+  // tag and then immediately "clicked" the new tag's × and removed it again. Cancelling the click's
+  // default action here stops that forwarding (typing + Enter was never affected).
   return (
-    <div>
+    <div onClick={(e) => e.preventDefault()}>
       <div className="mb-2 flex flex-wrap gap-1">
         {value.map((v) => (
-          <Chip key={v}>{v}<button className="ml-1 text-muted" onClick={() => onChange(value.filter((x) => x !== v))}>×</button></Chip>
+          <Chip key={v}>{v}<button type="button" aria-label={`Remove ${v}`} className="ml-1 text-muted" onClick={() => onChange(value.filter((x) => x !== v))}>×</button></Chip>
         ))}
       </div>
       <input className="input" value={t} placeholder={placeholder || "Type and press Enter"} onChange={(e) => setT(e.target.value)}
         onKeyDown={(e) => { if (e.key === "Enter" || e.key === ",") { e.preventDefault(); add(); } }} onBlur={add} />
       {suggestions.filter((x) => !value.includes(x)).length > 0 && (
         <div className="mt-2 flex flex-wrap gap-1"><span className="eyebrow mr-1 self-center">Quick add</span>
-          {suggestions.filter((x) => !value.includes(x)).slice(0, 8).map((x) => <button type="button" key={x} className="chip hover:border-accent" onMouseDown={(e) => e.preventDefault()} onClick={() => onChange([...value, x])}>+ {x}</button>)}
+          {suggestions.filter((x) => !value.includes(x)).slice(0, 20).map((x) => <button type="button" key={x} className="chip hover:border-accent" onMouseDown={(e) => e.preventDefault()} onClick={() => onChange([...value, x])}>+ {x}</button>)}
         </div>)}
     </div>
   );
