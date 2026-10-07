@@ -21,6 +21,7 @@ from pydantic import BaseModel, Field
 from auth import client_ip, rate_limit, require_role
 from database import current_community, db
 from ._common import audit, public_base_url
+from .portal import normalize_link
 
 router = APIRouter(tags=["google-forms"])
 KEY = "google_forms"
@@ -106,7 +107,7 @@ async def form_submitted(secret: str, body: HookIn, request: Request):
     open_reqs = [r async for r in db.member_requests.find({"user_id": u["id"], "status": {"$in": ["not_started", "in_progress"]}, "external_url": {"$nin": [None, ""]}}).sort("created_at", -1)]
     cands = [r for r in open_reqs if _is_google(r)]
     want = _norm(body.form_url)
-    hit = next((r for r in cands if want and _norm(r["external_url"]) == want), None)
+    hit = next((r for r in cands if want and _norm(normalize_link(r["external_url"])) == want), None)
     if not hit and len(cands) == 1:
         hit = cands[0]  # one open Google Form for this person: it can only be that one (covers forms.gle short links)
     if not hit:

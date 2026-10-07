@@ -22,7 +22,9 @@ function RequestModal({ id, onClose, onChanged }) {
   const done = r.status === "submitted" || closed;
   const submit = async () => { setBusy(true); try { await api.post(`/member-requests/${id}/submit`, { response: vals }); toast.success("Sent — your profile and the team's records are updated"); onChanged(); onClose(); } catch (e) { toast.error(errMsg(e)); } finally { setBusy(false); } };
   const draft = async () => { try { await api.post(`/member-requests/${id}/save`, { response: vals }); toast.success("Draft saved"); } catch (e) { toast.error(errMsg(e)); } };
-  const openExt = async () => { await api.post(`/member-requests/${id}/external-open`); window.open(r.external_url, "_blank", "noopener"); onChanged(); };
+  // A real link (not window.open after a network call, which phones and popup blockers refuse). The "opened" note is sent in the background.
+  const formUrl = /^[a-z][a-z0-9+.-]*:/i.test(r.external_url || "") ? r.external_url : `https://${(r.external_url || "").replace(/^\/+/, "")}`;
+  const openExt = () => { api.post(`/member-requests/${id}/external-open`).then(() => onChanged()).catch(() => {}); };
   const confirmExt = async () => { try { await api.post(`/member-requests/${id}/external-complete`); toast.success("Thanks — marked as complete"); onChanged(); onClose(); } catch (e) { toast.error(errMsg(e)); } };
   return (
     <Modal open onClose={onClose} title={r.title}>
@@ -32,8 +34,10 @@ function RequestModal({ id, onClose, onChanged }) {
       {r.external_url ? (
         <div className="space-y-3">
           <p className="text-sm text-muted">This one is a {r.external_provider || "external"} form. Open it, fill it in, then come back and confirm.</p>
-          <div className="flex flex-wrap gap-2"><Button onClick={openExt} variant="ghost"><ExternalLink className="h-4 w-4" />Open the form</Button>
+          <div className="flex flex-wrap items-center gap-2">
+            <a href={formUrl} target="_blank" rel="noopener noreferrer" onClick={openExt} className="btn-ghost inline-flex items-center gap-2" data-testid="external-open"><ExternalLink className="h-4 w-4" />Open the form</a>
             {!done && <Button onClick={confirmExt} data-testid="external-complete">I've completed it</Button>}</div>
+          <p className="break-all text-xs text-muted">Nothing opened? Copy this link into your browser: <a href={formUrl} target="_blank" rel="noopener noreferrer" className="underline">{formUrl}</a></p>
         </div>
       ) : (
         <div className="space-y-4">

@@ -251,8 +251,21 @@ def _effective(r: Dict[str, Any]) -> str:
     return st
 
 
+def normalize_link(u: Optional[str]) -> Optional[str]:
+    """Trim a pasted link and add https:// when it was pasted without one (docs.google.com/forms/...).
+    Anything that is not a web link (javascript:, mailto:, ...) comes back unchanged so callers can reject it."""
+    u = (u or "").strip()
+    if not u:
+        return None
+    if re.match(r"^[a-zA-Z][a-zA-Z0-9+.-]*:", u) and not re.match(r"^[^/\s]+\.[^/\s]+:\d+", u):
+        return u
+    return "https://" + u.lstrip("/")
+
+
 def _view(r: Dict[str, Any], admin: bool = False) -> Dict[str, Any]:
     r = clean(dict(r))
+    if r.get("external_url"):
+        r["external_url"] = normalize_link(r["external_url"])
     r["effective_status"] = _effective(r)
     r["kind_label"] = REQUEST_KINDS.get(r.get("kind"), {}).get("label", r.get("kind"))
     if not admin:
@@ -373,7 +386,7 @@ async def external_open(rid: str, me: dict = Depends(get_current_user)):
     r = await _own_request(rid, me)
     if r["status"] == "not_started":
         await db.member_requests.update_one({"id": rid}, {"$set": {"status": "in_progress", "opened_at": now_iso(), "updated_at": now_iso()}})
-    return {"ok": True, "url": r.get("external_url")}
+    return {"ok": True, "url": normalize_link(r.get("external_url"))}
 
 
 @router.post("/member-requests/{rid}/external-complete")
@@ -408,16 +421,17 @@ async def admin_create_requests(body: RequestCreate, me: dict = Depends(require_
         targets = [u for u in targets if member_type(u) == body.member_type]
     if not targets:
         raise HTTPException(status_code=400, detail="No members match that selection.")
-    if body.external_url and not re.match(r"^https?://\S+$", body.external_url.strip()):
-        raise HTTPException(status_code=400, detail="That form link should start with https://")
+    ext_url = normalize_link(body.external_url)
+    if ext_url and not re.match(r"^https?://[^\s/]+\.[^\s/]+\S*$", ext_url, re.I):
+        raise HTTPException(status_code=400, detail="That doesn't look like a web link. Paste the form's full link, e.g. https://forms.gle/...")
     meta = REQUEST_KINDS[body.kind]
     created = []
     for u in targets:
         doc = {"id": f"rq-{uuid.uuid4().hex[:10]}", "user_id": u["id"], "kind": body.kind,
                "title": body.title or meta["label"], "reason": body.reason, "due_date": body.due_date,
-               "fields": body.fields or ([] if body.external_url else meta["fields"]),
-               "external_url": body.external_url, "external_provider": body.external_provider,
-               "webhook_token": secrets.token_urlsafe(16) if body.external_url else None,
+               "fields": body.fields or ([] if ext_url else meta["fields"]),
+               "external_url": ext_url, "external_provider": body.external_provider,
+               "webhook_token": secrets.token_urlsafe(16) if ext_url else None,
                "status": "not_started", "created_by": me["id"], "created_by_name": me.get("name"),
                "created_at": now_iso(), "updated_at": now_iso()}
         await db.member_requests.insert_one(dict(doc))

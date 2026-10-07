@@ -80,6 +80,18 @@ def test_form_link_must_be_http(c):
     assert r.status_code == 400
 
 
+def test_form_link_without_https_is_fixed_up(c):
+    login(c, "admin@yourcommunity.app")
+    assert c.post("/api/admin/users", json={"name": "Bare Link", "email": "bare.link@example.com", "password": "Passw0rd-long-1"}).status_code == 201
+    uid = _request(c, "bare.link@example.com", "  docs.google.com/forms/d/e/1FAIpQLSCCC/viewform ", "Bare link survey")
+    login(c, "bare.link@example.com", "Passw0rd-long-1")
+    reqs = c.get("/api/me/requests").json()["requests"]
+    mine = next(r for r in reqs if r["title"] == "Bare link survey")
+    assert mine["external_url"] == "https://docs.google.com/forms/d/e/1FAIpQLSCCC/viewform"
+    out = c.post(f"/api/member-requests/{mine['id']}/external-open").json()
+    assert out["url"] == mine["external_url"]
+
+
 def test_google_form_submission_completes_the_matching_request(c):
     # fresh members, so this doesn't disturb the seeded demo member's requests used by other tests
     login(c, "admin@yourcommunity.app")
