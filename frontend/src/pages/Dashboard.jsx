@@ -10,6 +10,7 @@ import { PhotoCarousel } from "../components/PhotoCarousel";
 import { fieldLabel, fieldOn } from "../lib/profile";
 import { AI_CHAT_ENABLED } from "../lib/features";
 import { CalendarDays, Gift, ImagePlus, ListChecks, Megaphone, UserCheck2, UserPlus, Users } from "lucide-react";
+import { teamOf } from "../lib/names";
 
 // Below `lg` these become horizontally swipeable card rows instead of full vertical lists —
 // everything stays on one continuous scroll (nothing hidden behind a tab), it just takes a
@@ -215,7 +216,7 @@ export default function Dashboard() {
             <ul className="space-y-1.5">
               {todo.map((r) => (
                 <li key={r.id}><Link to="/requests" data-testid="dash-request" className="flex items-center justify-between gap-3 rounded-xl border border-line px-3 py-2 hover:border-ink/20 hover:bg-ink/5"><span className="min-w-0"><span className="block truncate text-sm font-medium lg:text-[15px]">{r.title}</span><span className="text-xs text-muted">{r.due_date ? `Due ${r.due_date}` : "No due date"}</span></span><StatusBadge status={r.status} /></Link></li>))}
-              {d.pending_profile_requests > 0 && <li><Link to="/profile" className="flex items-center justify-between rounded-xl bg-amber-400/10 px-3 py-2 text-sm hover:bg-amber-400/[.15]">The Playr League team asked for {d.pending_profile_requests} profile update<span className="text-xs underline">Review</span></Link></li>}
+              {d.pending_profile_requests > 0 && <li><Link to="/profile" className="flex items-center justify-between rounded-xl bg-amber-400/10 px-3 py-2 text-sm hover:bg-amber-400/[.15]">The {teamOf(config)} asked for {d.pending_profile_requests} profile update<span className="text-xs underline">Review</span></Link></li>}
             </ul>)}
         </Widget>
 

@@ -6,6 +6,7 @@ import { useLive } from "../lib/live";
 import { useAuth } from "../lib/auth";
 import { Avatar, Button, Card, Chip, Empty, Field, Input, Modal, PageHeader, PhotoField, Select, Spinner, StatusBadge, TagInput, Tabs, Textarea } from "../components/ui";
 import { ReachOutModal } from "../components/ReachOutModal";
+import { teamOf } from "../lib/names";
 
 // A board post can be deleted by an admin whether or not they posted it, or edited/deleted by its
 // own author -- everyone else only gets the Message / "I can help" actions further down. Same
@@ -39,7 +40,7 @@ export default function Support() {
   const loadTeam = useCallback(() => api.get("/me/team-support").then((r) => setTeam(r.data.requests)), []);
   useEffect(() => { loadTeam(); api.get("/support-categories").then((r) => { setCats(r.data); }); }, [loadTeam]);
   const submitTeam = async () => {
-    try { await api.post("/team-support", { ...tf, deadline: tf.deadline || null, attachment_url: tf.attachment_url || null }); toast.success("Sent to the Playr League team"); setTeamOpen(false); setTf({ ...tf, title: "", description: "" }); loadTeam(); } catch (e) { toast.error(errMsg(e)); }
+    try { await api.post("/team-support", { ...tf, deadline: tf.deadline || null, attachment_url: tf.attachment_url || null }); toast.success(`Sent to the ${teamOf(config)}`); setTeamOpen(false); setTf({ ...tf, title: "", description: "" }); loadTeam(); } catch (e) { toast.error(errMsg(e)); }
   };
   const load = useCallback(async () => {
     if (tab === "team") return;
@@ -66,7 +67,7 @@ export default function Support() {
 
   return (
     <div>
-      <PageHeader k="support" title="Help board" subtitle="Ask the Playr League team for help, or trade help with other members." actions={<Button onClick={() => (tab === "team" ? setTeamOpen(true) : openCreate())} data-testid="new-request">{tab === "team" ? "Ask the team" : "Post to the board"}</Button>} />
+      <PageHeader k="support" title="Help board" subtitle={`Ask the ${teamOf(config)} for help, or trade help with other members.`} actions={<Button onClick={() => (tab === "team" ? setTeamOpen(true) : openCreate())} data-testid="new-request">{tab === "team" ? "Ask the team" : "Post to the board"}</Button>} />
       {conn.filter((c) => c.status === "pending").length > 0 && (
         <Card className="mb-6 !bg-ink/5">
           <h3 className="mb-3 font-medium">Connection requests for you</h3>
@@ -80,7 +81,7 @@ export default function Support() {
       )}
       <Tabs tabs={[{ value: "team", label: "Ask the team" }, { value: "open", label: "Member board" }, { value: "mine", label: "My posts" }, { value: "resolved", label: "Resolved" }]} value={tab} onChange={setTab} />
       {tab === "team" ? (
-        !team ? <Spinner /> : team.length === 0 ? <Empty title="No support requests yet" hint="Need career advice, a business intro or help with scheduling? Ask the Playr League team." action={<Button onClick={() => setTeamOpen(true)}>Ask the team</Button>} /> : (
+        !team ? <Spinner /> : team.length === 0 ? <Empty title="No support requests yet" hint={`Need advice, an intro or help with scheduling? Ask the ${teamOf(config)}.`} action={<Button onClick={() => setTeamOpen(true)}>Ask the team</Button>} /> : (
           <div className="space-y-3">{team.map((r) => (
             <Card key={r.id} data-testid="team-request">
               <div className="flex flex-wrap items-start justify-between gap-2"><div><p className="font-medium">{r.title}</p><p className="text-xs text-muted">{r.category_label} · {timeAgo(r.created_at)}{r.deadline ? ` · needed by ${r.deadline}` : ""}</p></div><StatusBadge status={r.status} /></div>
@@ -124,7 +125,7 @@ export default function Support() {
           ))}
         </div>
       )}
-      <Modal open={teamOpen} onClose={() => setTeamOpen(false)} title="Ask the Playr League team">
+      <Modal open={teamOpen} onClose={() => setTeamOpen(false)} title={`Ask the ${teamOf(config)}`}>
         <div className="space-y-4">
           <Field label="Category"><Select data-testid="team-category" value={tf.category} onChange={(e) => setTf({ ...tf, category: e.target.value })} options={cats.categories} /></Field>
           <Field label="What do you need?"><Input data-testid="team-title" value={tf.title} onChange={(e) => setTf({ ...tf, title: e.target.value })} /></Field>

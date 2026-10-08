@@ -11,7 +11,7 @@ import { Button, Card, Field, Input, MembershipStatusCard, PoweredBy, Wordmark }
 import SocialAuthButtons from "../components/SocialAuthButtons";
 
 export default function Login() {
-  const { login, applySession, refresh } = useAuth();
+  const { login, applySession, refresh, enter } = useAuth();
   const nav = useNavigate();
   const loc = useLocation();
   const [params] = useSearchParams();
@@ -62,6 +62,8 @@ export default function Login() {
           return;
         } catch { /* already a member, or the apply failed -- fall through to the usual landing */ }
       }
+      // A demo link can name a community to open straight into (/login?demo=member&c=yvettabetta-pilates).
+      if (isDemo() && params.get("c")) { try { await enter(params.get("c")); nav("/", { replace: true }); return; } catch { /* not a member there: fall through to the Hub */ } }
       nav(loc.state?.from && loc.state.from !== "/login" ? "/hub" : "/hub", { replace: true });
     } catch (ex) { setStatus(ex?.response?.status === 403 && /membership request/i.test(errMsg(ex)) ? (/not approved/i.test(errMsg(ex)) ? "rejected" : "pending") : ""); setErr(errMsg(ex)); if (ex?.response?.status !== 403) toast.error(errMsg(ex)); } finally { setBusy(false); }
   };

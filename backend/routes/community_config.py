@@ -91,8 +91,8 @@ THEME_PRESETS = [
     _p("sunset", "Sunset", "dark", "#F2703F", "#140C0A", "#1E1310", "#F7EAE4", "#B79B90", "#3A241D"),
     _p("violet", "Violet", "light", "#6D28D9", "#FAF8FF", "#FFFFFF", "#1C1230", "#6F6688", "#E6E0F3", heading_style="normal"),
 ]
-HEADING_FONTS = ["Plus Jakarta Sans", "Playfair Display", "Lora", "Inter", "Montserrat", "Anton", "Bebas Neue", "Oswald", "Archivo Black"]
-FONTS = ["Plus Jakarta Sans", "Inter", "Space Grotesk", "DM Sans", "Manrope", "Poppins", "Montserrat", "Work Sans", "IBM Plex Sans", "Playfair Display", "Lora"]
+HEADING_FONTS = ["Plus Jakarta Sans", "Playfair Display", "Lora", "Inter", "Montserrat", "Anton", "Bebas Neue", "Oswald", "Archivo Black", "Instrument Serif"]
+FONTS = ["Plus Jakarta Sans", "Inter", "Space Grotesk", "DM Sans", "Manrope", "Poppins", "Montserrat", "Work Sans", "IBM Plex Sans", "Playfair Display", "Lora", "Jost"]
 HEX = re.compile(r"^#[0-9a-fA-F]{6}$")
 NAV_KEYS = {"members", "matches", "events", "resources", "updates", "requests", "support", "inbox"}
 

@@ -1,9 +1,9 @@
 // White-label theme engine: turns the community's brand config into CSS variables.
 // The same variables drive the live app (on <html>) and the Branding editor's preview (scoped to a div).
-export const FONTS = ["Plus Jakarta Sans", "Inter", "Space Grotesk", "DM Sans", "Manrope", "Poppins", "Montserrat", "Work Sans", "IBM Plex Sans", "Playfair Display", "Lora"];
-export const HEADING_FONTS = ["Plus Jakarta Sans", "Playfair Display", "Lora", "Inter", "Montserrat", "Anton", "Bebas Neue", "Oswald", "Archivo Black"];
-const SINGLE_WEIGHT = new Set(["Anton", "Bebas Neue", "Archivo Black"]);
-export const SERIF = new Set(["Playfair Display", "Lora"]);
+export const FONTS = ["Plus Jakarta Sans", "Inter", "Space Grotesk", "DM Sans", "Manrope", "Poppins", "Montserrat", "Work Sans", "IBM Plex Sans", "Playfair Display", "Lora", "Jost"];
+export const HEADING_FONTS = ["Plus Jakarta Sans", "Playfair Display", "Lora", "Inter", "Montserrat", "Anton", "Bebas Neue", "Oswald", "Archivo Black", "Instrument Serif"];
+const SINGLE_WEIGHT = new Set(["Anton", "Bebas Neue", "Archivo Black", "Instrument Serif"]);
+export const SERIF = new Set(["Playfair Display", "Lora", "Instrument Serif"]);
 
 const DEFAULT = {
   mode: "dark", font: "Inter", heading_style: "uppercase", radius: "soft", button_shape: "pill",

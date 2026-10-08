@@ -77,7 +77,7 @@ export default function Layout({ children }) {
         <div className="mx-auto flex max-w-[1600px] items-center gap-2 px-4 py-2 sm:gap-4 lg:px-10">
           <Link to="/" className="min-w-0 shrink text-lg sm:text-2xl" data-testid="brand"><Wordmark name={config?.community_name || "Pathwai"} /></Link>
           {editing && <button className="hidden whitespace-nowrap rounded-full border border-dashed border-ink/40 px-2 py-0.5 text-[10px] uppercase tracking-widest text-muted hover:text-ink sm:inline" onClick={() => setDrawer(true)} data-testid="edit-logo">Edit logo</button>}
-          <nav className="ml-2 hidden min-w-0 flex-1 gap-1 xl:flex">
+          <nav className="ml-2 hidden min-w-0 flex-1 gap-1 overflow-x-auto [scrollbar-width:none] xl:flex">
             {NAV.map(([to, label]) => (
               <NavLink key={to} to={to} end={to === "/"} className={({ isActive }) => cx("whitespace-nowrap rounded-lg px-3 py-1.5 text-sm", isActive ? "bg-ink text-paper font-semibold" : "text-muted hover:bg-ink/5 hover:text-ink")}>{label}{editing && <span role="button" className="ml-1.5 text-[10px] opacity-60 hover:opacity-100" title="Rename in Branding & menu" onClick={(e) => { e.preventDefault(); setDrawer(true); }}>✎</span>}{to === "/requests" && openReqs > 0 && <span className="ml-1.5 rounded-full bg-red-600 px-1.5 text-[10px] font-bold text-white" data-testid="badge-requests">{openReqs}</span>}{to === "/inbox" && inboxUnread > 0 && <span className="ml-1.5 rounded-full bg-red-600 px-1.5 text-[10px] font-bold text-white" data-testid="badge-inbox">{inboxUnread}</span>}</NavLink>
             ))}

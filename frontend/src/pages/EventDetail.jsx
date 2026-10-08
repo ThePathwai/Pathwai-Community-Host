@@ -35,7 +35,7 @@ export default function EventDetail() {
   const [e, setE] = useState(null);
   const [rating, setRating] = useState("5");
   const [note, setNote] = useState("");
-  const { user } = useAuth();
+  const { user, config } = useAuth();
   const [sales, setSales] = useState(null);
   const [tierId, setTierId] = useState("");
   const load = useCallback(() => api.get(`/events/${id}`).then((r) => setE(r.data)).catch(() => setE(false)), [id]);
@@ -58,7 +58,7 @@ export default function EventDetail() {
   if (e === false) return <div className="py-20 text-center"><p className="font-display text-xl">This link is not available.</p></div>;
   return (
     <div>
-      <PageHeader title={e.title} subtitle={`${fmtDate(e.starts_at)} · ${e.location || (e.virtual_url ? "Virtual" : "")} · hosted by ${e.host || "The Playr League"}`}
+      <PageHeader title={e.title} subtitle={`${fmtDate(e.starts_at)} · ${e.location || (e.virtual_url ? "Virtual" : "")} · hosted by ${e.host || config?.community_name || "the team"}`}
         actions={<><ItemTools kind="events" item={e} onChanged={load} /><button className="btn-ghost" onClick={toggleSave} aria-label="Save" data-testid="event-detail-save"><Bookmark className={`h-4 w-4 ${e.is_saved ? "fill-current" : ""}`} />{e.is_saved ? "Saved" : "Save"}</button><a className="btn-ghost" href={googleCalUrl(e)} target="_blank" rel="noreferrer" data-testid="add-to-google-calendar"><CalendarPlus className="h-4 w-4" />Google Calendar</a><a className="btn-ghost" href={`${api.defaults.baseURL}/events/${e.id}/ics`} onClick={addToCalendar} data-testid="add-to-calendar"><CalendarPlus className="h-4 w-4" />Apple / Outlook</a></>} />
       {e.cover_url && (
         <div className="mb-6 overflow-hidden rounded-xl2 border border-line bg-ink/5" data-testid="event-cover">

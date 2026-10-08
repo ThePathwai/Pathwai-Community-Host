@@ -7,6 +7,7 @@ import { useLive } from "../lib/live";
 import { Avatar, Button, Card, Chip, Empty, Field, Input, Modal, PageHeader, PhotoField, Select, Spinner, TagInput, Textarea } from "../components/ui";
 import { ItemTools } from "../components/EditKit";
 import { useAuth } from "../lib/auth";
+import { teamOf } from "../lib/names";
 
 const CATS = ["Discount", "Free access", "Insight", "Template", "Intro", "Service swap"];
 
@@ -19,7 +20,7 @@ export default function Resources() {
   useEffect(() => { const t = setTimeout(load, 200); return () => clearTimeout(t); }, [q, saved]); // eslint-disable-line
   useLive(["resources"], load);
 
-  const { user } = useAuth();
+  const { user, config } = useAuth();
   const [open, setOpen] = useState(false);
   const [req, setReq] = useState(false);
   const [rq, setRq] = useState("");
@@ -104,7 +105,7 @@ export default function Resources() {
           <Field label="How to claim"><Input value={f.how_to_claim} onChange={(e) => setF({ ...f, how_to_claim: e.target.value })} placeholder="Message me, or use code PLAYR20" /></Field>
           <PhotoField value={f.image_url} onChange={(v) => setF({ ...f, image_url: v })} />
           <Field label="Link (optional)"><Input type="url" placeholder="https://" value={f.url} onChange={(e) => setF({ ...f, url: e.target.value })} /></Field>
-          <p className="text-xs text-muted">{user.role === "admin" ? "Admins publish immediately." : "The Playr League team gives it a quick review before it goes live."}</p>
+          <p className="text-xs text-muted">{user.role === "admin" ? "Admins publish immediately." : `The ${teamOf(config)} gives it a quick review before it goes live.`}</p>
           <Button onClick={submit} disabled={!f.title.trim()} data-testid="res-submit">Share</Button>
         </div>
       </Modal>

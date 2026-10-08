@@ -17,7 +17,8 @@ export const demoFromUrl = () => {
 
 // Called once before the app starts. Returns true when this page load is a demo.
 export const prepareDemo = () => { const d = demoFromUrl(); if (d) { set("1"); setDemoRole(d); } return isDemo() || !!d; };
-export const startDemo = (role) => { set("1"); setDemoRole(role); window.location.assign(`/login?demo=${role}`); };
+// `slug` (optional) drops you straight into that community once signed in, e.g. /login?demo=admin&c=yvettabetta-pilates.
+export const startDemo = (role, slug) => { set("1"); setDemoRole(role); window.location.assign(`/login?demo=${role}${slug ? `&c=${encodeURIComponent(slug)}` : ""}`); };
 // True only when this tab is in the in-browser demo (not the static preview build).
 export const inDemoTab = () => get() === "1";
 // Leaves the demo for good and reloads onto the real site, so the real server is used again (the demo's

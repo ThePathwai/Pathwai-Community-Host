@@ -3,7 +3,9 @@ import { ExternalLink } from "lucide-react";
 import { toast } from "sonner";
 import { api, errMsg } from "../lib/api";
 import { useLive } from "../lib/live";
+import { useAuth } from "../lib/auth";
 import { Button, Card, Empty, Field, Input, Modal, PageHeader, Select, Spinner, StatusBadge, Tabs, TagInput, Textarea } from "../components/ui";
+import { teamOf } from "../lib/names";
 
 function FieldInput({ f, value, onChange }) {
   if (f.type === "longtext") return <Textarea placeholder={f.placeholder} value={value || ""} onChange={(e) => onChange(e.target.value)} />;
@@ -51,6 +53,7 @@ function RequestModal({ id, onClose, onChanged }) {
 }
 
 export default function Requests() {
+  const { config } = useAuth();
   const [tab, setTab] = useState("open");
   const [d, setD] = useState(null);
   const [openId, setOpenId] = useState(null);
@@ -60,7 +63,7 @@ export default function Requests() {
   const items = (d?.requests || []).filter((r) => (tab === "open" ? ["not_started", "in_progress", "overdue"].includes(r.effective_status) : tab === "done" ? ["submitted", "reviewed", "resolved"].includes(r.effective_status) : true));
   return (
     <div>
-      <PageHeader k="requests" title="To-do" subtitle="Forms and updates the Playr League team has asked you for." />
+      <PageHeader k="requests" title="To-do" subtitle={`Forms and updates the ${teamOf(config)} has asked you for.`} />
       <Tabs tabs={[{ value: "open", label: `To do${d ? ` (${d.open})` : ""}` }, { value: "done", label: "Submitted" }, { value: "all", label: "All" }]} value={tab} onChange={setTab} />
       {!d ? <Spinner /> : items.length === 0 ? <Empty title={tab === "open" ? "You have no open requests right now." : "Nothing here yet."} hint={tab === "open" ? "When the team needs something from you, it will show up here and on your home page." : ""} /> : (
         <div className="space-y-3">{items.map((r) => (
