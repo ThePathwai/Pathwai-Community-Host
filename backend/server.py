@@ -832,12 +832,17 @@ async def auth_forgot_password(body: ForgotPasswordRequest, request: Request):
 async def auth_reset_password(body: ResetPasswordRequest, request: Request):
     try:
         email = decode_reset_token(body.token)
+        issued = decode_token(body.token)
     except (pyjwt.PyJWTError, ValueError):
         raise HTTPException(status_code=400, detail="This reset link is invalid or has expired. Request a new one.")
     # Sets the new password on the platform account AND every community profile, and invalidates every
     # session issued before now (a reset usually means the old password -- and so maybe a session -- leaked).
-    hub = await hub_db().accounts.find_one({"email": email}, {"id": 1})
+    hub = await hub_db().accounts.find_one({"email": email}, {"id": 1, "sessions_valid_after": 1})
     recs = await find_all_for_email(email)
+    # One-time use: a reset (or "sign out everywhere") stamps the account, so a link issued before that moment is dead.
+    # This matters for the long-lived links admins hand out (7 days) -- once used, they can't be replayed.
+    if any(session_revoked(issued, doc) for doc in [hub, *[r for _, r in recs]]):
+        raise HTTPException(status_code=400, detail="This reset link has already been used or is out of date. Request a new one.")
     if not await revoke_sessions_for_email(email, hash_password(body.password)):
         raise HTTPException(status_code=400, detail="This reset link is invalid or has expired. Request a new one.")
     updated_id = hub["id"] if hub else (recs[0][1]["id"] if recs else None)

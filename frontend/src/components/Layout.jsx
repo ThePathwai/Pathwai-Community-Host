@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useState } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import { Link, NavLink, useLocation, useNavigate } from "react-router-dom";
 import { Bell, Bookmark, Calendar, CheckSquare, ChevronDown, Gift, Home as HomeIcon, Layers, LifeBuoy, LogOut, Megaphone, MessageSquare, Moon, Settings, Sparkles, Sun, User, UserPlus, Users } from "lucide-react";
 import { applyBrand, effectiveMode, setModePref } from "../lib/theme";
@@ -23,6 +23,26 @@ export default function Layout({ children }) {
   const loc = useLocation();
   const [unread, setUnread] = useState(0);
   const [menu, setMenu] = useState(false);
+  const menuRef = useRef(null);
+  // The account menu used to stay open after you tapped a link on a phone (it only closed on mouse-leave), covering the
+  // page. Close it on any tap outside it and whenever the page changes.
+  // It also can't be taller than the room under the button: the menu lives in the sticky header, so on a short phone
+  // anything past the bottom edge (Admin, Sign out) could never be scrolled to. Measure the room and scroll inside it.
+  const [menuMax, setMenuMax] = useState(null);
+  useEffect(() => {
+    if (!menu) return undefined;
+    const away = (e) => { if (!menuRef.current?.contains(e.target)) setMenu(false); };
+    const fit = () => {
+      const r = menuRef.current?.getBoundingClientRect();
+      const h = window.visualViewport?.height || window.innerHeight;
+      if (r) setMenuMax(Math.max(160, Math.floor(h - r.bottom - 72)));  // 72 = menu gap + the bottom tab bar
+    };
+    fit();
+    document.addEventListener("pointerdown", away);
+    window.addEventListener("resize", fit); window.addEventListener("scroll", fit, { passive: true });
+    return () => { document.removeEventListener("pointerdown", away); window.removeEventListener("resize", fit); window.removeEventListener("scroll", fit); };
+  }, [menu]);
+  useEffect(() => { setMenu(false); }, [loc.pathname]);
   const [mode, setMode] = useState(() => effectiveMode(config?.brand));
   useEffect(() => { setMode(effectiveMode(config?.brand)); }, [config]);
   const [openReqs, setOpenReqs] = useState(0);
@@ -72,7 +92,7 @@ export default function Layout({ children }) {
   return (
     <div className="min-h-screen">
       <AlertsPrompt />
-      <header className="sticky top-0 z-40 border-b border-line/60 bg-paper/70 backdrop-blur-xl backdrop-saturate-150">
+      <header className="sticky top-0 z-[45] border-b border-line/60 bg-paper/70 backdrop-blur-xl backdrop-saturate-150">
         <EditBar />
         <div className="mx-auto flex max-w-[1600px] items-center gap-2 px-4 py-2 sm:gap-4 lg:px-10">
           <Link to="/" className="min-w-0 shrink text-lg sm:text-2xl" data-testid="brand"><Wordmark name={config?.community_name || "Pathwai"} /></Link>
@@ -90,12 +110,12 @@ export default function Layout({ children }) {
               <Bell className={cx("h-4 w-4", unread > 0 && "text-red-500")} fill={unread > 0 ? "currentColor" : "none"} />
               {unread > 0 && <span className="absolute -right-1.5 -top-1.5 min-w-[18px] rounded-full bg-red-600 px-1.5 text-center text-[10px] font-bold leading-[18px] text-white" data-testid="badge-bell">{unread > 99 ? "99+" : unread}</span>}
             </Link>
-            <div className="relative">
+            <div className="relative" ref={menuRef}>
               <button className="flex items-center gap-2" onClick={() => setMenu(!menu)} data-testid="user-menu-trigger">
                 <span className="relative"><Avatar src={user.avatar_url} name={user.name} size={32} />{adminAttn > 0 && <span className="absolute -right-1 -top-1 h-3 w-3 rounded-full border-2 border-[rgb(var(--c-bg))] bg-red-600" data-testid="join-dot" />}</span><ChevronDown className="h-3 w-3" />
               </button>
               {menu && (
-                <div className="absolute right-0 mt-2 w-52 rounded-xl border border-line bg-surface p-1 shadow-lg" onMouseLeave={() => setMenu(false)}>
+                <div className="absolute right-0 z-50 mt-2 w-52 overflow-y-auto overscroll-contain rounded-xl border border-line bg-surface p-1 shadow-lg" style={{ maxHeight: menuMax || "70vh" }}>
                   <p className="px-3 py-2 text-xs text-muted">{user.name}<br />{user.email}<br /><span className="font-semibold text-ink">{config?.community_name}</span></p>
                   {overflowNav.map((n) => {
                     const to = ROUTES[n.key];
@@ -127,7 +147,7 @@ export default function Layout({ children }) {
           {custom.map((l) => <a key={l.url} href={l.url} target="_blank" rel="noreferrer" className="whitespace-nowrap rounded-full px-3 py-1 text-sm text-muted">{l.label} ↗</a>)}
         </nav>
       </header>
-      <main className="mx-auto max-w-[1600px] px-4 py-6 pb-28 lg:px-10 lg:py-10 xl:pb-10">{backTo && <BackButton fallback={backTo[0]} label={`Back to ${backTo[1]}`} />}{children}</main>
+      <main className="mx-auto max-w-[1600px] px-4 py-6 lg:px-10 lg:py-10">{backTo && <BackButton fallback={backTo[0]} label={`Back to ${backTo[1]}`} />}{children}</main>
       {AI_CHAT_ENABLED && loc.pathname !== "/ask" && <Link to="/ask" data-testid="ask-fab" className="btn-primary fixed bottom-5 right-5 z-40 hidden !px-4 shadow-card xl:inline-flex"><Sparkles className="h-4 w-4" />Ask</Link>}
       <nav className="fixed inset-x-0 bottom-0 z-40 grid border-t border-line bg-paper/90 backdrop-blur-xl backdrop-saturate-150 xl:hidden"
         style={{ gridTemplateColumns: `repeat(${Math.min(5, 1 + items.length)}, minmax(0, 1fr))`, paddingBottom: "env(safe-area-inset-bottom, 0px)" }} data-testid="tabbar">

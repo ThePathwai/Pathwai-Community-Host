@@ -3,6 +3,7 @@ import { Flag, Trash2, X } from "lucide-react";
 import { toast } from "sonner";
 import { api, errMsg, timeAgo } from "../lib/api";
 import { Avatar, Button, Field, Input, Select, Spinner, Tabs, Textarea, cx } from "./ui";
+import ScrollLock from "./ScrollLock";
 
 // Platform-wide "People" panel on the Hub: search everyone on Pathwai (not just whoever shares a
 // community with you), follow/unfollow them, see which of their communities are public, and message
@@ -247,8 +248,9 @@ export default function HubPeople({ open, onClose, communities, initialThreadId,
   const other = thread?.others?.[0];
 
   return (
-    <div className="fixed inset-0 z-50 flex items-start justify-center bg-black/60 p-4 pt-[8vh]" onClick={onClose} data-testid="hub-people">
-      <div className="flex max-h-[80vh] w-full max-w-xl flex-col overflow-hidden rounded-xl2 bg-[rgb(var(--c-surface))] text-ink" onClick={(e) => e.stopPropagation()}>
+    <div className="fixed inset-0 z-50 flex items-start justify-center bg-black/60 p-4 pt-sheet" onClick={onClose} data-testid="hub-people">
+      <ScrollLock />
+      <div className="flex max-h-sheet w-full max-w-xl flex-col overflow-hidden rounded-xl2 bg-[rgb(var(--c-surface))] text-ink" onClick={(e) => e.stopPropagation()}>
         <div className="flex items-center justify-between border-b border-line p-4">
           <div className="flex items-center gap-2">
             {screen !== "list" && <button type="button" onClick={backToList} data-testid="people-back" className="text-muted hover:text-ink">← Back</button>}

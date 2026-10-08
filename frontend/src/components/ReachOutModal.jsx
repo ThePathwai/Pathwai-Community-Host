@@ -4,6 +4,7 @@ import { Send, X } from "lucide-react";
 import { toast } from "sonner";
 import { api, errMsg } from "../lib/api";
 import { Avatar, Button, Spinner } from "./ui";
+import ScrollLock from "./ScrollLock";
 
 // Every point in the product that lets one member reach out to another opens this — a draft, the way
 // an email is a draft, not a chat bubble: a title bar, the recipient shown (not editable here, since
@@ -49,7 +50,8 @@ export function ReachOutModal({ open, onClose, member, defaultTopic = "", contex
 
   return (
     <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/40 sm:items-center sm:p-4" onClick={onClose}>
-      <div className="flex h-[88vh] w-full max-w-2xl flex-col overflow-hidden rounded-t-xl2 bg-surface shadow-2xl sm:h-[600px] sm:rounded-xl2" onClick={(e) => e.stopPropagation()}>
+      <ScrollLock />
+      <div className="flex h-sheet w-full max-w-2xl flex-col overflow-hidden rounded-t-xl2 bg-surface shadow-2xl sm:h-[600px] sm:rounded-xl2" onClick={(e) => e.stopPropagation()}>
         <div className="flex shrink-0 items-center justify-between border-b border-line bg-ink/[.03] px-4 py-2.5">
           <p className="text-sm font-semibold">New Message</p>
           <button onClick={onClose} className="text-muted hover:text-ink" aria-label="Close"><X className="h-4 w-4" /></button>

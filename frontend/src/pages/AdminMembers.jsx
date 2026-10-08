@@ -3,11 +3,16 @@ import { toast } from "sonner";
 import { api, errMsg, fmtDate } from "../lib/api";
 import { useLive } from "../lib/live";
 import MemberImport from "../components/MemberImport";
+import { ResetLinkModal } from "../components/AccountTools";
+import { useAuth } from "../lib/auth";
 import { Avatar, Button, Card, Chip, Empty, Modal, Spinner, Textarea } from "../components/ui";
 
 const FILTERS = [["pending", "Pending"], ["approved", "Approved"], ["rejected", "Declined"]];
 
 export default function MembershipRequests({ onChanged }) {
+  const { user } = useAuth();
+  const [link, setLink] = useState(null); // a freshly made password-reset link, shown in a popup
+  const [removing, setRemoving] = useState(null); // the person an admin is about to remove
   const [status, setStatus] = useState("pending");
   const [d, setD] = useState(null);
   const [declining, setDeclining] = useState(null);
@@ -24,6 +29,20 @@ export default function MembershipRequests({ onChanged }) {
       await api.post(`/admin/membership-requests/${id}/decision`, { decision, note: decision === "reject" ? note : undefined });
       toast.success(decision === "approve" ? "Member approved" : "Request declined");
       setDeclining(null); setNote(""); await load(); onChanged?.();
+    } catch (e) { toast.error(errMsg(e)); } finally { setBusy(null); }
+  };
+
+  const resetLink = async (r) => {
+    setBusy(r.id + "r");
+    try { const { data } = await api.post(`/admin/users/${r.id}/reset-link`); setLink({ ...data, name: r.name }); }
+    catch (e) { toast.error(errMsg(e)); } finally { setBusy(null); }
+  };
+  const remove = async () => {
+    const r = removing; setBusy(r.id + "d");
+    try {
+      const { data } = await api.delete(`/admin/users/${r.id}`);
+      toast.success(data.account_deleted ? `${r.name} was removed and their account deleted` : `${r.name} was removed from this community`);
+      setRemoving(null); setPreviewing(null); await load(); onChanged?.();
     } catch (e) { toast.error(errMsg(e)); } finally { setBusy(null); }
   };
 
@@ -67,8 +86,26 @@ export default function MembershipRequests({ onChanged }) {
                   {r.status !== "approved" && <Button onClick={() => decide(r.id, "approve")} loading={busy === r.id} data-testid="approve-member">Approve</Button>}
                   {r.status !== "rejected" && <Button variant="ghost" onClick={() => setDeclining(r.id)} data-testid="decline-member">Decline</Button>}
                 </div>)}
+              {declining !== r.id && r.id !== user?.id && !r.protected && (
+                <div className="flex flex-wrap gap-2 border-t border-line pt-3">
+                  {r.email && <Button variant="ghost" onClick={() => resetLink(r)} loading={busy === r.id + "r"} data-testid="member-reset-link">Password reset link</Button>}
+                  <Button variant="ghost" className="text-red-600" onClick={() => setRemoving(r)} data-testid="member-delete">Delete</Button>
+                </div>)}
             </Card>))}
         </div>)}
+
+      <ResetLinkModal info={link} onClose={() => setLink(null)} />
+      <Modal open={!!removing} onClose={() => setRemoving(null)} title="Delete this person?">
+        {removing && (
+          <div className="space-y-4" data-testid="member-delete-modal">
+            <p className="text-sm">This removes <b>{removing.name}</b> from this community, along with their profile and activity here. If this is the only community they belong to, their Pathwai account is deleted too, and they can sign up again with the same email.</p>
+            <p className="text-sm text-muted">It can't be undone. If they just forgot their password, use "Password reset link" instead.</p>
+            <div className="flex gap-2">
+              <Button variant="ghost" onClick={() => setRemoving(null)}>Cancel</Button>
+              <Button onClick={remove} loading={busy === removing.id + "d"} data-testid="member-delete-confirm">Delete {removing.name.split(" ")[0]}</Button>
+            </div>
+          </div>)}
+      </Modal>
 
       <Modal open={!!previewing} onClose={() => setPreviewing(null)} title="Applicant profile">
         {previewing && (

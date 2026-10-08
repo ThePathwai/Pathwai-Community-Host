@@ -3,6 +3,7 @@ import { FileUp, Download } from "lucide-react";
 import { toast } from "sonner";
 import { api, errMsg } from "../lib/api";
 import { Button, Card, Chip, Textarea } from "./ui";
+import ScrollLock from "./ScrollLock";
 
 // Admin -> Members -> "Import from CSV". Three steps: pick a file, preview exactly what will happen
 // (nothing is saved yet), then import. Rows with missing details are still added; see
@@ -80,7 +81,8 @@ export default function MemberImport({ onDone }) {
 
       {open && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4" onClick={close}>
-          <div className="max-h-[92vh] w-full max-w-3xl overflow-auto rounded-xl2 bg-surface p-6" onClick={(e) => e.stopPropagation()} data-testid="member-import-modal">
+          <ScrollLock />
+          <div className="max-h-modal-lg w-full max-w-3xl overflow-y-auto overscroll-contain rounded-xl2 bg-surface p-6" onClick={(e) => e.stopPropagation()} data-testid="member-import-modal">
             <div className="mb-4 flex items-center justify-between">
               <h2 className="text-xl font-semibold">Import members from a CSV</h2>
               <button onClick={close} className="text-muted hover:text-ink" aria-label="Close">✕</button>

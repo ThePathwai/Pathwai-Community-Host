@@ -4,6 +4,7 @@ import { Send, X } from "lucide-react";
 import { toast } from "sonner";
 import { api, errMsg } from "../lib/api";
 import { Button } from "./ui";
+import ScrollLock from "./ScrollLock";
 import { RecipientPicker } from "./RecipientPicker";
 
 // "New message" from the Messages tab itself, built to read as an email draft — a title bar, a bare
@@ -42,7 +43,8 @@ export function ComposeModal({ open, onClose, onSent }) {
 
   return (
     <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/40 sm:items-center sm:p-4" onClick={onClose}>
-      <div className="flex h-[88vh] w-full max-w-2xl flex-col overflow-hidden rounded-t-xl2 bg-surface shadow-2xl sm:h-[640px] sm:rounded-xl2" onClick={(e) => e.stopPropagation()}>
+      <ScrollLock />
+      <div className="flex h-sheet w-full max-w-2xl flex-col overflow-hidden rounded-t-xl2 bg-surface shadow-2xl sm:h-[640px] sm:rounded-xl2" onClick={(e) => e.stopPropagation()}>
         <div className="flex shrink-0 items-center justify-between border-b border-line bg-ink/[.03] px-4 py-2.5">
           <p className="text-sm font-semibold">New Message</p>
           <button onClick={onClose} className="text-muted hover:text-ink" aria-label="Close"><X className="h-4 w-4" /></button>

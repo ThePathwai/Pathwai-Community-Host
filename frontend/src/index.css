@@ -99,3 +99,19 @@ a, button, [role="button"], select, .input {
 .ctl { display: inline-flex; height: 2.5rem; width: 2.5rem; align-items: center; justify-content: center; border-radius: 9999px; border: 1px solid rgb(var(--c-line)); color: rgb(var(--c-ink)); }
 .ctl:hover:not(:disabled) { background: rgb(var(--c-ink) / 0.07); }
 .ctl:disabled { opacity: .3; cursor: default; }
+
+/* ---- Popup sizing that tracks the VISIBLE screen on phones ----
+   `vh` is the tallest the browser window can get (URL bar hidden), so a popup sized in vh runs off the bottom of an
+   iPhone while the address bar is showing. `dvh` follows the real visible height; the vh line is the fallback for
+   older phones that don't know dvh. */
+@layer utilities {
+  .max-h-modal { max-height: 90vh; max-height: 90dvh; }
+  .max-h-modal-lg { max-height: 92vh; max-height: 92dvh; }
+  .max-h-sheet { max-height: 80vh; max-height: 80dvh; }
+  .pt-sheet { padding-top: 8vh; padding-top: 8dvh; }
+  .h-sheet { height: 88vh; height: 88dvh; }
+  .h-inbox { height: calc(100vh - 260px); height: calc(100dvh - 260px); }
+  .min-h-screen { min-height: 100vh; min-height: 100dvh; }
+}
+/* Scrolling lists inside the app never hand the swipe to the page behind them once they hit their end. */
+html { -webkit-text-size-adjust: 100%; }

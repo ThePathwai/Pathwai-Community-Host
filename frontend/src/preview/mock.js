@@ -536,6 +536,15 @@ function get(path, p, config) {
     threads.sort((a, b) => (b.last_message_at || "").localeCompare(a.last_message_at || ""));
     return ok(config, { threads, unread: threads.filter((t) => t.unread).length });
   }
+  if (path === "/hub/admin/accounts") {
+    if (S.email !== "admin@yourcommunity.app") return fail(config, 403, "Platform admins only.");
+    const s = q(p.q); const gone = S.extra.goneAccts || {};
+    let rows = Object.values(platformDirectory()).filter((x) => x.email !== S.email && !gone[x.email])
+      .filter((x) => !s || x.email.includes(s) || (x.name || "").toLowerCase().includes(s))
+      .map((x) => ({ email: x.email, name: x.name || x.email, communities: ["demo"], has_account: true, platform_admin: false }));
+    rows.sort((a, b) => a.name.localeCompare(b.name));
+    return ok(config, { accounts: rows.slice(0, 50), total: rows.length });
+  }
   if (path === "/hub/people") {
     // Platform-wide search for following -- not any one community's member list. See
     // platformDirectory() above for why this draws from every recorded community's roster, not just
@@ -684,6 +693,18 @@ function get(path, p, config) {
   if (path === "/admin/membership-requests") {
     const ov = S.extra.mship || {};
     let rows = [...appsHere(), ...d.requests].map((r) => (ov[r.id] ? { ...r, ...ov[r.id] } : r));
+    // Everyone already in the community is an approved member too (same as the real list, which treats a missing
+    // status as approved) -- that's who the admin's Delete / reset-link buttons act on.
+    const listed = new Set(rows.map((r) => (r.email || "").toLowerCase()));
+    for (const u of communityRoster(slugOf())) {
+      const em = (u.email || "").trim().toLowerCase();
+      if (!em || em === (S.email || "").toLowerCase() || listed.has(em)) continue;
+      listed.add(em);
+      const row = { id: u.id, name: u.name, email: u.email, title: u.title || "", company: u.company || "", bio: u.bio || "", avatar_url: u.avatar_url || null, location: u.location || "", status: "approved",
+        requested_at: u.created_at || new Date().toISOString(), skill_set: u.skill_set || [], interests_hobbies: u.interests_hobbies || [], goals: u.goals || [], support_needs: u.support_needs || [] };
+      rows.push(ov[u.id] ? { ...row, ...ov[u.id] } : row);
+    }
+    rows = rows.filter((r) => !r.removed);
     const counts = rows.reduce((a, r) => ({ ...a, [r.status]: (a[r.status] || 0) + 1 }), { pending: 0, approved: 0, rejected: 0 });
     if (p.status && p.status !== "all") rows = rows.filter((r) => r.status === p.status);
     return ok(config, { requests: rows, counts });
@@ -1061,6 +1082,20 @@ function write(method, path, body, config) {
     return /^(?=.*[A-Za-z])(?=.*\d).{10,}$/.test(body.new_password || "") ? ok(config, { ok: true }) : fail(config, 400, "Password needs 10+ characters with a letter and a number.");
   }
   if (path === "/hub/account/sign-out-everywhere") return ok(config, { ok: true });
+  if (path === "/hub/admin/accounts/reset-link") return ok(config, { link: "https://pathwai.example/reset-password?token=demo-one-time-link", expires_in_days: 7 });
+  if (path === "/hub/admin/accounts/delete") {
+    if ((body.confirm || "").toUpperCase() !== "DELETE") return fail(config, 400, "Type DELETE to confirm.");
+    (S.extra.goneAccts = S.extra.goneAccts || {})[(body.email || "").toLowerCase()] = true;
+    return ok(config, { ok: true, communities: [] });
+  }
+  const umem = path.match(/^\/admin\/users\/([^/]+)(\/reset-link)?$/);
+  if (umem && method === "post" && umem[2]) return ok(config, { link: "https://pathwai.example/reset-password?token=demo-one-time-link", expires_in_days: 7, email: "", name: "" });
+  if (umem && method === "delete" && !umem[2]) {
+    const id = decodeURIComponent(umem[1]);
+    (S.extra.mship = S.extra.mship || {})[id] = { ...((S.extra.mship || {})[id] || {}), removed: true };
+    sharedContent("users").deleted[id] = true;
+    return ok(config, { ok: true, account_deleted: false });
+  }
   if (path === "/hub/account/delete") return (body.confirm || "").toUpperCase() === "DELETE" ? ok(config, { ok: true }) : fail(config, 400, "Type DELETE to confirm.");
   if (path === "/me/profile" && method === "patch") {
     const vals = { ...body.values };

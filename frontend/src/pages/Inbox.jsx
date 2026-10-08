@@ -187,7 +187,7 @@ export default function Inbox() {
           ))}
         </div>
 
-        <div className={cx("card !p-0 flex flex-col overflow-hidden lg:block", threadId ? "flex" : "hidden lg:flex", "h-[calc(100vh-260px)] min-h-[420px]")}>
+        <div className={cx("card !p-0 flex flex-col overflow-hidden lg:block", threadId ? "flex" : "hidden lg:flex", "h-inbox min-h-[420px]")}>
           {!threadId ? (
             <div className="flex h-full items-center justify-center p-8 text-center text-sm text-muted">Pick a conversation, or start a new message.</div>
           ) : !thread ? <div className="flex h-full items-center justify-center"><Spinner /></div> : (

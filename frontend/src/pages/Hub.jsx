@@ -8,6 +8,8 @@ import { SUGGEST, ageFromBirthday, oldestISO, todayISO } from "../lib/profile";
 import crowd from "../assets/crowd.jpg";
 import { Avatar, AvatarUpload, Button, Field, Input, Modal, PhotoGallery, PoweredBy, Select, Spinner, TagInput, Textarea, Wordmark, cx } from "../components/ui";
 import HubPeople from "../components/HubPeople";
+import ScrollLock from "../components/ScrollLock";
+import { PlatformAccounts } from "../components/AccountTools";
 
 const RADIUS = { sharp: "2px", soft: "0.75rem", round: "1.25rem" };
 
@@ -98,7 +100,8 @@ function CommunityDetailModal({ c, onClose, onEnter, onApply }) {
   const st = c.my?.status;
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4" onClick={onClose} data-testid="community-detail">
-      <div className="max-h-[90vh] w-full max-w-lg overflow-auto rounded-xl2" onClick={(e) => e.stopPropagation()}
+      <ScrollLock />
+      <div className="max-h-modal w-full max-w-lg overflow-y-auto overscroll-contain rounded-xl2" onClick={(e) => e.stopPropagation()}
         style={{ background: col.surface || col.background, color: col.text, borderRadius: r, fontFamily: `"${c.brand?.font}", system-ui, sans-serif` }}>
         <div className="relative h-44 sm:h-56" style={{ background: col.background }}>
           {c.cover && <img src={c.cover} alt="" className="absolute inset-0 h-full w-full object-cover" />}
@@ -190,8 +193,9 @@ function HubInbox({ open, onClose, loading, data, communities, onOpenThread }) {
   useEffect(() => { if (!open) { setQuick("all"); setSlugFilter("all"); } }, [open]);
   if (!open) return null;
   return (
-    <div className="fixed inset-0 z-50 flex items-start justify-center bg-black/60 p-4 pt-[8vh]" onClick={onClose} data-testid="hub-inbox">
-      <div className="flex max-h-[80vh] w-full max-w-xl flex-col overflow-hidden rounded-xl2 bg-[rgb(var(--c-surface))] text-ink" onClick={(e) => e.stopPropagation()}>
+    <div className="fixed inset-0 z-50 flex items-start justify-center bg-black/60 p-4 pt-sheet" onClick={onClose} data-testid="hub-inbox">
+      <ScrollLock />
+      <div className="flex max-h-sheet w-full max-w-xl flex-col overflow-hidden rounded-xl2 bg-[rgb(var(--c-surface))] text-ink" onClick={(e) => e.stopPropagation()}>
         <div className="flex items-center justify-between border-b border-line p-4">
           <h2 className="text-lg font-bold">Messages</h2>
           <button onClick={onClose} aria-label="Close" data-testid="close-hub-inbox" className="text-muted hover:text-ink">✕</button>
@@ -412,6 +416,8 @@ export default function Hub() {
               )}
             </>)}
         </>)}
+
+      {(items || []).some((c) => c.my?.platform_admin) && <div className="mt-12"><PlatformAccounts /></div>}
 
       <HubInbox open={inboxOpen} onClose={() => setInboxOpen(false)} loading={inboxLoading} data={inboxData} communities={items} onOpenThread={openThread} />
 

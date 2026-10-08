@@ -3,6 +3,7 @@ import { useLocation, useNavigate, useSearchParams } from "react-router-dom";
 import { ArrowLeftRight, CalendarDays, Check, ChevronLeft, ChevronRight, CreditCard, FileText, Handshake, Mail, MapPin, MessageCircle, Pause, Play, RotateCcw, Sparkles, Table2, X } from "lucide-react";
 import { useAuth } from "../lib/auth";
 import { isDemo, startDemo } from "../lib/demo";
+import ScrollLock from "./ScrollLock";
 import markWhite from "../assets/mark-white.png";
 
 // A ~9 second auto-playing story that explains what Pathwai is before someone signs in or creates a
@@ -191,8 +192,7 @@ export default function IntroTour() {
       else if (e.key === " " && !e.target.closest?.("button")) { e.preventDefault(); setUserPaused((h) => !h); }
     };
     document.addEventListener("keydown", onKey);
-    const prev = document.body.style.overflow; document.body.style.overflow = "hidden";
-    return () => { document.removeEventListener("keydown", onKey); document.body.style.overflow = prev; };
+    return () => document.removeEventListener("keydown", onKey);
   }, [open, i, go, close, restart]);
   useEffect(() => { if (open) dialog.current?.focus({ preventScroll: true }); }, [open]);
 
@@ -231,6 +231,7 @@ export default function IntroTour() {
       className="pw-story fixed inset-0 z-[90] flex select-none flex-col overflow-hidden outline-none"
       style={{ background: "rgb(var(--c-bg))", opacity: leaving ? 0 : 1, transform: leaving ? "scale(1.02)" : "none", transition: "opacity .26s ease, transform .26s ease", "--ps": paused ? "paused" : "running", touchAction: "manipulation" }}
       onPointerDown={down} onPointerUp={up} onPointerCancel={cancel} onPointerLeave={cancel} onContextMenu={(e) => e.preventDefault()}>
+      <ScrollLock />
       <div aria-hidden className="pointer-events-none absolute inset-0" style={{ background: "radial-gradient(60% 45% at 50% 30%, color-mix(in srgb, var(--accent) 14%, transparent), transparent 70%)" }} />
 
       {/* progress: one bar per beat, filling as it plays */}

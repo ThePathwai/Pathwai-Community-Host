@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState } from "react";
 import { ArrowLeft, ArrowRight, Expand, ImagePlus, Trash2 } from "lucide-react";
 import { Button, Input, PhotoCropModal, cx } from "./ui";
+import ScrollLock from "./ScrollLock";
 
 // Auto-sliding display carousel — shown on the community dashboard once an admin has added photos.
 // Clicking a photo (or the expand hint) opens it full-size in a lightbox; the same prev/next/dots
@@ -57,9 +58,10 @@ export function PhotoCarousel({ photos = [], intervalMs = 5000, className = "" }
       </div>
       {expanded && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/85 p-4" onClick={() => setExpanded(false)} data-testid="carousel-lightbox">
+          <ScrollLock />
           <button type="button" aria-label="Close" data-testid="carousel-lightbox-close" onClick={() => setExpanded(false)}
             className="absolute right-4 top-4 flex h-9 w-9 items-center justify-center rounded-full bg-white/10 text-white backdrop-blur hover:bg-white/20">✕</button>
-          <img src={photos[i]} alt="" onClick={(e) => e.stopPropagation()} className="max-h-[90vh] max-w-[92vw] rounded-lg object-contain shadow-2xl" />
+          <img src={photos[i]} alt="" onClick={(e) => e.stopPropagation()} className="max-h-modal max-w-[92vw] rounded-lg object-contain shadow-2xl" />
           {photos.length > 1 && (
             <>
               <button type="button" aria-label="Previous photo" data-testid="carousel-lightbox-prev" onClick={(e) => { e.stopPropagation(); prev(); }}
