@@ -18,4 +18,9 @@ export const demoFromUrl = () => {
 // Called once before the app starts. Returns true when this page load is a demo.
 export const prepareDemo = () => { const d = demoFromUrl(); if (d) { set("1"); setDemoRole(d); } return isDemo() || !!d; };
 export const startDemo = (role) => { set("1"); setDemoRole(role); window.location.assign(`/login?demo=${role}`); };
-export const exitDemo = () => { set(null); setDemoRole(null); window.location.assign("/login"); };
+// True only when this tab is in the in-browser demo (not the static preview build).
+export const inDemoTab = () => get() === "1";
+// Leaves the demo for good and reloads onto the real site, so the real server is used again (the demo's
+// stand-in server only goes away on a fresh page load).
+export const leaveDemo = (to = "/login") => { set(null); setDemoRole(null); window.location.replace(to); };
+export const exitDemo = () => leaveDemo("/login");

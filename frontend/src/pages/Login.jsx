@@ -3,7 +3,7 @@ import { Link, useLocation, useNavigate, useSearchParams } from "react-router-do
 import { toast } from "sonner";
 import { api, errMsg } from "../lib/api";
 import { useAuth } from "../lib/auth";
-import { demoRole, isDemo, startDemo } from "../lib/demo";
+import { demoRole, inDemoTab, isDemo, leaveDemo, startDemo } from "../lib/demo";
 import { HowItWorks } from "../components/IntroTour";
 import { applyBrand } from "../lib/theme";
 import crowd from "../assets/crowd.jpg";
@@ -32,6 +32,9 @@ export default function Login() {
   // /login?demo=member|admin|host (what the "Try the demo" buttons open) signs straight in to the in-browser demo.
   const autoDemo = params.get("demo") || (inDemo ? demoRole() : null);
   const autoDone = React.useRef(false);
+  // A login screen with no demo role to sign in to means the demo is over: switch to the real site.
+  const demoOver = inDemoTab() && !autoDemo;
+  useEffect(() => { if (demoOver) leaveDemo("/login" + window.location.search); }, [demoOver]);
   useEffect(() => {
     if (!autoDemo || autoDone.current || !demo.accounts.length) return;
     const a = autoDemo === "host" ? { email: "host@thevillage.example" } : demo.accounts.find((x) => x.demo_role === autoDemo);

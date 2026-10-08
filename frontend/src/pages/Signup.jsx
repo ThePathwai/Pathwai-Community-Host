@@ -3,6 +3,7 @@ import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { api, errMsg } from "../lib/api";
 import { useAuth } from "../lib/auth";
 import { applyBrand } from "../lib/theme";
+import { inDemoTab, leaveDemo } from "../lib/demo";
 import { AvatarUpload, Button, Card, Field, Input, MembershipStatusCard, Select, TagInput, Textarea, TermsConsent, Wordmark, cx } from "../components/ui";
 import { HowItWorks } from "../components/IntroTour";
 import { SUGGEST, ageFromBirthday, oldestISO, todayISO } from "../lib/profile";
@@ -127,6 +128,10 @@ export default function Signup() {
   const [showPending, setShowPending] = useState(false); // profile step done; join request came back pending approval
   const [joinInfo, setJoinInfo] = useState(null); // the target community's public info, when arriving via a share link
   const [joinResult, setJoinResult] = useState(null); // {slug, status} echoed back by signup when join_slug was sent
+
+  // Creating a real account must never go to the demo's stand-in server (nothing there is saved): leave the demo first.
+  const inDemo = inDemoTab();
+  useEffect(() => { if (inDemo) leaveDemo("/signup" + window.location.search); }, [inDemo]);
 
   useEffect(() => { api.get("/hub/community-categories").then((r) => setCategories(r.data.categories)).catch(() => {}); }, []);
 
