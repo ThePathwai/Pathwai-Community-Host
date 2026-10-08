@@ -900,7 +900,10 @@ async def auth_demo_accounts():
     can reconfigure the community.
     """
     if not demo_mode():
-        return {"accounts": [], "password": ""}
+        # A real deployment has no demo logins of its own. If a separate public demo site exists, point at it
+        # (DEMO_URL, e.g. https://pathwai-demo.up.railway.app) so the login page can offer "Try the demo".
+        url = (os.environ.get("DEMO_URL") or "").strip().rstrip("/")
+        return {"accounts": [], "password": "", "demo_url": url if url.startswith("https://") or url.startswith("http://localhost") else ""}
     demo_pw = os.environ.get("DEMO_PASSWORD") or "Demo123!"
 
     # Pull the current community label so the "member" demo reads as

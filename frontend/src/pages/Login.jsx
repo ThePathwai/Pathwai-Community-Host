@@ -23,9 +23,17 @@ export default function Login() {
   const [err, setErr] = useState("");
   const [status, setStatus] = useState("");
   const [busy, setBusy] = useState(false);
-  const [demo, setDemo] = useState({ accounts: [], password: "" });
+  const [demo, setDemo] = useState({ accounts: [], password: "", demo_url: "" });
 
   useEffect(() => { api.get("/auth/demo-accounts").then((r) => setDemo(r.data)).catch(() => {}); }, []);
+  // The live site links here as <demo site>/login?demo=member|admin|host: sign straight in (demo site only: it has the demo logins).
+  const autoDemo = params.get("demo");
+  const autoDone = React.useRef(false);
+  useEffect(() => {
+    if (!autoDemo || autoDone.current || !demo.accounts.length) return;
+    const a = autoDemo === "host" ? { email: "host@thevillage.example" } : demo.accounts.find((x) => x.demo_role === autoDemo);
+    if (a) { autoDone.current = true; go(a.email, demo.password); }
+  }, [autoDemo, demo]); // eslint-disable-line
 
   useEffect(() => {
     if (!joinSlug) return;
@@ -113,6 +121,18 @@ export default function Login() {
                 <p className="font-medium">{a.label}</p><p className="text-xs text-muted">{a.description}</p>
               </button>
             ))}
+          </div>
+        )}
+        {demo.demo_url && demo.accounts.length === 0 && (
+          <div className="mt-6 space-y-2" data-testid="demo-links">
+            <p className="eyebrow">Try the demo</p>
+            <p className="text-xs text-muted">A separate practice copy with made-up members and events. Nothing you do there touches the real community.</p>
+            {[["member", "Member demo", "Explore the community as a member: profiles, events, perks and recommended connections."],
+              ["admin", "Admin demo", "Sign in as the admin: edit the site, change the colours and logo, and manage members."]].map(([k, label, desc]) => (
+              <a key={k} data-testid={`demo-link-${k}`} href={`${demo.demo_url}/login?demo=${k}`} target="_blank" rel="noopener noreferrer"
+                className="block w-full rounded-xl border border-line bg-surface p-4 text-left hover:bg-ink/5">
+                <p className="font-medium">{label} <span className="text-muted">↗</span></p><p className="text-xs text-muted">{desc}</p>
+              </a>))}
           </div>
         )}
         <PoweredBy className="mt-10 text-center" />

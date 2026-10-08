@@ -69,6 +69,7 @@ Service → **Variables**. Generate secrets with `openssl rand -hex 32` (or any 
 | `APPLE_CLIENT_ID` | *(optional)* | Same for Apple. Leave blank to hide it. |
 | `REACT_APP_LEGAL_EMAIL` | `privacy@yourdomain.com` | **Build-time** variable (Railway passes it to the build). The contact address printed on the Terms and Privacy pages. Defaults to a placeholder — set it. |
 | `REACT_APP_LEGAL_ENTITY` | `Your Company Inc.` | **Build-time.** The legal name that operates the service, printed on both pages. |
+| `DEMO_URL` | *(optional, step 12)* | Address of your separate demo site. Adds "Try the demo" buttons to the sign-in page. |
 | `ENABLE_AI_CHAT` | `false` | Leave off unless you add an `OPENAI_API_KEY`. |
 
 Do **not** set: `USE_MOCK_DB`, `DEMO_MODE`, `DEMO_PASSWORD`, `DEMO_PUBLIC_SEED`, `COOKIE_SECURE`, `COOKIE_SAMESITE`
@@ -233,9 +234,15 @@ variable on the frontend, and set `CORS_ORIGINS` to the app origin on the API. U
 
 ## 12. Optional: a separate public demo instance
 
-To let people poke around with fake data, deploy a **second, independent** project with its own database and set
-`DEMO_MODE=true` and `DEMO_PASSWORD=<something>`. It seeds sample communities and shows "Try the demo" logins
-(`demo@yourcommunity.app` / `admin@yourcommunity.app`). Never point it at the real database.
+To let people poke around with fake data, deploy a **second, independent** Railway service (same GitHub repo) with
+its **own** new MongoDB, and set `DEMO_MODE=true` on it. It seeds sample communities and shows "Try the demo" logins
+(`demo@yourcommunity.app` / `admin@yourcommunity.app`, password `Demo123!` unless you set `DEMO_PASSWORD`).
+**Never point it at the real database, and never set `DEMO_MODE` on the real service.**
+
+Then, on the **real** service, set `DEMO_URL` to the demo's address (e.g. `https://pathwai-demo.up.railway.app`, no
+trailing slash). The real sign-in page then shows **Member demo** and **Admin demo** buttons that open the demo
+site already signed in (`/login?demo=member` / `/login?demo=admin`). The demo's database can be wiped and reseeded at any
+time without touching real members.
 
 ## Troubleshooting
 
