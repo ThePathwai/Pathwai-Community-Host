@@ -11,8 +11,17 @@ import markWhite from "../assets/mark-white.png";
 // with the three next steps. Plays once per browser on /login and /signup; any "How Pathwai works"
 // link can replay it (HowItWorks below fires the pw:open-intro event).
 const SEEN = "pw_intro_seen";
-const seen = () => { try { return window.localStorage.getItem(SEEN) === "1"; } catch { return false; } };
-const markSeen = () => { try { window.localStorage.setItem(SEEN, "1"); } catch { /* storage blocked: it may play again, which is harmless */ } };
+// "Already shown on this browser" is remembered in two places (browser storage, plus a one-year cookie in
+// case storage is blocked or cleared on its own), and is recorded the moment the story starts, so a refresh
+// or a closed tab never replays it. Only the "How Pathwai works" link plays it again.
+const seen = () => {
+  try { if (window.localStorage.getItem(SEEN) === "1") return true; } catch { /* storage blocked */ }
+  try { return document.cookie.split("; ").some((c) => c === `${SEEN}=1`); } catch { return false; }
+};
+const markSeen = () => {
+  try { window.localStorage.setItem(SEEN, "1"); } catch { /* storage blocked */ }
+  try { document.cookie = `${SEEN}=1; max-age=31536000; path=/; SameSite=Lax${window.location.protocol === "https:" ? "; Secure" : ""}`; } catch { /* cookies blocked: it may play again, which is harmless */ }
+};
 export const openIntro = () => window.dispatchEvent(new Event("pw:open-intro"));
 const reducedMotion = () => { try { return window.matchMedia("(prefers-reduced-motion: reduce)").matches; } catch { return false; } };
 
@@ -161,7 +170,7 @@ export default function IntroTour() {
 
   // First visit, signed out, on the sign-in or sign-up page (not on a community's own join link, not in the demo).
   const eligible = !loading && !account && !isDemo() && ["/login", "/signup"].includes(loc.pathname) && !params.get("join") && params.get("intro") !== "0";
-  useEffect(() => { if (eligible && !seen()) { setI(0); setOpen(true); } }, [eligible]);
+  useEffect(() => { if (eligible && !seen()) { markSeen(); setI(0); setOpen(true); } }, [eligible]);
   useEffect(() => { const on = () => { setI(0); setRun((r) => r + 1); setLeaving(false); setHolding(false); setUserPaused(false); setOpen(true); }; window.addEventListener("pw:open-intro", on); return () => window.removeEventListener("pw:open-intro", on); }, []);
   useEffect(() => { const v = () => setHidden(document.hidden); document.addEventListener("visibilitychange", v); return () => document.removeEventListener("visibilitychange", v); }, []);
 
