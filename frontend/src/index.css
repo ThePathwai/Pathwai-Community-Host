@@ -78,3 +78,20 @@ a, button, [role="button"], select, .input {
 @media (prefers-reduced-motion: reduce) {
   .pw-float, .pw-flow, .pw-pulse, .pw-in-right, .pw-in-left, .pw-pop, .pw-slide-x { animation: none !important; }
 }
+
+/* ---- Intro story (components/IntroTour.jsx): everything is a CSS animation so "hold to pause" can freeze it ---- */
+@keyframes pw-fill { from { transform: scaleX(0); } to { transform: scaleX(1); } }
+@keyframes pw-join { from { left: var(--x0); top: var(--y0); } }
+@keyframes pw-appear { from { opacity: 0; transform: translate(-50%, -50%) scale(.55); } }
+@keyframes pw-fade-in { from { opacity: 0; transform: translateY(8px); } }
+@keyframes pw-fade-out { 0%, 78% { opacity: 1; transform: none; } 100% { opacity: 0; transform: translateY(-8px); } }
+.pw-fill { transform-origin: left; animation: pw-fill var(--dur, 3s) linear forwards; }
+.pw-join { animation: pw-join .95s cubic-bezier(.6, 0, .2, 1) var(--dl, 1.5s) backwards, pw-float 5s ease-in-out 2.5s infinite; }
+.pw-appear { animation: pw-appear .6s var(--ease-out) var(--dl, 1.5s) backwards; }
+.pw-line { animation: pw-fade-in .6s ease var(--dl, 2s) backwards, pw-flow 1.1s linear infinite; }
+.pw-textout { opacity: 0; animation: pw-fade-out var(--dur, 1.6s) ease both; }
+.pw-textin { animation: pw-fade-in .55s var(--ease-out) var(--dl, 1.6s) backwards; }
+.pw-story *, .pw-story *::before, .pw-story *::after { animation-play-state: var(--ps, running) !important; }
+@media (prefers-reduced-motion: reduce) {
+  .pw-fill, .pw-join, .pw-appear, .pw-line, .pw-textout, .pw-textin { animation: none !important; }
+}
