@@ -2,6 +2,7 @@ import { applyBrand, HUB_BRAND, setThemeScope } from "./theme";
 import React, { createContext, useCallback, useContext, useEffect, useState } from "react";
 import { api } from "./api";
 import { forgetThisDevice } from "./webNotify";
+import { setDemoRole } from "./demo";
 
 const Ctx = createContext(null);
 export const useAuth = () => useContext(Ctx);
@@ -59,7 +60,7 @@ export function AuthProvider({ children }) {
     await loadConfig();
     return data;
   };
-  const logout = async () => { await forgetThisDevice(); await api.post("/auth/logout"); setUser(null); setAccount(null); showHubTheme(); };
+  const logout = async () => { setDemoRole(null); await forgetThisDevice(); await api.post("/auth/logout"); setUser(null); setAccount(null); showHubTheme(); };
 
   return (
     <Ctx.Provider value={{ account, user, setUser, config, loading, login, applySession, signup, enter, logout, refresh, loadConfig, showHubTheme }}>

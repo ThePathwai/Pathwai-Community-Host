@@ -6,10 +6,7 @@ export const API_BASE = base;
 export const CLIENT_ID = (typeof crypto !== "undefined" && crypto.randomUUID ? crypto.randomUUID() : String(Math.random()).slice(2) + Date.now()).replace(/[^a-zA-Z0-9-]/g, "").slice(0, 36);
 export const api = axios.create({ baseURL: `${base}/api`, withCredentials: true, headers: { "X-Client-Id": CLIENT_ID } });
 
-if (process.env.REACT_APP_PREVIEW === "true") {
-  // static preview build: answer from recorded fixtures instead of a server
-  require("../preview/mock").install(api);
-}
+// The in-browser demo / static preview swaps the server for recorded sample data: see index.js and lib/demo.js.
 
 export const errMsg = (e, fallback = "Your update was not saved. Please try again.") => {
   const d = e?.response?.data?.detail;

@@ -6,6 +6,7 @@ import { Bookmark, CalendarPlus, ExternalLink } from "lucide-react";
 import { toast } from "sonner";
 import { api, errMsg, fmtDate } from "../lib/api";
 import { useLive } from "../lib/live";
+import { isDemo } from "../lib/demo";
 import { Avatar, Button, Card, Chip, cx, Field, PageHeader, SectionCard, Select, Spinner, Textarea } from "../components/ui";
 
 export const RsvpButtons = ({ value, onChange, size, className }) => (
@@ -51,7 +52,7 @@ export default function EventDetail() {
   // starts itself -- a plain <a href> to a real backend URL would also just 404 there (there's no
   // backend to hit), so a live link is doubly broken in that context. Same honesty as the
   // chat/extract-pdf preview fallbacks: say so instead of silently failing.
-  const PREVIEW = process.env.REACT_APP_PREVIEW === "true";
+  const PREVIEW = isDemo();
   const addToCalendar = (ev) => { if (PREVIEW) { ev.preventDefault(); toast.message("Downloads aren't available in this preview — this opens a real .ics file in the deployed app."); } };
   if (e === null) return <Spinner />;
   if (e === false) return <div className="py-20 text-center"><p className="font-display text-xl">This link is not available.</p></div>;

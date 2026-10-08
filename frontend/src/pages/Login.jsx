@@ -3,6 +3,7 @@ import { Link, useLocation, useNavigate, useSearchParams } from "react-router-do
 import { toast } from "sonner";
 import { api, errMsg } from "../lib/api";
 import { useAuth } from "../lib/auth";
+import { demoRole, isDemo, startDemo } from "../lib/demo";
 import { applyBrand } from "../lib/theme";
 import crowd from "../assets/crowd.jpg";
 import { Button, Card, Field, Input, MembershipStatusCard, PoweredBy, Wordmark } from "../components/ui";
@@ -23,11 +24,12 @@ export default function Login() {
   const [err, setErr] = useState("");
   const [status, setStatus] = useState("");
   const [busy, setBusy] = useState(false);
-  const [demo, setDemo] = useState({ accounts: [], password: "", demo_url: "" });
+  const [demo, setDemo] = useState({ accounts: [], password: "" });
+  const inDemo = isDemo();
 
   useEffect(() => { api.get("/auth/demo-accounts").then((r) => setDemo(r.data)).catch(() => {}); }, []);
-  // The live site links here as <demo site>/login?demo=member|admin|host: sign straight in (demo site only: it has the demo logins).
-  const autoDemo = params.get("demo");
+  // /login?demo=member|admin|host (what the "Try the demo" buttons open) signs straight in to the in-browser demo.
+  const autoDemo = params.get("demo") || (inDemo ? demoRole() : null);
   const autoDone = React.useRef(false);
   useEffect(() => {
     if (!autoDemo || autoDone.current || !demo.accounts.length) return;
@@ -123,16 +125,16 @@ export default function Login() {
             ))}
           </div>
         )}
-        {demo.demo_url && demo.accounts.length === 0 && (
+        {!inDemo && (
           <div className="mt-6 space-y-2" data-testid="demo-links">
             <p className="eyebrow">Try the demo</p>
-            <p className="text-xs text-muted">A separate practice copy with made-up members and events. Nothing you do there touches the real community.</p>
+            <p className="text-xs text-muted">A practice copy with made-up members and events. Nothing you do there is saved or touches the real community.</p>
             {[["member", "Member demo", "Explore the community as a member: profiles, events, perks and recommended connections."],
               ["admin", "Admin demo", "Sign in as the admin: edit the site, change the colours and logo, and manage members."]].map(([k, label, desc]) => (
-              <a key={k} data-testid={`demo-link-${k}`} href={`${demo.demo_url}/login?demo=${k}`} target="_blank" rel="noopener noreferrer"
+              <button key={k} type="button" data-testid={`demo-link-${k}`} onClick={() => startDemo(k)}
                 className="block w-full rounded-xl border border-line bg-surface p-4 text-left hover:bg-ink/5">
-                <p className="font-medium">{label} <span className="text-muted">↗</span></p><p className="text-xs text-muted">{desc}</p>
-              </a>))}
+                <p className="font-medium">{label}</p><p className="text-xs text-muted">{desc}</p>
+              </button>))}
           </div>
         )}
         <PoweredBy className="mt-10 text-center" />

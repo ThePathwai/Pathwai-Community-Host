@@ -135,14 +135,3 @@ def test_setup_is_admin_only(c):
     login(c, "demo@yourcommunity.app")
     assert c.get("/api/admin/google-forms/setup").status_code == 403
 
-
-def test_live_login_page_points_at_the_separate_demo_site(c, monkeypatch):
-    # Production has no demo logins of its own; DEMO_URL (a separate demo deployment) is what the login page links to.
-    monkeypatch.setattr(server, "demo_mode", lambda: False)
-    monkeypatch.setenv("DEMO_URL", "https://pathwai-demo.up.railway.app/")
-    out = c.get("/api/auth/demo-accounts").json()
-    assert out == {"accounts": [], "password": "", "demo_url": "https://pathwai-demo.up.railway.app"}
-    monkeypatch.setenv("DEMO_URL", "javascript:alert(1)")
-    assert c.get("/api/auth/demo-accounts").json()["demo_url"] == ""
-    monkeypatch.delenv("DEMO_URL")
-    assert c.get("/api/auth/demo-accounts").json()["demo_url"] == ""

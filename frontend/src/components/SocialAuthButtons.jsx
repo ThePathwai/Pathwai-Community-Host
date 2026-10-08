@@ -2,12 +2,12 @@ import React, { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import { api, errMsg } from "../lib/api";
 import { Button, TermsConsent, cx } from "./ui";
+import { isDemo } from "../lib/demo";
 
 // Real Google/Apple SDKs live on hosts the bundled preview's sandbox can't load, so the preview
 // always uses the simulated click-through below; a real deployment (REACT_APP_PREVIEW unset)
 // loads the real SDKs and only falls back to the simulated button if a provider's client ID
 // hasn't been configured yet (see backend/routes/oauth.py).
-const PREVIEW = process.env.REACT_APP_PREVIEW === "true";
 const GOOGLE_SDK = "https://accounts.google.com/gsi/client";
 const APPLE_SDK = "https://appleid.cdn-apple.com/appleauth/static/jsapi/appleid/1/en_US/appleid.auth.js";
 
@@ -71,7 +71,7 @@ export default function SocialAuthButtons({ onSignedIn, disabled, joinSlug, acce
 
   // Real Google button: render Google's own widget once the SDK loads and a client ID is configured.
   useEffect(() => {
-    if (PREVIEW || !providers.google?.configured || !providers.google?.client_id || googleRendered.current) return;
+    if (isDemo() || !providers.google?.configured || !providers.google?.client_id || googleRendered.current) return;
     let cancelled = false;
     loadScript(GOOGLE_SDK)
       .then(() => {
@@ -89,13 +89,13 @@ export default function SocialAuthButtons({ onSignedIn, disabled, joinSlug, acce
   }, [providers.google?.client_id, providers.google?.configured]);
 
   const clickGoogle = () => {
-    if (PREVIEW) return finish("google", "preview-demo-credential");
+    if (isDemo()) return finish("google", "preview-demo-credential");
     // Not configured (or the SDK never loaded): still let it hit the backend, which explains why.
     return finish("google", "unconfigured");
   };
 
   const clickApple = async () => {
-    if (PREVIEW) return finish("apple", "preview-demo-credential");
+    if (isDemo()) return finish("apple", "preview-demo-credential");
     if (!providers.apple?.configured || !providers.apple?.client_id) return finish("apple", "unconfigured");
     try {
       await loadScript(APPLE_SDK);
@@ -111,8 +111,8 @@ export default function SocialAuthButtons({ onSignedIn, disabled, joinSlug, acce
 
   // A live site only shows a provider once its client ID is set (see DEPLOY.md section 6): a button that
   // can only answer "isn't configured" would just confuse people. The preview keeps simulated buttons.
-  const showGoogleFallback = PREVIEW;
-  const showApple = PREVIEW || !!providers.apple?.configured;
+  const showGoogleFallback = isDemo();
+  const showApple = isDemo() || !!providers.apple?.configured;
 
   return (
     <div className="space-y-2.5">
@@ -122,7 +122,7 @@ export default function SocialAuthButtons({ onSignedIn, disabled, joinSlug, acce
           <GoogleMark /> Continue with Google
         </button>
       )}
-      <div ref={googleBoxRef} className={cx("flex justify-center", (PREVIEW || !providers.google?.configured) && "hidden")} />
+      <div ref={googleBoxRef} className={cx("flex justify-center", (isDemo() || !providers.google?.configured) && "hidden")} />
       {showApple && <button type="button" onClick={clickApple} disabled={disabled || busy === "apple"} data-testid="oauth-apple"
         className={cx("flex w-full items-center justify-center gap-2.5 rounded-xl border border-line bg-ink py-2.5 text-sm font-medium text-paper transition hover:opacity-90", (disabled || busy === "apple") && "cursor-not-allowed opacity-60")}>
         <AppleMark /> Continue with iCloud

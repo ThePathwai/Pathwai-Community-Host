@@ -11,6 +11,7 @@
 // iPhone/iPad: Apple only allows web notifications for sites added to the Home Screen
 // (Share -> Add to Home Screen) and opened from there. alertsState() reports "ios-install" for that.
 import { api } from "./api";
+import { isDemo } from "./demo";
 
 const POLL_MS = 30000;
 
@@ -143,7 +144,7 @@ export function startNotificationWatch({ onUnread, onOpen }) {
   const seen = new Set();
   let first = true;
   let stopped = false;
-  syncPush();
+  if (!isDemo()) syncPush();  // no real push subscriptions from the demo
   const tick = async () => {
     if (stopped) return;
     try {

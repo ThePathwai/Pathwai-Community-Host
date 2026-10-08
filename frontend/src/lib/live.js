@@ -4,6 +4,7 @@
 // search box is left alone). The ping carries no data; pages re-fetch through the normal API.
 import { useEffect, useRef } from "react";
 import { API_BASE, CLIENT_ID } from "./api";
+import { isDemo } from "./demo";
 
 const listeners = new Set();
 let source = null;
@@ -39,6 +40,7 @@ function open() {
 
 // Call once while the signed-in app is on screen (Layout does). Returns a stop function.
 export function startLive() {
+  if (isDemo()) return () => {};  // the demo has no server to listen to
   users += 1;
   open();
   return () => {

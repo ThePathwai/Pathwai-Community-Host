@@ -43,7 +43,7 @@ with TestClient(server.app, base_url="https://app.example.com") as c:
     check("HTTPS deployment sends HSTS + hardening headers + request id",
           "max-age=31536000" in h.headers.get("strict-transport-security", "") and h.headers.get("x-frame-options") == "DENY"
           and h.headers.get("x-content-type-options") == "nosniff" and bool(h.headers.get("x-request-id")), str(dict(h.headers)))
-    check("no demo accounts offered on the login page", (lambda d: d["accounts"] == [] and d["password"] == "" and d.get("demo_url", "") == "")(c.get("/api/auth/demo-accounts").json()))
+    check("no demo accounts offered on the login page", c.get("/api/auth/demo-accounts").json() == {"accounts": [], "password": ""})
     for email in ("demo@yourcommunity.app", "admin@yourcommunity.app"):
         r = c.post("/api/auth/login", json={"email": email, "password": "Demo123!"})
         check(f"demo login {email} does not exist", r.status_code == 401, r.text)
