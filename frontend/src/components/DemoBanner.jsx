@@ -7,6 +7,7 @@ export default function DemoBanner() {
   return (
     <div className="flex flex-wrap items-center justify-center gap-x-3 gap-y-1 bg-accent px-3 py-1.5 text-center text-xs font-medium text-on-accent" style={{ background: "var(--accent, #F00F21)", color: "var(--on-accent, #fff)" }} data-testid="demo-banner">
       <span>You're in the demo: made-up members and events. Nothing here is saved or shared.</span>
+      <button type="button" onClick={() => window.location.reload()} className="underline underline-offset-2" data-testid="demo-restart">Restart demo</button>
       <button type="button" onClick={exitDemo} className="underline underline-offset-2" data-testid="demo-exit">Exit demo</button>
     </div>
   );

@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import { useLocation, useNavigate, useSearchParams } from "react-router-dom";
-import { ArrowLeftRight, CalendarDays, Check, CreditCard, FileText, Handshake, Mail, MapPin, MessageCircle, Sparkles, Table2, X } from "lucide-react";
+import { ArrowLeftRight, CalendarDays, Check, ChevronLeft, ChevronRight, CreditCard, FileText, Handshake, Mail, MapPin, MessageCircle, Pause, Play, RotateCcw, Sparkles, Table2, X } from "lucide-react";
 import { useAuth } from "../lib/auth";
 import { isDemo, startDemo } from "../lib/demo";
 import markWhite from "../assets/mark-white.png";
@@ -152,15 +152,17 @@ export default function IntroTour() {
   const [i, setI] = useState(0);
   const [holding, setHolding] = useState(false);
   const [hidden, setHidden] = useState(false);
+  const [userPaused, setUserPaused] = useState(false);
+  const [run, setRun] = useState(0);  // bumps on restart so every animation starts over, even from the first beat
   const dialog = useRef(null);
   const holdTimer = useRef(null);
   const held = useRef(false);
-  const still = reducedMotion();  // no auto-advance for people who asked for less motion: tap to move on
+  const still = reducedMotion();  // asked for less motion: the animations are skipped, but it still moves on by itself (timer below)
 
   // First visit, signed out, on the sign-in or sign-up page (not on a community's own join link, not in the demo).
   const eligible = !loading && !account && !isDemo() && ["/login", "/signup"].includes(loc.pathname) && !params.get("join") && params.get("intro") !== "0";
   useEffect(() => { if (eligible && !seen()) { setI(0); setOpen(true); } }, [eligible]);
-  useEffect(() => { const on = () => { setI(0); setLeaving(false); setHolding(false); setOpen(true); }; window.addEventListener("pw:open-intro", on); return () => window.removeEventListener("pw:open-intro", on); }, []);
+  useEffect(() => { const on = () => { setI(0); setRun((r) => r + 1); setLeaving(false); setHolding(false); setUserPaused(false); setOpen(true); }; window.addEventListener("pw:open-intro", on); return () => window.removeEventListener("pw:open-intro", on); }, []);
   useEffect(() => { const v = () => setHidden(document.hidden); document.addEventListener("visibilitychange", v); return () => document.removeEventListener("visibilitychange", v); }, []);
 
   const close = useCallback((then) => {
@@ -168,6 +170,7 @@ export default function IntroTour() {
     setTimeout(() => { setOpen(false); setLeaving(false); if (typeof then === "function") then(); }, 260);
   }, []);
   const go = useCallback((n) => setI(Math.max(0, Math.min(END, n))), []);
+  const restart = useCallback(() => { setI(0); setRun((r) => r + 1); setHolding(false); setUserPaused(false); }, []);
 
   useEffect(() => {
     if (!open) return undefined;
@@ -175,13 +178,23 @@ export default function IntroTour() {
       if (e.key === "Escape") close();
       else if (e.key === "ArrowRight") go(i + 1);
       else if (e.key === "ArrowLeft") go(i - 1);
-      else if (e.key === " " && !e.target.closest?.("button")) { e.preventDefault(); setHolding((h) => !h); }
+      else if (e.key === "r" || e.key === "R") restart();
+      else if (e.key === " " && !e.target.closest?.("button")) { e.preventDefault(); setUserPaused((h) => !h); }
     };
     document.addEventListener("keydown", onKey);
     const prev = document.body.style.overflow; document.body.style.overflow = "hidden";
     return () => { document.removeEventListener("keydown", onKey); document.body.style.overflow = prev; };
-  }, [open, i, go, close]);
+  }, [open, i, go, close, restart]);
   useEffect(() => { if (open) dialog.current?.focus({ preventScroll: true }); }, [open]);
+
+  // Autoplay. Normally the progress bar's own animation moves things on (so pausing freezes both together).
+  // With "reduce motion" on, that animation is switched off, so a plain timer does the same job instead.
+  const waiting = holding || hidden || userPaused;
+  useEffect(() => {
+    if (!open || !still || waiting || i >= END) return undefined;
+    const t = setTimeout(() => setI((n) => Math.min(END, n + 1)), BEATS[i].ms);
+    return () => clearTimeout(t);
+  }, [open, still, waiting, i, run]);
 
   if (!open) return null;
 
@@ -202,7 +215,7 @@ export default function IntroTour() {
   const cancel = () => { clearTimeout(holdTimer.current); if (held.current) { held.current = false; setHolding(false); } };
 
   const beat = BEATS[i];
-  const paused = holding || hidden;
+  const paused = holding || hidden || userPaused;
 
   return (
     <div ref={dialog} tabIndex={-1} role="dialog" aria-modal="true" aria-label="How Pathwai works" data-testid="intro-tour"
@@ -217,7 +230,7 @@ export default function IntroTour() {
           <div key={n} className="h-[3px] flex-1 overflow-hidden rounded-full" style={{ background: "rgb(var(--c-line))" }}>
             {n < i || i === END || (n === i && still)
               ? <div className="h-full w-full" style={{ background: "var(--accent)" }} />
-              : n === i ? <div key={`${i}-${open}`} className="pw-fill h-full w-full" style={{ background: "var(--accent)", "--dur": `${b.ms}ms` }} onAnimationEnd={(e) => { if (e.target === e.currentTarget) go(i + 1); }} /> : null}
+              : n === i ? <div key={`${i}-${run}`} className="pw-fill h-full w-full" style={{ background: "var(--accent)", "--dur": `${b.ms}ms` }} onAnimationEnd={(e) => { if (e.target === e.currentTarget) go(i + 1); }} /> : null}
           </div>))}
       </div>
       <div className="relative mx-auto flex w-full max-w-md items-center justify-between px-5 pb-1 pt-3">
@@ -229,7 +242,7 @@ export default function IntroTour() {
 
       <div className="relative mx-auto flex w-full max-w-md flex-1 flex-col px-5 pb-6">
         {i < END ? (
-          <div key={`${i}-${open}`} className="flex flex-1 flex-col items-center justify-center gap-7 py-3 text-center" data-testid={`intro-beat-${i}`}>
+          <div key={`${i}-${run}`} className="flex flex-1 flex-col items-center justify-center gap-7 py-3 text-center" data-testid={`intro-beat-${i}`}>
             <div className="flex min-h-[15rem] w-full items-center justify-center">{<beat.Visual />}</div>
             <div className="min-h-[7.5rem] w-full">{beat.text}</div>
           </div>
@@ -246,7 +259,19 @@ export default function IntroTour() {
             </div>
           </div>
         )}
-        {i < END && <p className="pt-2 text-center text-[11px] text-muted/70">{still ? "Tap to continue" : "Tap to skip ahead · hold to pause"}</p>}
+        {i < END ? (
+          <div className="flex items-center justify-center gap-2 pt-2" data-testid="intro-controls">
+            <button type="button" onClick={restart} aria-label="Restart" title="Restart" className="ctl" data-testid="intro-restart"><RotateCcw className="h-4 w-4" /></button>
+            <button type="button" onClick={() => go(i - 1)} disabled={i === 0} aria-label="Back" title="Back" className="ctl" data-testid="intro-back"><ChevronLeft className="h-5 w-5" /></button>
+            {<button type="button" onClick={() => setUserPaused((p) => !p)} aria-label={userPaused ? "Play" : "Pause"} title={userPaused ? "Play" : "Pause"} className="ctl" data-testid="intro-pause">{userPaused ? <Play className="h-4 w-4" /> : <Pause className="h-4 w-4" />}</button>}
+            <button type="button" onClick={() => go(i + 1)} aria-label="Forward" title="Forward" className="ctl" data-testid="intro-forward"><ChevronRight className="h-5 w-5" /></button>
+          </div>
+        ) : (
+          <div className="flex items-center justify-center gap-2 pt-1">
+            <button type="button" onClick={() => go(END - 1)} aria-label="Back" title="Back" className="ctl" data-testid="intro-back"><ChevronLeft className="h-5 w-5" /></button>
+            <button type="button" onClick={restart} className="inline-flex h-10 items-center gap-2 rounded-full border border-line px-4 text-xs font-medium text-ink hover:bg-ink/5" data-testid="intro-restart"><RotateCcw className="h-4 w-4" /> Watch again</button>
+          </div>
+        )}
       </div>
     </div>
   );
