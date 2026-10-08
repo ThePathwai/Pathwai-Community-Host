@@ -2,6 +2,7 @@ import React from "react";
 import { Navigate, Route, Routes, useLocation } from "react-router-dom";
 import { Toaster } from "sonner";
 import { useAuth } from "./lib/auth";
+import IntroTour from "./components/IntroTour";
 import { EditProvider } from "./components/EditKit";
 import Layout from "./components/Layout";
 import { Spinner } from "./components/ui";
@@ -53,6 +54,7 @@ export default function App() {
   return (
     <>
       <Toaster position="top-right" theme={config?.brand?.mode || "dark"} />
+      <IntroTour />
       <EditProvider><Routes>
         <Route path="/login" element={<Login />} />
         <Route path="/signup" element={<Signup />} />

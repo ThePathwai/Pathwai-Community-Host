@@ -59,3 +59,22 @@ a, button, [role="button"], select, .input {
   .chip-accent { background: var(--accent); background-image: var(--accent-grad, none); border-color: transparent; color: var(--on-accent); box-shadow: 0 4px 14px -6px var(--accent); }
   .eyebrow { @apply text-[10px] font-medium uppercase text-muted; letter-spacing: 0.24em; }
 }
+
+/* ---- First-visit intro (components/IntroTour.jsx) ---- */
+@keyframes pw-float { 0%, 100% { transform: translate(-50%, -50%) translateY(0) rotate(var(--r, 0deg)); } 50% { transform: translate(-50%, -50%) translateY(-5px) rotate(var(--r, 0deg)); } }
+@keyframes pw-flow { to { stroke-dashoffset: -14; } }
+@keyframes pw-pulse { 0%, 100% { box-shadow: 0 0 0 0 rgb(var(--c-ink) / 0.22); } 50% { box-shadow: 0 0 0 14px rgb(var(--c-ink) / 0); } }
+@keyframes pw-in-right { from { opacity: 0; transform: translateX(28px); } to { opacity: 1; transform: none; } }
+@keyframes pw-in-left { from { opacity: 0; transform: translateX(-28px); } to { opacity: 1; transform: none; } }
+@keyframes pw-pop { from { opacity: 0; transform: translateY(8px) scale(.96); } to { opacity: 1; transform: none; } }
+@keyframes pw-slide-x { 0%, 100% { transform: translateX(-3px); } 50% { transform: translateX(3px); } }
+.pw-float { animation: pw-float 5s ease-in-out infinite; }
+.pw-flow { stroke-dasharray: 4 3; animation: pw-flow 1.1s linear infinite; }
+.pw-pulse { animation: pw-pulse 2.4s ease-out infinite; }
+.pw-in-right { animation: pw-in-right .38s var(--ease-out) both; }
+.pw-in-left { animation: pw-in-left .38s var(--ease-out) both; }
+.pw-pop { animation: pw-pop .5s var(--ease-out) both; }
+.pw-slide-x { animation: pw-slide-x 1.8s ease-in-out infinite; }
+@media (prefers-reduced-motion: reduce) {
+  .pw-float, .pw-flow, .pw-pulse, .pw-in-right, .pw-in-left, .pw-pop, .pw-slide-x { animation: none !important; }
+}

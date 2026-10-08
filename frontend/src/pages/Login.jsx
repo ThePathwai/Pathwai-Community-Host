@@ -4,6 +4,7 @@ import { toast } from "sonner";
 import { api, errMsg } from "../lib/api";
 import { useAuth } from "../lib/auth";
 import { demoRole, isDemo, startDemo } from "../lib/demo";
+import { HowItWorks } from "../components/IntroTour";
 import { applyBrand } from "../lib/theme";
 import crowd from "../assets/crowd.jpg";
 import { Button, Card, Field, Input, MembershipStatusCard, PoweredBy, Wordmark } from "../components/ui";
@@ -114,6 +115,7 @@ export default function Login() {
           </form>
           <p className="mt-4 text-center text-sm text-muted">New to Pathwai? <Link className="underline" to="/signup">Create your account</Link></p>
         </Card>
+        <p className="mt-4 text-center"><HowItWorks /></p>
         {demo.accounts.length > 0 && (
           <div className="mt-6 space-y-2">
             <p className="eyebrow">Try the demo</p>

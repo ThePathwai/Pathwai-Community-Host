@@ -4,6 +4,7 @@ import { api, errMsg } from "../lib/api";
 import { useAuth } from "../lib/auth";
 import { applyBrand } from "../lib/theme";
 import { AvatarUpload, Button, Card, Field, Input, MembershipStatusCard, Select, TagInput, Textarea, TermsConsent, Wordmark, cx } from "../components/ui";
+import { HowItWorks } from "../components/IntroTour";
 import { SUGGEST, ageFromBirthday, oldestISO, todayISO } from "../lib/profile";
 import SocialAuthButtons from "../components/SocialAuthButtons";
 
@@ -28,6 +29,7 @@ function IntentPicker({ onPick }) {
         ))}
       </div>
       <p className="mt-6 text-center text-sm text-muted">Have an account? <Link className="underline" to="/login">Sign in</Link></p>
+      <p className="mt-4 text-center"><HowItWorks /></p>
     </div>
   );
 }
