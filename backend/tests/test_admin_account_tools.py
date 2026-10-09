@@ -124,3 +124,13 @@ def test_members_without_a_status_show_up_as_approved_so_admins_can_reach_them(c
     # ...and the platform admin's own row is marked protected so the UI offers no delete / reset on it
     mine = next(r for r in rows if r["email"] == "admin@yourcommunity.app")
     assert mine["protected"] is True
+
+
+def test_about_the_brand_settings_are_saved_and_validated(c):
+    login(c, "admin@yourcommunity.app")
+    r = c.patch("/api/community/config", json={"about": "  We run wellness events.  ", "about_url": "https://example.com", "about_cta": "Our site"})
+    assert r.status_code == 200 and r.json()["about"] == "We run wellness events." and r.json()["about_url"] == "https://example.com" and r.json()["about_cta"] == "Our site"
+    assert c.patch("/api/community/config", json={"about_url": "javascript:alert(1)"}).status_code == 400
+    assert c.get("/api/community/config").json()["about_url"] == "https://example.com"
+    login(c, "demo@yourcommunity.app")
+    assert c.patch("/api/community/config", json={"about": "x"}).status_code == 403

@@ -28,7 +28,7 @@ PROFILE_KEYS = {f["key"] for f in DEFAULT_PROFILE["fields"]}
 DEFAULT_CONFIG: Dict[str, Any] = {
     "community_name": "The Playr League",
     "require_approval": True,
-    "community_kind": "Wellness & events community", "about": "Networking, workshops and wellness events for professionals across the GTA.", "hub_cover": None, "apply_questions": [],
+    "community_kind": "Wellness & events community", "about": "Networking, workshops and wellness events for professionals across the GTA.", "about_url": "", "about_cta": "", "hub_cover": None, "apply_questions": [],
     # Shown on the hub's "Discover communities" browse/filter UI (see routes/hub.py:_summary) — not
     # shown inside the community itself. Free text so any admin can set it; both default to unset.
     "country": "", "interest_tags": [],
@@ -98,6 +98,16 @@ NAV_KEYS = {"members", "matches", "events", "resources", "updates", "requests", 
 
 
 def _validate(clean: Dict[str, Any]) -> None:
+    # The "About the brand" card on every community's home page: a story, plus an optional website button.
+    if "about" in clean:
+        clean["about"] = str(clean["about"] or "").strip()[:1500]
+    if "about_cta" in clean:
+        clean["about_cta"] = str(clean["about_cta"] or "").strip()[:40]
+    if "about_url" in clean:
+        u = str(clean["about_url"] or "").strip()
+        if u and not re.match(r"^https?://[^\s]+$", u):
+            raise HTTPException(status_code=400, detail="The website link must start with https://")
+        clean["about_url"] = u[:300]
     pt = clean.get("page_text")
     if pt is not None:
         if not isinstance(pt, dict) or len(pt) > 200:

@@ -5,7 +5,7 @@ import { api, errMsg } from "../lib/api";
 import { useAuth } from "../lib/auth";
 import { FONTS, HEADING_FONTS, applyBrand, brandVars, loadFont } from "../lib/theme";
 import { DEFAULT_FIELDS, typeLabel } from "../lib/profile";
-import { Button, Card, Chip, Field, Input, PoweredBy, Select, Spinner, StatusBadge, Wordmark } from "../components/ui";
+import { Button, Card, Chip, Field, Input, PoweredBy, Select, Spinner, StatusBadge, Textarea, Wordmark } from "../components/ui";
 import { PhotoCarouselEditor } from "../components/PhotoCarousel";
 
 const COLOR_FIELDS = [["accent", "Accent / buttons"], ["on_accent", "Text on buttons"], ["background", "Page background"], ["surface", "Cards"], ["text", "Text"], ["muted", "Secondary text"], ["border", "Borders"]];
@@ -88,7 +88,7 @@ export default function Branding({ embedded = false }) {
   const [busy, setBusy] = useState(false);
   const configRef = useRef(config); configRef.current = config;
   useEffect(() => {
-    api.get("/community/config").then((r) => setD({ community_name: r.data.community_name, tagline: r.data.tagline, brand: r.data.brand, nav: r.data.nav, custom_links: r.data.custom_links || [], profile: r.data.profile, member_types: r.data.member_types, gallery_photos: r.data.gallery_photos || [], dashboard_cover_url: r.data.dashboard_cover_url || null }));
+    api.get("/community/config").then((r) => setD({ community_name: r.data.community_name, tagline: r.data.tagline, about: r.data.about || "", about_url: r.data.about_url || "", about_cta: r.data.about_cta || "", brand: r.data.brand, nav: r.data.nav, custom_links: r.data.custom_links || [], profile: r.data.profile, member_types: r.data.member_types, gallery_photos: r.data.gallery_photos || [], dashboard_cover_url: r.data.dashboard_cover_url || null }));
     api.get("/community/presets").then((r) => setPresets(r.data.themes));
   }, []);
   // while editing inside the site, show the draft on the real page; revert if it is not saved
@@ -127,6 +127,11 @@ export default function Branding({ embedded = false }) {
           <div className="grid gap-3 sm:grid-cols-2">
             <Field label="Community name"><Input data-testid="brand-name" value={d.community_name} onChange={(e) => setD({ ...d, community_name: e.target.value })} /></Field>
             <Field label="Tagline"><Input value={d.tagline || ""} onChange={(e) => setD({ ...d, tagline: e.target.value })} /></Field>
+          </div>
+          <Field label="About the brand" hint="Shown in the About card on your members' home page and on your community's join page."><Textarea rows={4} maxLength={1500} data-testid="brand-about" value={d.about || ""} onChange={(e) => setD({ ...d, about: e.target.value })} placeholder="Who you are, what you do and why people join." /></Field>
+          <div className="grid gap-3 sm:grid-cols-2">
+            <Field label="Website (optional)" hint="Adds a button to the About card."><Input data-testid="brand-about-url" value={d.about_url || ""} onChange={(e) => setD({ ...d, about_url: e.target.value })} placeholder="https://" /></Field>
+            <Field label="Button label (optional)"><Input value={d.about_cta || ""} maxLength={40} onChange={(e) => setD({ ...d, about_cta: e.target.value })} placeholder="Visit our website" /></Field>
           </div>
           <div className="grid gap-4 sm:grid-cols-2">
             <LogoField label="Logo" hint="PNG or SVG, transparent background" value={b.logo_url} testid="logo-drop" onFile={(f) => upload(f, "logo_url")} onUrl={(u) => saveLogo({ logo_url: u })} onClear={() => saveLogo({ logo_url: null })} />

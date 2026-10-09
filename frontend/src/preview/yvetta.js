@@ -255,6 +255,7 @@ export function buildYvetta(fixtures, { blank, clone, DEFAULT_CONFIG, REFERENCE_
   const cfg = {
     ...clone(DEFAULT_CONFIG), community_name: "Yvettabetta Pilates", tagline: "Pilates with a playlist. Every class has a theme.",
     community_kind: "Wellness & events community", community_type: "social", member_label_singular: "Member", member_label_plural: "Members",
+    about_url: "https://yvettabettapilates.com", about_cta: "Visit yvettabettapilates.com",
     about: "Rooftop Pilates in Toronto with a theme and a soundtrack for every class. A community of people who came for the workout and stayed for each other: instructors, DJs, designers, photographers, partners and regulars who trade skills and perks.",
     country: "Canada", interest_tags: ["Wellness", "Music"],
     member_types: { founder: "Member", mentor: "Instructor & host", alumni: "Regular", partner: "Partner", guest: "Guest" },

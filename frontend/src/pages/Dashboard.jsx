@@ -7,6 +7,7 @@ import { useAuth } from "../lib/auth";
 import { Inline, useEdit } from "../components/EditKit";
 import { Avatar, Chip, Spinner, StatusBadge } from "../components/ui";
 import { PhotoCarousel } from "../components/PhotoCarousel";
+import AboutBrand from "../components/AboutBrand";
 import { fieldLabel, fieldOn } from "../lib/profile";
 import { AI_CHAT_ENABLED } from "../lib/features";
 import { CalendarDays, Gift, ImagePlus, ListChecks, Megaphone, UserCheck2, UserPlus, Users } from "lucide-react";
@@ -112,6 +113,8 @@ export default function Dashboard() {
           <span className="stat shrink-0 rounded-md bg-red-600 px-1.5 py-0.5 text-xs text-white">{d.membership_requests_total}</span>
           <span className="shrink-0 text-xs text-muted">Review ›</span>
         </button>)}
+
+      <AboutBrand />
 
       <div className="grid grid-cols-2 gap-2.5 lg:hidden">
         <Link to={`/members/${user.id}`} data-testid="dash-hero-mobile" className="card card-hover !p-3.5 col-span-2 flex items-center gap-3">
