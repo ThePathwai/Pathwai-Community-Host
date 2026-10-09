@@ -97,6 +97,18 @@ function blank(v) {
 // The Yvettabetta Pilates demo community (see yvetta.js): added to the recorded data and the hub's list once, at load.
 { const yv = buildYvetta(fixtures, { blank, clone, DEFAULT_CONFIG, REFERENCE_PUBLIC_KEYS }); fixtures.communities[YVETTA_SLUG] = yv.book; fixtures.hub.splice(1, 0, yv.hub); }
 
+// Unity Fitness was recorded with a copy of The Playr League's settings (name, colours, font, logo, text), so opening it
+// from the hub looked like the wrong community. Where a community's settings don't match its own hub card, rebuild them from
+// the card: name, look, story, questions. Anything else stays as recorded.
+for (const hubCard of fixtures.hub) {
+  const com = fixtures.communities[hubCard.slug]; const cfg = com?.public?.["/community/config"];
+  if (!cfg || cfg.community_name === hubCard.name) continue;
+  Object.assign(cfg, { community_name: hubCard.name, tagline: hubCard.tagline, about: hubCard.about, community_kind: hubCard.kind, hub_cover: hubCard.cover || null,
+    apply_questions: hubCard.apply_questions || [], country: hubCard.country || cfg.country, interest_tags: hubCard.interest_tags || cfg.interest_tags,
+    brand: clone(hubCard.brand), theme: { preset: "custom", accent: hubCard.brand?.colors?.accent || cfg.theme?.accent }, gallery_photos: [], dashboard_cover_url: null, custom_links: [] });
+  if (hubCard.slug === "unity") cfg.nav = cfg.nav.map((n) => (n.key === "events" ? { ...n, label: "Classes" } : n));
+}
+
 const fail = (config, status, detail) => {
   const response = { status, data: { detail }, headers: {}, config, statusText: "" };
   return Promise.reject(new axios.AxiosError(detail, "ERR_BAD_REQUEST", config, null, response));
