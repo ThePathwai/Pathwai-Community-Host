@@ -16,6 +16,7 @@ import Dashboard from "./pages/Dashboard";
 import Members from "./pages/Members";
 import MemberProfile from "./pages/MemberProfile";
 import Events from "./pages/Events";
+import Classes from "./pages/Classes";
 import Resources from "./pages/Resources";
 import Requests from "./pages/Requests";
 import Support from "./pages/Support";
@@ -71,6 +72,7 @@ export default function App() {
         <Route path="/members/:id" element={<P><MemberProfile /></P>} />
         <Route path="/events" element={<P><Events /></P>} />
         <Route path="/events/:id" element={<P><EventDetail /></P>} />
+        <Route path="/classes" element={<P><Classes /></P>} />
         <Route path="/matches" element={<P><Matches /></P>} />
         <Route path="/updates" element={<P><Updates /></P>} />
         <Route path="/support" element={<P><Support /></P>} />

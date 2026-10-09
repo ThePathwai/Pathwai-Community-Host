@@ -109,6 +109,7 @@ api_router = APIRouter(prefix="/api")
 # Route modules — each owns its own APIRouter and gets mounted under /api.
 from routes.matches import router as matches_router  # noqa: E402
 from routes.events import router as events_router  # noqa: E402
+from routes.classes import router as classes_router  # noqa: E402
 from routes.resources import router as resources_router  # noqa: E402
 from routes.feeds import router as feeds_router  # noqa: E402
 from routes.announcements import router as announcements_router  # noqa: E402
@@ -1623,6 +1624,7 @@ async def update_user(user_id: str, body: UserUpdate, request: Request, me: dict
 
 # Mount all per-domain routers under /api
 api_router.include_router(events_router)
+api_router.include_router(classes_router)
 api_router.include_router(resources_router)
 api_router.include_router(announcements_router)
 api_router.include_router(matches_router)

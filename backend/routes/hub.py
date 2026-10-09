@@ -39,6 +39,8 @@ CATEGORY_PRESETS: Dict[str, Dict[str, Any]] = {
                "event_types": ["Sunday Gathering", "Community Meal", "Connect Group", "Volunteer Day", "Youth Night", "Prayer Evening"]},
     "wellness": {"label": "Wellness / fitness brand", "kind": "Wellness & events community", "theme_preset": "playr-modern", "member_plural": "Members",
                  "event_types": ["Networking", "Workshop", "Wellness", "Social", "Summit"]},
+    "gym": {"label": "Gym / studio with classes", "kind": "Gym & fitness", "theme_preset": "playr-modern", "member_plural": "Members", "classes": True,
+            "event_types": ["Member Night", "Challenge", "Workshop", "Social"]},
     "dinner_club": {"label": "Private club / dinner series", "kind": "Private club", "theme_preset": "sunset", "member_plural": "Guests",
                     "event_types": ["Dinner", "Wine Salon", "Market Morning", "Members' Supper"]},
     "professional": {"label": "Professional network", "kind": "Professional network", "theme_preset": "ocean", "member_plural": "Members",
@@ -315,6 +317,8 @@ async def create_community(body: CreateCommunityIn, request: Request, response: 
         "member_label_plural": preset["member_plural"],
         "member_label_singular": preset["member_plural"][:-1] if preset["member_plural"].endswith("s") else preset["member_plural"],
         "event_types": list(preset["event_types"]),
+        # a gym or studio gets the bookable class schedule, first in its menu; everyone else can switch it on later in Branding
+        "nav": ([{"key": "classes", "label": "Classes", "enabled": True}] + [n for n in DEFAULT_CONFIG["nav"] if n["key"] != "classes"]) if preset.get("classes") else DEFAULT_CONFIG["nav"],
         "theme": {"preset": theme["preset"], "accent": theme["accent"]},
         "brand": {
             **DEFAULT_CONFIG["brand"], "preset": theme["preset"], "mode": theme["mode"], "colors": dict(theme["colors"]),

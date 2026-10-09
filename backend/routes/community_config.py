@@ -66,6 +66,7 @@ DEFAULT_CONFIG: Dict[str, Any] = {
         {"key": "updates", "label": "News", "enabled": True}, {"key": "requests", "label": "To-do", "enabled": True},
         {"key": "support", "label": "Help board", "enabled": True},
         {"key": "inbox", "label": "Messages", "enabled": True},
+        {"key": "classes", "label": "Classes", "enabled": False},  # bookable class schedule (gyms, studios): switched on per community
     ],
     "custom_links": [],
     "setup_completed": True,
@@ -94,7 +95,7 @@ THEME_PRESETS = [
 HEADING_FONTS = ["Plus Jakarta Sans", "Playfair Display", "Lora", "Inter", "Montserrat", "Anton", "Bebas Neue", "Oswald", "Archivo Black", "Instrument Serif"]
 FONTS = ["Plus Jakarta Sans", "Inter", "Space Grotesk", "DM Sans", "Manrope", "Poppins", "Montserrat", "Work Sans", "IBM Plex Sans", "Playfair Display", "Lora", "Jost"]
 HEX = re.compile(r"^#[0-9a-fA-F]{6}$")
-NAV_KEYS = {"members", "matches", "events", "resources", "updates", "requests", "support", "inbox"}
+NAV_KEYS = {"members", "matches", "events", "classes", "resources", "updates", "requests", "support", "inbox"}
 
 
 def _validate(clean: Dict[str, Any]) -> None:

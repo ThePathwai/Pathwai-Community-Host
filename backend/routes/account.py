@@ -28,7 +28,7 @@ router = APIRouter(tags=["account"])
 # erased on account deletion. `payments` is exported but deliberately KEPT on deletion: payment records are
 # financial records the community and its payment provider must retain.
 USER_OWNED = ["notifications", "member_requests", "profile_requests", "support_requests", "match_actions",
-              "resource_engagement", "event_views", "event_feedback"]
+              "resource_engagement", "event_views", "event_feedback", "class_bookings", "class_reviews"]
 EXPORT_ONLY = ["payments"]
 SECRET_FIELDS = ("_id", "password_hash", "sessions_valid_after", "oauth_sub")
 

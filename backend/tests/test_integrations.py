@@ -101,7 +101,7 @@ def test_brand_config_validation(c):
         assert c.patch("/api/community/config", json={"custom_links": [{"label": "x", "url": "javascript:alert(1)"}]}).status_code == 400
         ok = c.patch("/api/community/config", json={"community_name": "Acme Hub", "brand": {"preset": "ocean", "mode": "dark", "colors": {"accent": "#3B82F6"}, "font": "Manrope"}, "nav": [{"key": "events", "label": "Happenings", "enabled": True}]}).json()
         assert ok["brand"]["font"] == "Manrope" and ok["brand"]["colors"]["background"] == "#09090B" and ok["theme"]["accent"] == "#3B82F6"
-        assert ok["nav"][0]["label"] == "Happenings" and len(ok["nav"]) == 8
+        assert ok["nav"][0]["label"] == "Happenings" and len(ok["nav"]) == 9
     finally:
         c.patch("/api/community/config", json={"community_name": before["community_name"], "brand": before["brand"], "nav": before["nav"]})
 

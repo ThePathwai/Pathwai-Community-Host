@@ -3,6 +3,7 @@
 import axios from "axios";
 import fixtures from "./fixtures.json";
 import { buildYvetta, YVETTA_SLUG } from "./yvetta";
+import { classesHandler, newClassesState } from "./classes";
 
 const S = { role: null, email: null, community: null, books: {}, extra: {} };
 const book = () => { const k = S.community || "playr"; return (S.books[k] = S.books[k] || JSON.parse(JSON.stringify(fixtures.communities[k]))); };
@@ -14,7 +15,7 @@ const ACCOUNTS = { "demo@yourcommunity.app": { name: "Fife Ashley-Dejo", role: "
 // but just a plain member of grace (grace's real admin is a separate persona, pastor@c3.example, same
 // as the real backend's seed_communities.py); demo@ is a plain member everywhere except Toronto Tech
 // Collective, where it's the founding admin — the "vice versa" half. See ADMIN_OF below.
-const BASE = { "demo@yourcommunity.app": { playr: "approved", grace: "approved", "club-pto": "approved", "toronto-tech-collective": "approved", [YVETTA_SLUG]: "approved" }, "admin@yourcommunity.app": { playr: "approved", grace: "approved", "the-village": "approved", "club-pto": "approved", unity: "approved", [YVETTA_SLUG]: "approved" }, "host@thevillage.example": { "the-village": "approved" } };
+const BASE = { "demo@yourcommunity.app": { playr: "approved", grace: "approved", "club-pto": "approved", "toronto-tech-collective": "approved", unity: "approved", [YVETTA_SLUG]: "approved" }, "admin@yourcommunity.app": { playr: "approved", grace: "approved", "the-village": "approved", "club-pto": "approved", unity: "approved", [YVETTA_SLUG]: "approved" }, "host@thevillage.example": { "the-village": "approved" } };
 const ADMIN_OF = { "admin@yourcommunity.app": ["playr", "the-village", "club-pto", "unity", YVETTA_SLUG], "demo@yourcommunity.app": ["toronto-tech-collective"], "host@thevillage.example": ["the-village"] };
 const memStatus = (email, slug) => (S.extra.join || {})[email + "|" + slug] || (BASE[email] || {})[slug] || "none";
 const isAdminHere = () => (ADMIN_OF[S.email] || []).includes(slugOf());
@@ -33,6 +34,8 @@ const CATEGORY_PRESETS = {
     event_types: ["Dinner", "Wine Salon", "Market Morning", "Members' Supper"] },
   professional: { label: "Professional network", kind: "Professional network", theme_preset: "ocean", member_plural: "Members",
     event_types: ["Networking", "Workshop", "Panel", "Mixer"] },
+  gym: { label: "Gym / studio with classes", kind: "Gym & fitness", theme_preset: "playr-modern", member_plural: "Members", classes: true,
+    event_types: ["Member Night", "Challenge", "Workshop", "Social"] },
   other: { label: "Something else", kind: "Community", theme_preset: "pathwai", member_plural: "Members",
     event_types: ["Gathering", "Meetup", "Workshop", "Social"] },
 };
@@ -74,7 +77,7 @@ const DEFAULT_CONFIG = {
     { key: "members", label: "Members", enabled: true }, { key: "matches", label: "Connections", enabled: true },
     { key: "events", label: "Events", enabled: true }, { key: "resources", label: "Perks", enabled: true },
     { key: "updates", label: "News", enabled: true }, { key: "requests", label: "To-do", enabled: true },
-    { key: "support", label: "Help board", enabled: true },
+    { key: "support", label: "Help board", enabled: true }, { key: "classes", label: "Classes", enabled: false },
   ],
   custom_links: [], setup_completed: true,
 };
@@ -106,7 +109,16 @@ for (const hubCard of fixtures.hub) {
   Object.assign(cfg, { community_name: hubCard.name, tagline: hubCard.tagline, about: hubCard.about, community_kind: hubCard.kind, hub_cover: hubCard.cover || null,
     apply_questions: hubCard.apply_questions || [], country: hubCard.country || cfg.country, interest_tags: hubCard.interest_tags || cfg.interest_tags,
     brand: clone(hubCard.brand), theme: { preset: "custom", accent: hubCard.brand?.colors?.accent || cfg.theme?.accent }, gallery_photos: [], dashboard_cover_url: null, custom_links: [] });
-  if (hubCard.slug === "unity") cfg.nav = cfg.nav.map((n) => (n.key === "events" ? { ...n, label: "Classes" } : n));
+  // A gym books classes: Classes is switched on and leads the menu; Events stays as it was.
+  if (hubCard.slug === "unity") cfg.nav = [{ key: "classes", label: "Classes", enabled: true }, ...cfg.nav.filter((n) => n.key !== "classes")];
+  // The demo member (not just the admin) can walk into Unity: same studio, with their own member view.
+  if (hubCard.slug === "unity" && com.logins && !com.logins["demo@yourcommunity.app"]) {
+    const m = clone(com.logins["admin@yourcommunity.app"]);
+    for (const k of Object.keys(m)) if (k.startsWith("/admin")) delete m[k];
+    const me = { ...m["/auth/me"], id: "u-unity-demo", email: "demo@yourcommunity.app", role: "member", member_type: "guest", title: "Member", company: null };
+    m["/auth/me"] = me; if (m["/dashboard"]) m["/dashboard"] = { ...m["/dashboard"], me };
+    com.logins["demo@yourcommunity.app"] = m;
+  }
 }
 
 const fail = (config, status, detail) => {
@@ -463,7 +475,20 @@ function applyToCommunity(slug, { title, message, answers } = {}) {
 }
 const sum = (id) => String(id).split("").reduce((a, c) => a + c.charCodeAt(0), 0);
 const t_sold_out = (tier, orders) => tier.capacity != null && orders.filter((o) => o.tier_id === tier.id).length >= tier.capacity;
+// The in-browser Classes backend: one timetable per community, kept in this tab's demo state.
+function classesCall(method, path, body, params, config) {
+  const slug = slugOf();
+  if (!S.role || !slug) return fail(config, 401, "Not authenticated");
+  const store = (S.extra.classes = S.extra.classes || {});
+  const state = store[slug] || (store[slug] = newClassesState(slug));
+  const m = (view()["/auth/me"]) || {};
+  const r = classesHandler({ method, path, body, params, state, me: { id: m.id || S.email, name: m.name || "You", role: m.role, avatar_url: m.avatar_url || null } });
+  if (!r) return ok(config, { ok: true });
+  return r.status >= 400 ? fail(config, r.status, r.data?.detail || "Something went wrong") : ok(config, r.data, r.status);
+}
+
 function get(path, p, config) {
+  if (path.startsWith("/classes")) return classesCall("get", path, {}, p, config);
   if (path === "/admin/blasts/history") {
     let blasts = S.extra.blasts || [];
     if (p.audience_type) blasts = blasts.filter((b) => b.audience?.type === p.audience_type);
@@ -823,6 +848,7 @@ function get(path, p, config) {
 }
 
 function write(method, path, body, config) {
+  if (path.startsWith("/classes")) return classesCall(method, path, body, config.params || {}, config);
   if (path === "/auth/login") {
     const acct = ACCOUNTS[body.email] ? { ...ACCOUNTS[body.email], pw: "Demo123!" } : (S.extra.accounts || {})[body.email];
     if (!acct) return fail(config, 401, "Invalid email or password");
@@ -914,6 +940,7 @@ function write(method, path, body, config) {
     // just the bits the category preset and the admin's own input determine.
     pub["/community/config"] = {
       ...clone(DEFAULT_CONFIG),
+      ...(preset.classes ? { nav: [{ key: "classes", label: "Classes", enabled: true }, ...DEFAULT_CONFIG.nav.filter((n) => n.key !== "classes")] } : {}),
       community_name: name, tagline: (body.tagline || "").trim() || `Welcome to ${name}.`,
       community_kind: preset.kind, community_type: "social",
       member_label_singular: singular, member_label_plural: preset.member_plural,
