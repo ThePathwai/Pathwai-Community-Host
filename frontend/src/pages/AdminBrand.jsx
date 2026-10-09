@@ -113,6 +113,12 @@ export default function Branding({ embedded = false }) {
     setD((x) => ({ ...x, dashboard_cover_url }));
     try { await api.patch("/community/config", { dashboard_cover_url: dashboard_cover_url || "" }); await loadConfig(); toast.success(dashboard_cover_url ? "Cover photo saved — live for your members" : "Removed"); } catch (e) { toast.error(errMsg(e)); }
   };
+  const saveGallery = async (gallery_photos) => {
+    const prev = d.gallery_photos || [];
+    setD((x) => ({ ...x, gallery_photos }));
+    try { await api.patch("/community/config", { gallery_photos }); await loadConfig(); toast.success("Photos saved — live for your members"); }
+    catch (e) { setD((x) => ({ ...x, gallery_photos: prev })); toast.error(errMsg(e)); }
+  };
   const uploadCover = async (file) => { try { await saveCover(await fileToLogo(file, 1200)); } catch (e) { toast.error(e.message); } };
   const save = async () => {
     setBusy(true);
@@ -175,8 +181,8 @@ export default function Branding({ embedded = false }) {
 
         <Card className="space-y-3">
           <p className="eyebrow">Dashboard photo carousel (4:5)</p>
-          <p className="text-xs text-muted">Photos here slide through automatically at the top of your members' home dashboard. Drag and zoom to choose how each one sits in the frame before it's added.</p>
-          <PhotoCarouselEditor value={d.gallery_photos || []} onChange={(v) => setD({ ...d, gallery_photos: v })} aspect={4 / 5} tileClass="aspect-[4/5]" testId="gallery-carousel" />
+          <p className="text-xs text-muted">Photos here slide through automatically on your members' home page (phone and desktop) in exactly this 4:5 frame. Drag and zoom to choose how each one sits. Changes go live as soon as you make them — no need to press Save.</p>
+          <PhotoCarouselEditor value={d.gallery_photos || []} onChange={saveGallery} aspect={4 / 5} tileClass="aspect-[4/5]" outputMax={1000} maxBytes={420_000} testId="gallery-carousel" />
         </Card>
 
         <Card className="space-y-3">

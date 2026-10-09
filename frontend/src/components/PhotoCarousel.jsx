@@ -142,6 +142,7 @@ export function PhotoCarouselEditor({ value = [], onChange, max = 10, aspect, ti
       )}
       {err && <p className="text-xs text-red-500">{err}</p>}
       {value.length > 1 && <p className="text-xs text-muted">Slides through automatically on your dashboard, in this order.</p>}
+      {aspect && value.length > 0 && <p className="text-xs text-muted">Tip: the move icon re-frames a photo. To re-frame from the whole original after you've left this page, remove it and add the original again.</p>}
       {aspect && (
         <PhotoCropModal open={!!pending} file={pending} aspect={aspect} outputMax={outputMax} maxBytes={maxBytes}
           onCancel={() => { setPending(null); setRedo(null); }}

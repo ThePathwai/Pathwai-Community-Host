@@ -148,6 +148,18 @@ export default function Dashboard() {
           </div>
         </Link>
 
+        {(config?.gallery_photos || []).length > 0 ? (
+          <section className="col-span-2" data-testid="dash-gallery-mobile">
+            <PhotoCarousel photos={config.gallery_photos} className="aspect-[4/5] w-full" />
+          </section>
+        ) : user.role === "admin" && (
+          <Link to="/admin" onClick={() => { try { sessionStorage.setItem("pathwai.admintab", "brand"); } catch {} }}
+            className="card card-hover col-span-2 flex items-center gap-3 !p-3.5" data-testid="dash-gallery-mobile-add">
+            <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full" style={{ background: "var(--accent-grad, var(--accent))" }}><ImagePlus className="h-4 w-4" style={{ color: "var(--on-accent)" }} aria-hidden /></span>
+            <span className="min-w-0"><span className="block text-sm font-semibold">Add community photos</span><span className="block text-xs text-muted">They slide through here for your members</span></span>
+          </Link>
+        )}
+
         <UpcomingEvents events={events} total={d.stats.events} className="col-span-2" />
 
         <section className="card col-span-2 !p-3.5" data-testid="dash-connections-mobile">
@@ -208,7 +220,7 @@ export default function Dashboard() {
 
         <Widget title="Photos" className="lg:col-span-4" data-testid="dash-gallery">
           {(config?.gallery_photos || []).length > 0 ? (
-            <PhotoCarousel photos={config.gallery_photos} className="h-full min-h-[220px] w-full" />
+            <PhotoCarousel photos={config.gallery_photos} className="aspect-[4/5] w-full" />
           ) : user.role === "admin" ? (
             <Link
               to="/admin"
