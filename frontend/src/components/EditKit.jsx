@@ -218,9 +218,12 @@ export function BrandDrawer() {
   const { editing, drawer, setDrawer } = useEdit();
   if (!editing || !drawer) return null;
   return (
-    <div className="fixed inset-y-0 right-0 z-[60] w-[min(560px,100vw)] overflow-auto border-l border-line bg-paper p-5 shadow-card" data-testid="brand-drawer">
-      <div className="mb-4 flex items-center justify-between"><h2 className="text-xl">Branding &amp; menu</h2><button onClick={() => setDrawer(false)} aria-label="Close" className="text-muted hover:text-ink"><X className="h-5 w-5" /></button></div>
-      <Branding embedded />
+    <div className="fixed inset-y-0 right-0 z-[60] w-[min(560px,100vw)] overflow-auto overscroll-contain border-l border-line bg-paper shadow-card" data-testid="brand-drawer">
+      {/* padding lives on the inner wrapper: padding on the scrolling box itself leaves a gap under the sticky Save bar */}
+      <div className="p-5 pb-0">
+        <div className="mb-4 flex items-center justify-between"><h2 className="text-xl">Branding &amp; menu</h2><button onClick={() => setDrawer(false)} aria-label="Close" className="text-muted hover:text-ink"><X className="h-5 w-5" /></button></div>
+        <Branding embedded />
+      </div>
     </div>
   );
 }

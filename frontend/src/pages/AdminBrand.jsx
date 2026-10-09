@@ -32,10 +32,10 @@ function LogoField({ label, hint, value, onFile, onUrl, onClear, wide = true, te
     <div><span className="label">{label}</span>
       <div onClick={() => ref.current.click()} onDragOver={(e) => { e.preventDefault(); setDrag(true); }} onDragLeave={() => setDrag(false)}
         onDrop={(e) => { e.preventDefault(); setDrag(false); e.dataTransfer.files[0] && onFile(e.dataTransfer.files[0]); }} data-testid={testid}
-        className={`flex cursor-pointer items-center gap-3 rounded-lg border border-dashed p-3 ${drag ? "border-ink bg-ink/5" : "border-line hover:border-ink/50"}`}>
-        {value ? <img src={value} alt="" className={`${wide ? "h-12 max-w-[9rem]" : "h-12 w-12"} rounded bg-neutral-700 object-contain p-1`} /> : <span className="flex h-12 w-12 items-center justify-center rounded bg-ink/5"><ImagePlus className="h-5 w-5 text-muted" /></span>}
-        <div className="min-w-0 flex-1 text-sm"><p className="font-medium">{value ? "Replace" : "Upload image"}</p>{!value && <p className="text-xs text-muted">Click or drop a file · {hint}</p>}</div>
-        {value && <button type="button" className="btn-ghost !px-2 !py-1 text-xs" onClick={(e) => { e.stopPropagation(); onClear(); }}>Remove</button>}
+        className={`flex cursor-pointer flex-wrap items-center gap-x-3 gap-y-2 rounded-lg border border-dashed p-3 ${drag ? "border-ink bg-ink/5" : "border-line hover:border-ink/50"}`}>
+        {value ? <img src={value} alt="" className={`${wide ? "h-12 max-w-[9rem]" : "h-12 w-12"} shrink-0 rounded bg-neutral-700 object-contain p-1`} /> : <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded bg-ink/5"><ImagePlus className="h-5 w-5 text-muted" /></span>}
+        <div className="min-w-[6rem] flex-1 text-sm"><p className="font-medium">{value ? "Replace" : "Upload image"}</p>{!value && <p className="text-xs text-muted">Click or drop a file · {hint}</p>}</div>
+        {value && <button type="button" className="btn-ghost shrink-0 !px-2 !py-1 text-xs" onClick={(e) => { e.stopPropagation(); onClear(); }}>Remove</button>}
         <input ref={ref} type="file" accept="image/*" hidden onChange={(e) => { e.target.files[0] && onFile(e.target.files[0]); e.target.value = ""; }} />
       </div>
       <div className="mt-2 flex gap-2"><Input placeholder="…or paste an image link (https://…)" value={url} onChange={(e) => setUrl(e.target.value)} />
@@ -201,8 +201,8 @@ export default function Branding({ embedded = false }) {
               <input type="checkbox" className="accent-accent" checked={n.enabled} onChange={(e) => setD({ ...d, nav: d.nav.map((x, j) => (j === i ? { ...x, enabled: e.target.checked } : x)) })} aria-label={`Show ${n.key}`} />
               <Input value={n.label} maxLength={24} onChange={(e) => setD({ ...d, nav: d.nav.map((x, j) => (j === i ? { ...x, label: e.target.value } : x)) })} />
               <span className="eyebrow w-20 shrink-0">{n.key}</span>
-              <button className="p-1 text-muted hover:text-ink" onClick={() => move(i, -1)} aria-label="Move up"><ArrowUp className="h-4 w-4" /></button>
-              <button className="p-1 text-muted hover:text-ink" onClick={() => move(i, 1)} aria-label="Move down"><ArrowDown className="h-4 w-4" /></button>
+              <button className="p-1 text-muted hover:text-ink disabled:opacity-25" disabled={i === 0} onClick={() => move(i, -1)} aria-label="Move up"><ArrowUp className="h-4 w-4" /></button>
+              <button className="p-1 text-muted hover:text-ink disabled:opacity-25" disabled={i === d.nav.length - 1} onClick={() => move(i, 1)} aria-label="Move down"><ArrowDown className="h-4 w-4" /></button>
             </div>))}
           <p className="label pt-3">Custom links</p>
           {d.custom_links.map((l, i) => (
@@ -211,7 +211,7 @@ export default function Branding({ embedded = false }) {
               <button className="p-1 text-muted hover:text-ink" onClick={() => setD({ ...d, custom_links: d.custom_links.filter((_, j) => j !== i) })} aria-label="Remove link"><Trash2 className="h-4 w-4" /></button></div>))}
           <Button variant="ghost" onClick={() => setD({ ...d, custom_links: [...d.custom_links, { label: "", url: "https://" }] })}>Add a link</Button>
         </Card>
-        <div className={embedded ? "sticky bottom-0 -mx-1 border-t border-line bg-paper px-1 py-3" : ""}><Button onClick={save} loading={busy} data-testid="brand-save">Save branding</Button>{embedded && <span className="ml-3 text-xs text-muted">Changes preview on the page behind. Logos save instantly.</span>}</div>
+        <div className={embedded ? "sticky bottom-0 z-10 -mx-5 border-t border-line bg-paper px-5 py-3" : ""}><Button onClick={save} loading={busy} data-testid="brand-save">Save branding</Button>{embedded && <span className="ml-3 text-xs text-muted">Changes preview on the page behind. Logos save instantly.</span>}</div>
       </div>
       {!embedded && <div className="lg:sticky lg:top-24 lg:self-start"><p className="eyebrow mb-3">Live preview</p><Preview draft={d} /></div>}
     </div>
