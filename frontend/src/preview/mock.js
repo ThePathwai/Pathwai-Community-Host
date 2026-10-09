@@ -425,7 +425,7 @@ function communityPublicInfo(slug) {
   const liveMembers = (S.books[slug]?.shared?.users?.created?.length) || 0;
   return {
     slug, name: cfg?.community_name || fixture.name, tagline: cfg?.tagline ?? fixture.tagline ?? "",
-    kind: cfg?.community_kind || fixture.kind || "Community", about: cfg?.about || fixture.about || cfg?.tagline || fixture.tagline || "",
+    kind: cfg?.community_kind || fixture.kind || "Community", about: cfg?.about || fixture.about || cfg?.tagline || fixture.tagline || "", about_url: cfg?.about_url || "", about_cta: cfg?.about_cta || "",
     cover: cfg?.hub_cover ?? fixture.cover ?? null, apply_questions: cfg?.apply_questions || fixture.apply_questions || [],
     // Always true -- mirrors backend/routes/hub.py's _summary(), which hardcodes this rather than
     // reading it from config, since a stale config doc could otherwise claim otherwise.

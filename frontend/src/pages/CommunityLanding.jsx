@@ -59,6 +59,7 @@ export default function CommunityLanding() {
             className="px-6 py-3 text-sm font-semibold" style={{ background: col.accent, color: col.on_accent || "#fff", borderRadius: btn }}>
             Request to join
           </button>
+          {info.about_url && <a href={info.about_url} target="_blank" rel="noreferrer noopener" data-testid="community-landing-website" className="px-6 py-3 text-center text-sm font-semibold" style={{ border: `1px solid ${col.border || col.muted}`, borderRadius: btn }}>{info.about_cta || "Visit our website"} ↗</a>}
           <Link to={`/login?join=${slug}`} data-testid="community-landing-signin" className="px-6 py-3 text-center text-sm font-semibold underline" style={{ color: col.text }}>
             Already on Pathwai? Sign in
           </Link>

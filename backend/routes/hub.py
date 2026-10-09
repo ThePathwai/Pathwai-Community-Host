@@ -141,7 +141,7 @@ async def _summary(slug: str) -> Dict[str, Any]:
     now = _now()
     return {
         "slug": slug, "name": cfg.get("community_name") or slug, "tagline": cfg.get("tagline"), "kind": cfg.get("community_kind") or "Community",
-        "about": cfg.get("about") or cfg.get("tagline"), "cover": cfg.get("hub_cover"), "apply_questions": cfg.get("apply_questions") or [],
+        "about": cfg.get("about") or cfg.get("tagline"), "about_url": cfg.get("about_url") or "", "about_cta": cfg.get("about_cta") or "", "cover": cfg.get("hub_cover"), "apply_questions": cfg.get("apply_questions") or [],
         # Always true -- see _apply_to_community's "Policy" comment. Not read from cfg: a stale
         # community_config doc from before this policy existed could still say False.
         "require_approval": True,
