@@ -10,6 +10,7 @@ import { PhotoCarousel } from "../components/PhotoCarousel";
 import AboutBrand from "../components/AboutBrand";
 import ProfileNudge from "../components/ProfileNudge";
 import UpcomingEvents from "../components/UpcomingEvents";
+import { WhyLine } from "../components/WhyMatch";
 import { fieldLabel, fieldOn } from "../lib/profile";
 import { AI_CHAT_ENABLED } from "../lib/features";
 import { Dumbbell, Gift, ImagePlus, ListChecks, Megaphone, UserCheck2, UserPlus, Users } from "lucide-react";
@@ -149,16 +150,25 @@ export default function Dashboard() {
 
         <UpcomingEvents events={events} total={d.stats.events} className="col-span-2" />
 
+        <section className="card col-span-2 !p-3.5" data-testid="dash-connections-mobile">
+          <div className="mb-2 flex items-center justify-between"><h2 className="flex items-center gap-2 text-[15px]"><Users className="h-4 w-4 text-muted" strokeWidth={2.25} aria-hidden />Recommended connections</h2><Link to="/matches" className="text-xs text-muted">All ›</Link></div>
+          {d.recommended_people.length === 0 ? <p className="text-sm text-muted">Complete your profile to get better recommendations.</p> : (
+            <ul className="space-y-2">
+              {d.recommended_people.slice(0, 3).map((m) => (
+                <li key={m.user.id}><Link to={`/members/${m.user.id}`} className="flex items-start gap-3 rounded-xl border border-line px-3 py-2.5">
+                  <Avatar src={m.user.avatar_url} name={m.user.name} size={40} />
+                  <span className="min-w-0 flex-1"><span className="block truncate text-sm font-semibold">{m.user.name}</span><span className="block truncate text-xs text-muted">{m.user.title}</span><WhyLine m={m} lines={2} className="mt-1 text-xs text-ink/80" /></span></Link></li>))}
+            </ul>)}
+        </section>
+
         <Tile to="/requests" icon={ListChecks} label="To-do" value={d.open_requests.length || undefined}
           sub={d.pending_profile_requests > 0 ? `${d.pending_profile_requests} profile update requested` : (todo[0]?.title || "You're all caught up")} />
-        <PeopleTile to="/matches" icon={Users} label="Connections" people={d.recommended_people}
-          sub={d.recommended_people.length ? `${d.recommended_people[0].user.name.split(" ")[0]}${d.recommended_people.length > 1 ? ` +${d.recommended_people.length - 1} more` : ""}` : "Complete your profile"} />
         <Tile to="/resources" icon={Gift} label="Perks" value={d.featured_resources.length || undefined}
           sub={d.featured_resources[0]?.title || "No perks yet"} />
         <PeopleTile to="/members" icon={UserPlus} label="New members" people={d.new_members || []}
           sub={(d.new_members || []).length ? `${d.new_members.length} joined recently` : "No new members yet"} />
         {classesOn && <Tile to="/classes" icon={Dumbbell} label={classesLabel} sub="Book your next one" />}
-        <Tile to="/updates" icon={Megaphone} label="News" value={d.announcements.length || undefined} className={classesOn ? "" : "col-span-2"}
+        <Tile to="/updates" icon={Megaphone} label="News" value={d.announcements.length || undefined} className={classesOn ? "col-span-2" : ""}
           sub={d.announcements[0]?.title || "Nothing posted yet"} />
       </div>
 
@@ -234,7 +244,7 @@ export default function Dashboard() {
           {d.recommended_people.length === 0 ? <p className="text-sm text-muted">Complete your profile to get better recommendations.</p> : (
             <ul className={ROW}>
               {d.recommended_people.slice(0, 4).map((m) => (
-                <li key={m.user.id} className={CARD}><Link to={`/members/${m.user.id}`} data-testid="dash-match" className="flex items-center gap-3 rounded-xl border border-line px-3 py-2 hover:border-ink/20 hover:bg-ink/5"><Avatar src={m.user.avatar_url} name={m.user.name} size={48} /><span className="min-w-0"><span className="block truncate text-sm font-medium lg:text-[15px]">{m.user.name}</span><span className="block truncate text-xs text-muted">{m.user.title}{(m.matched_on || []).length ? ` · ${m.matched_on.slice(0, 2).join(", ")}` : ""}</span></span></Link></li>))}
+                <li key={m.user.id} className={CARD}><Link to={`/members/${m.user.id}`} data-testid="dash-match" className="flex items-start gap-3 rounded-xl border border-line px-3 py-2.5 hover:border-ink/20 hover:bg-ink/5"><Avatar src={m.user.avatar_url} name={m.user.name} size={48} /><span className="min-w-0 flex-1"><span className="block truncate text-sm font-medium lg:text-[15px]">{m.user.name}</span><span className="block truncate text-xs text-muted">{m.user.title}</span><WhyLine m={m} lines={2} className="mt-1 text-xs text-ink/80" /></span></Link></li>))}
             </ul>)}
         </Widget>
 

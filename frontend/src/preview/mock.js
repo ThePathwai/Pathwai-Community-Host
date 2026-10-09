@@ -111,6 +111,13 @@ for (const hubCard of fixtures.hub) {
     brand: clone(hubCard.brand), theme: { preset: "custom", accent: hubCard.brand?.colors?.accent || cfg.theme?.accent }, gallery_photos: [], dashboard_cover_url: null, custom_links: [] });
   // A gym books classes: Classes is switched on and leads the menu; Events stays as it was.
   if (hubCard.slug === "unity") cfg.nav = [{ key: "classes", label: "Classes", enabled: true }, ...cfg.nav.filter((n) => n.key !== "classes")];
+  // The demo owner's profile was blank, so nobody could be recommended to them. Give it real strengths and needs.
+  if (hubCard.slug === "unity" && com.logins?.["admin@yourcommunity.app"]) {
+    const al = com.logins["admin@yourcommunity.app"];
+    const fill = { skill_set: ["Studio space", "Referrals", "Class programming", "Community building"], expertise: ["Studio space", "Referrals", "Class programming", "Community building"],
+      support_needs: ["HIIT programming", "Sports nutrition", "Mobility coaching", "Group coaching"], needs_seeking: ["HIIT programming", "Sports nutrition", "Mobility coaching", "Group coaching"], interests_hobbies: ["Running", "Cooking", "Cycling"], interests: ["Running", "Cooking", "Cycling"] };
+    Object.assign(al["/auth/me"], fill); if (al["/dashboard"]?.me) Object.assign(al["/dashboard"].me, fill);
+  }
   // The demo member (not just the admin) can walk into Unity: same studio, with their own member view.
   if (hubCard.slug === "unity" && com.logins && !com.logins["demo@yourcommunity.app"]) {
     const m = clone(com.logins["admin@yourcommunity.app"]);
@@ -487,6 +494,41 @@ function classesCall(method, path, body, params, config) {
   return r.status >= 400 ? fail(config, r.status, r.data?.detail || "Something went wrong") : ok(config, r.data, r.status);
 }
 
+// Mirrors routes/matches.py (explain / compute_people): who could help whom, and what two people share.
+const lset = (...ls) => new Set(ls.flat().filter((x) => typeof x === "string" && x.trim()).map((x) => x.trim().toLowerCase()));
+const needsOf = (u) => lset(u.support_needs || [], u.needs_seeking || [], u.growing_in || [], u.goals || []);
+const offersOf = (u) => lset(u.expertise || [], u.strengths || [], u.services_offered || [], u.topics_can_advise_on || [], u.open_to || [], u.skill_set || []);
+const overlap = (a, b) => { const hits = new Set(); for (const x of a) for (const y of b) if (x === y || (x.length > 3 && (x.includes(y) || y.includes(x)))) hits.add(y); return [...hits].sort(); };
+const capw = (a) => a.map((x) => (/^[A-Z0-9]/.test(x) ? x : x[0].toUpperCase() + x.slice(1)));
+function explainMatch(me, u) {
+  const orig = {}; for (const k of ["support_needs", "needs_seeking", "growing_in", "goals", "expertise", "strengths", "services_offered", "topics_can_advise_on", "open_to", "skill_set"]) for (const x of u[k] || []) if (typeof x === "string" && x.trim() && !orig[x.trim().toLowerCase()]) orig[x.trim().toLowerCase()] = x.trim();
+  const give = overlap(needsOf(me), offersOf(u)).map((x) => orig[x] || x), get = overlap(offersOf(me), needsOf(u)).map((x) => orig[x] || x);
+  const mine = lset(me.interests_hobbies || [], me.interests || []); const seen = new Set();
+  const shared = [...(u.interests_hobbies || []), ...(u.interests || [])].filter((x) => { const k = (x || "").trim().toLowerCase(); if (!k || !mine.has(k) || seen.has(k)) return false; seen.add(k); return true; });
+  const sameSport = !!(me.industry && me.industry === u.industry);
+  const score = 3 * give.length + 2 * get.length + (sameSport ? 1 : 0) + Math.min(shared.length, 2);
+  const reasons = [];
+  if (give.length) reasons.push({ kind: "helps_you", label: "Can help you with", items: capw(give.slice(0, 4)) });
+  if (get.length) reasons.push({ kind: "you_help", label: "You can help them with", items: capw(get.slice(0, 4)) });
+  if (shared.length) reasons.push({ kind: "shared", label: "You both like", items: shared.slice(0, 4) });
+  if (sameSport) reasons.push({ kind: "shared", label: "In common", items: [u.industry] });
+  const parts = [];
+  if (give.length) parts.push("Can help you with " + capw(give.slice(0, 2)).join(" and "));
+  if (get.length) parts.push("You can help with " + capw(get.slice(0, 2)).join(" and "));
+  if (shared.length && parts.length < 2) parts.push("You both like " + shared.slice(0, 2).join(" and "));
+  if (sameSport && parts.length < 2) parts.push("Same " + u.industry);
+  return { give, get, shared, score, reasons, headline: parts.join(" · ") };
+}
+function computePeople(limit = 8) {
+  const me = view()["/auth/me"] || {};
+  return communityRoster(slugOf()).filter((u) => u.id !== me.id).map((u) => ({ u, x: explainMatch(me, u) })).filter(({ x }) => x.score > 0)
+    .sort((a, b) => b.x.score - a.x.score).slice(0, limit).map(({ u, x }) => ({
+      why: x.headline, headline: x.headline, reasons: x.reasons, match_type: "Recommended connection", next_action: "Say hi",
+      user: { id: u.id, name: u.name, avatar_url: u.avatar_url || null, role: u.role, title: u.title, company: u.company, industry: u.industry, location: u.location, member_type: u.member_type },
+      score: x.score, matched_on: [...x.give, ...x.get], can_help_you: x.give, you_can_help: x.get, shared_interests: x.shared, state: null,
+    }));
+}
+
 function get(path, p, config) {
   if (path.startsWith("/classes")) return classesCall("get", path, {}, p, config);
   if (path === "/admin/blasts/history") {
@@ -648,6 +690,15 @@ function get(path, p, config) {
     return ok(config, { events });
   }
   if (path === "/auth/me") return S.role && S.community ? ok(config, view()["/auth/me"]) : fail(config, 401, "Not authenticated");
+  const why = path.match(/^\/matches\/why\/([^/]+)$/);
+  if (why) {
+    const me = view()["/auth/me"] || {}; const u = communityRoster(slugOf()).find((x) => x.id === why[1]);
+    const rec = ((view()["/matches"] || {}).people || []).find((x) => x.user.id === why[1]); // a recorded recommendation
+    if (rec) return ok(config, { user_id: why[1], is_match: true, reasons: rec.reasons || [...(rec.can_help_you?.length ? [{ kind: "helps_you", label: "Can help you with", items: capw(rec.can_help_you.slice(0, 4)) }] : []), ...(rec.you_can_help?.length ? [{ kind: "you_help", label: "You can help them with", items: capw(rec.you_can_help.slice(0, 4)) }] : [])], headline: rec.headline || "", can_help_you: rec.can_help_you || [], you_can_help: rec.you_can_help || [], shared_interests: rec.shared_interests || [] });
+    if (!S.role || !u || u.id === me.id) return ok(config, { user_id: why[1], reasons: [], headline: "", is_match: false });
+    const x = explainMatch(me, u);
+    return ok(config, { user_id: u.id, is_match: x.score > 0, reasons: x.reasons, headline: x.headline, can_help_you: x.give, you_can_help: x.get, shared_interests: x.shared });
+  }
   if (path === "/resources/mine") {
     const me = view()["/auth/me"];
     const mineOf = (r) => r.submitted_by === me.id || r.shared_by?.id === me.id;
@@ -718,6 +769,7 @@ function get(path, p, config) {
   if (path === "/me/profile-completion") return ok(config, completion());
   if (path === "/matches") {
     const acts = S.extra.acts || {};
+    if (!(d.people || []).length) d = { ...d, people: computePeople() };
     d.people = d.people.filter((x) => acts["person:" + x.user.id] !== "dismiss").map((x) => ({ ...x, state: acts["person:" + x.user.id] || x.state }));
     d.events = d.events.filter((x) => acts["event:" + x.id] !== "dismiss").map((x) => ({ ...x, state: acts["event:" + x.id] || x.state }));
     d.resources = d.resources.filter((x) => acts["resource:" + x.id] !== "dismiss").map((x) => ({ ...x, state: acts["resource:" + x.id] || x.state }));
@@ -777,6 +829,7 @@ function get(path, p, config) {
 
   if (path === "/dashboard") {
     const ov = S.extra.mship || {};
+    if (!(d.recommended_people || []).length) d = { ...d, recommended_people: computePeople(3) };
     if (isAdminHere()) {
       const all = [...appsHere(), ...(d.membership_requests || [])].filter((r) => !ov[r.id]);
       d = { ...d, membership_requests: all.slice(0, 5), membership_requests_total: all.length + Math.max(0, (d.membership_requests_total || 0) - (d.membership_requests || []).length) };

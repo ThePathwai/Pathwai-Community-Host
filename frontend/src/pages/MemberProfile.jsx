@@ -8,6 +8,7 @@ import { useAuth } from "../lib/auth";
 import { fieldLabel, fieldOn, typeLabel } from "../lib/profile";
 import { Bookmark, Globe, Instagram, Linkedin, Mail, MessageCircle, Phone } from "lucide-react";
 import { Avatar, Button, Card, Chip, Spinner } from "../components/ui";
+import { WhyReasons, reasonsOf } from "../components/WhyMatch";
 
 const List = ({ title, items, accent }) => items?.length ? (
   <Card style={accent ? { borderColor: "var(--accent)" } : undefined}><h3 className="label" style={accent ? { color: "var(--accent)" } : undefined}>{title}</h3><div className="flex flex-wrap gap-1.5">{items.map((x) => { const t = typeof x === "string" ? x : x.name || x.label; return <Chip key={t} accent={accent}>{t}</Chip>; })}</div></Card>
@@ -44,9 +45,11 @@ export default function MemberProfile() {
   const [u, setU] = useState(null);
   const [missing, setMissing] = useState(false);
   const [open, setOpen] = useState(false);
+  const [why, setWhy] = useState(null); // why this person was suggested to the viewer
 
   const load = () => api.get(`/users/${id}`).then((r) => setU(r.data));
   useEffect(() => { setU(null); setMissing(false); load().catch(() => setMissing(true)); }, [id]); // eslint-disable-line
+  useEffect(() => { setWhy(null); if (id && id !== user.id) api.get(`/matches/why/${id}`, { params: { role: user.role } }).then((r) => setWhy(r.data)).catch(() => {}); }, [id]); // eslint-disable-line
   if (missing) return <div className="py-20 text-center"><p className="font-display text-xl">This profile is not available.</p><p className="mt-2 text-sm text-muted">This player may have hidden their card.</p></div>;
   if (!u) return <Spinner />;
   // Bookmarking a member, same on/off toggle as a perk's save button (Resources.jsx) and an event's
@@ -92,6 +95,11 @@ export default function MemberProfile() {
           </div>
         </div>
       </Card>
+      {why?.reasons?.length > 0 && (
+        <Card data-testid="why-suggested" style={{ borderColor: "var(--accent)" }}>
+          <div className="mb-3 flex flex-wrap items-center gap-2"><Chip accent>Suggested for you</Chip><h3 className="text-base font-semibold">Why we suggested {u.name.split(" ")[0]}</h3></div>
+          <WhyReasons reasons={reasonsOf(why)} className="sm:grid sm:grid-cols-2 sm:gap-x-6 sm:gap-y-3 sm:space-y-0" />
+        </Card>)}
       <ContactCard u={u} self={user.id === u.id} />
       {/* Same personal photo grid as the platform-wide People profile panel (HubPeople.jsx) --
           the account-level gallery (routes/hub.py's AccountProfileIn.photos) wasn't reaching this
@@ -111,7 +119,7 @@ export default function MemberProfile() {
         {fieldOn(config, "goals") && <List title={fieldLabel(config, "goals")} items={u.goals} />}
         {fieldOn(config, "support_needs") && <List title={fieldLabel(config, "support_needs")} items={u.support_needs} accent />}
       </div>
-      <ReachOutModal open={open} onClose={() => setOpen(false)} member={u} communityName={config?.community_name} />
+      <ReachOutModal open={open} onClose={() => setOpen(false)} member={u} communityName={config?.community_name} defaultTopic={why?.can_help_you?.[0] || ""} />
     </div>
   );
 }

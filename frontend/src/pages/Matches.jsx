@@ -1,4 +1,5 @@
 import React, { useCallback, useEffect, useState } from "react";
+import { WhyLine, WhyReasons, reasonsOf } from "../components/WhyMatch";
 import { Link, useNavigate } from "react-router-dom";
 import { Bookmark, X } from "lucide-react";
 import { toast } from "sonner";
@@ -62,7 +63,7 @@ export default function Matches() {
                     <p className="truncate text-[9px] text-muted">{m.user.title}</p>
                   </div>
                 </div>
-                <p className="line-clamp-1 text-[9px] leading-tight text-muted"><span className="text-ink/50">Why · </span>{m.why}</p>
+                <WhyLine m={m} lines={3} className="text-[10px] text-ink/80" />
                 <ActionsCompact kind="person" id={m.user.id} state={m.state} primary={m.state === "intro" ? <Chip className="!px-1.5 !py-0.5 !text-[9px]">Reached out</Chip> : <Button className="!flex !w-full !min-w-0 !px-1.5 !py-1 !text-[9px]" onClick={() => openIntro(m)} data-testid="request-intro-mobile"><span className="truncate">{m.next_action}</span></Button>} />
               </div>))}
             {tab === "events" && list.map((e) => (
@@ -88,8 +89,10 @@ export default function Matches() {
                 <div className="mb-3 flex items-center justify-between"><span className="eyebrow">{m.match_type}</span></div>
                 <div className="flex items-center gap-3"><Avatar src={m.user.avatar_url} name={m.user.name} size={44} />
                   <div><Link to={`/members/${m.user.id}`} className="font-medium hover:underline">{m.user.name}</Link><p className="text-xs text-muted">{m.user.title}{m.user.company ? ` · ${m.user.company}` : ""}</p></div></div>
-                <p className="mt-3 text-sm"><span className="text-muted">Why: </span>{m.why}</p>
-                <div className="mt-3 flex flex-wrap gap-1">{(m.matched_on || []).slice(0, 5).map((t) => <Chip key={t}>{t}</Chip>)}</div>
+                <div className="mt-4 rounded-xl bg-ink/5 p-3.5" data-testid="match-why">
+                  <p className="eyebrow mb-2.5">Why we suggested {m.user.name.split(" ")[0]}</p>
+                  {reasonsOf(m).length ? <WhyReasons reasons={reasonsOf(m)} /> : <p className="text-sm">{m.why}</p>}
+                </div>
                 <Actions kind="person" id={m.user.id} state={m.state} primary={m.state === "intro" ? <Chip>Reached out</Chip> : <Button onClick={() => openIntro(m)} data-testid="request-intro">{m.next_action}</Button>} />
               </Card>))}
             {tab === "events" && list.map((e) => (

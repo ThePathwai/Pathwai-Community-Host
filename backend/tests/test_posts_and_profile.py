@@ -99,3 +99,17 @@ def test_disabled_profile_fields_dont_count(c):
     finally:
         login(c, "admin@yourcommunity.app")
         c.patch("/api/community/config", json={"profile": {"fields": cfg["profile"]["fields"]}})
+
+
+def test_match_reasons_and_profile_explanation(c):
+    login(c, "admin@yourcommunity.app")
+    me = c.get("/api/auth/me").json()
+    ppl = c.get("/api/matches").json()["people"]
+    assert ppl, "demo admin should have recommendations"
+    m = ppl[0]
+    assert m["headline"] and m["reasons"] and all(r["items"] and r["label"] for r in m["reasons"])
+    assert m["why"]  # the original sentence is still there
+    w = c.get(f"/api/matches/why/{m['user']['id']}").json()
+    assert w["is_match"] is True and w["reasons"] == m["reasons"] and w["headline"] == m["headline"]
+    assert c.get(f"/api/matches/why/{me['id']}").json()["reasons"] == []
+    assert c.get("/api/matches/why/nobody").json()["is_match"] is False
