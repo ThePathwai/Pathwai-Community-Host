@@ -2,8 +2,10 @@ import React, { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { api, errMsg, timeAgo } from "../lib/api";
 import { useAuth } from "../lib/auth";
-import { Link } from "react-router-dom";
-import { AvatarUpload, Button, Card, Field, Input, PageHeader, ProgressBar, SectionCard, Select, Spinner, StatusBadge, TagInput, Textarea } from "../components/ui";
+import { Link, useSearchParams } from "react-router-dom";
+import { Check, Circle } from "lucide-react";
+import { Ring, OPTIONAL_NOTE } from "../components/ProfileNudge";
+import { AvatarUpload, Button, Card, Field, Input, PageHeader, SectionCard, Select, Spinner, StatusBadge, TagInput, Textarea } from "../components/ui";
 import { fieldLabel, fieldOn, prettyDate, SUGGEST, oldestISO, todayISO } from "../lib/profile";
 
 const ARR = ["expertise", "services_offered", "topics_can_advise_on", "needs_seeking", "interests_hobbies"];
@@ -53,13 +55,16 @@ function Value({ v, type }) {
   return type === "longtext" ? <span className="whitespace-pre-wrap text-sm">{v}</span> : <span className="block truncate text-sm">{v}</span>;
 }
 
-function Section({ title, fields, data, onSaved }) {
+function Section({ title, fields, data, onSaved, openSignal }) {
   const [edit, setEdit] = useState(false);
   const [vals, setVals] = useState({});
   const [busy, setBusy] = useState(false);
   const start = () => { const v = {}; fields.forEach(([k]) => { v[k] = data[k] ?? ""; }); setVals(v); setEdit(true); };
+  // Jumped to from the checklist: open this box for editing (once per tap) and bring it into view.
+  useEffect(() => { if (openSignal && openSignal.title === title) { start(); setTimeout(() => document.getElementById("sec-" + title)?.scrollIntoView({ behavior: "smooth", block: "center" }), 60); } }, [openSignal]); // eslint-disable-line
   const save = async () => { setBusy(true); try { const { data: r } = await api.patch("/me/profile", { values: vals }); toast.success("Saved"); setEdit(false); onSaved(r); } catch (e) { toast.error(errMsg(e)); } finally { setBusy(false); } };
   return (
+    <div id={"sec-" + title} className="scroll-mt-24">
     <SectionCard title={title} action={edit ? <div className="flex gap-2"><Button variant="ghost" className="!py-1" onClick={() => setEdit(false)}>Cancel</Button><Button className="!py-1" loading={busy} onClick={save} data-testid={`save-${title}`}>Save</Button></div> : <Button variant="ghost" className="!py-1" onClick={start} data-testid={`edit-${title}`}>Edit</Button>}>
       <div className={edit ? "grid gap-4 sm:grid-cols-2" : "grid grid-cols-2 gap-x-3 gap-y-3 sm:grid-cols-2"}>
         {fields.map(([k, label, type, ph]) => (
@@ -75,6 +80,7 @@ function Section({ title, fields, data, onSaved }) {
           </div>))}
       </div>
     </SectionCard>
+    </div>
   );
 }
 
@@ -94,14 +100,17 @@ function ContactSection({ data, onSaved }) {
     <SectionCard title="Contact details" action={edit ? <div className="flex gap-2"><Button variant="ghost" className="!py-1" onClick={() => setEdit(false)}>Cancel</Button><Button className="!py-1" loading={busy} onClick={save} data-testid="contact-save">Save</Button></div> : <Button variant="ghost" className="!py-1" onClick={start} data-testid="edit-Contact details">Edit</Button>}>
       {edit ? (
         <>
-          <p className="mb-3 text-sm text-muted">Shown on your profile in this community so members can reach you. Your details in other communities are separate.</p>
+          <p className="mb-3 text-sm text-muted">Optional. Shown on your profile in this community so members can reach you. Your details in other communities are separate.</p>
           <div className="grid gap-3 sm:grid-cols-2">{F.map((k) => <Field key={k} label={k[0].toUpperCase() + k.slice(1)}><Input data-testid={`contact-${k}`} placeholder={ph[k]} value={c[k] || ""} onChange={(e) => setC({ ...c, [k]: e.target.value })} /></Field>)}</div>
           <div className="mt-4"><Select value={vis} onChange={(e) => setVis(e.target.value)} options={[{ value: "members", label: "Visible to community members" }, { value: "hidden", label: "Hidden (message me in the app)" }]} /></div>
         </>
       ) : (
+        <>
+        <p className="mb-3 text-xs text-muted">Optional. LinkedIn, Instagram and website don't count toward your profile percentage.</p>
         <div className="grid grid-cols-2 gap-x-3 gap-y-3 sm:grid-cols-2">
           {F.map((k) => <div key={k} className="min-w-0"><p className="label truncate">{k[0].toUpperCase() + k.slice(1)}</p><Value v={data.contact?.[k]} /></div>)}
         </div>
+        </>
       )}
     </SectionCard>
   );
@@ -113,6 +122,7 @@ function Documents({ data, onSaved }) {
   const persist = async (values) => { try { const { data: r } = await api.patch("/me/profile", { values }); onSaved(r); toast.success("Saved"); } catch (e) { toast.error(errMsg(e)); } };
   return (
     <SectionCard title="Documents and links">
+      <p className="mb-2 text-xs text-muted">Optional. Documents and links don't count toward your profile percentage.</p>
       <div className="space-y-2">{docs.length === 0 && <p className="text-sm text-muted">No documents yet. Add a signed form or anything the team asked for.</p>}
         {docs.map((d, i) => <div key={i} className="flex items-center justify-between text-sm"><a className="underline" href={d.url} target="_blank" rel="noreferrer">{d.title || d.url}</a><button className="text-xs text-muted hover:text-ink" onClick={() => { const n = docs.filter((_, j) => j !== i); setDocs(n); persist({ documents: n }); }}>Remove</button></div>)}</div>
       <div className="mt-3 grid gap-2 sm:grid-cols-[1fr_1.5fr_auto]"><Input placeholder="Title" value={t} onChange={(e) => setT(e.target.value)} /><Input type="url" placeholder="https://" value={u} onChange={(e) => setU(e.target.value)} />
@@ -127,10 +137,25 @@ export default function ProfileEdit() {
   const [comp, setComp] = useState(null);
   const [eng, setEng] = useState(null);
   const [reqs, setReqs] = useState([]);
+  const [params, setParams] = useSearchParams();
+  const [openSignal, setOpenSignal] = useState(null);
   const loadReqs = () => api.get("/me/profile-requests").then((r) => setReqs(r.data.requests)).catch(() => {});
   const loadAll = () => { api.get(`/users/${user.id}`).then((r) => setF(r.data)); api.get("/me/profile-completion").then((r) => setComp(r.data)); };
   useEffect(() => { loadAll(); loadReqs(); api.get("/me/engagement").then((r) => setEng(r.data)); }, [user.id]); // eslint-disable-line
+  // /profile?focus=bio (from the home page checklist) jumps straight to the right box.
+  const focusKey = params.get("focus");
+  useEffect(() => {
+    if (!focusKey || !f || !comp) return;
+    jump(focusKey);
+    const next = new URLSearchParams(params); next.delete("focus"); setParams(next, { replace: true });
+  }, [focusKey, !!f, !!comp]); // eslint-disable-line
   if (!f || !comp) return <Spinner />;
+  function jump(key) {
+    if (key === "avatar_url") { document.querySelector('[data-testid="photo-card"]')?.scrollIntoView({ behavior: "smooth", block: "center" }); return; }
+    const sec = sections(config).find(([, fields]) => fields.some(([k]) => k === key));
+    if (sec) setOpenSignal({ title: sec[0], n: Date.now() });
+  }
+  const todo = (comp.missing_keys || []).map((k, i) => ({ key: k, label: (comp.missing || [])[i] || k }));
   const saved = (r) => { setF(r.user); setComp(r.completion); setUser({ ...user, ...r.user }); };
   const upload = async (url) => {
     try { const { data: r } = await api.patch("/me/profile", { values: { avatar_url: url } }); saved(r); toast.success("Photo updated"); } catch (e) { toast.error(errMsg(e)); }
@@ -147,13 +172,25 @@ export default function ProfileEdit() {
         <AvatarUpload photo={f.avatar_url} onChange={upload} name={f.name} size={104} testId="photo-upload" label="Upload photo" variant="primary" />
       </Card>
       <Card data-testid="profile-completion">
-        <div className="mb-2 flex items-center justify-between"><p className="eyebrow">Profile completion</p><p className="font-display text-2xl">{comp.percent}%</p></div>
-        <ProgressBar value={comp.percent} />
-        {comp.missing.length > 0 && <p className="mt-3 text-sm text-muted">Still missing: {comp.missing.slice(0, 6).join(", ")}{comp.missing.length > 6 ? ` and ${comp.missing.length - 6} more` : ""}.</p>}
+        <div className="flex items-center gap-4">
+          <Ring value={comp.percent} size={64} />
+          <div className="min-w-0">
+            <p className="font-display text-xl">{todo.length === 0 ? "Your profile is complete" : "Finish your profile"}</p>
+            <p className="text-sm text-muted">{todo.length === 0 ? "Everyone in the community can see the full picture." : `${todo.length} ${todo.length === 1 ? "thing" : "things"} left to reach 100%. Tap one to fill it in.`}</p>
+          </div>
+        </div>
+        {todo.length > 0 && (
+          <ul className="mt-4 grid gap-2 sm:grid-cols-2" data-testid="profile-todo">
+            {todo.map((m) => (
+              <li key={m.key}><button type="button" onClick={() => jump(m.key)} data-testid={`todo-${m.key}`} className="flex w-full items-center gap-2.5 rounded-xl border border-line px-3 py-2 text-left text-sm hover:border-ink/40 hover:bg-ink/5">
+                <Circle className="h-4 w-4 shrink-0 text-muted" /><span className="min-w-0 flex-1 truncate">{m.label}</span><span className="shrink-0 text-xs underline">Add</span></button></li>))}
+          </ul>)}
+        {comp.percent > 0 && todo.length > 0 && <p className="mt-3 flex items-center gap-1.5 text-xs text-muted"><Check className="h-3.5 w-3.5" style={{ color: "var(--accent)" }} />Done so far: {Object.entries(comp.sections || {}).map(([n, v]) => `${n} ${v.done}/${v.total}`).join(" · ")}</p>}
+        <p className="mt-3 rounded-lg bg-ink/5 px-3 py-2 text-xs text-muted" data-testid="optional-note">{OPTIONAL_NOTE}</p>
       </Card>
       {reqs.map((r) => <RequestCard key={r.id} r={r} onDone={() => { loadReqs(); loadAll(); }} />)}
       <div className="grid gap-5 lg:grid-cols-2">
-        {sections(config).map(([title, fields]) => <div key={title} className={fields.length > 4 ? "lg:col-span-2" : ""}><Section title={title} fields={fields} data={f} onSaved={saved} /></div>)}
+        {sections(config).map(([title, fields]) => <div key={title} className={fields.length > 4 ? "lg:col-span-2" : ""}><Section title={title} fields={fields} data={f} onSaved={saved} openSignal={openSignal} /></div>)}
         <ContactSection data={f} onSaved={saved} />
         <Documents data={f} onSaved={saved} />
         <SectionCard title="Games and events">

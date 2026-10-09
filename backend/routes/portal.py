@@ -47,12 +47,31 @@ def _filled(v: Any) -> bool:
     return True
 
 
-def completion(u: Dict[str, Any]) -> Dict[str, Any]:
-    keys = [k for ks in PROFILE_SECTIONS.values() for k in ks]
+def _skipped(cfg: Optional[Dict[str, Any]]) -> set:
+    """Profile fields the community has switched off (they can't count against completeness)."""
+    off = {f.get("key") for f in ((cfg or {}).get("profile") or {}).get("fields", []) if f.get("enabled") is False}
+    if "age" in off:
+        off.add("birthday")
+    return off
+
+
+# Never counted toward completion: they're nice-to-have, so the checklist says so plainly.
+OPTIONAL_ITEMS = [
+    {"key": "contact", "label": "LinkedIn, Instagram & website", "section": "Contact details"},
+    {"key": "documents", "label": "Documents & links", "section": "Documents and links"},
+]
+
+
+def completion(u: Dict[str, Any], cfg: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
+    off = _skipped(cfg)
+    secs = {name: [k for k in ks if k not in off] for name, ks in PROFILE_SECTIONS.items()}
+    keys = [k for ks in secs.values() for k in ks]
     missing = [k for k in keys if not _filled(u.get(k))]
-    pct = round(100 * (len(keys) - len(missing)) / len(keys))
+    pct = round(100 * (len(keys) - len(missing)) / len(keys)) if keys else 100
     return {"percent": pct, "missing": [FIELD_LABELS.get(k, k) for k in missing], "missing_keys": missing,
-            "sections": {name: {"done": sum(_filled(u.get(k)) for k in ks), "total": len(ks)} for name, ks in PROFILE_SECTIONS.items()}}
+            "missing_items": [{"key": k, "label": FIELD_LABELS.get(k, k), "section": next(n for n, ks in secs.items() if k in ks)} for k in missing],
+            "optional": OPTIONAL_ITEMS,
+            "sections": {name: {"done": sum(_filled(u.get(k)) for k in ks), "total": len(ks)} for name, ks in secs.items() if ks}}
 
 
 def mirror_fields(patch: Dict[str, Any]) -> None:
@@ -105,7 +124,7 @@ class ProfilePatch(BaseModel):
 @router.get("/me/profile-completion")
 async def my_completion(me: dict = Depends(get_current_user)):
     u = await db.users.find_one({"id": me["id"]}) or {}
-    return completion(u)
+    return completion(u, await db.community_config.find_one({"_key": "singleton"}))
 
 
 @router.patch("/me/profile")
@@ -130,7 +149,7 @@ async def patch_profile(body: ProfilePatch, me: dict = Depends(get_current_user)
     await audit(me["id"], "profile.updated", "user", me["id"], {"fields": [k for k in patch if k != "updated_at"]})
     await push_member(me["id"])
     u = clean(await db.users.find_one({"id": me["id"]}))
-    return {"user": u, "completion": completion(u)}
+    return {"user": u, "completion": completion(u, await db.community_config.find_one({"_key": "singleton"}))}
 
 
 @router.get("/me/engagement")
@@ -663,8 +682,9 @@ async def action_center(me: dict = Depends(require_role("admin"))):
     for coll in COLLECTIONS.values():
         pending += await db[coll].count_documents({"status": "pending"})
     profiles_incomplete = 0
+    _cfg = await db.community_config.find_one({"_key": "singleton"})
     async for u in db.users.find({"role": {"$ne": "admin"}, "is_simulated": {"$ne": True}}):
-        if completion(u)["percent"] < 60:
+        if completion(u, _cfg)["percent"] < 60:
             profiles_incomplete += 1
     recent = [{"action": a["action"], "actor_id": a.get("actor_id"), "target_type": a.get("target_type"),
                "at": a["created_at"].isoformat() if hasattr(a["created_at"], "isoformat") else a["created_at"]}

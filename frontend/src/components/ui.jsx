@@ -17,22 +17,30 @@ export const Button = ({ variant = "primary", className, loading, children, ...p
 );
 
 export const Card = ({ className, children, ...p }) => <div className={cx("card", className)} {...p}>{children}</div>;
-export function PhotoField({ value, onChange, label = "Photo (optional)" }) {
+// A photo slot for posts (news, events, perks...). With `aspect` set (width / height of the frame the photo
+// is shown in), picking a photo opens the drag-and-zoom step so the poster chooses what stays in frame, and
+// "Adjust" re-opens it later. The original is kept for the session so "Adjust" can widen the crop again.
+export function PhotoField({ value, onChange, label = "Photo (optional)", aspect }) {
   const ref = React.useRef(null);
+  const original = React.useRef({}); // cropped result -> the file it came from
   const [err, setErr] = React.useState("");
+  const [pending, setPending] = React.useState(null); // a File, or a data: URL being re-adjusted
   const pick = async (e) => {
     const file = e.target.files?.[0]; e.target.value = "";
     if (!file) return;
     setErr("");
+    if (aspect) { setPending(file); return; }
     try { const { resizePhoto } = await import("../lib/profile"); onChange(await resizePhoto(file)); } catch (ex) { setErr(ex.message || "Couldn't read that photo"); }
   };
+  const canAdjust = aspect && value && (original.current[value] || value.startsWith("data:") || value.startsWith("/"));
   return (
     <Field label={label}>
       <input ref={ref} type="file" accept="image/*" className="sr-only" onChange={pick} data-testid="photo-input" />
       {value ? (
         <div className="relative overflow-hidden rounded-xl border border-line">
-          <img src={value} alt="" className="max-h-48 w-full object-cover" />
+          <img src={value} alt="" className={aspect ? "w-full object-cover" : "max-h-48 w-full object-cover"} style={aspect ? { aspectRatio: String(aspect) } : undefined} />
           <div className="absolute right-2 top-2 flex gap-1.5">
+            {canAdjust && <button type="button" className="rounded-full bg-black/70 px-3 py-1 text-xs text-white" onClick={() => setPending(original.current[value] || value)} data-testid="photo-adjust">Adjust</button>}
             <button type="button" className="rounded-full bg-black/70 px-3 py-1 text-xs text-white" onClick={() => ref.current?.click()}>Change</button>
             <button type="button" className="rounded-full bg-black/70 px-3 py-1 text-xs text-white" onClick={() => onChange("")} data-testid="photo-remove">Remove</button>
           </div>
@@ -43,6 +51,8 @@ export function PhotoField({ value, onChange, label = "Photo (optional)" }) {
         </button>
       )}
       {err && <p className="mt-1 text-xs text-red-500">{err}</p>}
+      {aspect && <PhotoCropModal open={!!pending} file={pending} aspect={aspect} outputMax={1200} maxBytes={620_000} onCancel={() => setPending(null)}
+        onSave={(url) => { original.current[url] = typeof pending === "string" ? (original.current[value] || pending) : pending; onChange(url); setPending(null); }} />}
     </Field>
   );
 }
@@ -123,13 +133,15 @@ export function PhotoCropModal({ open, file, aspect = 1, outputMax = 480, maxByt
 
   // aspect = frame width / height. Longer side of the box is pinned to the *_MAX constant so the
   // frame is always square-in-a-280px-box for aspect=1, or a 224x280 portrait box for aspect=0.8, etc.
-  const vp = aspect <= 1 ? { w: Math.round(CROP_VIEWPORT_MAX * aspect), h: CROP_VIEWPORT_MAX } : { w: CROP_VIEWPORT_MAX, h: Math.round(CROP_VIEWPORT_MAX / aspect) };
+  const wide = aspect > 1 ? Math.max(CROP_VIEWPORT_MAX, Math.min(360, (typeof window !== "undefined" ? window.innerWidth : 400) - 88)) : CROP_VIEWPORT_MAX;
+  const vp = aspect <= 1 ? { w: Math.round(CROP_VIEWPORT_MAX * aspect), h: CROP_VIEWPORT_MAX } : { w: wide, h: Math.round(wide / aspect) };
   const out = aspect <= 1 ? { w: Math.round(outputMax * aspect), h: outputMax } : { w: outputMax, h: Math.round(outputMax / aspect) };
 
   React.useEffect(() => {
     if (!open || !file) { setImg(null); return; }
     setErr(""); setZoom(1); setImg(null);
-    const url = URL.createObjectURL(file);
+    const isUrl = typeof file === "string";
+    const url = isUrl ? file : URL.createObjectURL(file);
     const im = new Image();
     im.onload = () => {
       const base = Math.max(vp.w / im.width, vp.h / im.height);
@@ -138,7 +150,7 @@ export function PhotoCropModal({ open, file, aspect = 1, outputMax = 480, maxByt
     };
     im.onerror = () => setErr("That file isn't an image");
     im.src = url;
-    return () => URL.revokeObjectURL(url);
+    return () => { if (!isUrl) URL.revokeObjectURL(url); };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open, file]);
 

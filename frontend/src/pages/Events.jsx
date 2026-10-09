@@ -171,7 +171,7 @@ export default function Events() {
               <Field label="Type"><Select value={f.category} onChange={(e) => setF({ ...f, category: e.target.value })} options={config?.event_types?.length ? config.event_types : ["Meetup"]} /></Field></div>
             <Field label="Location or link"><Input value={f.location} onChange={(e) => setF({ ...f, location: e.target.value })} /></Field>
             <TierEditor tiers={tiers} onChange={setTiers} />
-            <PhotoField value={f.image_url} onChange={(v) => setF({ ...f, image_url: v })} label="Cover photo (optional)" />
+            <PhotoField value={f.image_url} onChange={(v) => setF({ ...f, image_url: v })} label="Cover photo (optional)" aspect={1.6} />
             <Field label="Tags"><TagInput value={f.tags} onChange={(tags) => setF({ ...f, tags })} /></Field>
             <Button onClick={suggest} disabled={!f.title.trim() || !f.starts_at} data-testid="event-submit">Submit</Button>
           </div>

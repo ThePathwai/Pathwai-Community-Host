@@ -48,8 +48,39 @@ async def list_resources(
             continue
         r["is_saved"] = bool(me and me["id"] in (r.get("saved_by") or []))
         r["save_count"] = len(r.get("saved_by") or [])
+        r["is_mine"] = _is_mine(r, me)
         out.append(r)
     return out
+
+
+def _is_mine(r: dict, me: Optional[dict]) -> bool:
+    return bool(me and (r.get("submitted_by") == me["id"] or (r.get("shared_by") or {}).get("id") == me["id"]))
+
+
+@router.get("/resources/mine")
+async def my_resources(me: dict = Depends(get_current_user)):
+    """Everything I've shared, including perks still waiting for the team's review."""
+    out = []
+    async for r in db.resources.find({"$or": [{"submitted_by": me["id"]}, {"shared_by.id": me["id"]}]}).sort("published_at", -1).limit(200):
+        r = clean(r)
+        r["is_saved"] = me["id"] in (r.get("saved_by") or [])
+        r["save_count"] = len(r.get("saved_by") or [])
+        r["is_mine"] = True
+        out.append(r)
+    return out
+
+
+@router.delete("/resources/{rid}")
+async def delete_my_resource(rid: str, me: dict = Depends(get_current_user)):
+    """The person who shared a perk can take it down any time; admins can remove anyone's."""
+    r = await db.resources.find_one({"id": rid})
+    if not r:
+        raise HTTPException(status_code=404, detail="Perk not found")
+    if not (_is_mine(r, me) or me.get("role") == "admin"):
+        raise HTTPException(status_code=403, detail="You can only delete perks you shared.")
+    await db.resources.delete_one({"id": rid})
+    await audit(me["id"], "resource.deleted", "resource", rid)
+    return {"ok": True}
 
 
 @router.get("/resources/{rid}")
@@ -60,6 +91,7 @@ async def get_resource(rid: str, request: Request):
     me = await get_current_user_optional(request)
     r = clean(r)
     r["is_saved"] = bool(me and me["id"] in (r.get("saved_by") or []))
+    r["is_mine"] = _is_mine(r, me)
     return r
 
 

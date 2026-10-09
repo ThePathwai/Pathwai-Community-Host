@@ -5,12 +5,14 @@ import { api, errMsg, fmtDate, timeAgo } from "../lib/api";
 import { useLive } from "../lib/live";
 import { useAuth } from "../lib/auth";
 import { Inline, useEdit } from "../components/EditKit";
-import { Avatar, Chip, Spinner, StatusBadge } from "../components/ui";
+import { Avatar, Spinner, StatusBadge } from "../components/ui";
 import { PhotoCarousel } from "../components/PhotoCarousel";
 import AboutBrand from "../components/AboutBrand";
+import ProfileNudge from "../components/ProfileNudge";
+import UpcomingEvents from "../components/UpcomingEvents";
 import { fieldLabel, fieldOn } from "../lib/profile";
 import { AI_CHAT_ENABLED } from "../lib/features";
-import { CalendarDays, Gift, ImagePlus, ListChecks, Megaphone, UserCheck2, UserPlus, Users } from "lucide-react";
+import { Dumbbell, Gift, ImagePlus, ListChecks, Megaphone, UserCheck2, UserPlus, Users } from "lucide-react";
 import { teamOf } from "../lib/names";
 
 // Below `lg` these become horizontally swipeable card rows instead of full vertical lists —
@@ -37,6 +39,9 @@ export default function Dashboard() {
   const others = d.upcoming_events.filter((e) => !d.my_rsvps.some((m) => m.id === e.id));
   const events = [...d.my_rsvps.map((e) => ({ ...e, going: true })), ...others].slice(0, 4);
   const todo = d.open_requests.slice(0, 3);
+  const classesNav = (config?.nav || []).find((n) => n.key === "classes");
+  const classesOn = !!classesNav?.enabled;
+  const classesLabel = classesNav?.label || "Classes";
   const Widget = ({ title, to, cta = "All", icon: Icon, className = "", quiet = false, children, ...p }) => (
     <section className={(quiet ? "flex min-h-0 flex-col rounded-2xl bg-ink/[.045] p-5 lg:p-6 " : "card flex min-h-0 flex-col ") + className} {...p}>
       <div className="mb-2.5 flex items-center lg:mb-3 justify-between">
@@ -128,6 +133,8 @@ export default function Dashboard() {
           </span>
         </Link>
 
+        {pc.missing_keys?.length > 0 && <ProfileNudge pc={pc} className="col-span-2" />}
+
         <Link to={next ? `/events/${next.id}` : "/events"} data-testid="dash-next-mobile" className="card card-hover relative col-span-2 flex h-24 flex-col justify-end overflow-hidden !p-0">
           {next?.cover_url ? <img src={next.cover_url} alt="" className="absolute inset-0 h-full w-full object-cover" />
             : config?.dashboard_cover_url ? <img src={config.dashboard_cover_url} alt="" className="absolute inset-0 h-full w-full object-cover" />
@@ -140,17 +147,18 @@ export default function Dashboard() {
           </div>
         </Link>
 
+        <UpcomingEvents events={events} total={d.stats.events} className="col-span-2" />
+
         <Tile to="/requests" icon={ListChecks} label="To-do" value={d.open_requests.length || undefined}
           sub={d.pending_profile_requests > 0 ? `${d.pending_profile_requests} profile update requested` : (todo[0]?.title || "You're all caught up")} />
         <PeopleTile to="/matches" icon={Users} label="Connections" people={d.recommended_people}
           sub={d.recommended_people.length ? `${d.recommended_people[0].user.name.split(" ")[0]}${d.recommended_people.length > 1 ? ` +${d.recommended_people.length - 1} more` : ""}` : "Complete your profile"} />
-        <Tile to="/events" icon={CalendarDays} label="Events" value={d.stats.events || undefined}
-          sub={events[0] ? `${events[0].title} · ${fmtDate(events[0].starts_at)}` : "Nothing scheduled"} />
         <Tile to="/resources" icon={Gift} label="Perks" value={d.featured_resources.length || undefined}
           sub={d.featured_resources[0]?.title || "No perks yet"} />
         <PeopleTile to="/members" icon={UserPlus} label="New members" people={d.new_members || []}
           sub={(d.new_members || []).length ? `${d.new_members.length} joined recently` : "No new members yet"} />
-        <Tile to="/updates" icon={Megaphone} label="News" value={d.announcements.length || undefined}
+        {classesOn && <Tile to="/classes" icon={Dumbbell} label={classesLabel} sub="Book your next one" />}
+        <Tile to="/updates" icon={Megaphone} label="News" value={d.announcements.length || undefined} className={classesOn ? "" : "col-span-2"}
           sub={d.announcements[0]?.title || "Nothing posted yet"} />
       </div>
 
@@ -164,10 +172,7 @@ export default function Dashboard() {
               <p className="mt-1 text-xs text-muted">{[fieldOn(config, "age") && me.age && `${fieldLabel(config, "age")} ${me.age}`, fieldOn(config, "height") && me.height?.split(" · ")[0]].filter(Boolean).join(" · ")}</p>
             </div>
           </div>
-          <Link to="/profile" data-testid="dash-completion" className="mt-3 flex items-center gap-3 rounded-xl border border-line bg-ink/5 p-3 hover:border-ink/20 hover:bg-ink/[.08] lg:mt-4">
-            <div className="relative"><Ring value={pc.percent} /><span className="stat absolute inset-0 flex items-center justify-center text-xs">{pc.percent}%</span></div>
-            <div className="text-sm"><p className="font-medium">Profile completion</p><p className="text-xs text-muted">{pc.missing.length > 0 ? `Add: ${pc.missing.slice(0, 2).join(", ")}` : "Your profile is complete"}</p></div>
-          </Link>
+          <ProfileNudge pc={pc} className="mt-3 lg:mt-4" />
         </Widget>
 
         <div className="card relative flex min-h-[220px] flex-col justify-end overflow-hidden !p-0 lg:col-span-5" data-testid="dash-next">
@@ -214,6 +219,8 @@ export default function Dashboard() {
           )}
         </Widget>
 
+        <UpcomingEvents events={events} total={d.stats.events} className="lg:col-span-3" />
+
         <Widget title={`To-do${d.open_requests.length ? ` · ${d.open_requests.length}` : ""}`} to="/requests" icon={ListChecks} className="lg:col-span-3">
           {todo.length === 0 && d.pending_profile_requests === 0 ? <p className="text-sm text-muted">You're all caught up.</p> : (
             <ul className="space-y-1.5">
@@ -240,12 +247,6 @@ export default function Dashboard() {
           </ul>
         </Widget>
 
-        <Widget title="Upcoming events" to="/events" icon={CalendarDays} className="lg:col-span-3">
-          <ul className={ROW}>
-            {events.map((e) => (
-              <li key={e.id} className={CARD}><Link to={`/events/${e.id}`} className="flex items-center justify-between gap-3 rounded-xl border border-line px-3 py-2 hover:border-ink/20 hover:bg-ink/5"><span className="min-w-0"><span className="block truncate text-sm font-medium lg:text-[15px]">{e.title}</span><span className="block truncate text-xs text-muted">{fmtDate(e.starts_at)}</span></span>{e.going && <Chip accent>Going</Chip>}</Link></li>))}
-          </ul>
-        </Widget>
 
         <Widget title="Community news" to="/updates" icon={Megaphone} className="lg:col-span-8">
           <div className="-mx-0.5 flex snap-x snap-mandatory gap-3 overflow-x-auto px-0.5 pb-1 sm:mx-0 sm:grid sm:grid-cols-3 sm:overflow-visible sm:px-0 sm:pb-0">

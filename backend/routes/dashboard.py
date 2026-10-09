@@ -55,7 +55,7 @@ async def dashboard(request: Request, role: Optional[str] = "founder"):
         "membership_requests": pend[:5],
         "membership_requests_total": len(pend),
         "member_type": member_type(real),
-        "profile_completion": completion(real),
+        "profile_completion": completion(real, cfg),
         "open_requests": open_reqs,
         "my_rsvps": my_rsvps,
         "team_support": team,

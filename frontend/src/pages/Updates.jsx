@@ -4,10 +4,22 @@ import { api, errMsg, fmtDate } from "../lib/api";
 import { useLive } from "../lib/live";
 import { ItemTools } from "../components/EditKit";
 import { useAuth } from "../lib/auth";
-import { Button, Card, Chip, Empty, Field, Input, Modal, PageHeader, PhotoField, Select, Spinner, Textarea } from "../components/ui";
+import { Link } from "react-router-dom";
+import { Avatar, Button, Card, Chip, Empty, Field, Input, Modal, PageHeader, PhotoField, Select, Spinner, Textarea } from "../components/ui";
 import { teamOf } from "../lib/names";
 
 const TYPES = ["Program update", "Deadline reminder", "Event announcement", "Opportunity announcement", "Resource announcement", "Community news", "Partner update", "Alumni update"];
+
+// "Posted by": the poster's face and name, linking to their profile when they still have one here.
+function PostedBy({ a, config, size = 22, className = "", onClick }) {
+  const p = a.author_profile;
+  const name = p?.name || a.author || `The ${teamOf(config)}`;
+  return p ? (
+    <Link to={`/members/${p.id}`} onClick={(e) => { e.stopPropagation(); onClick?.(); }} data-testid="posted-by" className={"inline-flex min-w-0 items-center gap-1.5 hover:underline " + className}>
+      <Avatar src={p.avatar_url} name={name} size={size} /><span className="truncate font-medium">{name}</span>
+    </Link>
+  ) : <span className={"inline-flex items-center gap-1.5 " + className} data-testid="posted-by"><span className="truncate">{name}</span></span>;
+}
 
 export default function Updates() {
   const { user, config } = useAuth();
@@ -35,18 +47,19 @@ export default function Updates() {
                 : <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg bg-ink/[.06] text-center text-[9px] font-semibold uppercase text-muted">{(a.category || "News").slice(0, 4)}</span>}
               <div className="min-w-0 flex-1">
                 <p className="truncate text-[13px] font-semibold leading-tight">{a.title}</p>
-                <p className="truncate text-[11px] text-muted">{fmtDate(a.published_at, { month: "short", day: "numeric" })}{a.priority === "high" ? " · Important" : ""}</p>
+                <p className="truncate text-[11px] text-muted">{fmtDate(a.published_at, { month: "short", day: "numeric" })} · by {a.author_profile?.name || a.author || `The ${teamOf(config)}`}{a.priority === "high" ? " · Important" : ""}</p>
               </div>
             </div>))}</div>
 
           <div className="hidden space-y-3 lg:block">{items.map((a) => (
             <Card key={a.id} className="cursor-pointer transition hover:border-ink/30" onClick={() => setSel(a)} data-testid="announcement">
-              <div className="mb-2 flex flex-wrap items-center gap-2"><Chip>{a.category || "Community news"}</Chip>{a.priority === "high" && <Chip>Important</Chip>}<span className="eyebrow">{fmtDate(a.published_at, { month: "short", day: "numeric" })} · {a.author || `The ${teamOf(config)}`}</span></div>
+              <div className="mb-2 flex flex-wrap items-center gap-2"><Chip>{a.category || "Community news"}</Chip>{a.priority === "high" && <Chip>Important</Chip>}<span className="eyebrow">{fmtDate(a.published_at, { month: "short", day: "numeric" })}</span><span className="text-xs text-muted">· posted by</span><PostedBy a={a} config={config} className="text-xs" /></div>
               <ItemTools kind="announcements" item={a} onChanged={load} className="mb-2" />{a.image_url && <img src={a.image_url} alt="" className="mb-3 h-44 w-full rounded-lg object-cover" />}<h3 className="text-lg">{a.title}</h3><p className="mt-1 line-clamp-2 text-sm text-muted">{a.body}</p>
             </Card>))}</div>
         </>)}
       <Modal open={!!sel} onClose={() => setSel(null)} title={sel?.title}>
-        {sel && <div className="space-y-3"><p className="eyebrow">{sel.category || "Community news"} · {fmtDate(sel.published_at)} · {sel.author || `The ${teamOf(config)}`}</p>
+        {sel && <div className="space-y-3"><p className="eyebrow">{sel.category || "Community news"} · {fmtDate(sel.published_at)}</p>
+          <div className="flex items-center gap-2 rounded-xl bg-ink/5 px-3 py-2 text-sm" data-testid="post-author"><span className="text-muted">Posted by</span><PostedBy a={sel} config={config} size={28} onClick={() => setSel(null)} />{sel.author_profile?.title && <span className="truncate text-xs text-muted">· {sel.author_profile.title}</span>}{sel.author_profile && <Link to={`/members/${sel.author_profile.id}`} className="ml-auto shrink-0 text-xs underline">View profile ›</Link>}</div>
           {sel.image_url && <img src={sel.image_url} alt="" className="max-h-80 w-full rounded-xl border border-line object-cover" />}
           <p className="whitespace-pre-wrap text-sm leading-relaxed">{sel.body}</p>
           {sel.cta_url && <a className="btn-primary" href={sel.cta_url} target="_blank" rel="noreferrer">{sel.cta_label || "Learn more"}</a>}</div>}
@@ -55,7 +68,7 @@ export default function Updates() {
         <div className="space-y-4">
           <Field label="Title"><Input value={f.title} onChange={(e) => setF({ ...f, title: e.target.value })} data-testid="ann-title" /></Field>
           <Field label="Type"><Select value={f.category} onChange={(e) => setF({ ...f, category: e.target.value })} options={TYPES} /></Field>
-          <PhotoField value={f.image_url} onChange={(v) => setF({ ...f, image_url: v })} />
+          <PhotoField value={f.image_url} onChange={(v) => setF({ ...f, image_url: v })} aspect={16 / 9} />
           <Field label="Message"><Textarea rows={5} value={f.body} onChange={(e) => setF({ ...f, body: e.target.value })} /></Field>
           <div className="grid grid-cols-2 gap-3"><Field label="Button label"><Input value={f.cta_label} onChange={(e) => setF({ ...f, cta_label: e.target.value })} /></Field><Field label="Button link"><Input type="url" value={f.cta_url} onChange={(e) => setF({ ...f, cta_url: e.target.value })} /></Field></div>
           <p className="text-xs text-muted">{user.role === "admin" ? "Admins publish immediately." : `The ${teamOf(config)} reviews updates before they're published.`}</p>

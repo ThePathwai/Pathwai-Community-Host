@@ -30,7 +30,14 @@ async def list_announcements(request: Request, space: Optional[str] = None, limi
     q = approved_q({"space_slug": space} if space and space != "all" else {})
     me = await get_current_user_optional(request)
     out = [clean(a) async for a in db.announcements.find(q).sort("published_at", -1).limit(limit)]
-    return [a for a in out if audience_ok(a, me)]
+    out = [a for a in out if audience_ok(a, me)]
+    # Who posted it, with a link target: the poster's member profile (only when they still have one here).
+    ids = list({a.get("author_id") for a in out if a.get("author_id")})
+    people = {u["id"]: u async for u in db.users.find({"id": {"$in": ids}})} if ids else {}
+    for a in out:
+        u = people.get(a.get("author_id"))
+        a["author_profile"] = {"id": u["id"], "name": u.get("name"), "avatar_url": u.get("avatar_url"), "title": u.get("title")} if u else None
+    return out
 
 
 @router.post("/announcements", status_code=201)

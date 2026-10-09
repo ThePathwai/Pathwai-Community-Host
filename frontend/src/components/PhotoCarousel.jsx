@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from "react";
-import { ArrowLeft, ArrowRight, Expand, ImagePlus, Trash2 } from "lucide-react";
+import { ArrowLeft, ArrowRight, Expand, ImagePlus, Move, Trash2 } from "lucide-react";
 import { Button, Input, PhotoCropModal, cx } from "./ui";
 import ScrollLock from "./ScrollLock";
 
@@ -92,6 +92,8 @@ export function PhotoCarouselEditor({ value = [], onChange, max = 10, aspect, ti
   const [url, setUrl] = useState("");
   const [err, setErr] = useState("");
   const [pending, setPending] = useState(null); // file awaiting placement, only used when `aspect` is set
+  const [redo, setRedo] = useState(null); // index of a photo being re-positioned
+  const originals = useRef({}); // cropped result -> the file it came from, kept for this editing session
   const addFile = async (file) => {
     setErr("");
     if (aspect) { setPending(file); return; }
@@ -115,9 +117,10 @@ export function PhotoCarouselEditor({ value = [], onChange, max = 10, aspect, ti
             <div key={i} className={cx("group relative overflow-hidden rounded-xl border border-line", tileClass)}>
               <img src={src} alt="" className="h-full w-full object-cover" />
               <span className="absolute left-1.5 top-1.5 rounded bg-black/60 px-1.5 py-0.5 text-[10px] text-white">{i + 1}</span>
-              <div className="absolute inset-0 flex items-center justify-center gap-1.5 bg-black/0 opacity-0 transition group-hover:bg-black/40 group-hover:opacity-100">
+              <div className="absolute inset-0 flex items-center justify-center gap-1.5 bg-black/0 opacity-0 transition group-hover:bg-black/40 group-hover:opacity-100 [@media(hover:none)]:bg-black/35 [@media(hover:none)]:opacity-100">
                 <button type="button" className="rounded-full bg-white/90 p-1.5 disabled:opacity-40" disabled={i === 0} aria-label="Move earlier" onClick={() => move(i, -1)}><ArrowLeft className="h-3.5 w-3.5" /></button>
                 <button type="button" className="rounded-full bg-white/90 p-1.5 disabled:opacity-40" disabled={i === value.length - 1} aria-label="Move later" onClick={() => move(i, 1)}><ArrowRight className="h-3.5 w-3.5" /></button>
+                {aspect && (src.startsWith("data:") || src.startsWith("/")) && <button type="button" className="rounded-full bg-white/90 p-1.5" aria-label="Adjust photo" data-testid={`${testId}-adjust`} onClick={() => { setRedo(i); setPending(originals.current[src] || src); }}><Move className="h-3.5 w-3.5" /></button>}
                 <button type="button" className="rounded-full bg-white/90 p-1.5" aria-label="Remove photo" data-testid={`${testId}-remove`} onClick={() => remove(i)}><Trash2 className="h-3.5 w-3.5" /></button>
               </div>
             </div>
@@ -141,7 +144,12 @@ export function PhotoCarouselEditor({ value = [], onChange, max = 10, aspect, ti
       {value.length > 1 && <p className="text-xs text-muted">Slides through automatically on your dashboard, in this order.</p>}
       {aspect && (
         <PhotoCropModal open={!!pending} file={pending} aspect={aspect} outputMax={outputMax} maxBytes={maxBytes}
-          onCancel={() => setPending(null)} onSave={(cropped) => { onChange([...value, cropped]); setPending(null); }} />
+          onCancel={() => { setPending(null); setRedo(null); }}
+          onSave={(cropped) => {
+            originals.current[cropped] = typeof pending === "string" ? (originals.current[value[redo]] || pending) : pending;
+            onChange(redo != null ? value.map((v, j) => (j === redo ? cropped : v)) : [...value, cropped]);
+            setPending(null); setRedo(null);
+          }} />
       )}
     </div>
   );

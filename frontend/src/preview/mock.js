@@ -648,6 +648,11 @@ function get(path, p, config) {
     return ok(config, { events });
   }
   if (path === "/auth/me") return S.role && S.community ? ok(config, view()["/auth/me"]) : fail(config, 401, "Not authenticated");
+  if (path === "/resources/mine") {
+    const me = view()["/auth/me"];
+    const mineOf = (r) => r.submitted_by === me.id || r.shared_by?.id === me.id;
+    return ok(config, mergedList(view()["/resources"] || [], "resources", false).filter(mineOf).map((r) => ({ ...r, is_saved: isSaved("resources", r), is_mine: true })));
+  }
   if (!S.role && !path.startsWith("/community") && !path.startsWith("/auth") && !path.startsWith("/organizations") &&
       !path.startsWith("/discover") && !path.startsWith("/mentors") && !path.startsWith("/chat")) {
     return fail(config, 401, "Not authenticated");
@@ -718,7 +723,14 @@ function get(path, p, config) {
     d.resources = d.resources.filter((x) => acts["resource:" + x.id] !== "dismiss").map((x) => ({ ...x, state: acts["resource:" + x.id] || x.state }));
     return ok(config, d);
   }
-  if (path === "/announcements") return ok(config, mergedList(d, "announcements"));
+  if (path === "/announcements") {
+    // Mirrors routes/announcements.py: who posted it, with a profile to link to (matched by id, else by name).
+    const roster = communityRoster(slugOf());
+    return ok(config, mergedList(d, "announcements").map((a) => {
+      const u = roster.find((x) => (a.author_id && x.id === a.author_id) || (a.submitted_by && x.id === a.submitted_by) || (!a.author_id && a.author && x.name === a.author));
+      return { ...a, author_profile: u ? { id: u.id, name: u.name, avatar_url: u.avatar_url || null, title: u.title || null } : null };
+    }));
+  }
   if (path === "/admin/member-requests") {
     d.requests = d.requests.map((r) => { const l = (S.extra.reqs || {})[r.id]; return l ? { ...r, ...l, effective_status: effective({ ...r, ...l }) } : r; });
     if (p.status && p.status !== "all") d.requests = d.requests.filter((r) => r.effective_status === p.status);
@@ -797,7 +809,8 @@ function get(path, p, config) {
     return ok(config, { attendees: [], ...ev, is_saved: isSaved("events", ev) });
   }
   if (path === "/resources") {
-    d = mergedList(d, "resources").map((r) => ({ ...r, is_saved: isSaved("resources", r) }));
+    const meId = view()["/auth/me"]?.id;
+    d = mergedList(d, "resources").map((r) => ({ ...r, is_saved: isSaved("resources", r), is_mine: !!meId && (r.submitted_by === meId || r.shared_by?.id === meId) }));
     if (p.q) d = d.filter((r) => has([r.title, r.description, r.tags], q(p.q)));
     if (p.source && p.source !== "all") d = d.filter((r) => r.source === p.source);
     if (p.saved) d = d.filter((r) => r.is_saved);
@@ -1210,7 +1223,7 @@ function write(method, path, body, config) {
     if (path === "/events" && !admin) return fail(config, 403, "Only admins can add events");
     const kind = path.slice(1);
     const me = view()["/auth/me"];
-    const doc = { id: "sub-" + Date.now(), ...body, status: admin ? "approved" : "pending", published_at: new Date().toISOString(), author: me.name, submitted_by: me.id, submitted_by_name: me.name };
+    const doc = { id: "sub-" + Date.now(), ...body, status: admin ? "approved" : "pending", published_at: new Date().toISOString(), author: me.name, author_id: me.id, submitted_by: me.id, submitted_by_name: me.name };
     doc.cover_url = body.image_url || null;
     if (kind === "resources") Object.assign(doc, { shared_by: { id: me.id, name: me.name, avatar_url: me.avatar_url, title: me.title }, category: body.category || "Discount", is_saved: false, tags: body.tags || [] });
     // A recorded fixture event always carries attendees/attendee_ids/rsvps/related_resources/etc.
@@ -1422,6 +1435,15 @@ function write(method, path, body, config) {
     (S.extra.join = S.extra.join || {})[email + "|" + inv.slug] = "approved";
     S.role = inv.role || "member"; S.email = email; S.community = inv.slug;
     return ok(config, { ok: true, user: { id: "acct-" + email, name: body.name, email, role: inv.role || "member" } }, 201);
+  }
+  const dp = path.match(/^\/resources\/([^/]+)$/);
+  if (dp && method === "delete") {
+    const ov = sharedContent("resources"); const me = view()["/auth/me"];
+    const item = ov.created.find((x) => x.id === dp[1]) || (view()["/resources"] || []).find((x) => x.id === dp[1]);
+    if (!item || ov.deleted[dp[1]]) return fail(config, 404, "Perk not found");
+    if (!(item.submitted_by === me.id || item.shared_by?.id === me.id || me.role === "admin")) return fail(config, 403, "You can only delete perks you shared.");
+    ov.deleted[dp[1]] = true;
+    return ok(config, { ok: true });
   }
   const ce = path.match(/^\/admin\/content\/(events|resources|announcements)\/([^/]+)$/);
   if (ce) {
