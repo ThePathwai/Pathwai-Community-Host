@@ -362,7 +362,7 @@ export const Wordmark = ({ name, className = "", brand }) => {
   const own = !name || name === "Pathwai";
   const logo = b.logo_url || b.logo_mark_url;
   return (
-    <span className={"inline-flex min-w-0 items-center gap-2.5 font-black uppercase tracking-tight " + className} style={{ textTransform: "var(--heading-transform)" }}>
+    <span className={"inline-flex min-w-0 max-w-full items-center gap-2.5 font-black uppercase tracking-tight " + className} style={{ textTransform: "var(--heading-transform)" }}>
       {logo ? <img src={logo} alt="" className="h-[1.4em] w-auto max-w-[7em] object-contain sm:h-[2em] sm:max-w-[10em]" style={b.logo_adapts ? { filter: "var(--mark-filter, none)" } : undefined} /> : own && <img src={wordmarkWhite} alt="Pathwai" className="h-[1.2em] w-auto sm:h-[1.5em]" style={{ filter: "var(--mark-filter, none)" }} />}
       {(logo || !own) && (!b.logo_url || b.show_name_with_logo !== false) && <span className={"truncate " + (logo ? "max-sm:hidden" : "")}>{name || "Pathwai"}</span>}
     </span>

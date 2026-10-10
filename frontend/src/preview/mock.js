@@ -3,6 +3,8 @@
 import axios from "axios";
 import fixtures from "./fixtures.json";
 import { buildYvetta, YVETTA_SLUG } from "./yvetta";
+import { buildHyrox, HYROX_SLUG } from "./hyrox";
+import { buildHumber, HUMBER_SLUG } from "./humber";
 import { classesHandler, newClassesState } from "./classes";
 
 const S = { role: null, email: null, community: null, books: {}, extra: {} };
@@ -15,8 +17,8 @@ const ACCOUNTS = { "demo@yourcommunity.app": { name: "Fife Ashley-Dejo", role: "
 // but just a plain member of grace (grace's real admin is a separate persona, pastor@c3.example, same
 // as the real backend's seed_communities.py); demo@ is a plain member everywhere except Toronto Tech
 // Collective, where it's the founding admin — the "vice versa" half. See ADMIN_OF below.
-const BASE = { "demo@yourcommunity.app": { playr: "approved", grace: "approved", "club-pto": "approved", "toronto-tech-collective": "approved", unity: "approved", [YVETTA_SLUG]: "approved" }, "admin@yourcommunity.app": { playr: "approved", grace: "approved", "the-village": "approved", "club-pto": "approved", unity: "approved", [YVETTA_SLUG]: "approved" }, "host@thevillage.example": { "the-village": "approved" } };
-const ADMIN_OF = { "admin@yourcommunity.app": ["playr", "the-village", "club-pto", "unity", YVETTA_SLUG], "demo@yourcommunity.app": ["toronto-tech-collective"], "host@thevillage.example": ["the-village"] };
+const BASE = { "demo@yourcommunity.app": { playr: "approved", grace: "approved", "club-pto": "approved", "toronto-tech-collective": "approved", unity: "approved", [YVETTA_SLUG]: "approved", [HYROX_SLUG]: "approved", [HUMBER_SLUG]: "approved" }, "admin@yourcommunity.app": { playr: "approved", grace: "approved", "the-village": "approved", "club-pto": "approved", unity: "approved", [YVETTA_SLUG]: "approved", [HYROX_SLUG]: "approved", [HUMBER_SLUG]: "approved" }, "host@thevillage.example": { "the-village": "approved" } };
+const ADMIN_OF = { "admin@yourcommunity.app": ["playr", "the-village", "club-pto", "unity", YVETTA_SLUG, HYROX_SLUG, HUMBER_SLUG], "demo@yourcommunity.app": ["toronto-tech-collective"], "host@thevillage.example": ["the-village"] };
 const memStatus = (email, slug) => (S.extra.join || {})[email + "|" + slug] || (BASE[email] || {})[slug] || "none";
 const isAdminHere = () => (ADMIN_OF[S.email] || []).includes(slugOf());
 const appsHere = () => ((S.extra.apps || {})[slugOf()] || []);
@@ -99,6 +101,10 @@ function blank(v) {
 
 // The Yvettabetta Pilates demo community (see yvetta.js): added to the recorded data and the hub's list once, at load.
 { const yv = buildYvetta(fixtures, { blank, clone, DEFAULT_CONFIG, REFERENCE_PUBLIC_KEYS }); fixtures.communities[YVETTA_SLUG] = yv.book; fixtures.hub.splice(1, 0, yv.hub); }
+// The Toronto Hyrox Crew and Humber Innovation Network demo communities (see hyrox.js, humber.js, demoKit.js).
+{ const deps = { blank, clone, DEFAULT_CONFIG, REFERENCE_PUBLIC_KEYS };
+  const hx = buildHyrox(fixtures, deps); fixtures.communities[HYROX_SLUG] = hx.book; fixtures.hub.splice(2, 0, hx.hub);
+  const hm = buildHumber(fixtures, deps); fixtures.communities[HUMBER_SLUG] = hm.book; fixtures.hub.splice(3, 0, hm.hub); }
 
 // Unity Fitness was recorded with a copy of The Playr League's settings (name, colours, font, logo, text), so opening it
 // from the hub looked like the wrong community. Where a community's settings don't match its own hub card, rebuild them from

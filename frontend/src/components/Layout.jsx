@@ -95,7 +95,7 @@ export default function Layout({ children }) {
       <header className="sticky top-0 z-[45] border-b border-line/60 bg-paper/70 backdrop-blur-xl backdrop-saturate-150">
         <EditBar />
         <div className="mx-auto flex max-w-[1600px] items-center gap-2 px-4 py-2 sm:gap-4 lg:px-10">
-          <Link to="/" className="min-w-0 shrink text-lg sm:text-2xl" data-testid="brand"><Wordmark name={config?.community_name || "Pathwai"} /></Link>
+          <Link to="/" className="min-w-0 shrink overflow-hidden text-lg sm:text-2xl" data-testid="brand"><Wordmark name={config?.community_name || "Pathwai"} /></Link>
           {editing && <button className="hidden whitespace-nowrap rounded-full border border-dashed border-ink/40 px-2 py-0.5 text-[10px] uppercase tracking-widest text-muted hover:text-ink sm:inline" onClick={() => setDrawer(true)} data-testid="edit-logo">Edit logo</button>}
           <nav className="ml-2 hidden min-w-0 flex-1 gap-1 overflow-x-auto [scrollbar-width:none] xl:flex">
             {NAV.map(([to, label]) => (

@@ -9,6 +9,7 @@ import { fieldLabel, fieldOn, typeLabel } from "../lib/profile";
 import { Bookmark, Globe, Instagram, Linkedin, Mail, MessageCircle, Phone } from "lucide-react";
 import { Avatar, Button, Card, Chip, Spinner } from "../components/ui";
 import { WhyReasons, reasonsOf } from "../components/WhyMatch";
+import PitchCard from "../components/PitchCard";
 
 const List = ({ title, items, accent }) => items?.length ? (
   <Card style={accent ? { borderColor: "var(--accent)" } : undefined}><h3 className="label" style={accent ? { color: "var(--accent)" } : undefined}>{title}</h3><div className="flex flex-wrap gap-1.5">{items.map((x) => { const t = typeof x === "string" ? x : x.name || x.label; return <Chip key={t} accent={accent}>{t}</Chip>; })}</div></Card>
@@ -67,7 +68,7 @@ export default function MemberProfile() {
           <div className="flex flex-col gap-4 p-6">
             <div className="flex flex-wrap items-start justify-between gap-3">
               <div>
-                <div className="mb-2 flex flex-wrap gap-1.5">{u.member_type && u.member_type !== "founder" && <Chip accent>{typeLabel(config, u.member_type)}</Chip>}</div>
+                <div className="mb-2 flex flex-wrap gap-1.5">{u.member_type && (u.member_type !== "founder" || typeLabel(config, "founder") !== "Member") && <Chip accent>{typeLabel(config, u.member_type)}</Chip>}</div>
                 <h1 className="text-2xl sm:text-3xl lg:text-4xl">{u.name}</h1>
                 <p className="mt-1 text-sm text-muted">{[u.company, u.location].filter(Boolean).join(" · ")}</p>
               </div>
@@ -90,7 +91,7 @@ export default function MemberProfile() {
                 <div key={k} className="bg-surface px-4 py-3"><dt className="eyebrow">{fieldLabel(config, k)}</dt><dd className={"mt-1 " + (k === "title" ? "text-sm font-medium leading-snug" : "font-display text-2xl")}>{k === "height" ? v.split(" · ")[0] : v}{k === "height" && v.includes(" · ") && <span className="ml-1 text-xs text-muted">{v.split(" · ")[1]}</span>}</dd></div>
               ))}
             </dl>
-            {u.bio && <p className="text-sm leading-relaxed text-ink/90">{u.bio}</p>}
+            {u.bio && <p className="whitespace-pre-line text-sm leading-relaxed text-ink/90">{u.bio}</p>}
             {u.company && <p className="text-xs text-muted">{u.title} at {u.company}</p>}
           </div>
         </div>
@@ -100,6 +101,7 @@ export default function MemberProfile() {
           <div className="mb-3 flex flex-wrap items-center gap-2"><Chip accent>Suggested for you</Chip><h3 className="text-base font-semibold">Why we suggested {u.name.split(" ")[0]}</h3></div>
           <WhyReasons reasons={reasonsOf(why)} className="sm:grid sm:grid-cols-2 sm:gap-x-6 sm:gap-y-3 sm:space-y-0" />
         </Card>)}
+      <PitchCard u={u} />
       <ContactCard u={u} self={user.id === u.id} />
       {/* Same personal photo grid as the platform-wide People profile panel (HubPeople.jsx) --
           the account-level gallery (routes/hub.py's AccountProfileIn.photos) wasn't reaching this
