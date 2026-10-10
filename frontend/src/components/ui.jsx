@@ -35,7 +35,7 @@ export function PhotoField({ value, onChange, label = "Photo (optional)", aspect
   const canAdjust = aspect && value && (original.current[value] || value.startsWith("data:") || value.startsWith("/"));
   return (
     <Field label={label}>
-      <input ref={ref} type="file" accept="image/*" className="sr-only" onChange={pick} data-testid="photo-input" />
+      <input ref={ref} type="file" accept="image/jpeg,image/png,image/webp,image/gif" className="sr-only" onChange={pick} data-testid="photo-input" />
       {value ? (
         <div className="relative overflow-hidden rounded-xl border border-line">
           <img src={value} alt="" className={aspect ? "w-full object-cover" : "max-h-48 w-full object-cover"} style={aspect ? { aspectRatio: String(aspect) } : undefined} />
@@ -81,7 +81,7 @@ export function PhotoGallery({ value = [], onChange, max = 9, label = "Photos", 
   };
   return (
     <Field label={label} hint={hint || `Up to ${max} — shown on your profile and in the People feed.`}>
-      <input ref={ref} type="file" accept="image/*" multiple className="sr-only" onChange={pick} data-testid="gallery-input" />
+      <input ref={ref} type="file" accept="image/jpeg,image/png,image/webp,image/gif" multiple className="sr-only" onChange={pick} data-testid="gallery-input" />
       <div className="grid grid-cols-3 gap-2 sm:grid-cols-4">
         {value.map((src, i) => (
           <div key={i} className="group relative aspect-square overflow-hidden rounded-lg border border-line" data-testid="gallery-photo">
@@ -148,7 +148,7 @@ export function PhotoCropModal({ open, file, aspect = 1, outputMax = 480, maxByt
       setPan({ x: (vp.w - im.width * base) / 2, y: (vp.h - im.height * base) / 2 });
       setImg(im);
     };
-    im.onerror = () => setErr("That file isn't an image");
+    im.onerror = () => setErr("We couldn't open that photo. Use a JPG, PNG or WebP (iPhone HEIC files can't be read by every browser).");
     im.src = url;
     return () => { if (!isUrl) URL.revokeObjectURL(url); };
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -196,7 +196,7 @@ export function PhotoCropModal({ open, file, aspect = 1, outputMax = 480, maxByt
 
   return (
     <Modal open={open} onClose={onCancel} title="Adjust photo">
-      {err ? <p className="text-sm text-red-400">{err}</p> : (
+      {err ? (<div className="space-y-4"><p className="text-sm text-red-400" data-testid="crop-error">{err}</p><div className="flex justify-end"><Button variant="ghost" onClick={onCancel}>Close</Button></div></div>) : (
         <div className="space-y-4">
           <p className="text-sm text-muted">Drag to reposition, and zoom to fill the frame the way you want — it saves cropped to the shape shown here.</p>
           <div className="relative mx-auto touch-none select-none overflow-hidden rounded-xl border border-line bg-ink/5"
@@ -232,7 +232,7 @@ export function AvatarUpload({ photo, onChange, name, size = 64, testId = "avata
       <div className="flex items-center gap-4">
         <Avatar src={photo} name={name || "?"} size={size} square />
         <label className={cx(variant === "primary" ? "btn-primary" : "btn-ghost", "cursor-pointer text-sm")} data-testid={testId}>
-          {label}<input type="file" accept="image/*" hidden onChange={pick} />
+          {label}<input type="file" accept="image/jpeg,image/png,image/webp,image/gif" hidden onChange={pick} />
         </label>
       </div>
       <PhotoCropModal open={!!pending} file={pending} aspect={1} outputMax={480} onCancel={() => setPending(null)} onSave={(url) => { onChange(url); setPending(null); }} />

@@ -41,7 +41,7 @@ export function resizePhoto(file, maxW = 1200) {
       while (out.length > 600000 && q > 0.4) { q -= 0.1; out = c.toDataURL("image/jpeg", q); }
       resolve(out);
     };
-    img.onerror = () => { URL.revokeObjectURL(url); reject(new Error("That file isn't an image")); };
+    img.onerror = () => { URL.revokeObjectURL(url); reject(new Error("We couldn't open that photo. Use a JPG, PNG or WebP (iPhone HEIC files can't be read by every browser).")); };
     img.src = url;
   });
 }
@@ -59,7 +59,7 @@ export function resizeImage(file, size = 360) {
       URL.revokeObjectURL(url);
       resolve(c.toDataURL("image/jpeg", 0.85));
     };
-    img.onerror = () => { URL.revokeObjectURL(url); reject(new Error("That file isn't an image")); };
+    img.onerror = () => { URL.revokeObjectURL(url); reject(new Error("We couldn't open that photo. Use a JPG, PNG or WebP (iPhone HEIC files can't be read by every browser).")); };
     img.src = url;
   });
 }

@@ -94,14 +94,31 @@ export function PhotoCarouselEditor({ value = [], onChange, max = 10, aspect, ti
   const [pending, setPending] = useState(null); // file awaiting placement, only used when `aspect` is set
   const [redo, setRedo] = useState(null); // index of a photo being re-positioned
   const originals = useRef({}); // cropped result -> the file it came from, kept for this editing session
-  const addFile = async (file) => {
+  const [queue, setQueue] = useState([]); // more photos waiting for their turn in the crop step
+  const [over, setOver] = useState(false); // a file is being dragged over the add area
+  const readyFile = async (file) => new File([await file.arrayBuffer()], file.name || "photo.jpg", { type: file.type || "image/jpeg" });
+  // Accepts one or many photos (file picker with multi-select, or dragged in from the desktop).
+  const addFiles = async (list) => {
     setErr("");
-    if (aspect) { setPending(file); return; }
+    const room = Math.max(0, max - value.length);
+    const files = [...list].filter((f) => /^image\//.test(f.type) || /\.(jpe?g|png|webp|gif)$/i.test(f.name || "")).slice(0, room);
+    if (files.length === 0) { setErr("Drop a JPG, PNG or WebP photo."); return; }
+    if (aspect) {
+      try {
+        const ready = [];
+        for (const f of files) ready.push(await readyFile(f)); // read fully now, before the picker is cleared
+        setPending(ready[0]); setQueue(ready.slice(1));
+      } catch { setErr("We couldn't read that photo — please try again."); }
+      return;
+    }
     try {
       const { resizePhoto } = await import("../lib/profile");
-      onChange([...value, await resizePhoto(file)]);
+      const out = [];
+      for (const f of files) out.push(await resizePhoto(f));
+      onChange([...value, ...out]);
     } catch (e) { setErr(e.message || "Couldn't read that photo"); }
   };
+  const nextInQueue = () => { setPending(queue[0] || null); setQueue(queue.slice(1)); };
   const addUrl = () => { if (!url.startsWith("https://")) return; onChange([...value, url]); setUrl(""); };
   const remove = (i) => onChange(value.filter((_, j) => j !== i));
   const move = (i, dir) => {
@@ -109,8 +126,13 @@ export function PhotoCarouselEditor({ value = [], onChange, max = 10, aspect, ti
     if (j < 0 || j >= value.length) return;
     const n = [...value]; [n[i], n[j]] = [n[j], n[i]]; onChange(n);
   };
+  const hasFiles = (e) => [...(e.dataTransfer?.types || [])].includes("Files");
   return (
-    <div className="space-y-3">
+    <div className="space-y-3"
+      onDragEnter={(e) => { if (hasFiles(e)) { e.preventDefault(); setOver(true); } }}
+      onDragOver={(e) => { if (hasFiles(e)) { e.preventDefault(); setOver(true); } }}
+      onDragLeave={(e) => { if (!e.currentTarget.contains(e.relatedTarget)) setOver(false); }}
+      onDrop={(e) => { if (!hasFiles(e)) return; e.preventDefault(); setOver(false); if (value.length < max) addFiles(e.dataTransfer.files); }}>
       {value.length > 0 && (
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
           {value.map((src, i) => (
@@ -129,11 +151,12 @@ export function PhotoCarouselEditor({ value = [], onChange, max = 10, aspect, ti
       )}
       {value.length < max && (
         <button type="button" onClick={() => ref.current?.click()} data-testid={`${testId}-add`}
-          className="flex w-full items-center justify-center gap-2 rounded-xl border border-dashed border-line py-6 text-sm text-muted hover:bg-ink/5">
-          <ImagePlus className="h-4 w-4" /> Add a photo · {value.length}/{max}
+          className={cx("flex w-full flex-col items-center justify-center gap-1 rounded-xl border border-dashed py-6 text-sm text-muted hover:bg-ink/5", over ? "border-accent bg-ink/5" : "border-line")}>
+          <span className="flex items-center gap-2"><ImagePlus className="h-4 w-4" /> Add photos · {value.length}/{max}</span>
+          <span className="text-xs">Click to choose, or drag photos here</span>
         </button>
       )}
-      <input ref={ref} type="file" accept="image/*" hidden data-testid={`${testId}-file`} onChange={(e) => { e.target.files[0] && addFile(e.target.files[0]); e.target.value = ""; }} />
+      <input ref={ref} type="file" accept="image/jpeg,image/png,image/webp,image/gif" multiple hidden data-testid={`${testId}-file`} onChange={async (e) => { const fs = [...e.target.files]; if (!fs.length) return; await addFiles(fs); e.target.value = ""; }} />
       {value.length < max && !aspect && (
         <div className="flex gap-2">
           <Input placeholder="…or paste an image link (https://…)" value={url} onChange={(e) => setUrl(e.target.value)} />
@@ -145,11 +168,11 @@ export function PhotoCarouselEditor({ value = [], onChange, max = 10, aspect, ti
       {aspect && value.length > 0 && <p className="text-xs text-muted">Tip: the move icon re-frames a photo. To re-frame from the whole original after you've left this page, remove it and add the original again.</p>}
       {aspect && (
         <PhotoCropModal open={!!pending} file={pending} aspect={aspect} outputMax={outputMax} maxBytes={maxBytes}
-          onCancel={() => { setPending(null); setRedo(null); }}
+          onCancel={() => { setRedo(null); nextInQueue(); }}
           onSave={(cropped) => {
             originals.current[cropped] = typeof pending === "string" ? (originals.current[value[redo]] || pending) : pending;
             onChange(redo != null ? value.map((v, j) => (j === redo ? cropped : v)) : [...value, cropped]);
-            setPending(null); setRedo(null);
+            setRedo(null); nextInQueue();
           }} />
       )}
     </div>

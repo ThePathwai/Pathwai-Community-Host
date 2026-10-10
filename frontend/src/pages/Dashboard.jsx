@@ -150,7 +150,7 @@ export default function Dashboard() {
 
         {(config?.gallery_photos || []).length > 0 ? (
           <section className="col-span-2" data-testid="dash-gallery-mobile">
-            <PhotoCarousel photos={config.gallery_photos} className="aspect-[4/5] w-full" />
+            <PhotoCarousel photos={config.gallery_photos} className="aspect-[4/3] w-full" />
           </section>
         ) : user.role === "admin" && (
           <Link to="/admin" onClick={() => { try { sessionStorage.setItem("pathwai.admintab", "brand"); } catch {} }}
@@ -218,9 +218,9 @@ export default function Dashboard() {
           </div>
         </div>
 
-        <Widget title="Photos" className="lg:col-span-4" data-testid="dash-gallery">
+        <Widget title="Photos" className="lg:col-span-4 lg:self-start" data-testid="dash-gallery">
           {(config?.gallery_photos || []).length > 0 ? (
-            <PhotoCarousel photos={config.gallery_photos} className="aspect-[4/5] w-full" />
+            <PhotoCarousel photos={config.gallery_photos} className="aspect-[4/3] w-full" />
           ) : user.role === "admin" ? (
             <Link
               to="/admin"

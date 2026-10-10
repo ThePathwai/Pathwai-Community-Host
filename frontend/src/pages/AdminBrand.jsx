@@ -36,7 +36,7 @@ function LogoField({ label, hint, value, onFile, onUrl, onClear, wide = true, te
         {value ? <img src={value} alt="" className={`${wide ? "h-12 max-w-[9rem]" : "h-12 w-12"} shrink-0 rounded bg-neutral-700 object-contain p-1`} /> : <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded bg-ink/5"><ImagePlus className="h-5 w-5 text-muted" /></span>}
         <div className="min-w-[6rem] flex-1 text-sm"><p className="font-medium">{value ? "Replace" : "Upload image"}</p>{!value && <p className="text-xs text-muted">Click or drop a file · {hint}</p>}</div>
         {value && <button type="button" className="btn-ghost shrink-0 !px-2 !py-1 text-xs" onClick={(e) => { e.stopPropagation(); onClear(); }}>Remove</button>}
-        <input ref={ref} type="file" accept="image/*" hidden onChange={(e) => { e.target.files[0] && onFile(e.target.files[0]); e.target.value = ""; }} />
+        <input ref={ref} type="file" accept="image/jpeg,image/png,image/webp,image/gif" hidden onChange={(e) => { e.target.files[0] && onFile(e.target.files[0]); e.target.value = ""; }} />
       </div>
       <div className="mt-2 flex gap-2"><Input placeholder="…or paste an image link (https://…)" value={url} onChange={(e) => setUrl(e.target.value)} />
         <Button variant="ghost" disabled={!url.startsWith("https://")} onClick={() => { onUrl(url); setUrl(""); }}>Use</Button></div>
@@ -180,9 +180,9 @@ export default function Branding({ embedded = false }) {
         </Card>
 
         <Card className="space-y-3">
-          <p className="eyebrow">Dashboard photo carousel (4:5)</p>
-          <p className="text-xs text-muted">Photos here slide through automatically on your members' home page (phone and desktop) in exactly this 4:5 frame. Drag and zoom to choose how each one sits. Changes go live as soon as you make them — no need to press Save.</p>
-          <PhotoCarouselEditor value={d.gallery_photos || []} onChange={saveGallery} aspect={4 / 5} tileClass="aspect-[4/5]" outputMax={1000} maxBytes={420_000} testId="gallery-carousel" />
+          <p className="eyebrow">Dashboard photo carousel (4:3)</p>
+          <p className="text-xs text-muted">Photos here slide through automatically on your members' home page (phone and desktop) in exactly this 4:3 frame. Drag and zoom to choose how each one sits. Changes go live as soon as you make them — no need to press Save.</p>
+          <PhotoCarouselEditor value={d.gallery_photos || []} onChange={saveGallery} aspect={4 / 3} tileClass="aspect-[4/3]" outputMax={1000} maxBytes={420_000} testId="gallery-carousel" />
         </Card>
 
         <Card className="space-y-3">

@@ -53,7 +53,7 @@ export default function SetupWizard() {
             className={cx("rounded-xl2 border p-4 text-left", d.theme?.preset === t.preset ? "border-ink" : "border-line")}><div className="mb-2 h-8 rounded-lg" style={{ background: t.accent }} /><p className="text-sm font-medium">{t.label}</p></button>))}</div>}
         {step === 2 && <>
           <p className="text-sm text-muted">Add a few photos to slide through automatically on your community's home dashboard — a quick way to show off events, spaces, or people. Drag and zoom to choose how each one sits in the frame. Optional; you can add or change these anytime from Branding.</p>
-          <PhotoCarouselEditor value={d.gallery_photos || []} onChange={(v) => set("gallery_photos", v)} aspect={4 / 5} tileClass="aspect-[4/5]" testId="gallery-carousel" /></>}
+          <PhotoCarouselEditor value={d.gallery_photos || []} onChange={(v) => set("gallery_photos", v)} aspect={4 / 3} tileClass="aspect-[4/3]" testId="gallery-carousel" /></>}
         {step === 3 && <>
           <Field label="Event types"><TagInput value={d.event_types} onChange={(v) => set("event_types", v)} /></Field>
           <Field label="Support request categories"><TagInput value={d.support_categories} onChange={(v) => set("support_categories", v)} /></Field></>}
