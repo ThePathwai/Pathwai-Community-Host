@@ -4,7 +4,7 @@ import axios from "axios";
 import fixtures from "./fixtures.json";
 import { buildYvetta, YVETTA_SLUG } from "./yvetta";
 import { buildHyrox, HYROX_SLUG } from "./hyrox";
-import { buildHumber, HUMBER_SLUG } from "./humber";
+import { buildHumber, HUMBER_SLUG, humberLearning, humberLearningFor } from "./humber";
 import { classesHandler, newClassesState } from "./classes";
 
 const S = { role: null, email: null, community: null, books: {}, extra: {} };
@@ -178,12 +178,19 @@ const integ = () => {
   if (!bk.integrations) {
     const seed = Object.values(bk.logins).find((l) => l["/admin/integrations"]);
     bk.integrations = clone((seed && seed["/admin/integrations"].integrations) || []);
+    if (slugOf() === HUMBER_SLUG) {   // Humber runs on Disco: show the Disco connector first, alongside a few common ones
+      const base = fixtures.communities.playr.logins["admin@yourcommunity.app"]["/admin/integrations"].integrations.filter((x) => ["airtable", "luma", "sendgrid"].includes(x.provider));
+      bk.integrations = clone([DISCO, ...base]);
+    }
   }
   return bk.integrations;
 };
+const DISCO = { provider: "disco", label: "Disco", kind: "api", preview: true, description: "Preview: show the Disco programs your members are in, and how far along they are, inside your community. Try it with the key \"demo\". Live connections are switched on per Academy once its Disco API access (Enterprise plan) is confirmed.",
+  capabilities: ["Programs members are enrolled in", "Progress and completion", "Next live session", "Matched to members by email"], credential_fields: [{ key: "api_key", label: "Disco API key", placeholder: "Disco Admin Area \u2192 Settings \u2192 API  (or 'demo' to try it)" }],
+  setting_fields: [], docs: "https://docs.disco.co/api", enabled: false, status: "disconnected", demo: false, masked: {}, settings: {}, last_sync_at: null, last_result: null, last_error: null, log: [], webhook_path: null, webhook_url: null };
 const stripeOn = () => integ().find((p) => p.provider === "stripe")?.enabled;
 const PLANS = [{ key: "member", label: "Community member", amount_cents: 4900, interval: "month" }, { key: "founder", label: "Founder plan", amount_cents: 12900, interval: "month" }];
-const SYNC = { airtable: { imported: 12, updated: 4, skipped: 1 }, luma: { events_imported: 5, rsvps_synced: 18 }, stripe: { plans: 2, payments: 3 } };
+const SYNC = { airtable: { imported: 12, updated: 4, skipped: 1 }, luma: { events_imported: 5, rsvps_synced: 18 }, stripe: { plans: 2, payments: 3 }, disco: { programs: 4, enrollments: 24, unmatched_members: 0 } };
 function integWrite(method, path, body, config) {
   const m = path.match(/^\/admin\/integrations\/(\w+)(?:\/(test|sync))?$/);
   if (!m) return null;
@@ -718,6 +725,19 @@ function get(path, p, config) {
     const pay = S.extra.pay || [];
     const cur = pay.find((x) => x.kind === "plan");
     return ok(config, { enabled: !!stripeOn(), plans: stripeOn() ? PLANS : [], status: cur ? "active" : null, plan: cur ? cur.description : null, payments: pay, currency: "cad" });
+  }
+  if (path.startsWith("/learning/")) {   // Humber's Disco academy (see humber.js); other communities have no programs
+    const me = view()["/auth/me"] || {}; const hum = slugOf() === HUMBER_SLUG;
+    const roster = communityRoster(slugOf());
+    const progs = hum ? humberLearning(me.id, roster) : [];
+    if (path === "/learning/programs") return ok(config, { programs: progs, source: progs.length ? "disco" : null });
+    if (path === "/learning/mine") {
+      const mine = progs.filter((p) => p.my); const active = mine.filter((p) => p.my.status === "enrolled");
+      const nxt = active.map((p) => p.my.next_session_at).filter(Boolean).sort();
+      return ok(config, { programs: mine, summary: { enrolled: active.length, completed: mine.length - active.length, next_session_at: nxt[0] || null } });
+    }
+    const lp = path.match(/^\/learning\/people\/([^/]+)$/);
+    if (lp) return ok(config, { programs: hum ? humberLearningFor(lp[1], roster) : [] });
   }
   if (path === "/admin/integrations") return ok(config, { integrations: integ() });
   if (path === "/messages/threads") {

@@ -44,6 +44,7 @@ function Provider({ p, reload }) {
             : <Button variant={connected ? "ghost" : "primary"} onClick={() => setOpen(!open)} data-testid={`connect-${p.provider}`}>{connected ? "Settings" : "Connect"}</Button>}
         </div>
       </div>
+      {p.preview && <p className="mt-3 rounded-lg border border-line bg-ink/5 p-3 text-sm" data-testid={`preview-${p.provider}`}>Live connections aren't switched on yet. They need Disco's API (Enterprise plan) and a key from your Disco admin. Until then, try it with the key <code>demo</code>.</p>}
       {p.last_error && <p className="mt-3 rounded-lg border border-red-400/40 bg-red-500/10 p-3 text-sm text-red-400">{p.last_error}</p>}
       {p.last_sync_at && !p.last_error && <p className="mt-3 text-xs text-muted">Last sync {timeAgo(p.last_sync_at)} · {Object.entries(p.last_result || {}).map(([k, v]) => `${k.replace(/_/g, " ")} ${v}`).join(", ")}</p>}
       {p.provider === "google_forms" && p.enabled && <GoogleFormsSetup />}

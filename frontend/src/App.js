@@ -17,6 +17,7 @@ import Members from "./pages/Members";
 import MemberProfile from "./pages/MemberProfile";
 import Events from "./pages/Events";
 import Classes from "./pages/Classes";
+import Learning from "./pages/Learning";
 import Resources from "./pages/Resources";
 import Requests from "./pages/Requests";
 import Support from "./pages/Support";
@@ -73,6 +74,7 @@ export default function App() {
         <Route path="/events" element={<P><Events /></P>} />
         <Route path="/events/:id" element={<P><EventDetail /></P>} />
         <Route path="/classes" element={<P><Classes /></P>} />
+        <Route path="/learning" element={<P><Learning /></P>} />
         <Route path="/matches" element={<P><Matches /></P>} />
         <Route path="/updates" element={<P><Updates /></P>} />
         <Route path="/support" element={<P><Support /></P>} />

@@ -10,6 +10,7 @@ import { Bookmark, Globe, Instagram, Linkedin, Mail, MessageCircle, Phone } from
 import { Avatar, Button, Card, Chip, Spinner } from "../components/ui";
 import { WhyReasons, reasonsOf } from "../components/WhyMatch";
 import PitchCard from "../components/PitchCard";
+import { ProfileLearning } from "../components/Learning";
 
 const List = ({ title, items, accent }) => items?.length ? (
   <Card style={accent ? { borderColor: "var(--accent)" } : undefined}><h3 className="label" style={accent ? { color: "var(--accent)" } : undefined}>{title}</h3><div className="flex flex-wrap gap-1.5">{items.map((x) => { const t = typeof x === "string" ? x : x.name || x.label; return <Chip key={t} accent={accent}>{t}</Chip>; })}</div></Card>
@@ -102,6 +103,7 @@ export default function MemberProfile() {
           <WhyReasons reasons={reasonsOf(why)} className="sm:grid sm:grid-cols-2 sm:gap-x-6 sm:gap-y-3 sm:space-y-0" />
         </Card>)}
       <PitchCard u={u} />
+      {(config?.nav || []).find((n) => n.key === "learning")?.enabled && <ProfileLearning userId={u.id} />}
       <ContactCard u={u} self={user.id === u.id} />
       {/* Same personal photo grid as the platform-wide People profile panel (HubPeople.jsx) --
           the account-level gallery (routes/hub.py's AccountProfileIn.photos) wasn't reaching this

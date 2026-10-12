@@ -13,8 +13,9 @@ import UpcomingEvents from "../components/UpcomingEvents";
 import { WhyLine } from "../components/WhyMatch";
 import { fieldLabel, fieldOn } from "../lib/profile";
 import { AI_CHAT_ENABLED } from "../lib/features";
-import { Dumbbell, Gift, ImagePlus, ListChecks, Megaphone, UserCheck2, UserPlus, Users } from "lucide-react";
+import { Dumbbell, GraduationCap, Gift, ImagePlus, ListChecks, Megaphone, UserCheck2, UserPlus, Users } from "lucide-react";
 import { teamOf } from "../lib/names";
+import { LearningList, useMyLearning } from "../components/Learning";
 
 // Below `lg` these become horizontally swipeable card rows instead of full vertical lists —
 // everything stays on one continuous scroll (nothing hidden behind a tab), it just takes a
@@ -32,6 +33,7 @@ export default function Dashboard() {
   const load = useCallback(() => api.get("/dashboard", { params: { role: user.role } }).then((r) => setD(r.data)).catch((e) => toast.error(errMsg(e))), [user.role]);
   useEffect(() => { load(); }, [load]);
   useLive(null, load);
+  const learning = useMyLearning(!!(config?.nav || []).find((n) => n.key === "learning")?.enabled);
   if (!d) return <Spinner />;
   const pc = d.profile_completion;
   const me = d.me || user;
@@ -43,6 +45,9 @@ export default function Dashboard() {
   const classesNav = (config?.nav || []).find((n) => n.key === "classes");
   const classesOn = !!classesNav?.enabled;
   const classesLabel = classesNav?.label || "Classes";
+  const learningNav = (config?.nav || []).find((n) => n.key === "learning");
+  const learningOn = !!learningNav?.enabled && (learning?.programs || []).length > 0;
+  const learningLabel = learningNav?.label || "Learning";
   const Widget = ({ title, to, cta = "All", icon: Icon, className = "", quiet = false, children, ...p }) => (
     <section className={(quiet ? "flex min-h-0 flex-col rounded-2xl bg-ink/[.045] p-5 lg:p-6 " : "card flex min-h-0 flex-col ") + className} {...p}>
       <div className="mb-2.5 flex items-center lg:mb-3 justify-between">
@@ -162,6 +167,12 @@ export default function Dashboard() {
 
         <UpcomingEvents events={events} total={d.stats.events} className="col-span-2" />
 
+        {learningOn && (
+          <section className="card col-span-2 !p-3.5" data-testid="dash-learning-mobile">
+            <div className="mb-2.5 flex items-center justify-between"><h2 className="flex items-center gap-2 text-[15px]"><GraduationCap className="h-4 w-4 text-muted" strokeWidth={2.25} aria-hidden />{learningLabel}</h2><Link to="/learning" className="text-xs text-muted">All ›</Link></div>
+            <LearningList data={learning} limit={2} />
+          </section>)}
+
         <section className="card col-span-2 !p-3.5" data-testid="dash-connections-mobile">
           <div className="mb-2 flex items-center justify-between"><h2 className="flex items-center gap-2 text-[15px]"><Users className="h-4 w-4 text-muted" strokeWidth={2.25} aria-hidden />Recommended connections</h2><Link to="/matches" className="text-xs text-muted">All ›</Link></div>
           {d.recommended_people.length === 0 ? <p className="text-sm text-muted">Complete your profile to get better recommendations.</p> : (
@@ -270,8 +281,13 @@ export default function Dashboard() {
         </Widget>
 
 
-        <Widget title="Community news" to="/updates" icon={Megaphone} className="lg:col-span-8">
-          <div className="-mx-0.5 flex snap-x snap-mandatory gap-3 overflow-x-auto px-0.5 pb-1 sm:mx-0 sm:grid sm:grid-cols-3 sm:overflow-visible sm:px-0 sm:pb-0">
+        {learningOn && (
+          <Widget title={learningLabel} to="/learning" icon={GraduationCap} className="lg:col-span-4" data-testid="dash-learning">
+            <LearningList data={learning} limit={3} />
+          </Widget>)}
+
+        <Widget title="Community news" to="/updates" icon={Megaphone} className={learningOn ? "lg:col-span-4" : "lg:col-span-8"}>
+          <div className={"-mx-0.5 flex snap-x snap-mandatory gap-3 overflow-x-auto px-0.5 pb-1 sm:mx-0 sm:grid sm:overflow-visible sm:px-0 sm:pb-0 " + (learningOn ? "sm:grid-cols-1" : "sm:grid-cols-3")}>
             {d.announcements.slice(0, 3).map((a) => (
               <Link key={a.id} to="/updates" className="w-64 shrink-0 snap-start rounded-xl border border-line bg-ink/5 p-3 hover:border-ink/20 hover:bg-ink/10 sm:w-auto sm:shrink"><p className="line-clamp-1 text-sm font-medium lg:text-[15px]">{a.title}</p><p className="mt-1 line-clamp-2 text-xs text-muted">{a.body}</p><p className="mt-2 text-[11px] text-muted">{timeAgo(a.published_at)}</p></Link>))}
           </div>

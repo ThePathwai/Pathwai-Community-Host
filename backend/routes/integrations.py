@@ -78,6 +78,15 @@ PROVIDERS: Dict[str, Dict[str, Any]] = {
         "defaults": {"default_category": "Meetup"},
         "docs": "https://docs.lu.ma/reference/getting-started-with-your-api",
     },
+    "disco": {
+        "label": "Disco", "kind": "api", "preview": True,
+        "description": "Preview: show the Disco programs your members are in, and how far along they are, inside your community. Try it with the key \"demo\". Live connections are switched on per Academy once its Disco API access (Enterprise plan) is confirmed.",
+        "capabilities": ["Programs members are enrolled in", "Progress and completion", "Next live session", "Matched to members by email"],
+        "credentials": [{"key": "api_key", "label": "Disco API key", "placeholder": "Disco Admin Area → Settings → API  (or 'demo' to try it)"}],
+        "settings": [],
+        "defaults": {},
+        "docs": "https://docs.disco.co/api",
+    },
     "stripe": {
         "label": "Stripe", "kind": "api",
         "description": "Charge membership dues and sell event tickets with Stripe Checkout; payments update member status automatically.",
@@ -373,6 +382,49 @@ async def luma_sync(c, s) -> Dict[str, Any]:
     return {"events_created": created, "events_updated": updated, "guests_matched": rsvps}
 
 
+# --------------------------------------------------------------------------- Disco (preview)
+async def _demo_disco() -> List[Any]:
+    """Sample programs, enrolled from whoever is already a member, so the whole flow can be tried without a Disco account."""
+    from .learning import MemberProgress, ProgramIn
+    emails = [u["email"] async for u in db.users.find({"email": {"$ne": None}}, {"email": 1}).limit(8) if u.get("email")]
+    t = datetime.now(timezone.utc)
+    iso = lambda d: d.isoformat().replace("+00:00", "Z")
+    shapes = [
+        ("demo-pitch", "Pitch Fundamentals", "Build a five-minute pitch: story, slides, delivery and the questions you'll get.", 8, [("completed", 100, "Pitch Day", None), ("enrolled", 62, "Module 5: Slides that sell", 4), ("enrolled", 25, "Module 2: Your story", 9)]),
+        ("demo-discovery", "Customer Discovery Bootcamp", "Ten customer interviews in four weeks, with a coach.", 6, [("enrolled", 50, "Module 3: Run the interview", 2), ("enrolled", 83, "Module 5: Synthesize what you heard", 6), ("completed", 100, "Wrap-up", None)]),
+        ("demo-funding", "Funding Readiness", "Cap tables, SAFEs, grants and what investors look for at pre-seed.", 5, [("enrolled", 40, "Module 2: Cap tables", 11), ("enrolled", 20, "Module 1: Funding map", 11)]),
+    ]
+    out = []
+    for ext, name, desc, mods, shape in shapes:
+        members = []
+        for i, (status, pct, cur, days) in enumerate(shape):
+            if i >= len(emails):
+                break
+            members.append(MemberProgress(email=emails[(i + len(out)) % len(emails)], status=status, progress_pct=pct, modules_done=int(mods * pct / 100), current_module=cur,
+                                          next_session_at=iso(t + timedelta(days=days)) if days else None, completed_at=iso(t - timedelta(days=3)) if status == "completed" else None))
+        out.append(ProgramIn(external_id=ext, name=name, description=desc, url="https://example.com/disco/" + ext, status="active", starts_at=iso(t - timedelta(days=21)),
+                             ends_at=iso(t + timedelta(days=35)), modules_total=mods, tags=["Disco", "Cohort"], members=members))
+    return out
+
+
+def _disco_live_unavailable() -> IntegrationError:
+    return IntegrationError("Live Disco connections aren't switched on yet. Use the key \"demo\" to preview, or ask us to turn on your Academy once its Disco API access (Enterprise plan) is confirmed.")
+
+
+async def disco_test(c, s) -> str:
+    if _is_demo(c):
+        return "Demo mode: connected to a sample Academy (3 programs)."
+    raise _disco_live_unavailable()
+
+
+async def disco_sync(c, s) -> Dict[str, Any]:
+    if not _is_demo(c):
+        raise _disco_live_unavailable()
+    from .learning import _upsert
+    res = await _upsert("disco", await _demo_disco())
+    return {"programs": res["programs"], "enrollments": res["enrollments"], "unmatched_members": res["unmatched_members"]}
+
+
 # --------------------------------------------------------------------------- Stripe
 STRIPE = "https://api.stripe.com/v1"
 
@@ -582,8 +634,8 @@ async def sendgrid_test(c, s) -> str:
     return f"Connected to SendGrid ({j.get('type', 'account')})"
 
 
-TESTS = {"airtable": airtable_test, "luma": luma_test, "stripe": stripe_test, "twilio": twilio_test, "sendgrid": sendgrid_test}
-SYNCS = {"airtable": airtable_sync, "luma": luma_sync, "stripe": stripe_sync}
+TESTS = {"airtable": airtable_test, "luma": luma_test, "disco": disco_test, "stripe": stripe_test, "twilio": twilio_test, "sendgrid": sendgrid_test}
+SYNCS = {"airtable": airtable_sync, "luma": luma_sync, "disco": disco_sync, "stripe": stripe_sync}
 
 
 WEBHOOKS = {"stripe": "/api/webhooks/stripe", "twilio": "/api/webhooks/twilio"}  # sendgrid has no inbound webhook yet
@@ -593,7 +645,7 @@ def _public(provider: str, d: Dict[str, Any], base: str = "") -> Dict[str, Any]:
     meta = PROVIDERS[provider]
     creds = {k: dec(v) for k, v in (d.get("credentials") or {}).items()}
     return {"provider": provider, "label": meta["label"], "kind": meta["kind"], "description": meta["description"], "capabilities": meta["capabilities"],
-            "credential_fields": meta["credentials"], "setting_fields": meta["settings"], "docs": meta.get("docs"),
+            "credential_fields": meta["credentials"], "setting_fields": meta["settings"], "docs": meta.get("docs"), "preview": bool(meta.get("preview")),
             "enabled": bool(d.get("enabled")), "status": d.get("status", "disconnected"), "demo": _is_demo(creds), "masked": {k: mask(v) for k, v in creds.items()},
             "settings": {**meta["defaults"], **(d.get("settings") or {})}, "last_sync_at": d.get("last_sync_at"), "last_result": d.get("last_result"),
             "last_error": d.get("last_error"), "log": (d.get("log") or [])[-8:][::-1],

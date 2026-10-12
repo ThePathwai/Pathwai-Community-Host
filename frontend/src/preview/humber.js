@@ -5,7 +5,7 @@
 // finalists get five minutes to pitch and then take judges' questions). Every person, venture, number, investor
 // and perk below is made up for the demo. Dates are relative to today.
 
-import { buildDemo, cover } from "./demoKit";
+import { at, buildDemo, cover, iso } from "./demoKit";
 
 export const HUMBER_SLUG = "humber-innovation-network";
 const ME = "u-hm-me";          // the member-demo persona (a founder)
@@ -287,6 +287,51 @@ const APPS = [
   ["u-hm-app-2", "Isabelle Roy", "isabelle.app-2@example.com", "Angel investor", "Independent", "I invest in early-stage consumer and health companies and would like to meet student founders.", ["Angel investing", "Consumer"]],
 ];
 
+// The programs founders are taking in Humber's Disco academy, and where each one is in them. [member id, status, % done, current module, days until next live session | null]
+// (Names, programs and progress are made up. In a live community this comes from Disco through Admin > Integrations.)
+const E = (id, status, pct, mod, days) => ({ id, status, pct, mod, days });
+const LEARNING = [
+  { id: "hm-lp-1", name: "Pitch Fundamentals", description: "Build a five-minute pitch: your story, your slides, your delivery, and the questions the judges will ask.", modules: 8, tags: ["Disco", "Pitch Day"], cohort: [
+    E(ME, "enrolled", 62, "Module 5: Slides that sell", 4), E("u-hm-amina", "completed", 100, "Pitch Day", null), E("u-hm-luca", "enrolled", 25, "Module 2: Your story", 4), E("u-hm-jaden", "enrolled", 87, "Module 7: Q&A under pressure", 4),
+    E("u-hm-fatima", "completed", 100, "Pitch Day", null), E("u-hm-daniel", "enrolled", 50, "Module 4: The ask", 4)] },
+  { id: "hm-lp-2", name: "Customer Discovery Bootcamp", description: "Ten customer interviews in four weeks, with a coach, so you build what people will pay for.", modules: 6, tags: ["Disco", "Cohort"], cohort: [
+    E(ME, "completed", 100, "Wrap-up", null), E("u-hm-luca", "enrolled", 83, "Module 5: Synthesize what you heard", 6), E("u-hm-mei", "enrolled", 50, "Module 3: Run the interview", 2),
+    E("u-hm-fatima", "completed", 100, "Wrap-up", null), E("u-hm-ethan", "enrolled", 33, "Module 2: Find ten people to talk to", 2)] },
+  { id: "hm-lp-3", name: "Funding Readiness", description: "Cap tables, SAFEs, grants and what investors look for at pre-seed.", modules: 5, tags: ["Disco", "Funding"], cohort: [
+    E(ME, "enrolled", 20, "Module 1: The funding map", 11), E("u-hm-amina", "enrolled", 40, "Module 2: Cap tables", 11), E("u-hm-mei", "enrolled", 40, "Module 2: Cap tables", 11),
+    E("u-hm-fatima", "enrolled", 60, "Module 3: SAFEs and notes", 11), E("u-hm-chiamaka", "enrolled", 20, "Module 1: The funding map", 11)] },
+  { id: "hm-lp-4", name: "Founder Legal Basics", description: "Incorporation, founder agreements, IP and the contracts you'll sign first.", modules: 4, tags: ["Disco", "Self-paced"], cohort: [
+    E("u-hm-ethan", "enrolled", 50, "Module 2: Founder agreements", null), E("u-hm-chiamaka", "completed", 100, "Done", null), E("u-hm-daniel", "enrolled", 25, "Module 1: Incorporating", null)] },
+];
+
+/** The learning data as the API returns it, for one viewer. roster: the community's members ({id, name, avatar_url}). */
+export function humberLearning(viewerId, roster) {
+  const byId = Object.fromEntries(roster.map((u) => [u.id, u]));
+  const programs = LEARNING.map((p) => {
+    const es = p.cohort;
+    const e = es.find((x) => x.id === viewerId);
+    const done = e && e.status === "completed";
+    return {
+      id: p.id, source: "disco", external_id: p.id, name: p.name, description: p.description, url: "https://humber-innovation.example.com/academy/" + p.id, cover_url: null, status: "active",
+      starts_at: iso(at(-21, 9)), ends_at: iso(at(35, 17)), modules_total: p.modules, tags: p.tags,
+      enrolled_count: es.length, completed_count: es.filter((x) => x.status === "completed").length,
+      cohort_preview: es.filter((x) => byId[x.id]).slice(0, 5).map((x) => ({ id: x.id, name: byId[x.id].name, avatar_url: byId[x.id].avatar_url || null })),
+      my: e ? { status: e.status, progress_pct: e.pct, modules_done: Math.round(p.modules * e.pct / 100), current_module: e.mod, next_session_at: e.days != null ? iso(at(e.days, 18)) : null,
+        completed_at: done ? iso(at(-3, 12)) : null, certificate_url: done ? "https://humber-innovation.example.com/certificates/" + p.id : null } : null,
+    };
+  });
+  programs.sort((a, b) => (a.my === null) - (b.my === null) || a.name.localeCompare(b.name));
+  return programs;
+}
+export function humberLearningFor(uid, roster) {
+  const out = [];
+  for (const p of LEARNING) {
+    const e = p.cohort.find((x) => x.id === uid);
+    if (e) out.push({ program_id: p.id, name: p.name, url: "https://humber-innovation.example.com/academy/" + p.id, status: e.status, progress_pct: e.pct, completed_at: e.status === "completed" ? iso(at(-3, 12)) : null });
+  }
+  return out.sort((a, b) => (a.status !== "enrolled") - (b.status !== "enrolled") || a.name.localeCompare(b.name));
+}
+
 export function buildHumber(fixtures, deps) {
   return buildDemo(fixtures, deps, {
     slug: HUMBER_SLUG, prefix: "hm", name: "Humber Innovation Network", tagline: "Where Humber founders meet capital, mentors and customers.", hubKind: "Innovation & entrepreneurship network",
@@ -328,9 +373,9 @@ export function buildHumber(fixtures, deps) {
         ask_title: "Ask the network", ask_subtitle: "Find an investor, a mentor or a first customer.",
       },
       nav: [
-        { key: "members", label: "Network", enabled: true }, { key: "matches", label: "Intros", enabled: true }, { key: "events", label: "Events", enabled: true },
-        { key: "resources", label: "Resources", enabled: true }, { key: "updates", label: "News", enabled: true }, { key: "requests", label: "To-do", enabled: false },
-        { key: "support", label: "Asks", enabled: true }, { key: "inbox", label: "Messages", enabled: true },
+        { key: "members", label: "People", enabled: true }, { key: "matches", label: "Intros", enabled: true }, { key: "events", label: "Events", enabled: true },
+        { key: "resources", label: "Perks", enabled: true }, { key: "updates", label: "News", enabled: true }, { key: "requests", label: "To-do", enabled: false },
+        { key: "support", label: "Asks", enabled: true }, { key: "inbox", label: "Inbox", enabled: true }, { key: "learning", label: "Academy", enabled: true },
       ],
       custom_links: [],
     },
