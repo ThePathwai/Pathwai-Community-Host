@@ -10,6 +10,7 @@
 //
 // iPhone/iPad: Apple only allows web notifications for sites added to the Home Screen
 // (Share -> Add to Home Screen) and opened from there. alertsState() reports "ios-install" for that.
+import { toast } from "sonner";
 import { api } from "./api";
 import { isDemo } from "./demo";
 
@@ -58,7 +59,15 @@ export async function syncPush() {
     const { data } = await api.get("/push/public-key");
     if (!data?.key) return { ok: false, reason: "key" };
     step = "subscribe";
-    const sub = (await reg.pushManager.getSubscription()) || (await reg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: toKey(data.key) }));
+    const want = toKey(data.key);
+    let sub = await reg.pushManager.getSubscription();
+    // A phone keeps the subscription it made once, even if the server's push key has changed since (a new
+    // deploy or database): the push service then rejects every message and nothing ever arrives. Replace it.
+    if (sub) {
+      const have = sub.options?.applicationServerKey ? new Uint8Array(sub.options.applicationServerKey) : null;
+      if (have && (have.length !== want.length || have.some((b, i) => b !== want[i]))) { try { await sub.unsubscribe(); } catch { /* replaced below */ } sub = null; }
+    }
+    if (!sub) sub = await reg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: want });
     const j = sub.toJSON();
     step = "server";
     await api.post("/push/subscribe", { endpoint: j.endpoint, keys: j.keys });
@@ -155,12 +164,20 @@ export function startNotificationWatch({ onUnread, onOpen }) {
       fresh.forEach((n) => seen.add(n.id));
       // The first check only records what was already waiting -- no flood of pop-ups on page load.
       if (!first && notificationsSupported() && Notification.permission === "granted") fresh.slice(0, 3).forEach((n) => show(n, onOpen));
+      // Phone alerts not switched on (or not possible here): still tell them in the app instead of silently only bumping the bell.
+      else if (!first) fresh.slice(0, 3).forEach((n) => toast(n.title, { description: n.body || undefined, action: { label: "Open", onClick: () => onOpen?.(n) } }));
       first = false;
     } catch { /* offline or signed out: try again next time */ }
   };
   tick();
   const timer = setInterval(tick, POLL_MS);
-  const onVisible = () => { if (!document.hidden) tick(); };
+  let lastSync = Date.now();
+  const onVisible = () => {
+    if (document.hidden) return;
+    tick();
+    // Phones suspend the page in the background and can drop the registration: re-check it whenever the app comes back.
+    if (!isDemo() && Date.now() - lastSync > 60000) { lastSync = Date.now(); syncPush(); }
+  };
   document.addEventListener("visibilitychange", onVisible);
   window.addEventListener("pw:check-notifications", tick);  // "Send me a test" asks for an immediate check
   return () => { stopped = true; clearInterval(timer); document.removeEventListener("visibilitychange", onVisible); window.removeEventListener("pw:check-notifications", tick); };
