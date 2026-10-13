@@ -49,4 +49,7 @@ async def create_announcement(body: AnnouncementIn, me: dict = Depends(get_curre
            "submitted_by": me["id"], "submitted_by_name": me.get("name")}
     await db.announcements.insert_one(dict(doc))
     await audit(me["id"], "announcement.created" if is_admin else "announcement.submitted", "announcement", doc["id"])
+    if is_admin:  # news from the team reaches everyone's phone (a member's post waits for approval first)
+        from .notifications import notify_members
+        await notify_members("announcements", "announcement_new", f"News: {body.title}", (body.body or "")[:140], link="/updates", meta={"announcement_id": doc["id"]}, exclude=[me["id"]])
     return doc

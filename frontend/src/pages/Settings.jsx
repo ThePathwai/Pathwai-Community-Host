@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { api, errMsg } from "../lib/api";
 import DesktopAlerts from "../components/DesktopAlerts";
+import { enableAlerts, alertsState } from "../lib/webNotify";
 import { Button, Card, Chip, StatusBadge, Field, Input, PageHeader, SectionCard, Spinner } from "../components/ui";
 
 const Toggle = ({ label, hint, checked, onChange, testid }) => (
@@ -10,6 +11,8 @@ const Toggle = ({ label, hint, checked, onChange, testid }) => (
     <input type="checkbox" data-testid={testid} checked={!!checked} onChange={(e) => onChange(e.target.checked)} className="h-4 w-4 accent-accent" />
   </label>
 );
+
+const KINDS = ["requests", "events", "members", "matches", "announcements", "resources", "support"];
 
 export default function SettingsPage() {
   const [d, setD] = useState(null);
@@ -26,6 +29,14 @@ export default function SettingsPage() {
     const next = { ...s, ...Object.fromEntries(Object.entries(body).map(([k, v]) => [k, typeof v === "object" && v ? { ...s[k], ...v } : v])) };
     setD({ ...d, settings: next });
     try { await api.patch("/me/settings", body); toast.success("Saved"); } catch (e) { toast.error(errMsg(e)); }
+  };
+  // One tap: every kind of notification on, and this phone or computer asked to allow alerts too.
+  const allOn = async () => {
+    await patch({ notifications: { in_app: true, email: true, kinds: Object.fromEntries(KINDS.map((k) => [k, true])) } });
+    const st = alertsState();
+    if (st === "default") { const r = await enableAlerts(); if (r === "granted") toast.success("Alerts are on for this device"); else if (r === "denied") toast.error("Your phone is blocking alerts for Pathwai. Allow them in your phone's settings."); }
+    else if (st === "denied") toast.error("Your phone is blocking alerts for Pathwai. Allow them in your phone's settings.");
+    else if (st === "ios-install") toast("On iPhone, first tap Share, then Add to Home Screen, and open Pathwai from the new icon.");
   };
   const changePw = async () => { try { await api.post("/me/change-password", pw); toast.success("Password updated"); setPw({ current_password: "", new_password: "" }); } catch (e) { toast.error(errMsg(e)); } };
   const n = s.notifications;
@@ -67,12 +78,13 @@ export default function SettingsPage() {
       </SectionCard>
       <SectionCard title="Notifications">
         <div className="mb-3"><DesktopAlerts /></div>
+        <Button className="mb-2 w-full sm:w-auto" onClick={allOn} data-testid="all-notifications-on">Turn on all notifications</Button>
         <Toggle label="In-app notifications" checked={n.in_app} onChange={(v) => patch({ notifications: { in_app: v } })} />
         <Toggle label="Email" checked={n.email} onChange={(v) => patch({ notifications: { email: v } })} />
         <Toggle label="Slack" hint="Available when your community connects Slack" checked={n.slack} onChange={(v) => patch({ notifications: { slack: v } })} />
         <Toggle label="Text messages (SMS)" hint="Event reminders and news from your community. Uses the phone number on your profile. Reply STOP any time." checked={!!n.sms} onChange={(v) => patch({ notifications: { sms: v } })} />
         <p className="label mt-4">What to notify me about</p>
-        {["requests", "events", "members", "matches", "announcements", "support"].map((k) => <Toggle key={k} label={k === "members" ? "New members" : k === "events" ? "New events" : k[0].toUpperCase() + k.slice(1)} checked={n.kinds?.[k] !== false} onChange={(v) => patch({ notifications: { kinds: { [k]: v } } })} testid={`kind-${k}`} />)}
+        {KINDS.map((k) => <Toggle key={k} label={k === "members" ? "New members" : k === "events" ? "New events" : k === "announcements" ? "News" : k === "resources" ? "Perks" : k[0].toUpperCase() + k.slice(1)} checked={n.kinds?.[k] !== false} onChange={(v) => patch({ notifications: { kinds: { [k]: v } } })} testid={`kind-${k}`} />)}
       </SectionCard>
       <SectionCard title="Privacy">
         <Toggle label="Show me in the directory" hint="Other members can find your profile" checked={s.privacy.visible_in_directory} onChange={(v) => patch({ privacy: { visible_in_directory: v } })} testid="privacy-directory" />

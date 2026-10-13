@@ -133,6 +133,9 @@ async def submit_resource(body: ResourceIn, me: dict = Depends(get_current_user)
            "status": "approved" if is_admin else "pending", "submitted_by": me["id"], "submitted_by_name": me.get("name")}
     await db.resources.insert_one(dict(doc))
     await audit(me["id"], "resource.created" if is_admin else "resource.submitted", "resource", doc["id"])
+    if is_admin:
+        from .notifications import notify_members
+        await notify_members("resources", "resource_new", f"New perk: {body.title}", (body.description or "")[:140], link="/resources", meta={"resource_id": doc["id"]}, exclude=[me["id"]])
     return doc
 
 

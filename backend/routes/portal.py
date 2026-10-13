@@ -185,7 +185,7 @@ async def engagement(me: dict = Depends(get_current_user)):
 # --------------------------------------------------------------------------- settings
 DEFAULT_SETTINGS = {
     "notifications": {"in_app": True, "email": True, "slack": False, "whatsapp": False, "sms": False,
-                      "kinds": {"requests": True, "events": True, "matches": True, "announcements": True, "support": True, "members": True}},
+                      "kinds": {"requests": True, "events": True, "matches": True, "announcements": True, "support": True, "members": True, "resources": True, "messages": True}},
     "privacy": {"visible_in_directory": True, "show_email": False, "show_phone": False},
     "calendar_link": None,
 }
@@ -545,6 +545,12 @@ async def moderate(kind: str, item_id: str, body: Decision, me: dict = Depends(r
     if d.get("submitted_by"):
         msg = {"approved": "is now live in the community", "rejected": "was not approved", "changes_requested": "needs changes"}[status]
         await notify(d["submitted_by"], "moderation", f"Your {kind} \"{d.get('title')}\" {msg}", body.note or "", link="/updates" if kind == "announcement" else f"/{kind}s")
+    if status == "approved" and d.get("status") != "approved":  # a member's post just went live: tell the community
+        from .notifications import notify_members
+        key, link = {"announcement": ("announcements", "/updates"), "resource": ("resources", "/resources"), "event": ("events", f"/events/{item_id}")}.get(kind, (None, None))
+        if key:
+            label = {"announcement": "News", "resource": "New perk", "event": "New event"}[kind]
+            await notify_members(key, f"{kind}_new", f"{label}: {d.get('title')}", (d.get("description") or d.get("body") or "")[:140], link=link, exclude=[d.get("submitted_by")] if d.get("submitted_by") else None)
     await audit(me["id"], f"moderation.{status}", kind, item_id)
     return {"ok": True, "status": status}
 
