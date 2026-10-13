@@ -9,8 +9,8 @@ self.addEventListener("push", (event) => {
   event.waitUntil(self.registration.showNotification(d.title || "Pathwai", {
     body: d.body || "",
     tag: d.tag || undefined,          // same tag as the in-page alert, so you never get two
-    icon: "/icon-192.png",
-    badge: "/icon-192.png",
+    icon: "/icon-192.png?v=3",
+    badge: "/icon-192.png?v=3",
     data: { url: d.url || "/notifications" },
   }));
 });

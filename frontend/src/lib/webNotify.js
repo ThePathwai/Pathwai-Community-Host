@@ -130,10 +130,10 @@ async function show(n, onOpen) {
   try {
     const reg = await registration();  // phones only allow pop-ups through the service worker
     if (reg?.showNotification) {
-      await reg.showNotification(n.title, { body: n.body || "", tag: n.id, icon: "/icon-192.png", badge: "/icon-192.png", data: { url: n.link || "/notifications" } });
+      await reg.showNotification(n.title, { body: n.body || "", tag: n.id, icon: "/icon-192.png?v=3", badge: "/icon-192.png?v=3", data: { url: n.link || "/notifications" } });
       return;
     }
-    const pop = new Notification(n.title, { body: n.body || "", tag: n.id, icon: "/icon-192.png" });
+    const pop = new Notification(n.title, { body: n.body || "", tag: n.id, icon: "/icon-192.png?v=3" });
     pop.onclick = () => { try { window.focus(); } catch { /* ignore */ } onOpen(n); pop.close(); };
   } catch { /* the bell still updates */ }
 }
