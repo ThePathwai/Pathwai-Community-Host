@@ -78,7 +78,5 @@ export function applyBrand(config) {
   loadFont(brand.font, brand.heading_font);
   const meta = document.querySelector('meta[name="theme-color"]');
   if (meta) meta.setAttribute("content", brand.colors?.background || "#0D0D0D");
-  const icon = brand.logo_mark_url || brand.logo_url;
-  const link = document.querySelector('link[rel="icon"]');
-  if (link && icon) link.setAttribute("href", icon);
+  // The browser-tab icon stays the Pathwai mark in every community (a community's own logo shows in the app header), so the tab, the installed app and its notifications all match.
 }
