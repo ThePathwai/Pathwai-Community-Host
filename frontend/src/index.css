@@ -22,6 +22,12 @@ html, body { background: rgb(var(--c-bg)); color: rgb(var(--c-ink)); font-family
 .glass { background: rgb(var(--c-bg) / 0.72); -webkit-backdrop-filter: saturate(180%) blur(18px); backdrop-filter: saturate(180%) blur(18px); }
 h1, h2, .font-display { font-family: var(--font-heading, var(--font-sans)); font-weight: var(--heading-weight); text-transform: var(--heading-transform); letter-spacing: var(--heading-ls); line-height: 1.08; }
 h3 { font-weight: 700; letter-spacing: -0.01em; }
+/* No pinch or double-tap zoom on phones and tablets: the app is laid out for the screen. Fields stay at 16px
+   on touch screens because iPhone zooms the page in whenever a smaller field is tapped. */
+html { touch-action: manipulation; -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }
+@media (hover: none) and (pointer: coarse) {
+  input, select, textarea, .input { font-size: 16px !important; }
+}
 ::selection { background: var(--accent); color: var(--on-accent); }
 :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 select option { background: rgb(var(--c-surface)); color: rgb(var(--c-ink)); }
