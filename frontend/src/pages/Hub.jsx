@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useState } from "react";
-import { Navigate, useNavigate, useSearchParams } from "react-router-dom";
+import { Link, Navigate, useNavigate, useSearchParams } from "react-router-dom";
 import { Mail, Users } from "lucide-react";
 import { toast } from "sonner";
 import { api, errMsg, timeAgo } from "../lib/api";
@@ -363,6 +363,7 @@ export default function Hub() {
         <span className="text-3xl"><Wordmark name="Pathwai" brand={{}} /></span>
         <div className="flex items-center gap-3">
           <span className="hidden text-right text-xs sm:block"><span className="block font-medium">{account.name}</span><span className="text-muted">{account.email}</span></span>
+          <Link to="/about" className="hidden text-sm text-ink/80 hover:text-ink sm:block" data-testid="hub-about">About</Link>
           <button onClick={() => setPeopleOpen(true)} data-testid="hub-open-people" title="People" aria-label="People" className="text-ink/80 hover:text-ink">
             <Users className="h-5 w-5" />
           </button>

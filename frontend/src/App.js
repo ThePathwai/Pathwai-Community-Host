@@ -38,6 +38,7 @@ import Admin from "./pages/Admin";
 import SetupWizard from "./pages/SetupWizard";
 import Hub from "./pages/Hub";
 import Legal from "./pages/Legal";
+import About from "./pages/About";
 
 function Protected({ children, admin }) {
   const { user, account, loading } = useAuth();
@@ -61,6 +62,7 @@ export default function App() {
         <Route path="/login" element={<Login />} />
         <Route path="/signup" element={<Signup />} />
         <Route path="/forgot-password" element={<ForgotPassword />} />
+        <Route path="/about" element={<About />} />
         <Route path="/terms" element={<Legal doc="terms" />} />
         <Route path="/privacy" element={<Legal doc="privacy" />} />
         <Route path="/reset-password" element={<ResetPassword />} />

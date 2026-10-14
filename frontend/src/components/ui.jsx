@@ -372,6 +372,8 @@ export const PoweredBy = ({ className = "" }) => (
   <p className={"eyebrow flex flex-wrap items-center justify-center gap-x-2 gap-y-1 " + className}>
     <span className="inline-flex items-center gap-2">Powered by <img src={markWhite} alt="" className="h-3 w-auto" style={{ filter: "var(--mark-filter, none)" }} /><span className="font-black text-ink">Pathwai</span></span>
     <span aria-hidden>·</span>
+    <Link to="/about" className="underline-offset-2 hover:underline" data-testid="footer-about">About</Link>
+    <span aria-hidden>·</span>
     <Link to="/terms" className="underline-offset-2 hover:underline" data-testid="footer-terms">Terms</Link>
     <span aria-hidden>·</span>
     <Link to="/privacy" className="underline-offset-2 hover:underline" data-testid="footer-privacy">Privacy</Link>
