@@ -1,10 +1,11 @@
 from datetime import datetime
 from typing import Optional
 
-from fastapi import APIRouter, Depends, HTTPException, Query, Request
+from fastapi import APIRouter, Depends, HTTPException, Query, Request, Response
 from pydantic import BaseModel
 
-import audits
+import audit_pdf
+import audit_report
 from auth import hash_password, require_role
 import uuid
 
@@ -23,14 +24,43 @@ class AuditRun(BaseModel):
 
 @router.get("/admin/audits")
 async def audits_catalogue():
-    return {"audits": audits.list_audits()}
+    return {"audits": audit_report.AUDITS}
+
+
+async def _community_config() -> dict:
+    from .community_config import get_config  # local import: community_config imports from this package too
+    return await get_config()
 
 
 @router.post("/admin/audits/{kind}")
 async def run_audit(kind: str, body: AuditRun = AuditRun(), me: dict = Depends(require_role("admin"))):
-    if kind not in audits.AUDIT_KINDS:
+    """Run one audit. The numbers come from this community's own data, so this works without any AI service."""
+    if kind not in audit_report.KINDS:
         raise HTTPException(status_code=400, detail=f"Unknown audit kind: {kind}")
-    return await audits.run_audit(db, kind, "admin", body.session_id)
+    cfg = await _community_config()
+    section = await audit_report.run(db, cfg, kind)
+    ai = await audit_report.ai_summary([section], cfg.get("community_name") or "Community")
+    await audit(me["id"], "admin.audit_run", "audit", kind)
+    return {**section, "stats": section["tiles"], "narrative": ai, "generated_at": now_iso()}
+
+
+@router.get("/admin/audits-report.pdf")
+async def audits_pdf(kind: str = "all", me: dict = Depends(require_role("admin"))):
+    """Download the audits as a visual metrics PDF: all six, or one with ?kind=<audit>."""
+    if kind != "all" and kind not in audit_report.KINDS:
+        raise HTTPException(status_code=400, detail=f"Unknown audit kind: {kind}")
+    cfg = await _community_config()
+    report = await audit_report.run_all(db, cfg)
+    ai = None
+    if kind != "all":
+        report["sections"] = [sec for sec in report["sections"] if sec["kind"] == kind]
+    else:
+        ai = await audit_report.ai_summary(report["sections"], report["community"])
+    pdf = audit_pdf.build_pdf(report, cfg, ai, only_kind=None if kind == "all" else kind)
+    slug = "".join(ch if ch.isalnum() else "-" for ch in (report["community"] or "community").lower()).strip("-") or "community"
+    name = f"{slug}-audit{'' if kind == 'all' else '-' + kind.replace('_', '-')}-{datetime.utcnow().strftime('%Y-%m-%d')}.pdf"
+    await audit(me["id"], "admin.audit_pdf", "audit", kind)
+    return Response(pdf, media_type="application/pdf", headers={"Content-Disposition": f'attachment; filename="{name}"', "Cache-Control": "no-store"})
 
 
 @router.get("/admin/audit-log")

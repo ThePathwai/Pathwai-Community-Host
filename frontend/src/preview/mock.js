@@ -1,5 +1,6 @@
 // Preview-only API layer: answers /api/* from responses recorded off the real backend.
 // Loaded only when REACT_APP_PREVIEW=true (see lib/api.js). Not part of the normal build.
+import { AUDIT_SAMPLES } from "./auditSample";
 import axios from "axios";
 import fixtures from "./fixtures.json";
 import { buildYvetta, YVETTA_SLUG } from "./yvetta";
@@ -919,6 +920,7 @@ function get(path, p, config) {
     if (p.region && p.region !== "all") o = o.filter((x) => x.region === p.region);
     return ok(config, { organizations: o, total: o.length });
   }
+  if (path === "/admin/audits-report.pdf") return fail(config, 400, "PDF reports are available in a live community. This practice copy has no server to build them.");
   if (path === "/admin/audit-log/actions") {
     const live = new Set(auditLog().map((e) => e.action));
     return ok(config, { actions: [...new Set([...(d.actions || []), ...live])].filter(Boolean).sort() });
@@ -1486,7 +1488,13 @@ function write(method, path, body, config) {
     notifs.unread = notifs.notifications.filter((n) => !n.read).length;
     return ok(config, { ok: true });
   }
-  if (path.startsWith("/admin/audits/")) return ok(config, { reply: "Audits call the language model, which the preview doesn't include." });
+  if (path.startsWith("/admin/audits/")) {
+    const kind = path.split("/").pop();
+    const meta = ((view()["/admin/audits"] || {}).audits || []).find((a) => a.kind === kind) || {};
+    const sample = AUDIT_SAMPLES[kind];
+    if (!sample) return fail(config, 400, "Unknown audit kind");
+    return ok(config, { kind, title: meta.title || kind, subtitle: meta.description || "", ...sample, stats: sample.tiles, narrative: null, generated_at: new Date().toISOString() });
+  }
   if (path === "/invites") {
     const inv = { id: "inv-" + Date.now(), code: Math.random().toString(36).slice(2, 10), email: body.email, role: body.role || "member", status: "pending", created_at: new Date().toISOString() };
     view()["/invites"].unshift(inv);

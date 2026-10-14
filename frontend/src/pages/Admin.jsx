@@ -1,34 +1,72 @@
 import React, { useCallback, useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import { Link2, Ticket } from "lucide-react";
+import { Download, Link2, Ticket } from "lucide-react";
 import { toast } from "sonner";
 import { api, errMsg, fmtDate } from "../lib/api";
 import { useLive } from "../lib/live";
 import { useAuth } from "../lib/auth";
 import { Button, Card, Chip, Empty, Field, Input, PageHeader, Select, Spinner, Tabs, TagInput } from "../components/ui";
+import AuditView from "../components/AuditView";
 import Branding from "./AdminBrand";
 import Integrations from "./AdminIntegrations";
 import MembershipRequests from "./AdminMembers";
 import { AdminRequests, Moderation, SupportQueue } from "./AdminPortal";
 
+// The PDF comes back as a file, so a failed request arrives as a Blob. Read the message out of it.
+async function pdfError(e) {
+  try { const d = e?.response?.data; if (d instanceof Blob) { const j = JSON.parse(await d.text()); if (typeof j.detail === "string") return j.detail; } } catch { /* fall through */ }
+  return errMsg(e, "The PDF could not be created. Please try again.");
+}
+
 function Overview() {
   const [o, setO] = useState(null);
   const [kinds, setKinds] = useState([]);
   const [run, setRun] = useState({});
+  const [pdf, setPdf] = useState(null);
   const loadOverview = useCallback(() => { api.get("/admin/overview").then((r) => setO(r.data)).catch(() => {}); api.get("/admin/audits").then((r) => setKinds(r.data.audits || [])).catch(() => {}); }, []);
   useEffect(() => { loadOverview(); }, [loadOverview]);
   useLive(["members", "events", "admin", "requests"], loadOverview);
   if (!o) return <Spinner />;
-  const runAudit = async (kind) => { setRun((x) => ({ ...x, [kind]: { loading: true } })); try { const { data } = await api.post(`/admin/audits/${kind}`, {}); setRun((x) => ({ ...x, [kind]: data })); } catch (e) { setRun((x) => ({ ...x, [kind]: { error: errMsg(e) } })); } };
+  const runAudit = async (kind) => { setRun((x) => ({ ...x, [kind]: { ...x[kind], loading: true, error: null } })); try { const { data } = await api.post(`/admin/audits/${kind}`, {}); setRun((x) => ({ ...x, [kind]: data })); } catch (e) { setRun((x) => ({ ...x, [kind]: { error: errMsg(e) } })); } };
+  const download = async (kind) => {
+    setPdf(kind);
+    try {
+      const r = await api.get("/admin/audits-report.pdf", { params: { kind }, responseType: "blob" });
+      const name = (/filename="?([^";]+)"?/.exec(r.headers?.["content-disposition"] || "") || [])[1] || "community-audit.pdf";
+      const url = URL.createObjectURL(r.data);
+      const a = document.createElement("a");
+      a.href = url; a.download = name; document.body.appendChild(a); a.click(); a.remove();
+      setTimeout(() => URL.revokeObjectURL(url), 4000);
+      toast.success("PDF downloaded");
+    } catch (e) { toast.error(await pdfError(e)); } finally { setPdf(null); }
+  };
   return (
     <div className="space-y-6">
       <div className="grid gap-3 sm:grid-cols-3 lg:grid-cols-6">{Object.entries(o).map(([k, v]) => <Card key={k}><p className="stat font-display text-2xl">{v}</p><p className="text-xs capitalize text-muted">{k.replace(/_/g, " ")}</p></Card>)}</div>
-      <h2 className="text-xl font-semibold">AI audits</h2>
-      <div className="grid gap-3 md:grid-cols-2">{kinds.map((a) => (
-        <Card key={a.kind}><p className="font-medium">{a.title}</p><p className="text-sm text-muted">{a.description}</p>
-          <Button className="mt-3" variant="ghost" onClick={() => runAudit(a.kind)} loading={run[a.kind]?.loading}>{a.user_label || "Run"}</Button>
-          {run[a.kind]?.error && <p className="mt-2 text-sm text-red-400">{run[a.kind].error}</p>}
-          {(run[a.kind]?.reply || run[a.kind]?.summary) && <p className="mt-3 whitespace-pre-wrap text-sm">{run[a.kind].reply || run[a.kind].summary}</p>}</Card>))}</div>
+      <div className="flex flex-wrap items-end justify-between gap-3">
+        <div>
+          <h2 className="text-xl font-semibold">Audits</h2>
+          <p className="mt-1 text-sm text-muted">Live numbers from your community. Run one to see it here, or download everything as a PDF report with charts.</p>
+        </div>
+        <Button onClick={() => download("all")} loading={pdf === "all"} data-testid="audit-pdf-all"><Download className="h-4 w-4" />Download full report (PDF)</Button>
+      </div>
+      <div className="grid gap-3 md:grid-cols-2">{kinds.map((a) => {
+        const r = run[a.kind] || {};
+        const done = !!r.tiles;
+        return (
+          <Card key={a.kind} className={done ? "md:col-span-2" : ""} data-testid={`audit-card-${a.kind}`}>
+            <div className="flex flex-wrap items-start justify-between gap-3">
+              <div className="min-w-0"><p className="font-medium">{a.title}</p><p className="text-sm text-muted">{a.description}</p></div>
+              <div className="flex flex-wrap gap-2">
+                <Button variant="ghost" onClick={() => runAudit(a.kind)} loading={r.loading} data-testid={`audit-run-${a.kind}`}>{done ? "Refresh" : (a.user_label || "Run")}</Button>
+                {done && <Button variant="ghost" onClick={() => download(a.kind)} loading={pdf === a.kind} data-testid={`audit-pdf-${a.kind}`}><Download className="h-4 w-4" />PDF</Button>}
+              </div>
+            </div>
+            {r.error && <p className="mt-3 text-sm text-red-400">{r.error}</p>}
+            {done && <AuditView audit={r} />}
+          </Card>
+        );
+      })}</div>
     </div>
   );
 }
