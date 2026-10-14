@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import { ArrowRight, Check, ChevronDown, Compass, Minus, Sparkles, Swords, Target, Users, X } from "lucide-react";
+import { ArrowRight, Check, Minus, Plus, X } from "lucide-react";
 import { Wordmark, PoweredBy, cx } from "../components/ui";
 
 // /about -- public (no login). A click-down explainer: what Pathwai is, who it's for, how it works,
@@ -86,153 +86,187 @@ function Mark({ v }) {
   return <span className="inline-flex h-6 w-6 items-center justify-center text-muted/50" role="img" aria-label="No"><X className="h-3.5 w-3.5" /></span>;
 }
 
-function Section({ id, n, icon: Icon, title, summary, open, onToggle, children }) {
+// One full-width row, like the FAQ / "what we do" rows on a marketing site: big title, + that turns into x,
+// hairline dividers, and a two-column body (short lede on the left, the detail on the right).
+function Row({ id, n, title, summary, lede, open, onToggle, children }) {
   return (
-    <section className={cx("overflow-hidden rounded-2xl border transition-colors", open ? "border-ink/30 bg-surface" : "border-line/70 bg-surface/60 hover:border-ink/20")} data-testid={`about-${id}`}>
+    <section id={id} className="scroll-mt-24 border-t border-line" data-testid={`about-${id}`}>
       <button type="button" onClick={onToggle} aria-expanded={open} aria-controls={`about-panel-${id}`}
-        className="flex w-full items-center gap-4 p-5 text-left sm:p-6" data-testid={`about-toggle-${id}`}>
-        <span className="flex h-11 w-11 flex-none items-center justify-center rounded-xl bg-ink text-paper"><Icon className="h-5 w-5" /></span>
+        className="group flex w-full items-center gap-4 py-6 text-left sm:gap-8 sm:py-9" data-testid={`about-toggle-${id}`}>
+        <span className="stat w-8 flex-none text-sm text-muted sm:w-12">{String(n).padStart(2, "0")}</span>
         <span className="min-w-0 flex-1">
-          <span className="eyebrow block">{String(n).padStart(2, "0")}</span>
-          <span className="mt-0.5 block text-lg font-bold sm:text-xl">{title}</span>
-          {!open && <span className="mt-1 block text-sm text-muted">{summary}</span>}
+          <span className={cx("font-display block text-2xl transition-colors sm:text-5xl", open ? "text-ink" : "text-ink/75 group-hover:text-ink")}>{title}</span>
+          <span className={cx("mt-2 hidden text-sm text-muted transition-opacity sm:block", open && "opacity-0")} aria-hidden={open}>{summary}</span>
         </span>
-        <ChevronDown className={cx("h-5 w-5 flex-none text-muted transition-transform duration-300", open && "rotate-180 text-ink")} />
+        <span className={cx("flex h-11 w-11 flex-none items-center justify-center rounded-full border transition-all duration-300 sm:h-14 sm:w-14", open ? "rotate-45 border-ink bg-ink text-paper" : "border-line text-ink group-hover:border-ink")}>
+          <Plus className="h-5 w-5 sm:h-6 sm:w-6" />
+        </span>
       </button>
-      <div id={`about-panel-${id}`} className={cx("grid transition-[grid-template-rows] duration-300 ease-out", open ? "grid-rows-[1fr]" : "grid-rows-[0fr]")}>
+      <div id={`about-panel-${id}`} className={cx("grid transition-[grid-template-rows,opacity] duration-500 ease-out", open ? "grid-rows-[1fr] opacity-100" : "grid-rows-[0fr] opacity-0")}>
         <div className="overflow-hidden">
-          <div className="px-5 pb-6 sm:px-6 sm:pl-[5.75rem]" hidden={!open}>{children}</div>
+          <div className="grid gap-6 pb-10 sm:grid-cols-12 sm:gap-8 sm:pb-14" hidden={!open}>
+            <p className="text-base leading-relaxed text-muted sm:col-span-4 sm:pl-20 sm:pr-4 lg:text-lg">{lede}</p>
+            <div className="sm:col-span-8">{children}</div>
+          </div>
         </div>
       </div>
     </section>
   );
 }
 
+const NAV = [["what", "What it is"], ["who", "Who it's for"], ["how", "How it works"], ["market", "Competitors"], ["diff", "Why us"]];
+const ALL = NAV.map(([k]) => k);
+
 export default function About() {
   const [open, setOpen] = useState(["what"]);
-  useEffect(() => { window.scrollTo(0, 0); document.title = "About Pathwai"; }, []);
+  useEffect(() => {
+    document.title = "About Pathwai";
+    const h = window.location.hash.replace("#", "");
+    if (ALL.includes(h)) { setOpen([h]); setTimeout(() => document.getElementById(h)?.scrollIntoView({ behavior: "smooth" }), 80); }
+    else window.scrollTo(0, 0);
+  }, []);
   const toggle = (k) => setOpen((o) => (o.includes(k) ? o.filter((x) => x !== k) : [...o, k]));
-  const allOpen = open.length === 5;
-  const P = (k) => ({ open: open.includes(k), onToggle: () => toggle(k) });
+  const jump = (k) => { setOpen((o) => (o.includes(k) ? o : [...o, k])); setTimeout(() => document.getElementById(k)?.scrollIntoView({ behavior: "smooth" }), 60); };
+  const allOpen = open.length === ALL.length;
+  const R = (k) => ({ open: open.includes(k), onToggle: () => toggle(k) });
 
   return (
-    <div className="mx-auto w-full max-w-3xl px-4 py-8 sm:py-12" data-testid="about">
-      <header className="mb-10 flex items-center justify-between">
-        <Link to="/" className="text-2xl"><Wordmark name="Pathwai" brand={{}} /></Link>
-        <Link to="/login" className="btn-ghost" data-testid="about-signin">Sign in</Link>
+    <div className="w-full" data-testid="about">
+      <header className="glass sticky top-0 z-30 border-b border-line/60">
+        <div className="mx-auto flex max-w-6xl items-center justify-between gap-4 px-4 py-3 lg:px-8">
+          <Link to="/" className="text-2xl"><Wordmark name="Pathwai" brand={{}} /></Link>
+          <nav className="hidden items-center gap-6 text-sm md:flex" aria-label="About sections">
+            {NAV.map(([k, label]) => <button key={k} type="button" onClick={() => jump(k)} className="text-muted hover:text-ink" data-testid={`about-nav-${k}`}>{label}</button>)}
+          </nav>
+          <div className="flex items-center gap-2">
+            <Link to="/login" className="btn-ghost hidden sm:inline-flex" data-testid="about-signin">Sign in</Link>
+            <Link to="/signup" className="btn-primary" data-testid="about-signup-top">Get started</Link>
+          </div>
+        </div>
       </header>
 
-      <p className="eyebrow">About Pathwai</p>
-      <h1 className="mt-3 text-3xl font-bold sm:text-5xl" style={{ textWrap: "balance" }}>The community platform for networks where the point is who you meet.</h1>
-      <p className="mt-4 max-w-xl text-base text-muted">Not what you post. Pathwai gives accelerators, alumni groups and member organizations a branded home, and helps members find the right people inside it.</p>
-
-      <div className="mt-8 mb-4 flex items-center justify-between">
-        <p className="text-sm text-muted">Tap a section to open it.</p>
-        <button type="button" className="text-sm underline underline-offset-2" data-testid="about-toggle-all"
-          onClick={() => setOpen(allOpen ? [] : ["what", "who", "how", "market", "diff"])}>{allOpen ? "Collapse all" : "Expand all"}</button>
-      </div>
-
-      <div className="space-y-3">
-        <Section id="what" n={1} icon={Compass} title="What Pathwai is" summary="A branded home for your network, with smart introductions built in." {...P("what")}>
-          <p className="text-sm leading-relaxed text-muted">Pathwai is a white-label platform for running a member community. Each community gets its own members, events, news, perks and look. Members get one Pathwai login that works across every community they belong to.</p>
-          <div className="mt-5 grid gap-3 sm:grid-cols-3">
-            {[["Directory", "Searchable profiles with pitch cards, offers and asks."],
-              ["Matching", "Suggested introductions, each with a reason."],
-              ["Operations", "Events, news, perks, approvals and messages in one admin."]].map(([t, d]) => (
-              <div key={t} className="rounded-xl border border-line/70 p-4">
-                <p className="text-sm font-semibold">{t}</p>
-                <p className="mt-1 text-xs leading-relaxed text-muted">{d}</p>
-              </div>
-            ))}
+      <main className="mx-auto max-w-6xl px-4 lg:px-8">
+        <div className="py-10 sm:py-14">
+          <p className="eyebrow">About Pathwai</p>
+          <h1 className="mt-4 max-w-4xl text-4xl sm:text-5xl lg:text-6xl" style={{ textWrap: "balance" }}>Built for networks where the point is who you meet.</h1>
+          <p className="mt-6 max-w-xl text-base text-muted sm:text-lg">Not what you post. Pathwai gives accelerators, alumni groups and member organizations a branded home, and helps members find the right people inside it.</p>
+          <div className="mt-8 flex flex-wrap gap-3">
+            <Link to="/signup" className="btn-primary" data-testid="about-signup">Get started</Link>
+            <Link to="/hub" className="btn-ghost border border-line" data-testid="about-hub">Browse communities</Link>
           </div>
-        </Section>
-
-        <Section id="who" n={2} icon={Users} title="Who it's for" summary="Gated networks of founders, professionals and members." {...P("who")}>
-          <div className="grid gap-3 sm:grid-cols-2">
-            {AUDIENCES.map(([t, d]) => (
-              <div key={t} className="rounded-xl border border-line/70 p-4">
-                <p className="text-sm font-semibold">{t}</p>
-                <p className="mt-1 text-xs leading-relaxed text-muted">{d}</p>
-              </div>
-            ))}
-          </div>
-          <p className="mt-4 text-xs text-muted">Not the best fit if your main goal is selling courses or growing a large public audience. Other tools do that better.</p>
-        </Section>
-
-        <Section id="how" n={3} icon={Sparkles} title="How it works" summary="Profile, match, run. Three steps." {...P("how")}>
-          <ol className="space-y-4">
-            {STEPS.map(([t, d], i) => (
-              <li key={t} className="flex gap-4">
-                <span className="stat flex h-8 w-8 flex-none items-center justify-center rounded-full border border-line text-sm">{i + 1}</span>
-                <span><span className="block text-sm font-semibold">{t}</span><span className="mt-0.5 block text-sm text-muted">{d}</span></span>
-              </li>
-            ))}
-          </ol>
-        </Section>
-
-        <Section id="market" n={4} icon={Swords} title="Who else is out there" summary="Community platforms, association software, learning tools, and free chat apps." {...P("market")}>
-          <div className="space-y-7">
-            {COMPETITORS.map((g) => (
-              <div key={g.group}>
-                <h3 className="text-sm font-bold normal-case" style={{ textTransform: "none", letterSpacing: 0 }}>{g.group}</h3>
-                <p className="mt-0.5 text-xs text-muted">{g.blurb}</p>
-                <ul className="mt-3 divide-y divide-line/60 rounded-xl border border-line/70">
-                  {g.items.map(([name, forWho, price, how]) => (
-                    <li key={name} className="p-4">
-                      <div className="flex flex-wrap items-baseline justify-between gap-x-3">
-                        <p className="text-sm font-semibold">{name}</p>
-                        <p className="text-xs text-muted"><span>{forWho}</span> · <span className="font-semibold text-ink/80" title="Relative cost">{price}</span></p>
-                      </div>
-                      <p className="mt-1 text-xs leading-relaxed text-muted">{how}</p>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            ))}
-          </div>
-          <p className="mt-4 text-[11px] text-muted">{PRICE_NOTE}</p>
-        </Section>
-
-        <Section id="diff" n={5} icon={Target} title="How we're different" summary="Introductions first, built for networks, branded per community." {...P("diff")}>
-          <ul className="space-y-4">
-            {EDGES.map(([t, d]) => (
-              <li key={t} className="flex gap-3">
-                <ArrowRight className="mt-0.5 h-4 w-4 flex-none" />
-                <span><span className="block text-sm font-semibold">{t}</span><span className="mt-0.5 block text-sm text-muted">{d}</span></span>
-              </li>
-            ))}
-          </ul>
-
-          <div className="mt-6 overflow-x-auto rounded-xl border border-line/70" data-testid="about-matrix">
-            <table className="w-full min-w-[34rem] border-collapse text-left text-xs">
-              <thead>
-                <tr className="border-b border-line/70">
-                  <th scope="col" className="p-3 font-medium text-muted">At a glance</th>
-                  {MATRIX.cols.map((c, i) => <th key={c} scope="col" className={cx("p-3 text-center font-semibold", i === 0 && "bg-ink/[.07]")}>{c}</th>)}
-                </tr>
-              </thead>
-              <tbody>
-                {MATRIX.rows.map(([label, ...v]) => (
-                  <tr key={label} className="border-b border-line/50 last:border-0">
-                    <th scope="row" className="p-3 font-normal">{label}</th>
-                    {v.map((x, i) => <td key={i} className={cx("p-3 text-center", i === 0 && "bg-ink/[.07]")}><Mark v={x} /></td>)}
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-          <p className="mt-3 text-[11px] text-muted">Honest note: payments and courses are not our focus, so we say so. Use Stripe or your learning platform alongside Pathwai. Pathwai installs on a phone as an app today; a store listing is on the roadmap. Comparisons use public information and may have changed.</p>
-        </Section>
-      </div>
-
-      <div className="mt-10 flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-line/70 p-5">
-        <p className="text-sm font-semibold">Ready to see it with your network?</p>
-        <div className="flex gap-2">
-          <Link to="/hub" className="btn-ghost" data-testid="about-hub">Browse communities</Link>
-          <Link to="/signup" className="btn-primary" data-testid="about-signup">Get started</Link>
         </div>
-      </div>
-      <PoweredBy className="mt-8 text-center" />
+
+        <div className="mb-3 flex items-center justify-between">
+          <p className="eyebrow">Explore</p>
+          <button type="button" className="text-sm text-muted underline underline-offset-2 hover:text-ink" data-testid="about-toggle-all"
+            onClick={() => setOpen(allOpen ? [] : ALL)}>{allOpen ? "Close all" : "Open all"}</button>
+        </div>
+
+        <div className="border-b border-line">
+          <Row id="what" n={1} title="What it is" summary="A branded home for your network, with smart introductions built in."
+            lede="A white-label platform for running a member community. Each community keeps its own members, events and look. Members keep one login." {...R("what")}>
+            <div className="grid gap-px overflow-hidden rounded-xl border border-line bg-line sm:grid-cols-3">
+              {[["Directory", "Searchable profiles with pitch cards, offers and asks."],
+                ["Matching", "Suggested introductions, each with a reason."],
+                ["Operations", "Events, news, perks, approvals and messages in one admin."]].map(([t, d]) => (
+                <div key={t} className="bg-surface p-5">
+                  <p className="font-display text-lg">{t}</p>
+                  <p className="mt-2 text-sm leading-relaxed text-muted">{d}</p>
+                </div>
+              ))}
+            </div>
+          </Row>
+
+          <Row id="who" n={2} title="Who it's for" summary="Gated networks of founders, professionals and members."
+            lede="Networks that need members to find each other, not just find content. Less suited if your main goal is selling courses or growing a large public audience." {...R("who")}>
+            <div className="grid gap-px overflow-hidden rounded-xl border border-line bg-line sm:grid-cols-2">
+              {AUDIENCES.map(([t, d]) => (
+                <div key={t} className="bg-surface p-5">
+                  <p className="text-base font-semibold">{t}</p>
+                  <p className="mt-2 text-sm leading-relaxed text-muted">{d}</p>
+                </div>
+              ))}
+            </div>
+          </Row>
+
+          <Row id="how" n={3} title="How it works" summary="Profile, match, run. Three steps."
+            lede="Members do a few minutes of setup. After that, introductions and community operations mostly run themselves." {...R("how")}>
+            <ol className="divide-y divide-line border-y border-line">
+              {STEPS.map(([t, d], i) => (
+                <li key={t} className="flex gap-5 py-5">
+                  <span className="stat flex h-9 w-9 flex-none items-center justify-center rounded-full border border-line text-sm">{i + 1}</span>
+                  <span><span className="block text-base font-semibold">{t}</span><span className="mt-1 block text-sm leading-relaxed text-muted">{d}</span></span>
+                </li>
+              ))}
+            </ol>
+          </Row>
+
+          <Row id="market" n={4} title="Competitors" summary="Community platforms, association software, learning tools and free chat apps."
+            lede="Plenty of good tools exist. Here is who we get compared to, and how each one differs. Costs are relative, from $ to $$$$." {...R("market")}>
+            <div className="space-y-8">
+              {COMPETITORS.map((g) => (
+                <div key={g.group}>
+                  <h3 className="text-base font-semibold" style={{ textTransform: "none", letterSpacing: 0, fontFamily: "var(--font-sans)", fontWeight: 600 }}>{g.group}</h3>
+                  <p className="mt-1 text-sm text-muted">{g.blurb}</p>
+                  <ul className="mt-3 divide-y divide-line border-y border-line">
+                    {g.items.map(([name, forWho, price, how]) => (
+                      <li key={name} className="grid gap-1 py-4 sm:grid-cols-12 sm:gap-6">
+                        <div className="sm:col-span-4">
+                          <p className="text-sm font-semibold">{name}</p>
+                          <p className="text-xs text-muted">{forWho} · <span className="font-semibold text-ink/80" title="Relative cost">{price}</span></p>
+                        </div>
+                        <p className="text-sm leading-relaxed text-muted sm:col-span-8">{how}</p>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              ))}
+            </div>
+            <p className="mt-5 text-xs text-muted">{PRICE_NOTE}</p>
+          </Row>
+
+          <Row id="diff" n={5} title="Why Pathwai" summary="Introductions first, built for networks, branded per community."
+            lede="We are not trying to be the biggest platform. We are trying to be the best one for networks that run on relationships." {...R("diff")}>
+            <ul className="divide-y divide-line border-y border-line">
+              {EDGES.map(([t, d]) => (
+                <li key={t} className="flex gap-4 py-5">
+                  <ArrowRight className="mt-1 h-4 w-4 flex-none" />
+                  <span><span className="block text-base font-semibold">{t}</span><span className="mt-1 block text-sm leading-relaxed text-muted">{d}</span></span>
+                </li>
+              ))}
+            </ul>
+
+            <div className="mt-8 overflow-x-auto rounded-xl border border-line" data-testid="about-matrix">
+              <table className="w-full min-w-[36rem] border-collapse text-left text-xs">
+                <thead>
+                  <tr className="border-b border-line">
+                    <th scope="col" className="p-3 font-medium text-muted">At a glance</th>
+                    {MATRIX.cols.map((c, i) => <th key={c} scope="col" className={cx("p-3 text-center font-semibold", i === 0 && "bg-ink/[.07]")}>{c}</th>)}
+                  </tr>
+                </thead>
+                <tbody>
+                  {MATRIX.rows.map(([label, ...v]) => (
+                    <tr key={label} className="border-b border-line/60 last:border-0">
+                      <th scope="row" className="p-3 font-normal">{label}</th>
+                      {v.map((x, i) => <td key={i} className={cx("p-3 text-center", i === 0 && "bg-ink/[.07]")}><Mark v={x} /></td>)}
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+            <p className="mt-3 text-xs text-muted">Honest note: payments and courses are not our focus, so use Stripe or your learning platform alongside Pathwai. Pathwai installs on a phone as an app today; a store listing is on the roadmap. Comparisons use public information and may have changed.</p>
+          </Row>
+        </div>
+
+        <div className="py-16 text-center sm:py-24">
+          <h2 className="mx-auto max-w-2xl text-3xl sm:text-5xl" style={{ textWrap: "balance" }}>See it with your network.</h2>
+          <div className="mt-8 flex flex-wrap justify-center gap-3">
+            <Link to="/signup" className="btn-primary" data-testid="about-cta">Get started</Link>
+            <Link to="/login" className="btn-ghost border border-line">Sign in</Link>
+          </div>
+        </div>
+        <PoweredBy className="pb-10 text-center" />
+      </main>
     </div>
   );
 }
