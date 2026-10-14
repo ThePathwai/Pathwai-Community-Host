@@ -86,6 +86,9 @@ export default function Login() {
 
   return (
     <div className="grid min-h-screen lg:grid-cols-2">
+      <div className="pointer-events-none fixed inset-x-0 top-0 z-30 flex justify-end px-4 py-4 lg:px-8">
+        <Link to="/about" className="btn-ghost pointer-events-auto border border-line bg-paper/70 backdrop-blur" data-testid="login-about">About Pathwai <span aria-hidden>→</span></Link>
+      </div>
       <div className="relative hidden overflow-hidden lg:block" style={{ background: "#08080B" }}>
         <img src={crowd} alt="" className="absolute inset-0 h-full w-full object-cover opacity-55" />
         <div className="absolute inset-0" style={{ background: "linear-gradient(180deg, rgba(8,8,11,.55) 0%, rgba(8,8,11,.25) 45%, rgba(8,8,11,.92) 100%)" }} />
@@ -120,10 +123,6 @@ export default function Login() {
           </form>
           <p className="mt-4 text-center text-sm text-muted">New to Pathwai? <Link className="underline" to="/signup">Create your account</Link></p>
         </Card>
-        <Link to="/about" className="mt-4 flex items-center justify-between gap-3 rounded-xl border border-line bg-surface p-4 hover:bg-ink/5" data-testid="login-about">
-          <span><span className="block font-medium">What is Pathwai?</span><span className="block text-xs text-muted">Who it's for, who we compete with and how we're different.</span></span>
-          <span aria-hidden className="text-lg">→</span>
-        </Link>
         <p className="mt-4 text-center"><HowItWorks /></p>
         {demo.accounts.length > 0 && (
           <div className="mt-6 space-y-2">

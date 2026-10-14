@@ -104,6 +104,7 @@ export default function Layout({ children }) {
             {custom.map((l) => <a key={l.url} href={l.url} target="_blank" rel="noreferrer" className="whitespace-nowrap rounded-lg px-3 py-1.5 text-sm text-muted hover:bg-ink/5">{l.label} ↗</a>)}
           </nav>
           <div className="ml-auto flex shrink-0 items-center gap-0.5 sm:gap-2">
+            <Link to="/about" className="btn-ghost !px-2 sm:!px-3" data-testid="top-about" title="About Pathwai"><Info className="h-4 w-4" /><span className="hidden sm:inline">About</span></Link>
             <button className="btn-ghost !px-2 sm:!px-3" data-testid="mode-toggle" aria-label={mode === "dark" ? "Switch to light mode" : "Switch to dark mode"} title={mode === "dark" ? "Light mode" : "Dark mode"} onClick={() => { const n = mode === "dark" ? "light" : "dark"; setModePref(n); applyBrand(config); setMode(n); }}>{mode === "dark" ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}</button>
             {AI_CHAT_ENABLED && <Link to="/ask" className="btn-ghost !px-2 sm:!px-3" title="Ask the League"><Sparkles className="h-4 w-4" /><span className="hidden sm:inline">Ask</span></Link>}
             <Link to="/notifications" className="relative btn-ghost !px-2 sm:!px-3" data-testid="bell" aria-label="Notifications">

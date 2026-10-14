@@ -363,6 +363,7 @@ export default function Hub() {
         <span className="text-3xl"><Wordmark name="Pathwai" brand={{}} /></span>
         <div className="flex items-center gap-3">
           <span className="hidden text-right text-xs sm:block"><span className="block font-medium">{account.name}</span><span className="text-muted">{account.email}</span></span>
+          <Link to="/about" className="btn-ghost !px-3 sm:!px-4" data-testid="hub-about">About<span className="hidden sm:inline"> Pathwai</span></Link>
           <button onClick={() => setPeopleOpen(true)} data-testid="hub-open-people" title="People" aria-label="People" className="text-ink/80 hover:text-ink">
             <Users className="h-5 w-5" />
           </button>
@@ -380,10 +381,7 @@ export default function Hub() {
           <h1 className="text-2xl font-bold sm:text-3xl lg:text-4xl">Your communities</h1>
           <p className="mt-2 max-w-xl text-sm text-muted">One Pathwai login. Each community has its own members, events and look, and you have a separate profile in each — pre-filled from your <button className="underline" onClick={openProfileEditor} data-testid="hub-profile-link">Pathwai profile</button>.</p>
         </div>
-        <div className="flex flex-wrap gap-2">
-          <Link to="/about" className="btn-ghost border border-line" data-testid="hub-about">What is Pathwai?</Link>
-          <Button variant="ghost" className="border border-dashed border-line" onClick={() => setStarting(true)} data-testid="hub-start-community">+ Start your own community</Button>
-        </div>
+        <Button variant="ghost" className="border border-dashed border-line" onClick={() => setStarting(true)} data-testid="hub-start-community">+ Start your own community</Button>
       </div>
 
       {!items ? <Spinner /> : (
