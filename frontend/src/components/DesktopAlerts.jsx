@@ -16,8 +16,12 @@ export default function DesktopAlerts({ compact = false }) {
   const [check, setCheck] = useState(null); // { busy } | { ok, message }
   const [devices, setDevices] = useState(null); // what the server knows about this person's registered phones/computers
   useEffect(() => {
-    if (state !== "granted" || isDemo() || (check && check.busy)) return;
-    api.get("/push/status").then((r) => setDevices(r.data.devices || [])).catch(() => {});
+    if (state !== "granted" || isDemo() || (check && check.busy)) return undefined;
+    const load = () => api.get("/push/status").then((r) => setDevices(r.data.devices || [])).catch(() => {});
+    load();
+    const onShow = () => { if (!document.hidden) load(); };  // reopening the app after the closed-app test shows how it went
+    document.addEventListener("visibilitychange", onShow);
+    return () => document.removeEventListener("visibilitychange", onShow);
   }, [state, check]);
   if (state === "unsupported" || (compact && state === "granted")) return null;
   const turnOn = async () => setState(await enableAlerts());
@@ -27,6 +31,14 @@ export default function DesktopAlerts({ compact = false }) {
       await api.post("/notifications/test");
       toast.success("Test sent. A pop-up should appear in a few seconds.");
       window.dispatchEvent(new Event("pw:check-notifications"));
+    } catch (e) { toast.error(errMsg(e)); }
+  };
+  // The real test: schedule an alert for 20 seconds from now so the app can be closed and the phone locked first.
+  const closedTest = async () => {
+    try {
+      const { data } = await api.post("/push/test-later", { seconds: 20 });
+      if (!data.ok) { setCheck({ ok: false, message: data.message }); return; }
+      setCheck({ ok: true, message: "Test scheduled for 20 seconds from now. Fully close Pathwai (swipe it away from the app switcher) and lock your phone. An alert should arrive within about 30 seconds. If it doesn't, open Pathwai again and read the status line below." });
     } catch (e) { toast.error(errMsg(e)); }
   };
   const runCheck = async () => { setCheck({ busy: true }); setCheck(await diagnosePush()); };
@@ -49,12 +61,13 @@ export default function DesktopAlerts({ compact = false }) {
         <div className="flex flex-wrap gap-2">
           <Button variant="ghost" onClick={runCheck} loading={!!check?.busy} data-testid="check-push">Check this device</Button>
           <Button variant="ghost" onClick={sendTest} data-testid="send-test-alert">Send me a test</Button>
+          <Button variant="ghost" onClick={closedTest} data-testid="closed-test-alert">Test with app closed</Button>
         </div>)}
       {state === "granted" && devices && !compact && (
         <ul className="w-full space-y-0.5 text-xs text-muted" data-testid="push-devices">
           {devices.length === 0 && <li>This device isn't registered for alerts while the app is closed yet. Tap "Check this device".</li>}
           {devices.map((d, i) => (
-            <li key={i}>{pushService(d.host)}: {d.last_status == null ? "no alert sent yet" : d.last_status >= 200 && d.last_status < 300 ? `last alert delivered to the phone's push service ${timeAgo(d.last_at)}` : `last alert was refused (code ${d.last_status}${d.last_detail ? `: ${String(d.last_detail).slice(0, 80)}` : ""})`}</li>
+            <li key={i}>{pushService(d.host)}: {d.last_status == null ? "no alert sent yet" : d.last_status >= 200 && d.last_status < 300 ? `the push service accepted the last alert ${timeAgo(d.last_at)}. If it never appeared on the phone, check Settings > Notifications > Pathwai and that Focus is off` : `last alert was refused (code ${d.last_status}${d.last_detail ? `: ${String(d.last_detail).slice(0, 80)}` : ""})`}</li>
           ))}
         </ul>)}
       {check && !check.busy && <p className={`w-full text-xs ${check.ok ? "text-green-600" : "text-red-600"}`} data-testid="check-push-result">{check.message}</p>}

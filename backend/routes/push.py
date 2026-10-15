@@ -189,6 +189,34 @@ async def push_test(body: TestIn = TestIn(), me: dict = Depends(get_current_user
     return {"devices": out}
 
 
+class LaterIn(BaseModel):
+    seconds: int = Field(default=20, ge=5, le=120)
+
+
+@router.post("/push/test-later")
+async def push_test_later(body: LaterIn = LaterIn(), me: dict = Depends(get_current_user)):
+    """The real closed-app test: send myself a notification in N seconds, through exactly the path every real
+    notification takes, so I can close the app and lock the phone first. The result is recorded per device
+    (see /push/status)."""
+    from auth import rate_limit
+
+    await rate_limit("push_test", me["id"], 20, 3600, "That's plenty of tests for now. Try again in a little while.")
+    subs = (await _subs_for([me["id"]])).get(me["id"], [])
+    if not subs:
+        return {"ok": False, "message": "This device isn't registered for alerts yet. Tap \"Check this device\" first."}
+
+    async def later() -> None:
+        await asyncio.sleep(body.seconds)
+        from .notifications import notify
+
+        await notify(me["id"], "test", "Test while the app is closed", "If you can see this with Pathwai closed, alerts work.", "/notifications")
+
+    t = asyncio.get_running_loop().create_task(later())  # copies the pinned-community context
+    _TASKS.add(t)
+    t.add_done_callback(_TASKS.discard)
+    return {"ok": True, "seconds": body.seconds, "devices": len(subs)}
+
+
 async def ensure_indexes() -> None:
     await db.push_subscriptions.create_index([("endpoint", 1)], unique=True)
     await db.push_subscriptions.create_index([("user_id", 1)])

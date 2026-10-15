@@ -1684,7 +1684,8 @@ if (STATIC_DIR / "index.html").is_file():
             raise HTTPException(status_code=404, detail="Not found")
         target = (STATIC_DIR / full_path).resolve()
         if full_path and target.is_file() and STATIC_DIR in target.parents:
-            return FileResponse(target)
+            # The service worker and manifest must always be re-checked, or a phone keeps running an old copy.
+            return FileResponse(target, headers={"Cache-Control": "no-cache"} if full_path in ("sw.js", "manifest.json") else None)
         # client-side routes (/hub, /c/some-community, /events/123 ...) all get the app shell
         return FileResponse(STATIC_DIR / "index.html", headers={"Cache-Control": "no-cache"})
 

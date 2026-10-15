@@ -100,3 +100,33 @@ def test_a_phone_registered_in_one_community_is_found_from_another(c):
         return await hub_db().push_subscriptions.count_documents({"endpoint": dev["endpoint"]}), await db.push_subscriptions.count_documents({"endpoint": dev["endpoint"]})
 
     assert asyncio.run(gone()) == (0, 0)
+
+
+def test_closed_app_test_goes_through_the_real_notification_path(c, monkeypatch):
+    import time
+    c.post("/api/auth/login", json={"email": "demo@yourcommunity.app", "password": PW})
+    c.post("/api/hub/enter", json={"slug": "playr"})
+    # nothing registered yet: tell them what to do first
+    c.post("/api/push/unsubscribe", json={"endpoint": "https://web.push.apple.com/none-registered-yet-0000000"})
+    from database import db, hub_db
+
+    async def wipe():
+        me = c.get("/api/auth/me").json()["id"]
+        await db.push_subscriptions.delete_many({"user_id": me}); await hub_db().push_subscriptions.delete_many({"user_id": me})
+    asyncio.run(wipe())
+    assert c.post("/api/push/test-later", json={"seconds": 5}).json()["ok"] is False
+
+    sent = []
+    monkeypatch.setattr(push_mod, "_send_one", lambda sub, payload, key: (sent.append((sub["endpoint"], payload)) or (201, "")))
+    dev = {"endpoint": "https://web.push.apple.com/QXYZ-closed-test-endpoint-98765", "keys": {"p256dh": "B" + "x" * 86, "auth": "y" * 22}}
+    assert c.post("/api/push/subscribe", json=dev).status_code == 200
+    r = c.post("/api/push/test-later", json={"seconds": 5}).json()
+    assert r["ok"] is True and r["devices"] == 1
+    deadline = time.time() + 12
+    while not sent and time.time() < deadline:
+        time.sleep(0.3)
+    assert sent and sent[0][0] == dev["endpoint"] and "Test while the app is closed" in sent[0][1]
+    st = c.get("/api/push/status").json()["devices"]
+    assert st and st[0]["last_status"] == 201
+    c.post("/api/push/unsubscribe", json={"endpoint": dev["endpoint"]})
+    assert c.post("/api/push/test-later", json={"seconds": 1}).status_code == 422  # too soon to be a meaningful test

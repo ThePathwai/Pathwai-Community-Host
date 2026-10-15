@@ -28,3 +28,21 @@ self.addEventListener("notificationclick", (event) => {
     await self.clients.openWindow(url);
   })());
 });
+
+// Apple, Google and Mozilla can replace a phone's push address at any time (it then silently stops receiving).
+// Register the new one straight away, from the background, without needing the app to be opened.
+const toKey = (b64) => {
+  const pad = "=".repeat((4 - (b64.length % 4)) % 4);
+  const raw = atob((b64 + pad).replace(/-/g, "+").replace(/_/g, "/"));
+  return Uint8Array.from([...raw].map((c) => c.charCodeAt(0)));
+};
+self.addEventListener("pushsubscriptionchange", (event) => {
+  event.waitUntil((async () => {
+    try {
+      const { key } = await (await fetch("/api/push/public-key", { credentials: "include" })).json();
+      const sub = await self.registration.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: toKey(key) });
+      const j = sub.toJSON();
+      await fetch("/api/push/subscribe", { method: "POST", credentials: "include", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ endpoint: j.endpoint, keys: j.keys }) });
+    } catch (e) { /* the app re-registers next time it is opened */ }
+  })());
+});
