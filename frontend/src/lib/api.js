@@ -8,6 +8,30 @@ export const api = axios.create({ baseURL: `${base}/api`, withCredentials: true,
 
 // The in-browser demo / static preview swaps the server for recorded sample data: see index.js and lib/demo.js.
 
+// Staying signed in. The server hands out a short-lived access cookie (1 hour) and a long-lived refresh cookie
+// (a year). When the short one has lapsed a request comes back 401: quietly renew it with the long one and
+// repeat the request, so a person who signed in once is never sent back to the login screen until they sign
+// out themselves. One renewal at a time, however many requests failed together.
+const NO_RENEW = ["/auth/login", "/auth/refresh", "/auth/logout", "/hub/signup", "/auth/oauth", "/auth/forgot", "/auth/reset", "/auth/google", "/push/public-key"];
+let renewing = null;
+let signedOutAt = 0;
+export const renewSession = () => {
+  renewing = renewing || api.post("/auth/refresh").finally(() => { renewing = null; });
+  return renewing;
+};
+api.interceptors.response.use(
+  (r) => { if (/\/(auth\/login|auth\/oauth|hub\/signup|auth\/google)/.test(r.config?.url || "")) signedOutAt = 0; return r; },
+  async (error) => {
+    const cfg = error.config;
+    if (error.response?.status !== 401 || !cfg || cfg._renewed || NO_RENEW.some((u) => (cfg.url || "").includes(u))) throw error;
+    if (process.env.REACT_APP_PREVIEW === "true" || (typeof window !== "undefined" && window.sessionStorage?.getItem("pw_demo") === "1")) throw error; // the demo has no real session
+    if (Date.now() - signedOutAt < 15000) throw error; // just confirmed there's no session: don't retry every request
+    cfg._renewed = true;
+    try { await renewSession(); } catch { signedOutAt = Date.now(); throw error; }
+    return api(cfg);
+  },
+);
+
 export const errMsg = (e, fallback = "Your update was not saved. Please try again.") => {
   const d = e?.response?.data?.detail;
   if (typeof d === "string") return d;

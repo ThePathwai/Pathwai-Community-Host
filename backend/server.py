@@ -875,6 +875,10 @@ async def auth_refresh(request: Request, response: Response):
         raise HTTPException(status_code=401, detail="Invalid refresh token")
     if payload.get("type") != "refresh":
         raise HTTPException(status_code=401, detail="Invalid token type")
+    # Renewing the sign-in also renews which community this phone is in, so it never falls back to the Hub.
+    pinned = request.cookies.get("pw_community")
+    if pinned and re.fullmatch(r"[a-z0-9][a-z0-9-]{0,80}", pinned) and pinned in COMMUNITY_SLUGS:
+        set_community_cookie(response, pinned)
     user = await db.users.find_one({"id": payload["sub"]}, {"_id": 0, "password_hash": 0})
     if not user:
         # A platform-only account (no community profile yet) refreshes against the hub record instead.

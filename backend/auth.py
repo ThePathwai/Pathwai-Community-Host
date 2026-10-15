@@ -17,7 +17,9 @@ from database import db, demo_mode, hub_db
 JWT_SECRET = os.environ.get("JWT_SECRET", "dev-secret-change-me")
 JWT_ALG = "HS256"
 ACCESS_MIN = int(os.environ.get("ACCESS_TOKEN_MIN", "60"))
-REFRESH_DAYS = int(os.environ.get("REFRESH_TOKEN_DAYS", "7"))
+# People stay signed in until they sign out: the refresh token is long-lived and is re-issued (rolling) every
+# time the app renews its short access token, so only a year of not opening the app signs anyone out.
+REFRESH_DAYS = int(os.environ.get("REFRESH_TOKEN_DAYS", "365"))
 RESET_TOKEN_MIN = int(os.environ.get("RESET_TOKEN_MIN", "30"))
 LOCKOUT_MAX = 5
 LOCKOUT_WINDOW_MIN = 15

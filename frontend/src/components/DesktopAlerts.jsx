@@ -1,16 +1,24 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Bell } from "lucide-react";
 import { toast } from "sonner";
-import { api, errMsg } from "../lib/api";
+import { api, errMsg, timeAgo } from "../lib/api";
+import { isDemo } from "../lib/demo";
 import { alertsState, diagnosePush, enableAlerts } from "../lib/webNotify";
 import { Button } from "./ui";
 
 // "Turn on pop-up alerts" -- asks the browser for permission and registers this device for push, so
 // new events, new members and approvals pop up on desktop and phone. `compact` hides the card once
 // it's on (used as a banner on the Notifications page).
+const pushService = (host = "") => (/apple/.test(host) ? "iPhone / Safari" : /googleapis|google/.test(host) ? "Android / Chrome" : /mozilla/.test(host) ? "Firefox" : /windows/.test(host) ? "Edge / Windows" : host || "Device");
+
 export default function DesktopAlerts({ compact = false }) {
   const [state, setState] = useState(alertsState());
   const [check, setCheck] = useState(null); // { busy } | { ok, message }
+  const [devices, setDevices] = useState(null); // what the server knows about this person's registered phones/computers
+  useEffect(() => {
+    if (state !== "granted" || isDemo() || (check && check.busy)) return;
+    api.get("/push/status").then((r) => setDevices(r.data.devices || [])).catch(() => {});
+  }, [state, check]);
   if (state === "unsupported" || (compact && state === "granted")) return null;
   const turnOn = async () => setState(await enableAlerts());
   // Admins are never alerted about their own actions, so this is how they see a pop-up work.
@@ -42,6 +50,13 @@ export default function DesktopAlerts({ compact = false }) {
           <Button variant="ghost" onClick={runCheck} loading={!!check?.busy} data-testid="check-push">Check this device</Button>
           <Button variant="ghost" onClick={sendTest} data-testid="send-test-alert">Send me a test</Button>
         </div>)}
+      {state === "granted" && devices && !compact && (
+        <ul className="w-full space-y-0.5 text-xs text-muted" data-testid="push-devices">
+          {devices.length === 0 && <li>This device isn't registered for alerts while the app is closed yet. Tap "Check this device".</li>}
+          {devices.map((d, i) => (
+            <li key={i}>{pushService(d.host)}: {d.last_status == null ? "no alert sent yet" : d.last_status >= 200 && d.last_status < 300 ? `last alert delivered to the phone's push service ${timeAgo(d.last_at)}` : `last alert was refused (code ${d.last_status}${d.last_detail ? `: ${String(d.last_detail).slice(0, 80)}` : ""})`}</li>
+          ))}
+        </ul>)}
       {check && !check.busy && <p className={`w-full text-xs ${check.ok ? "text-green-600" : "text-red-600"}`} data-testid="check-push-result">{check.message}</p>}
     </div>
   );

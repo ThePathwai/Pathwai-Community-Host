@@ -95,8 +95,11 @@ async def records_for(email: str):
     return hub, recs
 
 
+COMMUNITY_COOKIE_DAYS = 365  # stay in the community you signed into, as long as the sign-in itself lasts
+
+
 def set_community_cookie(response: Response, slug: str) -> None:
-    set_cookie(response, "pw_community", slug, 60 * 86400, httponly=False)
+    set_cookie(response, "pw_community", slug, COMMUNITY_COOKIE_DAYS * 86400, httponly=False)
 
 
 async def account_from_request(request: Request) -> Optional[dict]:

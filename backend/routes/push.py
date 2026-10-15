@@ -20,6 +20,7 @@ import base64
 import json
 import logging
 import os
+import re
 from typing import Any, Dict, List, Optional
 from urllib.parse import urlparse
 
@@ -52,6 +53,28 @@ def endpoint_allowed(url: str) -> bool:
 
 
 # --------------------------------------------------------------------------- VAPID keys
+def _vapid_subject() -> str:
+    """Who the push services can contact about this sender. Apple rejects a push (403 BadJwtToken) whose
+    VAPID `sub` isn't a real mailto: address or https URL, so never fall back to a placeholder when we can
+    build a real one: the configured subject, a real admin/legal email, or this site's own https address."""
+    explicit = (os.environ.get("VAPID_SUBJECT") or "").strip()
+    if explicit.startswith(("mailto:", "https://")):
+        return explicit
+    if explicit and "@" in explicit:
+        return "mailto:" + explicit
+    for raw in [os.environ.get("REACT_APP_LEGAL_EMAIL", "")] + os.environ.get("PLATFORM_ADMIN_EMAILS", "").split(","):
+        e = raw.strip()
+        if re.fullmatch(r"[^@\s]+@[^@\s]+\.[^@\s]+", e) and not e.lower().endswith(("@example.com", "@localhost")):
+            return "mailto:" + e
+    base = (os.environ.get("FRONTEND_URL") or "").strip().rstrip("/")
+    if base.startswith("https://"):
+        return base
+    dom = (os.environ.get("RAILWAY_PUBLIC_DOMAIN") or "").strip()
+    if dom:
+        return "https://" + dom
+    return "mailto:admin@example.com"
+
+
 def _b64url(raw: bytes) -> str:
     return base64.urlsafe_b64encode(raw).rstrip(b"=").decode()
 
@@ -63,8 +86,7 @@ async def vapid() -> Dict[str, str]:
     from cryptography.hazmat.primitives import serialization
     from py_vapid import Vapid
 
-    contact = (os.environ.get("REACT_APP_LEGAL_EMAIL") or os.environ.get("PLATFORM_ADMIN_EMAILS", "").split(",")[0]).strip() or "admin@example.com"
-    subject = os.environ.get("VAPID_SUBJECT") or f"mailto:{contact}"
+    subject = _vapid_subject()
     pem = (os.environ.get("VAPID_PRIVATE_KEY") or "").replace("\\n", "\n").strip()
     if not pem:
         from .integrations import dec, enc
@@ -111,17 +133,21 @@ async def subscribe(body: SubscribeIn, me: dict = Depends(get_current_user)):
     mine = any(s["endpoint"] == body.endpoint for s in existing)
     if not mine and len(existing) >= MAX_DEVICES_PER_USER:
         await db.push_subscriptions.delete_one({"id": existing[0]["id"]})  # drop the oldest device
-    await db.push_subscriptions.update_one(
-        {"endpoint": body.endpoint},
-        {"$set": {"user_id": me["id"], "keys": body.keys.model_dump(), "updated_at": now_iso()},
-         "$setOnInsert": {"id": os.urandom(8).hex(), "created_at": now_iso()}},
-        upsert=True)
+    doc = {"$set": {"user_id": me["id"], "keys": body.keys.model_dump(), "updated_at": now_iso()},
+           "$setOnInsert": {"id": os.urandom(8).hex(), "created_at": now_iso()}}
+    await db.push_subscriptions.update_one({"endpoint": body.endpoint}, doc, upsert=True)
+    # A phone is registered once, whichever community was open at the time. Keep a copy at platform level so a
+    # notification from ANY of this person's communities can reach it (see _subs_for).
+    try:
+        await hub_db().push_subscriptions.update_one({"endpoint": body.endpoint}, doc, upsert=True)
+    except Exception:  # noqa: BLE001 -- the community copy above is enough to work
+        logger.warning("could not mirror push subscription to the platform database", exc_info=True)
     return {"ok": True}
 
 
 @router.post("/push/unsubscribe")
 async def unsubscribe(body: UnsubscribeIn, me: dict = Depends(get_current_user)):
-    await db.push_subscriptions.delete_many({"endpoint": body.endpoint, "user_id": me["id"]})
+    await _forget(body.endpoint, me["id"])
     return {"ok": True}
 
 
@@ -130,7 +156,7 @@ async def status(me: dict = Depends(get_current_user)):
     """What the server knows about my registered devices and how the last push to each went."""
     devices = [{"host": _host(d["endpoint"]), "added": d.get("created_at"), "last_status": d.get("last_status"),
                 "last_detail": d.get("last_detail"), "last_at": d.get("last_at")}
-               async for d in db.push_subscriptions.find({"user_id": me["id"]})]
+               for d in (await _subs_for([me["id"]])).get(me["id"], [])]
     return {"devices": devices}
 
 
@@ -145,10 +171,9 @@ async def push_test(body: TestIn = TestIn(), me: dict = Depends(get_current_user
     from auth import rate_limit
 
     await rate_limit("push_test", me["id"], 20, 3600, "That's plenty of tests for now. Try again in a little while.")
-    q: Dict[str, Any] = {"user_id": me["id"]}
+    subs = (await _subs_for([me["id"]])).get(me["id"], [])
     if body.endpoint:
-        q["endpoint"] = body.endpoint
-    subs = [d async for d in db.push_subscriptions.find(q)]
+        subs = [d for d in subs if d["endpoint"] == body.endpoint]
     if not subs:
         return {"devices": [], "message": "This device isn't registered for push yet."}
     key = await vapid()
@@ -157,9 +182,9 @@ async def push_test(body: TestIn = TestIn(), me: dict = Depends(get_current_user
     for sub in subs:
         status_code, detail = _unpack(await asyncio.to_thread(_send_one, sub, payload, key))
         if status_code in (404, 410):
-            await db.push_subscriptions.delete_one({"endpoint": sub["endpoint"]})
+            await _forget(sub["endpoint"])
         else:
-            await db.push_subscriptions.update_one({"endpoint": sub["endpoint"]}, {"$set": {"last_status": status_code, "last_detail": detail, "last_at": now_iso()}})
+            await _record(sub["endpoint"], status_code, detail)
         out.append({"host": _host(sub["endpoint"]), "endpoint": sub["endpoint"], "status": status_code, "detail": detail, "ok": 200 <= status_code < 300})
     return {"devices": out}
 
@@ -167,6 +192,46 @@ async def push_test(body: TestIn = TestIn(), me: dict = Depends(get_current_user
 async def ensure_indexes() -> None:
     await db.push_subscriptions.create_index([("endpoint", 1)], unique=True)
     await db.push_subscriptions.create_index([("user_id", 1)])
+    try:
+        await hub_db().push_subscriptions.create_index([("endpoint", 1)], unique=True)
+        await hub_db().push_subscriptions.create_index([("user_id", 1)])
+    except Exception:  # noqa: BLE001
+        logger.warning("could not index platform push subscriptions", exc_info=True)
+
+
+async def _subs_for(user_ids: List[str]) -> Dict[str, List[Dict[str, Any]]]:
+    """Every registered device for these people, from this community AND the platform copy, one row per device."""
+    out: Dict[str, List[Dict[str, Any]]] = {}
+    seen: set = set()
+    for col in (db.push_subscriptions, hub_db().push_subscriptions):
+        try:
+            async for s in col.find({"user_id": {"$in": list(user_ids)}}):
+                if s["endpoint"] in seen:
+                    continue
+                seen.add(s["endpoint"])
+                out.setdefault(s["user_id"], []).append(s)
+        except Exception:  # noqa: BLE001
+            logger.warning("could not read push subscriptions", exc_info=True)
+    return out
+
+
+async def _forget(endpoint: str, user_id: Optional[str] = None) -> None:
+    q: Dict[str, Any] = {"endpoint": endpoint}
+    if user_id:
+        q["user_id"] = user_id
+    for col in (db.push_subscriptions, hub_db().push_subscriptions):
+        try:
+            await col.delete_many(q)
+        except Exception:  # noqa: BLE001
+            logger.warning("could not remove a push subscription", exc_info=True)
+
+
+async def _record(endpoint: str, status: int, detail: str) -> None:
+    for col in (db.push_subscriptions, hub_db().push_subscriptions):
+        try:
+            await col.update_one({"endpoint": endpoint}, {"$set": {"last_status": status, "last_detail": detail, "last_at": now_iso()}})
+        except Exception:  # noqa: BLE001
+            pass
 
 
 # --------------------------------------------------------------------------- sending
@@ -203,9 +268,7 @@ async def _deliver(rows: List[Dict[str, Any]]) -> None:
         async for u in db.users.find({"id": {"$in": ids}}, {"id": 1, "settings": 1}):
             if (((u.get("settings") or {}).get("notifications")) or {}).get("in_app") is False:
                 ids.remove(u["id"])  # they switched notifications off in Settings
-        subs: Dict[str, List[Dict[str, Any]]] = {}
-        async for s in db.push_subscriptions.find({"user_id": {"$in": ids}}):
-            subs.setdefault(s["user_id"], []).append(s)
+        subs = await _subs_for(ids)
         if not subs:
             return
         key = await vapid()
@@ -214,12 +277,14 @@ async def _deliver(rows: List[Dict[str, Any]]) -> None:
         async def one(sub, payload):
             async with limit:
                 status, detail = _unpack(await asyncio.to_thread(_send_one, sub, payload, key))
-            if status in (404, 410):  # the device uninstalled / revoked it
-                await db.push_subscriptions.delete_one({"endpoint": sub["endpoint"]})
+            # 404/410: the device uninstalled / revoked it. A key mismatch means the phone registered against an older
+            # server key and can never receive anything: drop it so the app registers a fresh one next time it opens.
+            if status in (404, 410) or (status in (400, 401, 403) and "VapidPkHashMismatch" in (detail or "")):
+                await _forget(sub["endpoint"])
                 return
             if not 200 <= status < 300:
                 logger.warning("push to a %s device failed: status %s %s", _host(sub["endpoint"]), status, detail)
-            await db.push_subscriptions.update_one({"endpoint": sub["endpoint"]}, {"$set": {"last_status": status, "last_detail": detail, "last_at": now_iso()}})
+            await _record(sub["endpoint"], status, detail)
 
         jobs = []
         for r in rows:
