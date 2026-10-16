@@ -24,8 +24,8 @@ async function start() {
   }
   createRoot(document.getElementById("root")).render(
     <Router>
-      <DemoBanner />
       <AuthProvider>
+        <DemoBanner />
         <App />
       </AuthProvider>
     </Router>

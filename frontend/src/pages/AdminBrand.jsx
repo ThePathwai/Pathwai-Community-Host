@@ -7,6 +7,7 @@ import { FONTS, HEADING_FONTS, applyBrand, brandVars, loadFont } from "../lib/th
 import { DEFAULT_FIELDS, typeLabel } from "../lib/profile";
 import { Button, Card, Chip, Field, Input, PoweredBy, Select, Spinner, StatusBadge, Textarea, Wordmark } from "../components/ui";
 import { PhotoCarouselEditor } from "../components/PhotoCarousel";
+import { HomeWidgetsPanel } from "../components/HomeWidgets";
 
 const COLOR_FIELDS = [["accent", "Accent / buttons"], ["on_accent", "Text on buttons"], ["background", "Page background"], ["surface", "Cards"], ["text", "Text"], ["muted", "Secondary text"], ["border", "Borders"]];
 
@@ -177,6 +178,12 @@ export default function Branding({ embedded = false }) {
           <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">{["founder", "mentor", "alumni", "partner"].map((t) => (
             <Field key={t} label={t === "founder" ? "Members" : t === "mentor" ? "Coaches / mentors" : t === "alumni" ? "Alumni" : "Staff"}>
               <Input value={(d.member_types || {})[t] ?? typeLabel(null, t)} maxLength={24} onChange={(e) => setD({ ...d, member_types: { ...(d.member_types || {}), [t]: e.target.value } })} /></Field>))}</div>
+        </Card>
+
+        <Card className="space-y-3" data-testid="home-widgets-card">
+          <p className="eyebrow">Home screen</p>
+          <p className="text-xs text-muted">Switch each block on or off, separately for your members and for admins. You can also do this from the “Customize home” button on the home page.</p>
+          <HomeWidgetsPanel />
         </Card>
 
         <Card className="space-y-3">

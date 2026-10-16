@@ -25,3 +25,11 @@ export const inDemoTab = () => get() === "1";
 // stand-in server only goes away on a fresh page load).
 export const leaveDemo = (to = "/login") => { set(null); setDemoRole(null); window.location.replace(to); };
 export const exitDemo = () => leaveDemo("/login");
+
+// Practice communities worth walking through, each open from both the member side and the admin side.
+export const DEMO_COMMUNITIES = [
+  { slug: "club-pto", name: "Club PTO", blurb: "A padel club: Skill Lab coaching, sponsors and a member skill exchange." },
+  { slug: "the-village", name: "The Village", blurb: "A private dinner club: guests, long-table dinners and the host's guest list." },
+  { slug: "humber-innovation-network", name: "Humber Innovation Network", blurb: "Founders, investors and mentors, with pitch days." },
+  { slug: "toronto-hyrox-crew", name: "Toronto Hyrox Crew", blurb: "A fitness racing crew: training sessions, race prep and perks." },
+];

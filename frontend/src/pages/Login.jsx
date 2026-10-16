@@ -3,7 +3,7 @@ import { Link, useLocation, useNavigate, useSearchParams } from "react-router-do
 import { toast } from "sonner";
 import { api, errMsg } from "../lib/api";
 import { useAuth } from "../lib/auth";
-import { demoRole, inDemoTab, isDemo, leaveDemo, startDemo } from "../lib/demo";
+import { DEMO_COMMUNITIES, demoRole, inDemoTab, isDemo, leaveDemo, startDemo } from "../lib/demo";
 import { HowItWorks } from "../components/IntroTour";
 import { applyBrand } from "../lib/theme";
 import crowd from "../assets/crowd.jpg";
@@ -145,6 +145,15 @@ export default function Login() {
                 className="block w-full rounded-xl border border-line bg-surface p-4 text-left hover:bg-ink/5">
                 <p className="font-medium">{label}</p><p className="text-xs text-muted">{desc}</p>
               </button>))}
+            <p className="eyebrow pt-3">Or walk through a community, from either side</p>
+            {DEMO_COMMUNITIES.map((c) => (
+              <div key={c.slug} className="rounded-xl border border-line bg-surface p-4" data-testid={`demo-community-${c.slug}`}>
+                <p className="font-medium">{c.name}</p><p className="text-xs text-muted">{c.blurb}</p>
+                <div className="mt-3 flex gap-2">
+                  <button type="button" className="btn-ghost flex-1" data-testid={`demo-${c.slug}-member`} onClick={() => startDemo("member", c.slug)}>As a member</button>
+                  <button type="button" className="btn-ghost flex-1" data-testid={`demo-${c.slug}-admin`} onClick={() => startDemo("admin", c.slug)}>As the admin</button>
+                </div>
+              </div>))}
           </div>
         )}
         <PoweredBy className="mt-10 text-center" />

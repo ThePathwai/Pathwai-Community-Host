@@ -48,6 +48,9 @@ DEFAULT_CONFIG: Dict[str, Any] = {
     ],
     "custom_profile_fields": [],
     "widgets": ["upcoming_events", "support_requests", "smart_matches", "announcements", "resources"],
+    # Home-screen blocks the admin has switched OFF, separately for members and for admins (so new blocks appear by default).
+    # Keys are in HOME_WIDGETS below.
+    "home_hidden": {"member": [], "admin": []},
     "page_text": {},
     "gallery_photos": [],  # portrait (4:5) carousel on the dashboard — each photo placed by the admin (client-side crop) before it's saved
     "dashboard_cover_url": None,  # fallback photo behind the dashboard's "next event" widget when there's no event cover to show; falls back to the logo if unset
@@ -99,7 +102,22 @@ HEX = re.compile(r"^#[0-9a-fA-F]{6}$")
 NAV_KEYS = {"members", "matches", "events", "classes", "learning", "resources", "updates", "requests", "support", "inbox"}
 
 
+# The blocks on a home screen that an admin can switch on or off. `join_requests` only exists on the admin's home.
+HOME_WIDGETS = ("profile", "next_event", "photos", "events", "todo", "connections", "perks", "learning", "news", "new_members", "join_requests")
+
+
 def _validate(clean: Dict[str, Any]) -> None:
+    hh = clean.get("home_hidden")
+    if hh is not None:
+        if not isinstance(hh, dict):
+            raise HTTPException(status_code=400, detail="home_hidden must be an object")
+        out: Dict[str, Any] = {"member": [], "admin": []}
+        for aud in ("member", "admin"):
+            vals = hh.get(aud) or []
+            if not isinstance(vals, list) or any(not isinstance(v, str) or v not in HOME_WIDGETS for v in vals):
+                raise HTTPException(status_code=400, detail="Unknown home-screen block")
+            out[aud] = [w for w in HOME_WIDGETS if w in vals]
+        clean["home_hidden"] = out
     # The "About the brand" card on every community's home page: a story, plus an optional website button.
     if "about" in clean:
         clean["about"] = str(clean["about"] or "").strip()[:1500]
