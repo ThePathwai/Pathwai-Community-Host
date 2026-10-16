@@ -86,8 +86,8 @@ export default function Dashboard() {
       {people.slice(0, 3).map((p, i) => (<span key={p.id || p.user?.id || i} className="block rounded-full" style={{ marginLeft: i > 0 ? -10 : 0, zIndex: 3 - i }}><Avatar src={p.avatar_url || p.user?.avatar_url} name={p.name || p.user?.name} size={24} /></span>))}
     </span>
   );
-  const PeopleTile = ({ to, icon: Icon, label, people, sub }) => (
-    <Link to={to} className="card card-hover !p-3 flex flex-col gap-2.5">
+  const PeopleTile = ({ to, icon: Icon, label, people, sub, className = "" }) => (
+    <Link to={to} className={"card card-hover !p-3 flex flex-col gap-2.5 " + className}>
       <span className="flex items-center justify-between">
         <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-ink/[.06]"><Icon className="h-4 w-4 text-muted" strokeWidth={2.25} aria-hidden /></span>
         {people.length > 0 && <AvatarStack people={people} />}
@@ -98,6 +98,24 @@ export default function Dashboard() {
       </span>
     </Link>
   );
+  // Phone: the small tiles sit two to a row; if one is left over (something was switched off) it takes the whole row.
+  const tileKeys = [on("todo") && "todo", on("perks") && "perks", on("new_members") && "new_members", classesOn && "classes", on("news") && "news"].filter(Boolean);
+  const wide = (k) => (tileKeys.length % 2 === 1 && tileKeys[tileKeys.length - 1] === k ? "col-span-2" : "");
+  // Desktop: blocks flow into rows of 12 columns in their usual order, and each row's blocks are stretched to use the
+  // whole row, so switching one off lets its neighbours grow into the space instead of leaving a gap.
+  const PREFERRED = [["profile", 3], ["next_event", 5], ["photos", 4], ["events", 3], ["todo", 3], ["connections", 3], ["perks", 3], ["learning", 4], ["news", learningOn ? 4 : 8], ["new_members", 4]]
+    .filter(([k]) => (k === "learning" ? learningOn : on(k)));
+  const span = {};
+  { const rows = []; let cur = [], used = 0;
+    for (const it of PREFERRED) { if (used + it[1] > 12 && cur.length) { rows.push(cur); cur = []; used = 0; } cur.push(it); used += it[1]; }
+    if (cur.length) rows.push(cur);
+    for (const row of rows) {
+      const total = row.reduce((a, [, w]) => a + w, 0);
+      const base = row.map(([, w]) => Math.floor((12 * w) / total));
+      let left = 12 - base.reduce((a, b) => a + b, 0);
+      row.forEach(([k], i) => { span[k] = base[i] + (i < left ? 1 : 0); });
+    } }
+  const slot = (k, node) => (span[k] ? <div key={k} data-slot={k} style={{ gridColumn: `span ${span[k]} / span ${span[k]}`, alignSelf: k === "photos" ? "start" : undefined }} className="flex min-w-0 flex-col [&>*]:flex-1">{node}</div> : null);
   return (
     <div className="space-y-3">
       <div className="flex flex-wrap items-start justify-between gap-4">
@@ -198,27 +216,27 @@ export default function Dashboard() {
 )}
 
         {on("todo") && (
-<Tile to="/requests" icon={ListChecks} label="To-do" value={d.open_requests.length || undefined}
+<Tile to="/requests" icon={ListChecks} label="To-do" value={d.open_requests.length || undefined} className={wide("todo")}
           sub={d.pending_profile_requests > 0 ? `${d.pending_profile_requests} profile update requested` : (todo[0]?.title || "You're all caught up")} />
 )}
         {on("perks") && (
-<Tile to="/resources" icon={Gift} label="Perks" value={d.featured_resources.length || undefined}
+<Tile to="/resources" icon={Gift} label="Perks" value={d.featured_resources.length || undefined} className={wide("perks")}
           sub={d.featured_resources[0]?.title || "No perks yet"} />
 )}
         {on("new_members") && (
-<PeopleTile to="/members" icon={UserPlus} label="New members" people={d.new_members || []}
+<PeopleTile to="/members" icon={UserPlus} label="New members" people={d.new_members || []} className={wide("new_members")}
           sub={(d.new_members || []).length ? `${d.new_members.length} joined recently` : "No new members yet"} />
 )}
-        {classesOn && <Tile to="/classes" icon={Dumbbell} label={classesLabel} sub="Book your next one" />}
+        {classesOn && <Tile to="/classes" icon={Dumbbell} label={classesLabel} sub="Book your next one" className={wide("classes")} />}
         {on("news") && (
-<Tile to="/updates" icon={Megaphone} label="News" value={d.announcements.length || undefined} className={classesOn ? "col-span-2" : ""}
+<Tile to="/updates" icon={Megaphone} label="News" value={d.announcements.length || undefined} className={wide("news")}
           sub={d.announcements[0]?.title || "Nothing posted yet"} />
 )}
       </div>
 
       <div className="hidden lg:grid lg:grid-cols-12 lg:gap-4 [&>*]:min-w-0" style={{ gridAutoFlow: "dense" }}>
-        {on("profile") && (
-<Widget title="Your profile" to={`/members/${user.id}`} cta="View" quiet className="lg:col-span-3" data-testid="dash-hero">
+        {slot("profile", (
+<Widget title="Your profile" to={`/members/${user.id}`} cta="View" quiet className="" data-testid="dash-hero">
           <div className="flex items-center gap-4">
             <Avatar src={user.avatar_url} name={user.name} size={96} />
             <div className="min-w-0">
@@ -229,10 +247,10 @@ export default function Dashboard() {
           </div>
           <ProfileNudge pc={pc} className="mt-3 lg:mt-4" />
         </Widget>
-)}
+))}
 
-        {on("next_event") && (
-<div className="card relative flex min-h-[220px] flex-col justify-end overflow-hidden !p-0 lg:col-span-5" data-testid="dash-next">
+        {slot("next_event", (
+<div className="card relative flex min-h-[220px] flex-col justify-end overflow-hidden !p-0" data-testid="dash-next">
           {next?.cover_url ? (
             <img src={next.cover_url} alt="" className="absolute inset-0 h-full w-full object-cover" />
           ) : config?.dashboard_cover_url ? (
@@ -252,10 +270,10 @@ export default function Dashboard() {
             <Link to={next ? `/events/${next.id}` : "/events"} className="mt-4 inline-flex rounded-lg bg-white px-4 py-2 text-sm font-semibold text-black">{next ? "View details" : "Browse events"}</Link>
           </div>
         </div>
-)}
+))}
 
-        {on("photos") && (
-<Widget title="Photos" className="lg:col-span-4 lg:self-start" data-testid="dash-gallery">
+        {slot("photos", (
+<Widget title="Photos" className="" data-testid="dash-gallery">
           {(config?.gallery_photos || []).length > 0 ? (
             <PhotoCarousel photos={config.gallery_photos} className="aspect-[4/3] w-full" />
           ) : user.role === "admin" ? (
@@ -277,12 +295,12 @@ export default function Dashboard() {
             </div>
           )}
         </Widget>
-)}
+))}
 
-        {on("events") && <UpcomingEvents events={events} total={d.stats.events} className="lg:col-span-3" />}
+        {slot("events", <UpcomingEvents events={events} total={d.stats.events} />)}
 
-        {on("todo") && (
-<Widget title={`To-do${d.open_requests.length ? ` · ${d.open_requests.length}` : ""}`} to="/requests" icon={ListChecks} className="lg:col-span-3">
+        {slot("todo", (
+<Widget title={`To-do${d.open_requests.length ? ` · ${d.open_requests.length}` : ""}`} to="/requests" icon={ListChecks} className="">
           {todo.length === 0 && d.pending_profile_requests === 0 ? <p className="text-sm text-muted">You're all caught up.</p> : (
             <ul className="space-y-1.5">
               {todo.map((r) => (
@@ -290,20 +308,20 @@ export default function Dashboard() {
               {d.pending_profile_requests > 0 && <li><Link to="/profile" className="flex items-center justify-between rounded-xl bg-amber-400/10 px-3 py-2 text-sm hover:bg-amber-400/[.15]">The {teamOf(config)} asked for {d.pending_profile_requests} profile update<span className="text-xs underline">Review</span></Link></li>}
             </ul>)}
         </Widget>
-)}
+))}
 
-        {on("connections") && (
-<Widget title="Recommended connections" to="/matches" icon={Users} className="lg:col-span-3">
+        {slot("connections", (
+<Widget title="Recommended connections" to="/matches" icon={Users} className="">
           {d.recommended_people.length === 0 ? <p className="text-sm text-muted">Complete your profile to get better recommendations.</p> : (
             <ul className={ROW}>
               {d.recommended_people.slice(0, 4).map((m) => (
                 <li key={m.user.id} className={CARD}><Link to={`/members/${m.user.id}`} data-testid="dash-match" className="flex items-start gap-3 rounded-xl border border-line px-3 py-2.5 hover:border-ink/20 hover:bg-ink/5"><Avatar src={m.user.avatar_url} name={m.user.name} size={48} /><span className="min-w-0 flex-1"><span className="block truncate text-sm font-medium lg:text-[15px]">{m.user.name}</span><span className="block truncate text-xs text-muted">{m.user.title}</span><WhyLine m={m} lines={2} className="mt-1 text-xs text-ink/80" /></span></Link></li>))}
             </ul>)}
         </Widget>
-)}
+))}
 
-        {on("perks") && (
-<Widget title="Community perks" to="/resources" icon={Gift} className="lg:col-span-3">
+        {slot("perks", (
+<Widget title="Community perks" to="/resources" icon={Gift} className="">
           <ul className={ROW}>
             {d.featured_resources.slice(0, 4).map((r) => (
               <li key={r.id} className={CARD}><a href={r.external_url || r.url} target="_blank" rel="noreferrer" onClick={() => trackOpen(r.id)} className="flex items-center gap-3 rounded-xl border border-line px-3 py-2 hover:border-ink/20 hover:bg-ink/5">
@@ -311,32 +329,32 @@ export default function Dashboard() {
                 <span className="min-w-0"><span className="block truncate text-sm font-medium lg:text-[15px]">{r.title}</span><span className="block truncate text-xs text-muted">{r.shared_by ? `Shared by ${r.shared_by.name}` : r.category}</span></span></a></li>))}
           </ul>
         </Widget>
-)}
+))}
 
 
-        {learningOn && (
-          <Widget title={learningLabel} to="/learning" icon={GraduationCap} className="lg:col-span-4" data-testid="dash-learning">
+        {slot("learning", (
+          <Widget title={learningLabel} to="/learning" icon={GraduationCap} data-testid="dash-learning">
             <LearningList data={learning} limit={3} />
-          </Widget>)}
+          </Widget>))}
 
-        {on("news") && (
-<Widget title="Community news" to="/updates" icon={Megaphone} className={learningOn ? "lg:col-span-4" : "lg:col-span-8"}>
-          <div className={"-mx-0.5 flex snap-x snap-mandatory gap-3 overflow-x-auto px-0.5 pb-1 sm:mx-0 sm:grid sm:overflow-visible sm:px-0 sm:pb-0 " + (learningOn ? "sm:grid-cols-1" : "sm:grid-cols-3")}>
+        {slot("news", (
+<Widget title="Community news" to="/updates" icon={Megaphone}>
+          <div className={"-mx-0.5 flex snap-x snap-mandatory gap-3 overflow-x-auto px-0.5 pb-1 sm:mx-0 sm:grid sm:overflow-visible sm:px-0 sm:pb-0 " + (span.news >= 8 ? "sm:grid-cols-3" : "sm:grid-cols-1")}>
             {d.announcements.slice(0, 3).map((a) => (
               <Link key={a.id} to="/updates" className="w-64 shrink-0 snap-start rounded-xl border border-line bg-ink/5 p-3 hover:border-ink/20 hover:bg-ink/10 sm:w-auto sm:shrink"><p className="line-clamp-1 text-sm font-medium lg:text-[15px]">{a.title}</p><p className="mt-1 line-clamp-2 text-xs text-muted">{a.body}</p><p className="mt-2 text-[11px] text-muted">{timeAgo(a.published_at)}</p></Link>))}
           </div>
         </Widget>
-)}
+))}
 
-        {on("new_members") && (
-<Widget title="New members" to="/members" icon={UserPlus} className="lg:col-span-4" data-testid="dash-new-members">
+        {slot("new_members", (
+<Widget title="New members" to="/members" icon={UserPlus} className="" data-testid="dash-new-members">
           {(d.new_members || []).length === 0 ? <p className="text-sm text-muted">No new members yet.</p> : (
             <ul className={ROW}>
               {d.new_members.map((m) => (
                 <li key={m.id} className={CARD}><Link to={`/members/${m.id}`} className="flex items-center gap-3 rounded-xl border border-line px-3 py-2 hover:border-ink/20 hover:bg-ink/5"><Avatar src={m.avatar_url} name={m.name} size={40} /><span className="min-w-0 flex-1"><span className="block truncate text-sm font-medium">{m.name}</span><span className="block truncate text-xs text-muted">{m.title}</span></span><span className="text-[11px] text-muted">Joined {timeAgo(m.joined_at)}</span></Link></li>))}
             </ul>)}
         </Widget>
-)}
+))}
       </div>
     </div>
   );
