@@ -1,0 +1,19 @@
+{
+  "name": "pathwai-mobile",
+  "private": true,
+  "version": "1.0.0",
+  "description": "iOS (TestFlight) wrapper around the live Pathwai site. Not part of the Railway build.",
+  "scripts": {
+    "icons": "npx capacitor-assets generate --ios",
+    "sync": "npx cap sync ios",
+    "open": "npx cap open ios"
+  },
+  "dependencies": {
+    "@capacitor/cli": "^6.2.0",
+    "@capacitor/core": "^6.2.0",
+    "@capacitor/ios": "^6.2.0"
+  },
+  "devDependencies": {
+    "@capacitor/assets": "^3.0.5"
+  }
+}

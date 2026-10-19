@@ -1,0 +1,13 @@
+{
+  "appId": "com.pathwai.app",
+  "appName": "Pathwai",
+  "webDir": "www",
+  "backgroundColor": "#0A0A0A",
+  "server": {
+    "url": "https://pathwai-production-17f6.up.railway.app",
+    "cleartext": false
+  },
+  "ios": {
+    "contentInset": "automatic"
+  }
+}

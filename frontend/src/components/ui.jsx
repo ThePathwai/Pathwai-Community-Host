@@ -374,6 +374,8 @@ export const PoweredBy = ({ className = "" }) => (
     <span aria-hidden>·</span>
     <Link to="/about" className="underline-offset-2 hover:underline" data-testid="footer-about">About</Link>
     <span aria-hidden>·</span>
+    <Link to="/install" className="underline-offset-2 hover:underline" data-testid="footer-install">Get the app</Link>
+    <span aria-hidden>·</span>
     <Link to="/terms" className="underline-offset-2 hover:underline" data-testid="footer-terms">Terms</Link>
     <span aria-hidden>·</span>
     <Link to="/privacy" className="underline-offset-2 hover:underline" data-testid="footer-privacy">Privacy</Link>

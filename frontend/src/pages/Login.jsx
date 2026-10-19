@@ -86,7 +86,8 @@ export default function Login() {
 
   return (
     <div className="grid min-h-screen lg:grid-cols-2">
-      <div className="pointer-events-none fixed inset-x-0 top-0 z-30 flex justify-end px-4 py-4 lg:px-8">
+      <div className="pointer-events-none fixed inset-x-0 top-0 z-30 flex justify-end gap-2 px-4 py-4 lg:px-8">
+        <Link to="/install" className="btn-ghost pointer-events-auto border border-line bg-paper/70 backdrop-blur" data-testid="login-install">Get the app</Link>
         <Link to="/about" className="btn-ghost pointer-events-auto border border-line bg-paper/70 backdrop-blur" data-testid="login-about">About Pathwai <span aria-hidden>→</span></Link>
       </div>
       <div className="relative hidden overflow-hidden lg:block" style={{ background: "#08080B" }}>
