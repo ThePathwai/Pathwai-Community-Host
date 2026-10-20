@@ -6,8 +6,10 @@ import fixtures from "./fixtures.json";
 import { buildYvetta, YVETTA_SLUG } from "./yvetta";
 import { buildHyrox, HYROX_SLUG } from "./hyrox";
 import { buildClubPto, CLUBPTO_SLUG } from "./clubpto";
+import { buildC3Film, C3_SLUG } from "./c3film";
 import { buildHumber, HUMBER_SLUG, humberLearning, humberLearningFor } from "./humber";
 import { classesHandler, newClassesState } from "./classes";
+import { teamsHandler } from "./teams";
 
 const S = { role: null, email: null, community: null, books: {}, extra: {} };
 const book = () => { const k = S.community || "playr"; return (S.books[k] = S.books[k] || JSON.parse(JSON.stringify(fixtures.communities[k]))); };
@@ -16,11 +18,10 @@ const slugOf = () => S.community || "playr";
 Object.defineProperty(S, "data", { get() { const b = book(); const v = (S.email && b.logins[S.email]) || {}; return { public: b.public, member: v, admin: v }; } });
 const ACCOUNTS = { "demo@yourcommunity.app": { name: "Fife Ashley-Dejo", role: "member" }, "admin@yourcommunity.app": { name: "Fife Ashley-Dejo", role: "admin" }, "host@thevillage.example": { name: "Camille Laurent", role: "host" } };
 // A role is per-community, not global: admin@ is the actual admin of playr/the-village/club-pto/unity
-// but just a plain member of grace (grace's real admin is a separate persona, pastor@c3.example, same
-// as the real backend's seed_communities.py); demo@ is a plain member everywhere except Toronto Tech
+// and of grace (the C3 Film Team demo, see c3film.js); demo@ is a plain member everywhere except Toronto Tech
 // Collective, where it's the founding admin — the "vice versa" half. See ADMIN_OF below.
 const BASE = { "demo@yourcommunity.app": { playr: "approved", grace: "approved", "the-village": "approved", "club-pto": "approved", "toronto-tech-collective": "approved", unity: "approved", [YVETTA_SLUG]: "approved", [HYROX_SLUG]: "approved", [HUMBER_SLUG]: "approved" }, "admin@yourcommunity.app": { playr: "approved", grace: "approved", "the-village": "approved", "club-pto": "approved", unity: "approved", [YVETTA_SLUG]: "approved", [HYROX_SLUG]: "approved", [HUMBER_SLUG]: "approved" }, "host@thevillage.example": { "the-village": "approved" } };
-const ADMIN_OF = { "admin@yourcommunity.app": ["playr", "the-village", "club-pto", "unity", YVETTA_SLUG, HYROX_SLUG, HUMBER_SLUG], "demo@yourcommunity.app": ["toronto-tech-collective"], "host@thevillage.example": ["the-village"] };
+const ADMIN_OF = { "admin@yourcommunity.app": ["playr", "grace", "the-village", "club-pto", "unity", YVETTA_SLUG, HYROX_SLUG, HUMBER_SLUG], "demo@yourcommunity.app": ["toronto-tech-collective"], "host@thevillage.example": ["the-village"] };
 const memStatus = (email, slug) => (S.extra.join || {})[email + "|" + slug] || (BASE[email] || {})[slug] || "none";
 const isAdminHere = () => (ADMIN_OF[S.email] || []).includes(slugOf());
 const appsHere = () => ((S.extra.apps || {})[slugOf()] || []);
@@ -81,7 +82,7 @@ const DEFAULT_CONFIG = {
     { key: "members", label: "Members", enabled: true }, { key: "matches", label: "Connections", enabled: true },
     { key: "events", label: "Events", enabled: true }, { key: "resources", label: "Perks", enabled: true },
     { key: "updates", label: "News", enabled: true }, { key: "requests", label: "To-do", enabled: true },
-    { key: "support", label: "Help board", enabled: true }, { key: "classes", label: "Classes", enabled: false },
+    { key: "support", label: "Help board", enabled: true }, { key: "classes", label: "Classes", enabled: false }, { key: "teams", label: "Teams", enabled: false },
   ],
   custom_links: [], setup_completed: true,
 };
@@ -109,7 +110,10 @@ function blank(v) {
   const hm = buildHumber(fixtures, deps); fixtures.communities[HUMBER_SLUG] = hm.book; fixtures.hub.splice(3, 0, hm.hub);
   // Club PTO is rebuilt from its public Skill Lab summary: sponsors, a member skill exchange and both demo sides (see clubpto.js).
   const pt = buildClubPto(fixtures, deps); fixtures.communities[CLUBPTO_SLUG] = pt.book;
-  const ptAt = fixtures.hub.findIndex((c) => c.slug === CLUBPTO_SLUG); if (ptAt >= 0) fixtures.hub[ptAt] = pt.hub; else fixtures.hub.splice(4, 0, pt.hub); }
+  const ptAt = fixtures.hub.findIndex((c) => c.slug === CLUBPTO_SLUG); if (ptAt >= 0) fixtures.hub[ptAt] = pt.hub; else fixtures.hub.splice(4, 0, pt.hub);
+  // C3 becomes the C3 Film Team (the church's creative team), with project teams. Built last: the builders above read the recorded C3 as their template.
+  const c3 = buildC3Film(fixtures, deps); fixtures.communities[C3_SLUG] = c3.book;
+  const c3At = fixtures.hub.findIndex((c) => c.slug === C3_SLUG); if (c3At >= 0) fixtures.hub[c3At] = c3.hub; else fixtures.hub.splice(1, 0, c3.hub); }
 
 // Unity Fitness was recorded with a copy of The Playr League's settings (name, colours, font, logo, text), so opening it
 // from the hub looked like the wrong community. Where a community's settings don't match its own hub card, rebuild them from
@@ -512,6 +516,16 @@ function classesCall(method, path, body, params, config) {
   return r.status >= 400 ? fail(config, r.status, r.data?.detail || "Something went wrong") : ok(config, r.data, r.status);
 }
 
+// The in-browser Teams backend (see teams.js): one list per community, shared by every demo login.
+function teamsCall(method, path, body, config) {
+  if (!S.role || !S.community) return fail(config, 401, "Not authenticated");
+  const bk = book(); bk.shared = bk.shared || {}; bk.shared.teams = bk.shared.teams || { items: [] };
+  const m = (view()["/auth/me"]) || {};
+  const r = teamsHandler({ method, path, body, store: bk.shared.teams, me: { id: m.id || S.email, role: m.role }, users: view()["/users"] || [] });
+  if (!r) return ok(config, { ok: true });
+  return r.status >= 400 ? fail(config, r.status, r.data?.detail || "Something went wrong") : ok(config, r.data, r.status);
+}
+
 // Mirrors routes/matches.py (explain / compute_people): who could help whom, and what two people share.
 const lset = (...ls) => new Set(ls.flat().filter((x) => typeof x === "string" && x.trim()).map((x) => x.trim().toLowerCase()));
 const needsOf = (u) => lset(u.support_needs || [], u.needs_seeking || [], u.growing_in || [], u.goals || []);
@@ -549,6 +563,7 @@ function computePeople(limit = 8) {
 
 function get(path, p, config) {
   if (path.startsWith("/classes")) return classesCall("get", path, {}, p, config);
+  if (path.startsWith("/teams")) return teamsCall("get", path, {}, config);
   if (path === "/admin/blasts/history") {
     let blasts = S.extra.blasts || [];
     if (p.audience_type) blasts = blasts.filter((b) => b.audience?.type === p.audience_type);
@@ -947,6 +962,7 @@ function get(path, p, config) {
 
 function write(method, path, body, config) {
   if (path.startsWith("/classes")) return classesCall(method, path, body, config.params || {}, config);
+  if (path.startsWith("/teams")) return teamsCall(method, path, body, config);
   if (path === "/auth/login") {
     const acct = ACCOUNTS[body.email] ? { ...ACCOUNTS[body.email], pw: "Demo123!" } : (S.extra.accounts || {})[body.email];
     if (!acct) return fail(config, 401, "Invalid email or password");

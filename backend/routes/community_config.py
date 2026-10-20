@@ -70,6 +70,7 @@ DEFAULT_CONFIG: Dict[str, Any] = {
         {"key": "support", "label": "Help board", "enabled": True},
         {"key": "inbox", "label": "Messages", "enabled": True},
         {"key": "classes", "label": "Classes", "enabled": False},  # bookable class schedule (gyms, studios): switched on per community
+        {"key": "teams", "label": "Teams", "enabled": False},  # small project teams members start themselves: switched on per community
         {"key": "learning", "label": "Learning", "enabled": False},  # programs members are in elsewhere (e.g. Disco), mirrored here: switched on per community
     ],
     "custom_links": [],
@@ -99,7 +100,7 @@ THEME_PRESETS = [
 HEADING_FONTS = ["Plus Jakarta Sans", "Playfair Display", "Lora", "Inter", "Montserrat", "Anton", "Bebas Neue", "Oswald", "Archivo Black", "Instrument Serif"]
 FONTS = ["Plus Jakarta Sans", "Inter", "Space Grotesk", "DM Sans", "Manrope", "Poppins", "Montserrat", "Work Sans", "IBM Plex Sans", "Playfair Display", "Lora", "Jost"]
 HEX = re.compile(r"^#[0-9a-fA-F]{6}$")
-NAV_KEYS = {"members", "matches", "events", "classes", "learning", "resources", "updates", "requests", "support", "inbox"}
+NAV_KEYS = {"members", "matches", "events", "classes", "learning", "teams", "resources", "updates", "requests", "support", "inbox"}
 
 
 # The blocks on a home screen that an admin can switch on or off. `join_requests` only exists on the admin's home.

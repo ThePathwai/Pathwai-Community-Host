@@ -110,6 +110,7 @@ api_router = APIRouter(prefix="/api")
 from routes.matches import router as matches_router  # noqa: E402
 from routes.events import router as events_router  # noqa: E402
 from routes.classes import router as classes_router  # noqa: E402
+from routes.teams import router as teams_router, ensure_indexes as ensure_team_indexes  # noqa: E402
 from routes.learning import router as learning_router  # noqa: E402
 from routes.resources import router as resources_router  # noqa: E402
 from routes.feeds import router as feeds_router  # noqa: E402
@@ -198,6 +199,7 @@ async def ensure_seeded():
 
 async def _playr_startup_tail() -> None:
     await ensure_support_indexes()
+    await ensure_team_indexes()
     await ensure_notification_indexes()
     await ensure_push_indexes()
     await _sync_admin_company_with_community(db)
@@ -214,6 +216,7 @@ async def _index_community(slug: str) -> None:
         await ensure_indexes(db)
         await ensure_message_indexes()
         await ensure_support_indexes()
+        await ensure_team_indexes()
         await ensure_notification_indexes()
         await ensure_push_indexes()
         await db.audit_log.create_index([("created_at", -1)])
@@ -299,6 +302,7 @@ async def on_startup():
     await ensure_program_extras(db)
     # Spec v2 — Community Value Exchange: Support Requests module.
     await ensure_support_indexes()
+    await ensure_team_indexes()
     await ensure_support_requests_seed(db)
     # In-app notifications (value-match pings, future channels).
     await ensure_notification_indexes()
@@ -1630,6 +1634,7 @@ async def update_user(user_id: str, body: UserUpdate, request: Request, me: dict
 # Mount all per-domain routers under /api
 api_router.include_router(events_router)
 api_router.include_router(classes_router)
+api_router.include_router(teams_router)
 api_router.include_router(learning_router)
 api_router.include_router(resources_router)
 api_router.include_router(announcements_router)

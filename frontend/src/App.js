@@ -40,6 +40,8 @@ import Hub from "./pages/Hub";
 import Legal from "./pages/Legal";
 import About from "./pages/About";
 import Install from "./pages/Install";
+import Teams from "./pages/Teams";
+import TeamDetail from "./pages/TeamDetail";
 
 function Protected({ children, admin }) {
   const { user, account, loading } = useAuth();
@@ -79,6 +81,8 @@ export default function App() {
         <Route path="/events/:id" element={<P><EventDetail /></P>} />
         <Route path="/classes" element={<P><Classes /></P>} />
         <Route path="/learning" element={<P><Learning /></P>} />
+        <Route path="/teams" element={<P><Teams /></P>} />
+        <Route path="/teams/:id" element={<P><TeamDetail /></P>} />
         <Route path="/matches" element={<P><Matches /></P>} />
         <Route path="/updates" element={<P><Updates /></P>} />
         <Route path="/support" element={<P><Support /></P>} />

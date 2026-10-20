@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import { Link, NavLink, useLocation, useNavigate } from "react-router-dom";
-import { Bell, Bookmark, Calendar, CheckSquare, ChevronDown, Dumbbell, GraduationCap, Gift, Info, Home as HomeIcon, Layers, LifeBuoy, LogOut, Megaphone, MessageSquare, Moon, Settings, Sparkles, Sun, User, UserPlus, Users } from "lucide-react";
+import { Bell, Bookmark, Calendar, CheckSquare, ChevronDown, Dumbbell, GraduationCap, Gift, Info, Home as HomeIcon, Layers, LifeBuoy, LogOut, Megaphone, MessageSquare, Moon, Settings, Sparkles, Sun, User, UserPlus, Users, UsersRound } from "lucide-react";
 import { applyBrand, effectiveMode, setModePref } from "../lib/theme";
 import { AI_CHAT_ENABLED } from "../lib/features";
 import { useAuth } from "../lib/auth";
@@ -11,11 +11,11 @@ import AlertsPrompt from "./AlertsPrompt";
 import { Avatar, BackButton, PoweredBy, Wordmark, cx } from "./ui";
 import { BrandDrawer, EditBar, Inline, useEdit } from "./EditKit";
 
-const ROUTES = { members: "/members", matches: "/matches", events: "/events", classes: "/classes", learning: "/learning", resources: "/resources", updates: "/updates", requests: "/requests", support: "/support", inbox: "/inbox" };
-const DEFAULT_LABELS = { members: "Members", matches: "Connections", events: "Events", classes: "Classes", learning: "Learning", resources: "Perks", updates: "News", requests: "To-do", support: "Help board", inbox: "Messages" };
+const ROUTES = { members: "/members", matches: "/matches", events: "/events", classes: "/classes", learning: "/learning", teams: "/teams", resources: "/resources", updates: "/updates", requests: "/requests", support: "/support", inbox: "/inbox" };
+const DEFAULT_LABELS = { members: "Members", matches: "Connections", events: "Events", classes: "Classes", learning: "Learning", teams: "Teams", resources: "Perks", updates: "News", requests: "To-do", support: "Help board", inbox: "Messages" };
 // Icon-forward tab bar (mirrors Instagram / Strava / ClassPass-style bottom nav) — each primary
 // section gets a fixed glyph so the bar reads at a glance instead of by label text alone.
-const TAB_ICONS = { "/": HomeIcon, members: Users, matches: UserPlus, events: Calendar, classes: Dumbbell, learning: GraduationCap, resources: Gift, updates: Megaphone, requests: CheckSquare, support: LifeBuoy, inbox: MessageSquare };
+const TAB_ICONS = { "/": HomeIcon, members: Users, matches: UserPlus, events: Calendar, classes: Dumbbell, learning: GraduationCap, teams: UsersRound, resources: Gift, updates: Megaphone, requests: CheckSquare, support: LifeBuoy, inbox: MessageSquare };
 
 export default function Layout({ children }) {
   const { user, config, logout } = useAuth();

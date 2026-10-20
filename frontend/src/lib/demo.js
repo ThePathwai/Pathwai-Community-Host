@@ -28,6 +28,7 @@ export const exitDemo = () => leaveDemo("/login");
 
 // Practice communities worth walking through, each open from both the member side and the admin side.
 export const DEMO_COMMUNITIES = [
+  { slug: "grace", name: "C3 Film Team", blurb: "A church's creative team: skills, shoots, onboarding and project teams anyone can start." },
   { slug: "club-pto", name: "Club PTO", blurb: "A padel club: Skill Lab coaching, sponsors and a member skill exchange." },
   { slug: "the-village", name: "The Village", blurb: "A private dinner club: guests, long-table dinners and the host's guest list." },
   { slug: "humber-innovation-network", name: "Humber Innovation Network", blurb: "Founders, investors and mentors, with pitch days." },
