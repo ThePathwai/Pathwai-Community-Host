@@ -104,7 +104,7 @@ NAV_KEYS = {"members", "matches", "events", "classes", "learning", "teams", "res
 
 
 # The blocks on a home screen that an admin can switch on or off. `join_requests` only exists on the admin's home.
-HOME_WIDGETS = ("profile", "next_event", "photos", "events", "todo", "connections", "perks", "learning", "news", "new_members", "join_requests")
+HOME_WIDGETS = ("profile", "next_event", "photos", "events", "todo", "connections", "perks", "learning", "news", "new_members", "join_requests", "impact", "quiet")
 
 
 def _validate(clean: Dict[str, Any]) -> None:

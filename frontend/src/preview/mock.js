@@ -1,6 +1,7 @@
 // Preview-only API layer: answers /api/* from responses recorded off the real backend.
 // Loaded only when REACT_APP_PREVIEW=true (see lib/api.js). Not part of the normal build.
 import { AUDIT_SAMPLES } from "./auditSample";
+import { impactHandler } from "./impact";
 import axios from "axios";
 import fixtures from "./fixtures.json";
 import { buildYvetta, YVETTA_SLUG } from "./yvetta";
@@ -516,6 +517,21 @@ function classesCall(method, path, body, params, config) {
   return r.status >= 400 ? fail(config, r.status, r.data?.detail || "Something went wrong") : ok(config, r.data, r.status);
 }
 
+// The in-browser Impact / reports / going-quiet backend (see impact.js): sample numbers made from this community's own lists.
+function impactCall(method, path, body, config) {
+  const publicRead = path.startsWith("/public/report/");
+  if (!publicRead && (!S.role || !S.community)) return fail(config, 401, "Not authenticated");
+  if (!publicRead && !isAdminHere()) return fail(config, 403, "Insufficient permissions");
+  const slug = S.community || "demo";
+  const bk = S.community ? book() : { shared: {} }; bk.shared = bk.shared || {};
+  const store = (bk.shared.impact = bk.shared.impact || { shares: [], nudged: {} });
+  const v = S.role ? view() : {};
+  const r = impactHandler({ method, path, body, params: config.params || {}, store, users: v["/users"] || [], events: v["/events"] || [], resources: v["/resources"] || [], community: slug,
+    communityName: ((S.community && (S.data.public || {})["/community/config"]) || {}).community_name || "Your community" });
+  if (!r) return ok(config, { ok: true });
+  return r.status >= 400 ? fail(config, r.status, r.data?.detail || "Something went wrong") : ok(config, r.data, r.status);
+}
+
 // The in-browser Teams backend (see teams.js): one list per community, shared by every demo login.
 function teamsCall(method, path, body, config) {
   if (!S.role || !S.community) return fail(config, 401, "Not authenticated");
@@ -564,6 +580,7 @@ function computePeople(limit = 8) {
 function get(path, p, config) {
   if (path.startsWith("/classes")) return classesCall("get", path, {}, p, config);
   if (path.startsWith("/teams")) return teamsCall("get", path, {}, config);
+  if (/^\/(admin\/(impact|report-types|reports\/|report-shares|quiet)|public\/report\/)/.test(path)) return impactCall("get", path, {}, config);
   if (path === "/admin/blasts/history") {
     let blasts = S.extra.blasts || [];
     if (p.audience_type) blasts = blasts.filter((b) => b.audience?.type === p.audience_type);
@@ -963,6 +980,7 @@ function get(path, p, config) {
 function write(method, path, body, config) {
   if (path.startsWith("/classes")) return classesCall(method, path, body, config.params || {}, config);
   if (path.startsWith("/teams")) return teamsCall(method, path, body, config);
+  if (/^\/admin\/(report-shares|quiet)/.test(path)) return impactCall(method, path, body, config);
   if (path === "/auth/login") {
     const acct = ACCOUNTS[body.email] ? { ...ACCOUNTS[body.email], pw: "Demo123!" } : (S.extra.accounts || {})[body.email];
     if (!acct) return fail(config, 401, "Invalid email or password");

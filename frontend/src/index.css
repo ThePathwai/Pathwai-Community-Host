@@ -121,3 +121,13 @@ a, button, [role="button"], select, .input {
 }
 /* Scrolling lists inside the app never hand the swipe to the page behind them once they hit their end. */
 html { -webkit-text-size-adjust: 100%; }
+
+
+/* Print / save as PDF of a report (the practice copy has no server to build a PDF). */
+@media print {
+  body * { visibility: hidden; }
+  .print-area, .print-area * { visibility: visible; }
+  .print-area { position: absolute; left: 0; top: 0; width: 100%; background: #fff; color: #111; border: 0; box-shadow: none; }
+  .no-print { display: none !important; }
+  * { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+}

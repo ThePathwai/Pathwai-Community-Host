@@ -111,6 +111,7 @@ from routes.matches import router as matches_router  # noqa: E402
 from routes.events import router as events_router  # noqa: E402
 from routes.classes import router as classes_router  # noqa: E402
 from routes.teams import router as teams_router, ensure_indexes as ensure_team_indexes  # noqa: E402
+from routes.impact import router as impact_router  # noqa: E402
 from routes.learning import router as learning_router  # noqa: E402
 from routes.resources import router as resources_router  # noqa: E402
 from routes.feeds import router as feeds_router  # noqa: E402
@@ -1635,6 +1636,7 @@ async def update_user(user_id: str, body: UserUpdate, request: Request, me: dict
 api_router.include_router(events_router)
 api_router.include_router(classes_router)
 api_router.include_router(teams_router)
+api_router.include_router(impact_router)
 api_router.include_router(learning_router)
 api_router.include_router(resources_router)
 api_router.include_router(announcements_router)

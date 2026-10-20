@@ -100,7 +100,7 @@ function Table({ columns, rows }) {
   );
 }
 
-function Chart({ ch }) {
+export function Chart({ ch }) {
   const items = ch.items || [];
   const empty = ch.type === "table" ? !(ch.rows || []).length : !items.length || (ch.type !== "pairs" && items.every((i) => !i.value));
   return (

@@ -227,6 +227,9 @@ async def rsvp(event_id: str, body: RsvpIn = RsvpIn(), me: dict = Depends(get_cu
     else:
         rsvps[me["id"]] = status
     await db.events.update_one({"id": event_id}, {"$set": {"attendee_ids": ids, "rsvps": rsvps}})
+    # RSVP history (who answered what, and when) lives in its own collection: it feeds the impact reports and the
+    # "going quiet" list, and keeps the answer times out of the event data every member can load.
+    await db.rsvp_log.insert_one({"event_id": event_id, "user_id": me["id"], "status": status, "at": datetime.now(timezone.utc).isoformat()})
     await audit(me["id"], "event.rsvp", "event", event_id, {"status": status})
     return {"ok": True, "is_attending": status == "yes", "my_rsvp": status, "attendee_count": len(ids), "event_id": event_id}
 

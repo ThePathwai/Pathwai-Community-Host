@@ -1,10 +1,14 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { ArrowRight, Check, Minus, Plus, X } from "lucide-react";
 import { Wordmark, PoweredBy, cx } from "../components/ui";
+import ReportView from "../components/ReportView";
+import { startAdminDemo } from "../lib/demo";
+import { REPORT_TYPES, buildReport, sampleMetrics } from "../lib/sampleReport";
 
-// /about -- public (no login). A click-down explainer: what Pathwai is, who it's for, how it works,
-// who the alternatives are and where Pathwai is different. Plain data below so copy edits are one-liners.
+// /about -- public (no login). Written for the person who runs a community, because they are the buyer:
+// three promises, a sample report you can read right here, then who it's for, how it works and how it compares.
+// Plain data below so copy edits are one-liners.
 
 const AUDIENCES = [
   ["Accelerators & incubators", "Cohorts need founders to find the right peer, mentor or customer fast. Pathwai introduces them and explains why."],
@@ -13,10 +17,20 @@ const AUDIENCES = [
   ["Programs & learning cohorts", "Pair it with the learning tool you already use. Pathwai handles the people side: who is in your cohort and who to meet."],
 ];
 
+const PROMISES = [
+  ["Members stay", "Every introduction comes with a reason, so people meet the right person instead of scrolling. Welcome them properly, say goodbye properly, and see who is drifting while there is still time to act.",
+    "Introductions with a reason · onboarding and off-boarding · a going-quiet list with a one-tap nudge"],
+  ["Everything about your community, in one place", "Members, events and RSVPs, perks, news, applications, messages and project teams, all in your own branded space. It replaces the spreadsheet, the group chat, the event page and the mailing list.",
+    "One directory · events and turnout · perks · news · applications · teams"],
+  ["Proof in one click", "Sponsors, funders and your board ask the same questions: who is in it, who is active, who showed up, what did it do. Pathwai counts the answers from your own records and hands you a report. Share a PDF, or a live link that stays current.",
+    "Sponsor, funder and board reports · PDF or read-only live link · every number counted, never estimated"],
+];
+
 const STEPS = [
-  ["Members build a pitch-style profile", "Who they are, what they offer and what they are asking for. Not a bio nobody reads."],
-  ["Pathwai suggests who to meet, and why", "Every match comes with a plain-language reason, so a cold intro becomes a warm one."],
-  ["Organizers run it from one place", "Approve members, post events and news, add perks and message the community, all inside their own branded space."],
+  ["Set up your community in an afternoon", "Your name, colours and logo. Import your members or invite them. Decide who gets in and what they see."],
+  ["Members build a profile and get introduced", "Who they are, what they offer and what they are asking for. Pathwai suggests who to meet and says why, so a cold intro becomes a warm one."],
+  ["You run it from one place, and see what is working", "Approve members, post events and news, add perks and message the community. The Impact view shows who is active, who is drifting and what turned out."],
+  ["Send the proof when someone asks", "Pick sponsor, funder or board, choose the period, and download the PDF or share a live link. No spreadsheet-wrangling the night before."],
 ];
 
 const COMPETITORS = [
@@ -59,6 +73,7 @@ const COMPETITORS = [
 const MATRIX = {
   cols: ["Pathwai", "Circle", "Mighty", "Skool", "Hivebrite", "Chat apps"],
   rows: [
+    ["Impact reports for sponsors and funders, shareable as a live link", "Y", "P", "P", "N", "P", "N"],
     ["Matches members and explains why", "Y", "N", "P", "N", "P", "N"],
     ["Pitch cards, offers and asks", "Y", "N", "N", "N", "N", "N"],
     ["Own look and feel per community", "Y", "Y", "P", "N", "Y", "N"],
@@ -71,6 +86,7 @@ const MATRIX = {
 };
 
 const EDGES = [
+  ["Proof is built in", "Reports for sponsors, funders and boards come from the same records you already run the community on. Nothing to export, merge or chase."],
   ["Introductions, not just posts", "Most platforms give you a place to talk. Pathwai tells members who to talk to, and why."],
   ["Built for networks, not audiences", "Applications, approvals, gated directories and organizer tools come first, not course checkout."],
   ["Every community looks like itself", "Each community gets its own colours, logo, naming and navigation. Members keep one Pathwai login."],
@@ -114,20 +130,23 @@ function Row({ id, n, title, summary, lede, open, onToggle, children }) {
   );
 }
 
-const NAV = [["what", "What it is"], ["who", "Who it's for"], ["how", "How it works"], ["market", "Competitors"], ["diff", "Why us"]];
-const ALL = NAV.map(([k]) => k);
+const NAV = [["promises", "Why Pathwai"], ["sample", "Sample report"], ["who", "Who it's for"], ["how", "How it works"], ["market", "Competitors"], ["diff", "Compare"]];
+const OPEN_ROWS = ["who", "how", "market", "diff"]; // the rest of NAV are plain sections that are always showing
+const ALL = OPEN_ROWS;
 
 export default function About() {
-  const [open, setOpen] = useState(["what"]);
+  const [kind, setKind] = useState("sponsor");
+  const [open, setOpen] = useState([]);
   useEffect(() => {
-    document.title = "About Pathwai";
+    document.title = "Pathwai: keep your members, prove your impact";
     const h = window.location.hash.replace("#", "");
-    if (ALL.includes(h)) { setOpen([h]); setTimeout(() => document.getElementById(h)?.scrollIntoView({ behavior: "smooth" }), 80); }
+    if (NAV.some(([k]) => k === h)) { if (ALL.includes(h)) setOpen([h]); setTimeout(() => document.getElementById(h)?.scrollIntoView({ behavior: "smooth" }), 80); }
     else window.scrollTo(0, 0);
   }, []);
   const toggle = (k) => setOpen((o) => (o.includes(k) ? o.filter((x) => x !== k) : [...o, k]));
-  const jump = (k) => { setOpen((o) => (o.includes(k) ? o : [...o, k])); setTimeout(() => document.getElementById(k)?.scrollIntoView({ behavior: "smooth" }), 60); };
+  const jump = (k) => { if (ALL.includes(k)) setOpen((o) => (o.includes(k) ? o : [...o, k])); setTimeout(() => document.getElementById(k)?.scrollIntoView({ behavior: "smooth" }), 60); };
   const allOpen = open.length === ALL.length;
+  const sample = useMemo(() => buildReport(kind, sampleMetrics({ members: 64, seed: "pathwai-sample", days: 90 }), "Northside Founders Club"), [kind]);
   const R = (k) => ({ open: open.includes(k), onToggle: () => toggle(k) });
 
   return (
@@ -135,26 +154,70 @@ export default function About() {
       <header className="glass sticky top-0 z-30 border-b border-line/60">
         <div className="mx-auto flex max-w-6xl items-center justify-between gap-4 px-4 py-3 lg:px-8">
           <Link to="/" className="text-2xl"><Wordmark name="Pathwai" brand={{}} /></Link>
-          <nav className="hidden items-center gap-6 text-sm md:flex" aria-label="About sections">
+          <nav className="hidden items-center gap-6 whitespace-nowrap text-sm lg:flex" aria-label="About sections">
             {NAV.map(([k, label]) => <button key={k} type="button" onClick={() => jump(k)} className="text-muted hover:text-ink" data-testid={`about-nav-${k}`}>{label}</button>)}
           </nav>
           <div className="flex items-center gap-2">
-            <Link to="/login" className="btn-ghost hidden sm:inline-flex" data-testid="about-signin">Sign in</Link>
-            <Link to="/signup" className="btn-primary" data-testid="about-signup-top">Get started</Link>
+            <Link to="/login" className="btn-ghost hidden whitespace-nowrap sm:inline-flex" data-testid="about-signin">Sign in</Link>
+            <button type="button" onClick={() => startAdminDemo()} className="btn-primary whitespace-nowrap" data-testid="about-demo-top">Try the demo</button>
           </div>
         </div>
       </header>
 
       <main className="mx-auto max-w-6xl px-4 lg:px-8">
-        <div className="py-10 sm:py-14">
-          <p className="eyebrow">About Pathwai</p>
-          <h1 className="mt-4 max-w-4xl text-4xl sm:text-5xl lg:text-6xl" style={{ textWrap: "balance" }}>Built for networks where the point is who you meet.</h1>
-          <p className="mt-6 max-w-xl text-base text-muted sm:text-lg">Not what you post. Pathwai gives accelerators, alumni groups and member organizations a branded home, and helps members find the right people inside it.</p>
-          <div className="mt-8 flex flex-wrap gap-3">
-            <Link to="/signup" className="btn-primary" data-testid="about-signup">Get started</Link>
-            <Link to="/hub" className="btn-ghost border border-line" data-testid="about-hub">Browse communities</Link>
+        <div className="py-10 sm:py-16">
+          <p className="eyebrow">For the people who run communities</p>
+          <h1 className="mt-4 max-w-4xl text-4xl sm:text-5xl lg:text-6xl" style={{ textWrap: "balance" }}>Keep your members. Prove your impact.</h1>
+          <p className="mt-6 max-w-2xl text-base text-muted sm:text-lg">Pathwai is the home for your accelerator, alumni group, club or congregation: members, events, perks and introductions in one place, and a report your sponsors, funders and board will trust, one click away.</p>
+          <div className="mt-8 flex flex-wrap items-center gap-3">
+            <button type="button" onClick={() => startAdminDemo()} className="btn-primary" data-testid="about-demo">Try the admin demo</button>
+            <Link to="/signup" className="btn-ghost border border-line" data-testid="about-signup">Get started</Link>
+            <Link to="/hub" className="btn-ghost" data-testid="about-hub">Browse communities</Link>
           </div>
+          <p className="mt-3 text-xs text-muted">The demo is a practice copy with sample data. Nothing in it touches a real community.</p>
         </div>
+
+        <section id="promises" className="scroll-mt-24 border-t border-line py-10 sm:py-14" data-testid="about-promises">
+          <p className="eyebrow">Three promises</p>
+          <div className="mt-6 grid gap-px overflow-hidden rounded-xl border border-line bg-line md:grid-cols-3">
+            {PROMISES.map(([t, d, how], i) => (
+              <div key={t} className="flex flex-col bg-surface p-6" data-testid={`about-promise-${i + 1}`}>
+                <span className="stat text-sm text-muted">{String(i + 1).padStart(2, "0")}</span>
+                <h2 className="mt-3 text-xl sm:text-2xl" style={{ textWrap: "balance" }}>{t}</h2>
+                <p className="mt-3 text-sm leading-relaxed text-muted">{d}</p>
+                <p className="mt-auto pt-5 text-xs text-ink/70">{how}</p>
+              </div>
+            ))}
+          </div>
+        </section>
+
+        <section id="sample" className="scroll-mt-24 border-t border-line py-10 sm:py-14" data-testid="about-sample">
+          <div className="flex flex-wrap items-end justify-between gap-4">
+            <div className="max-w-xl">
+              <p className="eyebrow">A sample report</p>
+              <h2 className="mt-3 text-3xl sm:text-4xl" style={{ textWrap: "balance" }}>This is what your sponsor opens.</h2>
+              <p className="mt-3 text-sm text-muted sm:text-base">One click from the admin home. Pick who it is for, and Pathwai builds it from your own records. Everything below is made-up sample data.</p>
+            </div>
+            <div className="inline-flex rounded-full border border-line p-0.5 text-sm" role="tablist" aria-label="Report type">
+              {REPORT_TYPES.map((t) => (
+                <button key={t.kind} type="button" role="tab" aria-selected={kind === t.kind} onClick={() => setKind(t.kind)} data-testid={`about-sample-${t.kind}`}
+                  className={cx("rounded-full px-4 py-1.5 transition-colors", kind === t.kind ? "bg-ink text-paper" : "text-muted hover:text-ink")}>{t.title.replace(" report", "")}</button>
+              ))}
+            </div>
+          </div>
+          <div className="mt-8 rounded-2xl border border-line bg-surface p-5 sm:p-8">
+            <div className="mb-6 border-b border-line pb-5">
+              <p className="eyebrow">{sample.audience}</p>
+              <h3 className="mt-2 text-2xl sm:text-3xl" style={{ textWrap: "balance" }}>Northside Founders Club: {sample.headline}</h3>
+              <p className="mt-2 flex flex-wrap items-center gap-2 text-xs text-muted">{sample.period_label} <span className="chip" data-testid="about-sample-chip">Sample data</span></p>
+            </div>
+            <ReportView report={sample} />
+          </div>
+          <div className="mt-5 flex flex-wrap items-center gap-3">
+            <button type="button" onClick={() => startAdminDemo()} className="btn-primary" data-testid="about-sample-demo">Open it in the admin demo</button>
+            <p className="text-xs text-muted">Download it as a PDF, or share a read-only live link that always shows current numbers (totals only, never names).</p>
+          </div>
+        </section>
 
         <div className="mb-3 flex items-center justify-between">
           <p className="eyebrow">Explore</p>
@@ -163,21 +226,7 @@ export default function About() {
         </div>
 
         <div className="border-b border-line">
-          <Row id="what" n={1} title="What it is" summary="A branded home for your network, with smart introductions built in."
-            lede="A white-label platform for running a member community. Each community keeps its own members, events and look. Members keep one login." {...R("what")}>
-            <div className="grid gap-px overflow-hidden rounded-xl border border-line bg-line sm:grid-cols-3">
-              {[["Directory", "Searchable profiles with pitch cards, offers and asks."],
-                ["Matching", "Suggested introductions, each with a reason."],
-                ["Operations", "Events, news, perks, approvals and messages in one admin."]].map(([t, d]) => (
-                <div key={t} className="bg-surface p-5">
-                  <p className="font-display text-lg">{t}</p>
-                  <p className="mt-2 text-sm leading-relaxed text-muted">{d}</p>
-                </div>
-              ))}
-            </div>
-          </Row>
-
-          <Row id="who" n={2} title="Who it's for" summary="Gated networks of founders, professionals and members."
+          <Row id="who" n={1} title="Who it's for" summary="Gated networks of founders, professionals and members."
             lede="Networks that need members to find each other, not just find content. Less suited if your main goal is selling courses or growing a large public audience." {...R("who")}>
             <div className="grid gap-px overflow-hidden rounded-xl border border-line bg-line sm:grid-cols-2">
               {AUDIENCES.map(([t, d]) => (
@@ -189,8 +238,8 @@ export default function About() {
             </div>
           </Row>
 
-          <Row id="how" n={3} title="How it works" summary="Profile, match, run. Three steps."
-            lede="Members do a few minutes of setup. After that, introductions and community operations mostly run themselves." {...R("how")}>
+          <Row id="how" n={2} title="How it works" summary="Set up, introduce, run, report. Four steps."
+            lede="You set it up once. After that, introductions run themselves and the proof builds as the community does." {...R("how")}>
             <ol className="divide-y divide-line border-y border-line">
               {STEPS.map(([t, d], i) => (
                 <li key={t} className="flex gap-5 py-5">
@@ -201,7 +250,7 @@ export default function About() {
             </ol>
           </Row>
 
-          <Row id="market" n={4} title="Competitors" summary="Community platforms, association software, learning tools and free chat apps."
+          <Row id="market" n={3} title="Competitors" summary="Community platforms, association software, learning tools and free chat apps."
             lede="Plenty of good tools exist. Here is who we get compared to, and how each one differs. Costs are relative, from $ to $$$$." {...R("market")}>
             <div className="space-y-8">
               {COMPETITORS.map((g) => (
@@ -225,7 +274,7 @@ export default function About() {
             <p className="mt-5 text-xs text-muted">{PRICE_NOTE}</p>
           </Row>
 
-          <Row id="diff" n={5} title="Why Pathwai" summary="Introductions first, built for networks, branded per community."
+          <Row id="diff" n={4} title="Why Pathwai" summary="Proof built in, introductions first, branded per community."
             lede="We are not trying to be the biggest platform. We are trying to be the best one for networks that run on relationships." {...R("diff")}>
             <ul className="divide-y divide-line border-y border-line">
               {EDGES.map(([t, d]) => (
@@ -259,10 +308,10 @@ export default function About() {
         </div>
 
         <div className="py-16 text-center sm:py-24">
-          <h2 className="mx-auto max-w-2xl text-3xl sm:text-5xl" style={{ textWrap: "balance" }}>See it with your network.</h2>
+          <h2 className="mx-auto max-w-2xl text-3xl sm:text-5xl" style={{ textWrap: "balance" }}>See it the way you would run it.</h2>
           <div className="mt-8 flex flex-wrap justify-center gap-3">
-            <Link to="/signup" className="btn-primary" data-testid="about-cta">Get started</Link>
-            <Link to="/login" className="btn-ghost border border-line">Sign in</Link>
+            <button type="button" onClick={() => startAdminDemo()} className="btn-primary" data-testid="about-cta">Try the admin demo</button>
+            <Link to="/signup" className="btn-ghost border border-line">Get started</Link>
           </div>
         </div>
         <PoweredBy className="pb-10 text-center" />

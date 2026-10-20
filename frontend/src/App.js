@@ -42,6 +42,8 @@ import About from "./pages/About";
 import Install from "./pages/Install";
 import Teams from "./pages/Teams";
 import TeamDetail from "./pages/TeamDetail";
+import Reports from "./pages/Reports";
+import PublicReport from "./pages/PublicReport";
 
 function Protected({ children, admin }) {
   const { user, account, loading } = useAuth();
@@ -67,6 +69,7 @@ export default function App() {
         <Route path="/forgot-password" element={<ForgotPassword />} />
         <Route path="/about" element={<About />} />
         <Route path="/install" element={<Install />} />
+        <Route path="/r/:slug/:token" element={<PublicReport />} />
         <Route path="/terms" element={<Legal doc="terms" />} />
         <Route path="/privacy" element={<Legal doc="privacy" />} />
         <Route path="/reset-password" element={<ResetPassword />} />
@@ -106,6 +109,7 @@ export default function App() {
             pattern as /messages -> /inbox above) in case anyone has the old path bookmarked. */}
         <Route path="/copilot" element={<Navigate to="/ask" replace />} />
         <Route path="/admin" element={<P admin><Admin /></P>} />
+        <Route path="/reports" element={<P admin><Reports /></P>} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes></EditProvider>
     </>

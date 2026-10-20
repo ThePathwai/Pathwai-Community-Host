@@ -186,6 +186,11 @@ async def get_current_user(request: Request) -> dict:
     user = await _user_from_request(request)
     if not user:
         raise HTTPException(status_code=401, detail="Not authenticated")
+    try:
+        from activity import touch  # last-seen, throttled; see activity.py
+        await touch(user)
+    except Exception:  # noqa: BLE001
+        pass
     return user
 
 

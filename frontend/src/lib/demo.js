@@ -26,6 +26,9 @@ export const inDemoTab = () => get() === "1";
 export const leaveDemo = (to = "/login") => { set(null); setDemoRole(null); window.location.replace(to); };
 export const exitDemo = () => leaveDemo("/login");
 
+// The practice community the "admin demo" buttons open straight into: sponsors, funders and mentors make the Impact view and the reports easy to picture.
+export const startAdminDemo = () => startDemo("admin", "humber-innovation-network");
+
 // Practice communities worth walking through, each open from both the member side and the admin side.
 export const DEMO_COMMUNITIES = [
   { slug: "grace", name: "C3 Film Team", blurb: "A church's creative team: skills, shoots, onboarding and project teams anyone can start." },

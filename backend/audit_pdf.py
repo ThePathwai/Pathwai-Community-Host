@@ -297,7 +297,8 @@ def _chart(ch: Dict[str, Any], width: float):
     return None
 
 
-def build_pdf(report: Dict[str, Any], config: Dict[str, Any], ai_text: Optional[str] = None, only_kind: Optional[str] = None) -> bytes:
+def build_pdf(report: Dict[str, Any], config: Dict[str, Any], ai_text: Optional[str] = None, only_kind: Optional[str] = None, label: Optional[str] = None) -> bytes:
+    """`label` swaps the "Community audit" wording for another document name (the sponsor/funder/board reports reuse this)."""
     brand = _brand(config)
     community = _t(report.get("community") or "Community")
     try:
@@ -311,12 +312,12 @@ def build_pdf(report: Dict[str, Any], config: Dict[str, Any], ai_text: Optional[
         canv.saveState()
         canv.setFont("Helvetica", 7.5)
         canv.setFillColor(MUTED)
-        canv.drawString(MARGIN, 0.45 * inch, _t(f"{community}  |  Community audit  |  {gen}"))
+        canv.drawString(MARGIN, 0.45 * inch, _t(f"{community}  |  {label or 'Community audit'}  |  {gen}"))
         canv.drawRightString(W - MARGIN, 0.45 * inch, f"Pathwai  |  Page {doc.page}")
         canv.restoreState()
 
     doc = BaseDocTemplate(buf, pagesize=letter, leftMargin=MARGIN, rightMargin=MARGIN, topMargin=0.7 * inch, bottomMargin=0.8 * inch,
-                          title=_t(f"{community} community audit"), author="Pathwai")
+                          title=_t(f"{community} {(label or 'community audit').lower()}"), author="Pathwai")
     doc.addPageTemplates([PageTemplate(id="p", frames=[Frame(MARGIN, 0.8 * inch, CONTENT_W, H - 1.5 * inch, id="f", leftPadding=0, rightPadding=0, topPadding=0, bottomPadding=0)], onPage=on_page)])
     st: List[Any] = []
 
@@ -331,22 +332,22 @@ def build_pdf(report: Dict[str, Any], config: Dict[str, Any], ai_text: Optional[
             c.roundRect(0, 0, CONTENT_W, 92, 8, fill=1, stroke=0)
             c.setFillColor(colors.white)
             c.setFont("Helvetica-Bold", 8)
-            c.drawString(18, 70, "COMMUNITY AUDIT REPORT" if not only_kind else "COMMUNITY AUDIT")
+            c.drawString(18, 70, (label or ("COMMUNITY AUDIT REPORT" if not only_kind else "COMMUNITY AUDIT")).upper())
             c.setFont("Helvetica-Bold", 24)
             c.drawString(18, 40, community[:42])
             c.setFont("Helvetica", 9.5)
-            c.drawString(18, 20, f"Generated {gen}")
+            c.drawString(18, 20, f"Generated {gen}" + (f"  |  {report['period_label']}" if report.get("period_label") else ""))
 
     st += [_Band(), Spacer(1, 16)]
     if not only_kind:
         st += [_Tiles([{"label": h["label"], "value": h["value"]} for h in report["headline"]], CONTENT_W, brand), Spacer(1, 18)]
-        st.append(Paragraph("Key takeaways", S_H3))
+        st.append(Paragraph("Key takeaways" if not label else "At a glance", S_H3))
         for s in sections:
             if s["insights"]:
                 st.append(Paragraph(f"<b>{escape(_t(s['title']))}.</b> {escape(_t(s['insights'][0]))}", S_BUL, bulletText="•"))
         if ai_text:
             st += [Spacer(1, 10), Paragraph("Summary", S_H3), Paragraph(escape(_t(ai_text)), S_BODY)]
-        st += [Spacer(1, 12), Paragraph("Every figure in this report is counted from your community's own data at the time it was generated. Nothing is estimated.", S_MUTED)]
+        st += [Spacer(1, 12), Paragraph("Every figure in this report is counted from the community's own records at the time it was generated. Nothing is estimated.", S_MUTED)]
         st.append(PageBreak())
 
     # --- one page-ish per audit ---

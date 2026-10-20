@@ -46,7 +46,7 @@ function Overview() {
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
           <h2 className="text-xl font-semibold">Audits</h2>
-          <p className="mt-1 text-sm text-muted">Live numbers from your community. Run one to see it here, or download everything as a PDF report with charts.</p>
+          <p className="mt-1 text-sm text-muted">Live numbers from your community. Run one to see it here, or download everything as a PDF report with charts. Need something for a sponsor, funder or your board? <Link to="/reports" className="underline" data-testid="audits-to-reports">Open Reports</Link>.</p>
         </div>
         <Button onClick={() => download("all")} loading={pdf === "all"} data-testid="audit-pdf-all"><Download className="h-4 w-4" />Download full report (PDF)</Button>
       </div>

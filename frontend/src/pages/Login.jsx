@@ -3,12 +3,18 @@ import { Link, useLocation, useNavigate, useSearchParams } from "react-router-do
 import { toast } from "sonner";
 import { api, errMsg } from "../lib/api";
 import { useAuth } from "../lib/auth";
-import { DEMO_COMMUNITIES, demoRole, inDemoTab, isDemo, leaveDemo, startDemo } from "../lib/demo";
+import { sampleMetrics } from "../lib/sampleReport";
+import { DEMO_COMMUNITIES, demoRole, inDemoTab, isDemo, leaveDemo, startAdminDemo, startDemo } from "../lib/demo";
 import { HowItWorks } from "../components/IntroTour";
 import { applyBrand } from "../lib/theme";
 import crowd from "../assets/crowd.jpg";
 import { Button, Card, Field, Input, MembershipStatusCard, PoweredBy, Wordmark } from "../components/ui";
 import SocialAuthButtons from "../components/SocialAuthButtons";
+
+// Four sample figures for the demo entry (the same sample the About page and the admin demo use).
+const SAMPLE_TILES = (() => { const m = sampleMetrics({ members: 64, seed: "pathwai-sample" }); return [
+  { label: "Members active", value: `${m.active_pct}%` }, { label: "Introductions made", value: m.intros_made },
+  { label: "Event turnout", value: `${m.turnout_pct}%` }, { label: "Perk opens", value: m.perk_opens }]; })();
 
 export default function Login() {
   const { login, applySession, refresh, enter } = useAuth();
@@ -139,13 +145,23 @@ export default function Login() {
         {!inDemo && (
           <div className="mt-6 space-y-2" data-testid="demo-links">
             <p className="eyebrow">Try the demo</p>
-            <p className="text-xs text-muted">A practice copy with made-up members and events. Nothing you do there is saved or touches the real community.</p>
-            {[["member", "Member demo", "Explore the community as a member: profiles, events, perks and recommended connections."],
-              ["admin", "Admin demo", "Sign in as the admin: edit the site, change the colours and logo, and manage members."]].map(([k, label, desc]) => (
-              <button key={k} type="button" data-testid={`demo-link-${k}`} onClick={() => startDemo(k)}
-                className="block w-full rounded-xl border border-line bg-surface p-4 text-left hover:bg-ink/5">
-                <p className="font-medium">{label}</p><p className="text-xs text-muted">{desc}</p>
-              </button>))}
+            <h2 className="text-xl" style={{ textWrap: "balance" }}>Keep your members. Prove your impact.</h2>
+            <p className="text-xs text-muted">A practice copy with made-up members and events. Nothing you do there is saved or touches a real community.</p>
+            <div className="rounded-xl border border-ink/40 bg-surface p-4" data-testid="demo-admin-card">
+              <p className="font-medium">See it as the person running a community</p>
+              <p className="mt-1 text-xs text-muted">Opens on the Impact view: active members, introductions made, event turnout and perk results, plus who is going quiet and a sponsor report you can open.</p>
+              <div className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-4" data-testid="demo-sample-tiles" aria-label="Sample figures">
+                {SAMPLE_TILES.map((t) => (
+                  <div key={t.label} className="rounded-lg bg-ink/[.05] p-2.5"><p className="stat text-lg leading-none">{t.value}</p><p className="mt-1 text-[11px] leading-tight text-muted">{t.label}</p></div>
+                ))}
+              </div>
+              <p className="mt-1.5 text-[11px] text-muted">Sample data. <Link to="/about#sample" className="underline" data-testid="demo-see-report">See a full sample report</Link></p>
+              <button type="button" data-testid="demo-link-admin" onClick={() => startAdminDemo()} className="btn-primary mt-3 w-full">Open the admin demo</button>
+            </div>
+            <button type="button" data-testid="demo-link-member" onClick={() => startDemo("member")}
+              className="block w-full rounded-xl border border-line bg-surface p-4 text-left hover:bg-ink/5">
+              <p className="font-medium">Or see what your members see</p><p className="text-xs text-muted">Profiles, events, perks and recommended connections, each with a reason.</p>
+            </button>
             <p className="eyebrow pt-3">Or walk through a community, from either side</p>
             {DEMO_COMMUNITIES.map((c) => (
               <div key={c.slug} className="rounded-xl border border-line bg-surface p-4" data-testid={`demo-community-${c.slug}`}>

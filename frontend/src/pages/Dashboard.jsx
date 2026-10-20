@@ -17,6 +17,7 @@ import { Dumbbell, GraduationCap, Gift, ImagePlus, ListChecks, Megaphone, UserCh
 import { teamOf } from "../lib/names";
 import { LearningList, useMyLearning } from "../components/Learning";
 import { CustomizeHome, hiddenFor } from "../components/HomeWidgets";
+import { ImpactPanel, QuietCard } from "../components/ImpactPanel";
 
 // Below `lg` these become horizontally swipeable card rows instead of full vertical lists —
 // everything stays on one continuous scroll (nothing hidden behind a tab), it just takes a
@@ -133,6 +134,10 @@ export default function Dashboard() {
           {AI_CHAT_ENABLED && <Link to="/ask" className="btn-ghost">Ask anything</Link>}
         </div>
       </div>
+
+      {/* The admin's own proof of value comes first: the numbers a sponsor, funder or board asks for, then who is drifting. */}
+      {user.role === "admin" && on("impact") && <ImpactPanel />}
+      {user.role === "admin" && on("quiet") && <QuietCard />}
 
       {/* Just a heads-up on the home page — approving/declining happens in Admin, not inline here,
           so this is a single notification-style row rather than a list of actionable requests. */}
