@@ -12,8 +12,8 @@ async function pdfError(e) {
   try { const t = await e?.response?.data?.text?.(); const j = t && JSON.parse(t); if (j?.detail) return j.detail; } catch { /* fall through */ }
   return errMsg(e, "The PDF could not be created. Please try again.");
 }
-export async function downloadReportPdf(kind, days) {
-  const r = await api.get(`/admin/reports/${kind}.pdf`, { params: { days }, responseType: "blob" });
+export async function downloadReportPdf(kind, days, include = "") {
+  const r = await api.get(`/admin/reports/${kind}.pdf`, { params: { days, include }, responseType: "blob" });
   const name = (/filename="?([^";]+)"?/.exec(r.headers?.["content-disposition"] || "") || [])[1] || `${kind}-report.pdf`;
   const url = URL.createObjectURL(r.data);
   const a = document.createElement("a");

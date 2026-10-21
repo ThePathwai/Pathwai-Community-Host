@@ -279,3 +279,48 @@ def quiet_list(d: Dict[str, Any], days: int = ACTIVE_DAYS) -> List[Dict[str, Any
                     "nudged_recently": bool(ln and ln > now - timedelta(days=NUDGE_COOLDOWN_DAYS))})
     out.sort(key=lambda r: (r["nudged_recently"], -r["days_quiet"]))
     return out
+
+
+# ---------- Instagram section (only when the admin has connected Instagram and ticked it) ----------
+def _n(v: Any) -> str:
+    return f"{v:,}" if isinstance(v, (int, float)) else "n/a"
+
+
+def instagram_section(snap: Dict[str, Any], hist: List[Dict[str, Any]]) -> Dict[str, Any]:
+    a, t, aud = snap["account"], snap.get("totals") or {}, snap.get("audience") or {}
+    reach, eng = t.get("reach"), t.get("accounts_engaged")
+    charts: List[Dict[str, Any]] = []
+    pts = [h for h in hist if h.get("followers") is not None]
+    if len(pts) >= 2:
+        charts.append({"type": "columns", "title": "Followers over time", "items": [{"label": datetime.fromisoformat(h["day"]).strftime("%b %-d"), "value": h["followers"]} for h in pts[-8:]]})
+    if aud.get("country"):
+        charts.append({"type": "hbar", "title": "Where the audience is", "items": aud["country"]})
+    if aud.get("city"):
+        charts.append({"type": "hbar", "title": "Top cities", "items": aud["city"]})
+    if aud.get("age"):
+        charts.append({"type": "hbar", "title": "Audience by age", "items": aud["age"]})
+    if aud.get("gender"):
+        charts.append({"type": "donut", "title": "Audience by gender", "items": aud["gender"]})
+    if snap.get("top_posts"):
+        charts.append({"type": "table", "title": "Best recent posts", "columns": ["Post", "Type", "Reach", "Likes"],
+                       "rows": [[p.get("caption") or "(no caption)", p.get("kind"), _n(p.get("reach")), _n(p.get("likes"))] for p in snap["top_posts"]]})
+    insights = []
+    if reach is not None and a["followers"]:
+        insights.append(f"Content reached {reach:,} accounts in the last 30 days, {reach / a['followers']:.1f} times the follower count.")
+    if reach and eng is not None:
+        insights.append(f"{eng:,} accounts engaged with it ({_pct(eng, reach)}% of those reached).")
+    if snap.get("audience_note"):
+        insights.append(snap["audience_note"])
+    return {"kind": "instagram", "title": "Instagram reach", "subtitle": f"@{a.get('username')}. Last 30 days. Reach counts accounts, not followers, and includes people who don't follow.",
+            "tiles": [_tile("Followers", _n(a["followers"]), "", True), _tile("Accounts reached", _n(reach), "last 30 days"), _tile("Views", _n(t.get("views")), "last 30 days"),
+                      _tile("Accounts engaged", _n(eng)), _tile("Profile link taps", _n(t.get("profile_links_taps")))],
+            "charts": charts, "insights": insights}
+
+
+def add_instagram(report: Dict[str, Any], snap: Optional[Dict[str, Any]], hist: List[Dict[str, Any]]) -> Dict[str, Any]:
+    if not snap:
+        return report
+    sec = instagram_section(snap, hist)
+    secs = list(report["sections"])
+    secs.insert(1 if report["type"] == "sponsor" else len(secs), sec)  # a sponsor sees reach straight after the headline numbers
+    return {**report, "sections": secs, "sample": bool(report.get("sample") or snap.get("sample"))}

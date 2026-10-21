@@ -1,3 +1,4 @@
+import Attendance from "../components/Attendance";
 import { ItemTools } from "../components/EditKit";
 import { useAuth } from "../lib/auth";
 import React, { useCallback, useEffect, useState } from "react";
@@ -116,6 +117,7 @@ export default function EventDetail() {
               </div>
             </SectionCard>)}
           {e.related_resources?.length > 0 && <SectionCard title="Related resources"><ul className="space-y-2 text-sm">{e.related_resources.map((r) => <li key={r.id}><a className="underline" href={r.url} target="_blank" rel="noreferrer">{r.title}</a></li>)}</ul></SectionCard>}
+          {user?.role === "admin" && <Attendance eventId={id} />}
           <SectionCard title="Who's going">{e.attendees.length === 0 ? <p className="text-sm text-muted">Be the first to RSVP.</p> : <div className="space-y-2">{e.attendees.slice(0, 8).map((a) => <Link key={a.id} to={`/members/${a.id}`} className="flex items-center gap-2 text-sm hover:underline"><Avatar src={a.avatar_url} name={a.name} size={28} />{a.name}</Link>)}</div>}</SectionCard>
         </div>
       </div>

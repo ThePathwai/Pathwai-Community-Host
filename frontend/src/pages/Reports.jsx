@@ -1,7 +1,7 @@
 import React, { useCallback, useEffect, useState } from "react";
-import { Link, useSearchParams } from "react-router-dom";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { toast } from "sonner";
-import { Check, Copy, Download, ExternalLink, Link2, Printer, Trash2 } from "lucide-react";
+import { Check, Copy, Download, ExternalLink, Instagram, Link2, Printer, RefreshCw, Trash2 } from "lucide-react";
 import { api, errMsg, timeAgo } from "../lib/api";
 import { useAuth } from "../lib/auth";
 import { isDemo } from "../lib/demo";
@@ -21,8 +21,11 @@ export const shareUrl = (slug, token) => `${window.location.origin}/r/${slug || 
 export default function Reports() {
   const { config } = useAuth();
   const [sp, setSp] = useSearchParams();
+  const nav = useNavigate();
   const kind = TYPES.some(([k]) => k === sp.get("type")) ? sp.get("type") : "sponsor";
   const days = PERIODS.some(([n]) => n === Number(sp.get("days"))) ? Number(sp.get("days")) : 90;
+  const igOn = sp.get("ig") === "1";
+  const [ig, setIg] = useState(null);
   const [rep, setRep] = useState(null);
   const [shares, setShares] = useState([]);
   const [label, setLabel] = useState("");
@@ -31,21 +34,32 @@ export default function Reports() {
   const demo = isDemo();
   const set = (patch) => { const n = new URLSearchParams(sp); Object.entries(patch).forEach(([k, v]) => n.set(k, v)); setSp(n, { replace: true }); };
 
-  useEffect(() => { setRep(null); api.get(`/admin/reports/${kind}`, { params: { days } }).then((r) => setRep(r.data)).catch((e) => toast.error(errMsg(e))); }, [kind, days]);
+  const include = igOn && ig?.has_data ? "instagram" : "";
+  useEffect(() => { if (ig === null) return; setRep(null); api.get(`/admin/reports/${kind}`, { params: { days, include } }).then((r) => setRep(r.data)).catch((e) => toast.error(errMsg(e))); }, [kind, days, include, ig === null]); // eslint-disable-line
+  const loadIg = useCallback(() => api.get("/admin/instagram").then((r) => setIg(r.data)).catch(() => setIg({ connected: false })), []);
+  useEffect(() => { loadIg(); }, [loadIg]);
+  const refreshIg = async (quiet) => {
+    setBusy("ig");
+    try { await api.post("/admin/integrations/instagram/sync"); await loadIg(); if (!quiet) toast.success("Instagram numbers updated"); }
+    catch (e) { if (!quiet) toast.error(errMsg(e)); } finally { setBusy(""); }
+  };
+  // Instagram numbers older than half a day are renewed quietly when the page opens (a live connection only).
+  useEffect(() => { if (ig?.connected && !ig.sample && ig.fetched_at && Date.now() - new Date(ig.fetched_at).getTime() > 12 * 3600e3) refreshIg(true); }, [ig?.connected]); // eslint-disable-line
+  const goConnectIg = () => { try { sessionStorage.setItem("pathwai.admintab", "integrations"); } catch { /* ignore */ } nav("/admin"); };
   const loadShares = useCallback(() => api.get("/admin/report-shares").then((r) => setShares(r.data.shares || [])).catch(() => {}), []);
   useEffect(() => { loadShares(); }, [loadShares]);
 
   const pdf = async () => {
     if (demo) { window.print(); return; }
     setBusy("pdf");
-    try { await downloadReportPdf(kind, days); toast.success("PDF downloaded"); }
+    try { await downloadReportPdf(kind, days, include); toast.success("PDF downloaded"); }
     catch (e) { let m; try { const t = await e?.response?.data?.text?.(); m = JSON.parse(t).detail; } catch { /* ignore */ } toast.error(m || errMsg(e, "The PDF could not be created.")); }
     finally { setBusy(""); }
   };
   const create = async () => {
     setBusy("share");
     try {
-      const { data } = await api.post("/admin/report-shares", { kind, days, label });
+      const { data } = await api.post("/admin/report-shares", { kind, days, label, include: include ? [include] : [] });
       setLabel(""); await loadShares();
       copy(data);
       toast.success("Live link created and copied");
@@ -74,6 +88,31 @@ export default function Reports() {
           </button>
         ))}
       </div>
+
+      <Card className="no-print" data-testid="report-instagram">
+        <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
+          <Instagram className="h-5 w-5 shrink-0 text-muted" />
+          {ig?.connected && ig.has_data ? (
+            <>
+              <label className="flex min-w-0 flex-1 cursor-pointer items-center gap-2.5 text-sm">
+                <input type="checkbox" className="accent-accent" checked={igOn} onChange={(e) => set({ ig: e.target.checked ? "1" : "0" })} data-testid="report-ig-toggle" />
+                <span className="min-w-0"><span className="font-medium">Include Instagram reach</span> <span className="text-muted">@{ig.handle} · {ig.followers?.toLocaleString("en-US")} followers · updated {timeAgo(ig.fetched_at)}{ig.sample ? " · sample numbers" : ""}</span></span>
+              </label>
+              <Button variant="ghost" onClick={() => refreshIg(false)} loading={busy === "ig"} data-testid="report-ig-refresh"><RefreshCw className="h-4 w-4" />Update numbers</Button>
+            </>
+          ) : ig?.connected ? (
+            <>
+              <p className="min-w-0 flex-1 text-sm text-muted">Instagram is connected but has no numbers yet.</p>
+              <Button variant="ghost" onClick={() => refreshIg(false)} loading={busy === "ig"} data-testid="report-ig-refresh"><RefreshCw className="h-4 w-4" />Pull numbers now</Button>
+            </>
+          ) : (
+            <>
+              <p className="min-w-0 flex-1 text-sm text-muted"><span className="font-medium text-ink">Add your Instagram reach.</span> Sponsors like seeing followers, reach and who the audience is next to your community numbers.</p>
+              <Button variant="ghost" onClick={goConnectIg} data-testid="report-ig-connect">Connect Instagram</Button>
+            </>
+          )}
+        </div>
+      </Card>
 
       <div className="no-print flex flex-wrap items-center justify-between gap-3">
         <div className="inline-flex rounded-full border border-line p-0.5 text-xs" role="group" aria-label="Time period">

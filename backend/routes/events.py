@@ -5,7 +5,7 @@ from typing import Any, Dict, List, Optional
 from fastapi import APIRouter, Depends, HTTPException, Query, Request, Response
 from pydantic import BaseModel
 
-from auth import get_current_user, get_current_user_optional
+from auth import get_current_user, get_current_user_optional, require_role
 from database import db
 from ._common import check_image, HIDDEN_STATUSES, approved_q, audience_ok, audit, clean, now_iso
 
@@ -291,3 +291,46 @@ async def event_feedback(event_id: str, body: FeedbackIn, me: dict = Depends(get
                                        {"$set": {"rating": body.rating, "note": body.note, "created_at": now_iso()}}, upsert=True)
     await audit(me["id"], "event.feedback", "event", event_id, {"rating": body.rating})
     return {"ok": True}
+
+
+# ---------- attendance: who actually came ----------
+# RSVPs say who planned to come; attendance is what the Impact view and the sponsor / funder reports call "turnout".
+class AttendanceIn(BaseModel):
+    user_ids: List[str]
+    attended: bool = True
+
+
+async def _attendance_view(e: dict) -> dict:
+    going = list(e.get("attendee_ids") or [])
+    came = list(e.get("attended_ids") or [])
+    ids = list(dict.fromkeys(going + came))
+    people = {u["id"]: u async for u in db.users.find({"id": {"$in": ids}}, {"_id": 0, "id": 1, "name": 1, "avatar_url": 1})} if ids else {}
+    rows = [{"id": i, "name": (people.get(i) or {}).get("name") or "Member", "avatar_url": (people.get(i) or {}).get("avatar_url"), "rsvp": i in going, "attended": i in came} for i in ids if i in people]
+    rows.sort(key=lambda r: (not r["rsvp"], r["name"].lower()))
+    return {"event_id": e["id"], "title": e.get("title"), "starts_at": e.get("starts_at"), "is_past": (e.get("starts_at") or "") < _now(),
+            "going": len([r for r in rows if r["rsvp"]]), "attended": len([r for r in rows if r["attended"]]), "people": rows}
+
+
+@router.get("/admin/events/{event_id}/attendance")
+async def get_attendance(event_id: str, me: dict = Depends(require_role("admin"))):
+    e = await db.events.find_one({"id": event_id})
+    if not e:
+        raise HTTPException(status_code=404, detail="Event not found")
+    return await _attendance_view(e)
+
+
+@router.post("/admin/events/{event_id}/attendance")
+async def set_attendance(event_id: str, body: AttendanceIn, me: dict = Depends(require_role("admin"))):
+    """Mark people as having come (or not). Safe to repeat: it only ever adds or removes the ids you send."""
+    e = await db.events.find_one({"id": event_id})
+    if not e:
+        raise HTTPException(status_code=404, detail="Event not found")
+    valid = {u["id"] async for u in db.users.find({"id": {"$in": body.user_ids[:500]}}, {"_id": 0, "id": 1})}
+    came = [i for i in (e.get("attended_ids") or [])]
+    if body.attended:
+        came += [i for i in body.user_ids if i in valid and i not in came]
+    else:
+        came = [i for i in came if i not in set(body.user_ids)]
+    await db.events.update_one({"id": event_id}, {"$set": {"attended_ids": came}})
+    await audit(me["id"], "event.attendance", "event", event_id, {"attended": body.attended, "count": len(body.user_ids)})
+    return await _attendance_view({**e, "attended_ids": came})

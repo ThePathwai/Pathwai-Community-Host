@@ -112,3 +112,32 @@ def test_nudge_notifies_once_then_cools_down(admin, member):
     notes = member.get("/api/notifications").json()["notifications"]
     assert any(n["kind"] == "nudge" and "Friday" in n["body"] for n in notes)
     assert admin.post("/api/admin/quiet/nudge", json={"user_ids": []}).status_code == 400
+
+
+def test_admin_marks_attendance_and_turnout_counts_it(admin, member):
+    ev = admin.get("/api/events").json()
+    ev = ev["events"] if isinstance(ev, dict) else ev
+    eid = ev[0]["id"]
+    me_id = member.get("/api/auth/me").json()["id"]
+    assert member.post(f"/api/admin/events/{eid}/attendance", json={"user_ids": [me_id]}).status_code == 403
+    r = admin.post(f"/api/admin/events/{eid}/attendance", json={"user_ids": [me_id, "not-a-user"]})
+    assert r.status_code == 200, r.text
+    v = r.json()
+    assert v["attended"] == 1 and any(p["id"] == me_id and p["attended"] for p in v["people"])
+    assert admin.post(f"/api/admin/events/{eid}/attendance", json={"user_ids": [me_id]}).json()["attended"] == 1  # repeating changes nothing
+    assert admin.get(f"/api/admin/events/{eid}/attendance").json()["attended"] == 1
+    off = admin.post(f"/api/admin/events/{eid}/attendance", json={"user_ids": [me_id], "attended": False}).json()
+    assert off["attended"] == 0
+    assert admin.get("/api/admin/events/nope/attendance").status_code == 404
+
+
+def test_turnout_uses_checkins_when_they_exist():
+    from datetime import datetime, timedelta, timezone
+    now = datetime(2026, 10, 1, tzinfo=timezone.utc)
+    users = [{"id": f"u{i}", "role": "member", "created_at": (now - timedelta(days=90)).isoformat()} for i in range(4)]
+    ev = {"id": "e1", "title": "Mixer", "starts_at": (now - timedelta(days=3)).isoformat(), "attendee_ids": ["u0", "u1", "u2", "u3"], "rsvps": {f"u{i}": "yes" for i in range(4)}, "attended_ids": ["u0", "u1", "u2"]}
+    d = {"now": now, "users": users, "events": [ev], "resources": [], "engagement": [], "connects": [], "rsvp_log": [], "acts": [], "support": [], "nudges": [], "pending_apps": 0}
+    m = impact.compute(d, 30)
+    assert m["events_held"] == 1 and m["rsvps"] == 4 and m["attended"] == 3 and m["turnout_pct"] == 75
+    ev2 = {**ev, "attended_ids": []}
+    assert impact.compute({**d, "events": [ev2]}, 30)["turnout_pct"] is None  # nobody marked: show RSVPs, never a made-up rate

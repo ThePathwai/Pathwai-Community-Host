@@ -108,3 +108,45 @@ export function buildReport(kind, m, community = "Your community") {
   else { const r2 = { ...reach, charts: [reach.charts[1]] }; sections = [health, r2, events, perks]; }
   return { type: kind, title: meta.title, audience: meta.audience, headline: meta.headline, community, generated_at: new Date().toISOString(), period_days: m.days, period_label: period, sections, sample: !!m.sample };
 }
+
+
+// ---- Instagram reach (the optional report section; real numbers come from backend/instagram.py) ----
+export function sampleInstagram(seed = "sample") {
+  const r = rng(hash("ig" + seed));
+  const followers = 2400 + Math.round(r() * 7400);
+  const reach = Math.round(followers * (2.2 + r() * 2.3));
+  const split = (labels, weights) => labels.map((label, i) => ({ label, value: Math.round(followers * weights[i]) }));
+  const caps = ["Founders mixer recap", "Meet our newest members", "Behind the scenes at Demo Day", "Perk spotlight: cloud credits", "Pitch night highlights"];
+  const posts = caps.map((caption, i) => { const pr = Math.round(reach * (0.06 + r() * 0.14)); return { caption, kind: i % 2 ? "Post" : "Reel", reach: pr, likes: Math.round(pr * (0.04 + r() * 0.06)) }; }).sort((a, b) => b.reach - a.reach);
+  return {
+    sample: true, account: { username: "yourcommunity", followers },
+    totals: { reach, views: Math.round(reach * (1.6 + r() * 0.8)), accounts_engaged: Math.round(reach * (0.04 + r() * 0.05)), profile_links_taps: Math.round(reach * (0.004 + r() * 0.008)) },
+    audience: { country: split(["Canada", "United States", "United Kingdom", "Nigeria", "Jamaica"], [0.62, 0.17, 0.06, 0.05, 0.03]), city: split(["Toronto", "Mississauga", "Brampton", "Ottawa", "New York"], [0.34, 0.1, 0.06, 0.05, 0.04]),
+      age: split(["18-24", "25-34", "35-44", "45-54", "55-64"], [0.22, 0.43, 0.2, 0.08, 0.03]), gender: split(["Women", "Men", "Not specified"], [0.57, 0.41, 0.02]) },
+    top_posts: posts,
+  };
+}
+
+const fmt = (v) => (typeof v === "number" ? v.toLocaleString("en-US") : "n/a");
+export function instagramSection(snap) {
+  const a = snap.account, t = snap.totals || {}, aud = snap.audience || {};
+  const charts = [];
+  if (aud.country?.length) charts.push({ type: "hbar", title: "Where the audience is", items: aud.country });
+  if (aud.city?.length) charts.push({ type: "hbar", title: "Top cities", items: aud.city });
+  if (aud.age?.length) charts.push({ type: "hbar", title: "Audience by age", items: aud.age });
+  if (aud.gender?.length) charts.push({ type: "donut", title: "Audience by gender", items: aud.gender });
+  if (snap.top_posts?.length) charts.push({ type: "table", title: "Best recent posts", columns: ["Post", "Type", "Reach", "Likes"], rows: snap.top_posts.map((p) => [p.caption, p.kind, fmt(p.reach), fmt(p.likes)]) });
+  const insights = [];
+  if (t.reach != null && a.followers) insights.push(`Content reached ${t.reach.toLocaleString("en-US")} accounts in the last 30 days, ${(t.reach / a.followers).toFixed(1)} times the follower count.`);
+  if (t.reach && t.accounts_engaged != null) insights.push(`${t.accounts_engaged.toLocaleString("en-US")} accounts engaged with it (${pct(t.accounts_engaged, t.reach)}% of those reached).`);
+  return { kind: "instagram", title: "Instagram reach", subtitle: `@${a.username}. Last 30 days. Reach counts accounts, not followers, and includes people who don't follow.`,
+    tiles: [tile("Followers", fmt(a.followers), "", true), tile("Accounts reached", fmt(t.reach), "last 30 days"), tile("Views", fmt(t.views), "last 30 days"), tile("Accounts engaged", fmt(t.accounts_engaged)), tile("Profile link taps", fmt(t.profile_links_taps))],
+    charts, insights };
+}
+/** Adds the Instagram section to a built report: straight after the headline numbers for a sponsor, at the end otherwise. */
+export function withInstagram(report, snap) {
+  if (!snap) return report;
+  const secs = [...report.sections];
+  secs.splice(report.type === "sponsor" ? 1 : secs.length, 0, instagramSection(snap));
+  return { ...report, sections: secs };
+}

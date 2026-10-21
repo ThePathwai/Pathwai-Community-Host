@@ -193,14 +193,18 @@ const integ = () => {
       bk.integrations = clone([DISCO, ...base]);
     }
   }
+  if (!bk.integrations.some((x) => x.provider === "instagram")) bk.integrations.push(clone(INSTAGRAM));
   return bk.integrations;
 };
 const DISCO = { provider: "disco", label: "Disco", kind: "api", preview: true, description: "Preview: show the Disco programs your members are in, and how far along they are, inside your community. Try it with the key \"demo\". Live connections are switched on per Academy once its Disco API access (Enterprise plan) is confirmed.",
   capabilities: ["Programs members are enrolled in", "Progress and completion", "Next live session", "Matched to members by email"], credential_fields: [{ key: "api_key", label: "Disco API key", placeholder: "Disco Admin Area \u2192 Settings \u2192 API  (or 'demo' to try it)" }],
   setting_fields: [], docs: "https://docs.disco.co/api", enabled: false, status: "disconnected", demo: false, masked: {}, settings: {}, last_sync_at: null, last_result: null, last_error: null, log: [], webhook_path: null, webhook_url: null };
+const INSTAGRAM = { provider: "instagram", label: "Instagram", kind: "api", preview: false, description: "Bring your Instagram Business or Creator analytics into Pathwai: followers, 30-day reach, who your audience is and your best posts. Add it to sponsor, funder and board reports. Try it with the token \"demo\".",
+  capabilities: ["Followers and 30-day reach", "Audience by country, city, age and gender", "Best recent posts", "Adds a section to your reports"], credential_fields: [{ key: "api_key", label: "Instagram access token", placeholder: "Instagram User access token  (or 'demo' to try it)" }],
+  setting_fields: [], docs: "https://developers.facebook.com/docs/instagram-platform/instagram-api-with-instagram-login", enabled: false, status: "disconnected", demo: false, masked: {}, settings: {}, last_sync_at: null, last_result: null, last_error: null, log: [], webhook_path: null, webhook_url: null };
 const stripeOn = () => integ().find((p) => p.provider === "stripe")?.enabled;
 const PLANS = [{ key: "member", label: "Community member", amount_cents: 4900, interval: "month" }, { key: "founder", label: "Founder plan", amount_cents: 12900, interval: "month" }];
-const SYNC = { airtable: { imported: 12, updated: 4, skipped: 1 }, luma: { events_imported: 5, rsvps_synced: 18 }, stripe: { plans: 2, payments: 3 }, disco: { programs: 4, enrollments: 24, unmatched_members: 0 } };
+const SYNC = { airtable: { imported: 12, updated: 4, skipped: 1 }, luma: { events_imported: 5, rsvps_synced: 18 }, stripe: { plans: 2, payments: 3 }, disco: { programs: 4, enrollments: 24, unmatched_members: 0 }, instagram: { followers: 4812, reach_30d: 15240, posts_read: 5 } };
 function integWrite(method, path, body, config) {
   const m = path.match(/^\/admin\/integrations\/(\w+)(?:\/(test|sync))?$/);
   if (!m) return null;
@@ -517,6 +521,26 @@ function classesCall(method, path, body, params, config) {
   return r.status >= 400 ? fail(config, r.status, r.data?.detail || "Something went wrong") : ok(config, r.data, r.status);
 }
 
+// Attendance check-in (backend/routes/events.py): who actually came. Kept per community in this tab's demo state.
+function attendanceCall(method, eventId, body, config) {
+  if (!S.role || !S.community) return fail(config, 401, "Not authenticated");
+  if (!isAdminHere()) return fail(config, 403, "Insufficient permissions");
+  const ev = withRsvpFields(applyEdit([...sharedContent("events").created, ...((view()["/events"]) || [])].find((x) => x.id === eventId), "events"));
+  if (!ev) return fail(config, 404, "Event not found");
+  const users = view()["/users"] || [];
+  const going = (ev.attendees && ev.attendees.length ? ev.attendees : users.filter((u) => u.role !== "admin").slice(0, Math.min(ev.attendee_count || 6, 8)));
+  const store = ((S.extra.attended = S.extra.attended || {})[S.community] = (S.extra.attended[S.community] || {}));
+  const came = (store[eventId] = store[eventId] || []);
+  if (method === "post") {
+    const ids = body.user_ids || [];
+    if (body.attended === false) store[eventId] = came.filter((i) => !ids.includes(i));
+    else ids.forEach((i) => { if (!came.includes(i)) came.push(i); });
+  }
+  const now = store[eventId];
+  const people = going.map((u) => ({ id: u.id, name: u.name, avatar_url: u.avatar_url || null, rsvp: true, attended: now.includes(u.id) }));
+  return ok(config, { event_id: eventId, title: ev.title, starts_at: ev.starts_at, is_past: new Date(ev.starts_at) < new Date(), going: people.length, attended: people.filter((p) => p.attended).length, people });
+}
+
 // The in-browser Impact / reports / going-quiet backend (see impact.js): sample numbers made from this community's own lists.
 function impactCall(method, path, body, config) {
   const publicRead = path.startsWith("/public/report/");
@@ -525,9 +549,10 @@ function impactCall(method, path, body, config) {
   const slug = S.community || "demo";
   const bk = S.community ? book() : { shared: {} }; bk.shared = bk.shared || {};
   const store = (bk.shared.impact = bk.shared.impact || { shares: [], nudged: {} });
+  const instagramOn = S.community ? !!(integ().find((x) => x.provider === "instagram") || {}).enabled : false;
   const v = S.role ? view() : {};
   const r = impactHandler({ method, path, body, params: config.params || {}, store, users: v["/users"] || [], events: v["/events"] || [], resources: v["/resources"] || [], community: slug,
-    communityName: ((S.community && (S.data.public || {})["/community/config"]) || {}).community_name || "Your community" });
+    instagramOn, communityName: ((S.community && (S.data.public || {})["/community/config"]) || {}).community_name || "Your community" });
   if (!r) return ok(config, { ok: true });
   return r.status >= 400 ? fail(config, r.status, r.data?.detail || "Something went wrong") : ok(config, r.data, r.status);
 }
@@ -580,7 +605,7 @@ function computePeople(limit = 8) {
 function get(path, p, config) {
   if (path.startsWith("/classes")) return classesCall("get", path, {}, p, config);
   if (path.startsWith("/teams")) return teamsCall("get", path, {}, config);
-  if (/^\/(admin\/(impact|report-types|reports\/|report-shares|quiet)|public\/report\/)/.test(path)) return impactCall("get", path, {}, config);
+  if (/^\/(admin\/(impact|report-types|reports\/|report-shares|quiet|instagram)|public\/report\/)/.test(path)) return impactCall("get", path, {}, config);
   if (path === "/admin/blasts/history") {
     let blasts = S.extra.blasts || [];
     if (p.audience_type) blasts = blasts.filter((b) => b.audience?.type === p.audience_type);
@@ -588,6 +613,8 @@ function get(path, p, config) {
     if (p.until) blasts = blasts.filter((b) => b.at <= p.until);
     return ok(config, { blasts });
   }
+  const att = path.match(/^\/admin\/events\/([^/]+)\/attendance$/);
+  if (att) return attendanceCall("get", att[1], {}, config);
   const sl = path.match(/^\/admin\/events\/([^/]+)\/sales$/);
   if (sl) {
     const ev = withRsvpFields(applyEdit([...sharedContent("events").created, ...((view()["/events"]) || [])].find((x) => x.id === sl[1]), "events")) || {};
@@ -981,6 +1008,8 @@ function write(method, path, body, config) {
   if (path.startsWith("/classes")) return classesCall(method, path, body, config.params || {}, config);
   if (path.startsWith("/teams")) return teamsCall(method, path, body, config);
   if (/^\/admin\/(report-shares|quiet)/.test(path)) return impactCall(method, path, body, config);
+  const attW = path.match(/^\/admin\/events\/([^/]+)\/attendance$/);
+  if (attW && method === "post") return attendanceCall("post", attW[1], body, config);
   if (path === "/auth/login") {
     const acct = ACCOUNTS[body.email] ? { ...ACCOUNTS[body.email], pw: "Demo123!" } : (S.extra.accounts || {})[body.email];
     if (!acct) return fail(config, 401, "Invalid email or password");

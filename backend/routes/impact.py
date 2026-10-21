@@ -39,10 +39,18 @@ def _check_kind(kind: str) -> None:
         raise HTTPException(status_code=400, detail="Unknown report type")
 
 
-async def _report(kind: str, days: int) -> dict:
+async def _report(kind: str, days: int, include: Optional[List[str]] = None) -> dict:
     cfg = await _config()
     d = await impact.load(db)
-    return impact.build_report(impact.compute(d, _days(days)), kind, cfg.get("community_name") or "Community")
+    rep = impact.build_report(impact.compute(d, _days(days)), kind, cfg.get("community_name") or "Community")
+    if "instagram" in (include or []):  # only what the last sync saved: a shared link never makes a live call to Instagram
+        import instagram
+        rep = impact.add_instagram(rep, await instagram.latest(db), await instagram.history(db))
+    return rep
+
+
+def _include(raw: Optional[str]) -> List[str]:
+    return [x for x in (raw or "").split(",") if x in ("instagram",)]
 
 
 @router.get("/admin/impact")
@@ -57,10 +65,10 @@ async def report_types(me: dict = Depends(require_role("admin"))):
 
 
 @router.get("/admin/reports/{kind}.pdf")
-async def report_pdf(kind: str, days: int = Query(90), me: dict = Depends(require_role("admin"))):
+async def report_pdf(kind: str, days: int = Query(90), include: str = Query(""), me: dict = Depends(require_role("admin"))):
     _check_kind(kind)
     cfg = await _config()
-    rep = await _report(kind, days)
+    rep = await _report(kind, days, _include(include))
     rep["headline"] = [{"label": t["label"], "value": t["value"]} for t in rep["sections"][0]["tiles"][:4]]
     pdf = audit_pdf.build_pdf(rep, cfg, None, None, label=rep["title"])
     slug = "".join(ch if ch.isalnum() else "-" for ch in rep["community"].lower()).strip("-") or "community"
@@ -69,9 +77,9 @@ async def report_pdf(kind: str, days: int = Query(90), me: dict = Depends(requir
 
 
 @router.get("/admin/reports/{kind}")
-async def report_json(kind: str, days: int = Query(90), me: dict = Depends(require_role("admin"))):
+async def report_json(kind: str, days: int = Query(90), include: str = Query(""), me: dict = Depends(require_role("admin"))):
     _check_kind(kind)
-    return await _report(kind, days)
+    return await _report(kind, days, _include(include))
 
 
 # ---------- read-only live links ----------
@@ -79,10 +87,11 @@ class ShareIn(BaseModel):
     kind: str
     days: int = 90
     label: Optional[str] = None
+    include: List[str] = []
 
 
 def _share_view(s: dict) -> dict:
-    return {k: s.get(k) for k in ("id", "token", "kind", "days", "label", "created_at", "views", "last_viewed_at", "revoked")}
+    return {k: s.get(k) for k in ("id", "token", "kind", "days", "label", "include", "created_at", "views", "last_viewed_at", "revoked")}
 
 
 @router.get("/admin/report-shares")
@@ -95,7 +104,7 @@ async def list_shares(me: dict = Depends(require_role("admin"))):
 async def create_share(body: ShareIn, me: dict = Depends(require_role("admin"))):
     _check_kind(body.kind)
     doc = {"id": str(uuid.uuid4()), "token": secrets.token_urlsafe(24), "kind": body.kind, "days": _days(body.days),
-           "label": (body.label or "").strip()[:80] or None, "created_by": me["id"], "created_at": now_iso(), "views": 0, "revoked": False}
+           "label": (body.label or "").strip()[:80] or None, "include": _include(",".join(body.include)), "created_by": me["id"], "created_at": now_iso(), "views": 0, "revoked": False}
     await db.report_shares.insert_one(dict(doc))
     await audit(me["id"], "admin.report_share_created", "report", body.kind, {"share_id": doc["id"]})
     return _share_view(doc)
@@ -116,11 +125,21 @@ async def public_report(token: str):
     if not s:
         raise HTTPException(status_code=404, detail="This link is no longer active.")
     await db.report_shares.update_one({"id": s["id"]}, {"$inc": {"views": 1}, "$set": {"last_viewed_at": now_iso()}})
-    rep = await _report(s["kind"], s.get("days") or 90)
+    rep = await _report(s["kind"], s.get("days") or 90, s.get("include") or [])
     cfg = await _config()
     brand = cfg.get("brand") or {}
     return {**rep, "label": s.get("label"), "read_only": True, "live": True,
             "brand": {"accent": (brand.get("colors") or {}).get("accent") or (cfg.get("theme") or {}).get("accent"), "logo_url": brand.get("logo_url")}}
+
+
+# ---------- Instagram status (for the Reports page) ----------
+@router.get("/admin/instagram")
+async def instagram_status(me: dict = Depends(require_role("admin"))):
+    import instagram
+    d = await db.integrations.find_one({"provider": "instagram"}) or {}
+    snap = await instagram.latest(db)
+    return {"connected": bool(d.get("enabled") and d.get("credentials")), "has_data": bool(snap), "fetched_at": (snap or {}).get("fetched_at"),
+            "handle": ((snap or {}).get("account") or {}).get("username"), "followers": ((snap or {}).get("account") or {}).get("followers"), "sample": bool((snap or {}).get("sample"))}
 
 
 # ---------- going quiet ----------

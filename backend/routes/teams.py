@@ -23,8 +23,13 @@ SNAP = ("id", "name", "avatar_url", "title", "company", "member_type")
 
 
 async def ensure_indexes() -> None:
-    await db.teams.create_index("id", unique=True)
-    await db.teams.create_index([("created_at", -1)])
+    # Never let an index problem stop the whole app from starting (an older "teams" collection with duplicate ids would).
+    try:
+        await db.teams.create_index("id", unique=True)
+        await db.teams.create_index([("created_at", -1)])
+    except Exception:  # noqa: BLE001
+        import logging
+        logging.getLogger(__name__).warning("teams index setup skipped", exc_info=True)
 
 
 def _tags(v: Optional[List[str]]) -> List[str]:

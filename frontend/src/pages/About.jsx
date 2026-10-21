@@ -4,7 +4,7 @@ import { ArrowRight, Check, Minus, Plus, X } from "lucide-react";
 import { Wordmark, PoweredBy, cx } from "../components/ui";
 import ReportView from "../components/ReportView";
 import { startAdminDemo } from "../lib/demo";
-import { REPORT_TYPES, buildReport, sampleMetrics } from "../lib/sampleReport";
+import { REPORT_TYPES, buildReport, sampleInstagram, sampleMetrics, withInstagram } from "../lib/sampleReport";
 
 // /about -- public (no login). Written for the person who runs a community, because they are the buyer:
 // three promises, a sample report you can read right here, then who it's for, how it works and how it compares.
@@ -146,7 +146,7 @@ export default function About() {
   const toggle = (k) => setOpen((o) => (o.includes(k) ? o.filter((x) => x !== k) : [...o, k]));
   const jump = (k) => { if (ALL.includes(k)) setOpen((o) => (o.includes(k) ? o : [...o, k])); setTimeout(() => document.getElementById(k)?.scrollIntoView({ behavior: "smooth" }), 60); };
   const allOpen = open.length === ALL.length;
-  const sample = useMemo(() => buildReport(kind, sampleMetrics({ members: 64, seed: "pathwai-sample", days: 90 }), "Northside Founders Club"), [kind]);
+  const sample = useMemo(() => withInstagram(buildReport(kind, sampleMetrics({ members: 64, seed: "pathwai-sample", days: 90 }), "Northside Founders Club"), sampleInstagram("pathwai-sample")), [kind]);
   const R = (k) => ({ open: open.includes(k), onToggle: () => toggle(k) });
 
   return (
@@ -196,7 +196,7 @@ export default function About() {
             <div className="max-w-xl">
               <p className="eyebrow">A sample report</p>
               <h2 className="mt-3 text-3xl sm:text-4xl" style={{ textWrap: "balance" }}>This is what your sponsor opens.</h2>
-              <p className="mt-3 text-sm text-muted sm:text-base">One click from the admin home. Pick who it is for, and Pathwai builds it from your own records. Everything below is made-up sample data.</p>
+              <p className="mt-3 text-sm text-muted sm:text-base">One click from the admin home. Pick who it is for, and Pathwai builds it from your own records, with your Instagram reach alongside if you connect it. Everything below is made-up sample data.</p>
             </div>
             <div className="inline-flex rounded-full border border-line p-0.5 text-sm" role="tablist" aria-label="Report type">
               {REPORT_TYPES.map((t) => (

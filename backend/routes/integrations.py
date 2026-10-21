@@ -87,6 +87,15 @@ PROVIDERS: Dict[str, Dict[str, Any]] = {
         "defaults": {},
         "docs": "https://docs.disco.co/api",
     },
+    "instagram": {
+        "label": "Instagram", "kind": "api",
+        "description": "Bring your Instagram Business or Creator analytics into Pathwai: followers, 30-day reach, who your audience is and your best posts. Add it to sponsor, funder and board reports. Try it with the token \"demo\".",
+        "capabilities": ["Followers and 30-day reach", "Audience by country, city, age and gender", "Best recent posts", "Adds a section to your reports"],
+        "credentials": [{"key": "api_key", "label": "Instagram access token", "placeholder": "Instagram User access token  (or 'demo' to try it)"}],
+        "settings": [],
+        "defaults": {},
+        "docs": "https://developers.facebook.com/docs/instagram-platform/instagram-api-with-instagram-login",
+    },
     "stripe": {
         "label": "Stripe", "kind": "api",
         "description": "Charge membership dues and sell event tickets with Stripe Checkout; payments update member status automatically.",
@@ -425,6 +434,42 @@ async def disco_sync(c, s) -> Dict[str, Any]:
     return {"programs": res["programs"], "enrollments": res["enrollments"], "unmatched_members": res["unmatched_members"]}
 
 
+# --------------------------------------------------------------------------- Instagram analytics
+async def instagram_test(c, s) -> str:
+    import instagram
+    if instagram.is_demo(c.get("api_key", "")):
+        return "Demo mode: connected to @yourcommunity (sample numbers)."
+    try:
+        me = await instagram.whoami(c["api_key"])
+    except instagram.InstagramError as exc:
+        raise IntegrationError(str(exc))
+    if (me.get("account_type") or "").upper() not in ("BUSINESS", "MEDIA_CREATOR", "CREATOR"):
+        raise IntegrationError("That Instagram account is a personal account. Switch it to a Business or Creator account (free, in Instagram's settings) to get analytics.")
+    return f"Connected to @{me.get('username')} ({me.get('followers_count', 0):,} followers)."
+
+
+async def instagram_sync(c, s) -> Dict[str, Any]:
+    import instagram
+    token = c.get("api_key", "")
+    try:
+        snap = instagram.demo_snapshot(current_community() or "demo") if instagram.is_demo(token) else await instagram.fetch_snapshot(token)
+    except instagram.InstagramError as exc:
+        raise IntegrationError(str(exc))
+    await instagram.save_snapshot(db, snap)
+    if not instagram.is_demo(token):  # long-lived tokens last 60 days: renew about weekly so a connected account never lapses
+        d = await _doc("instagram")
+        try:
+            last = datetime.fromisoformat(d.get("token_refreshed_at") or "2000-01-01T00:00:00+00:00")
+        except ValueError:
+            last = datetime(2000, 1, 1, tzinfo=timezone.utc)
+        if datetime.now(timezone.utc) - last > timedelta(days=7):
+            new = await instagram.refresh_token(token)
+            if new:
+                await db.integrations.update_one({"provider": "instagram"}, {"$set": {"credentials.api_key": enc(new), "token_refreshed_at": now_iso()}})
+    t = snap.get("totals") or {}
+    return {"followers": snap["account"]["followers"], "reach_30d": t.get("reach") if t.get("reach") is not None else "n/a", "posts_read": len(snap.get("top_posts") or [])}
+
+
 # --------------------------------------------------------------------------- Stripe
 STRIPE = "https://api.stripe.com/v1"
 
@@ -634,8 +679,8 @@ async def sendgrid_test(c, s) -> str:
     return f"Connected to SendGrid ({j.get('type', 'account')})"
 
 
-TESTS = {"airtable": airtable_test, "luma": luma_test, "disco": disco_test, "stripe": stripe_test, "twilio": twilio_test, "sendgrid": sendgrid_test}
-SYNCS = {"airtable": airtable_sync, "luma": luma_sync, "disco": disco_sync, "stripe": stripe_sync}
+TESTS = {"airtable": airtable_test, "luma": luma_test, "disco": disco_test, "instagram": instagram_test, "stripe": stripe_test, "twilio": twilio_test, "sendgrid": sendgrid_test}
+SYNCS = {"airtable": airtable_sync, "luma": luma_sync, "disco": disco_sync, "instagram": instagram_sync, "stripe": stripe_sync}
 
 
 WEBHOOKS = {"stripe": "/api/webhooks/stripe", "twilio": "/api/webhooks/twilio"}  # sendgrid has no inbound webhook yet
@@ -742,6 +787,9 @@ async def disconnect_integration(provider: str, me: dict = Depends(require_role(
     if provider not in PROVIDERS:
         raise HTTPException(status_code=404, detail="Unknown integration")
     await db.integrations.delete_one({"provider": provider})
+    if provider == "instagram":  # the saved numbers go with the connection, so a shared report can't keep showing them
+        await db.instagram_latest.delete_many({})
+        await db.instagram_history.delete_many({})
     await audit(me["id"], "integration.disconnected", "integration", provider)
     return {"ok": True}
 
