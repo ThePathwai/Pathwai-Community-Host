@@ -13,78 +13,56 @@ import { PlatformAccounts } from "../components/AccountTools";
 
 const RADIUS = { sharp: "2px", soft: "0.75rem", round: "1.25rem" };
 
-// Each community card is drawn in that community's own colours, fonts and shape, so the hub shows how different they are.
-function CommunityCard({ c, onEnter, onApply, onView }) {
+// Pick readable text for a community's own accent colour (a white label on a pale accent was unreadable).
+function lum(hex) {
+  const m = /^#?([0-9a-f]{6})$/i.exec((hex || "").trim());
+  if (!m) return null;
+  const n = parseInt(m[1], 16);
+  const [r, g, b] = [(n >> 16) & 255, (n >> 8) & 255, n & 255].map((v) => { v /= 255; return v <= 0.03928 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4; });
+  return 0.2126 * r + 0.7152 * g + 0.0722 * b;
+}
+const onColor = (bg, given) => { const l = lum(bg); return l === null ? (given || "#fff") : l > 0.45 ? "#111" : "#fff"; };
+
+// Square thumbnail drawn on the community's own background: logo if it has one, else its cover, else initials.
+function Thumb({ c, size = 56 }) {
   const col = c.brand?.colors || {};
-  const r = RADIUS[c.brand?.radius] || RADIUS.soft;
-  const btn = c.brand?.button_shape === "pill" ? "9999px" : c.brand?.button_shape === "square" ? "2px" : "0.5rem";
-  const st = c.my?.status;
   return (
-    <article className="flex cursor-pointer flex-col overflow-hidden border transition hover:-translate-y-0.5 hover:shadow-lg" data-testid={`community-${c.slug}`} onClick={() => onView(c)} style={{ background: col.surface || col.background, color: col.text, borderColor: col.border, borderRadius: r, fontFamily: `"${c.brand?.font}", system-ui, sans-serif` }}>
-      <div className="relative h-32" style={{ background: col.background }}>
-        {c.cover && <img src={c.cover} alt="" className="absolute inset-0 h-full w-full object-cover" />}
-        <div className="absolute inset-0" style={{ background: `linear-gradient(to top, ${col.surface || col.background}, transparent 70%)` }} />
-        {c.brand?.logo_url && <img src={c.brand.logo_url} alt="" className="absolute left-4 top-4 h-10 w-auto max-w-[8rem] object-contain" />}
-        <span className="absolute right-3 top-3 px-2.5 py-1 text-[10px] font-bold uppercase" style={{ background: col.accent, color: col.on_accent || "#fff", borderRadius: btn, letterSpacing: "0.12em" }}>{c.kind}</span>
-      </div>
-      <div className="flex flex-1 flex-col p-5">
-        <h3 className="text-xl font-bold leading-tight" style={{ fontFamily: `"${c.brand?.heading_font}", serif` }}>{c.name}</h3>
-        <p className="mt-1 text-sm" style={{ color: col.muted }}>{c.tagline}</p>
-        <p className="mt-3 line-clamp-3 text-sm" style={{ color: col.text, opacity: 0.85 }}>{c.about}</p>
-        <p className="mt-3 text-xs" style={{ color: col.muted }}>{c.members} members · {c.upcoming_events} upcoming events{c.country ? ` · ${c.country}` : ""}</p>
-        {c.interest_tags?.length > 0 && (
-          <div className="mt-2 flex flex-wrap gap-1.5">{c.interest_tags.map((t) => (
-            <span key={t} className="px-2 py-0.5 text-[10px] font-medium" style={{ background: col.background, color: col.muted, borderRadius: btn, border: `1px solid ${col.border}` }}>{t}</span>
-          ))}</div>
-        )}
-        <div className="mt-auto pt-5">
-          {st === "approved" ? (
-            <div className="flex items-center justify-between gap-3">
-              <button className="px-5 py-2.5 text-sm font-semibold" data-testid={`enter-${c.slug}`} onClick={(e) => { e.stopPropagation(); onEnter(c); }} style={{ background: col.accent, color: col.on_accent || "#fff", borderRadius: btn }}>Enter</button>
-              {c.my.role === "admin" && <span className="text-xs font-semibold" style={{ color: col.accent }}>{c.my.platform_admin ? "Platform admin" : "Admin"}{c.pending_requests ? ` · ${c.pending_requests} new request${c.pending_requests > 1 ? "s" : ""}` : ""}</span>}
-            </div>
-          ) : st === "pending" ? (
-            <div className="flex items-center gap-2 text-sm" data-testid={`pending-${c.slug}`}><span className="h-2 w-2 animate-pulse rounded-full bg-amber-400" /><span style={{ color: col.text }}>Request under review</span><span className="text-xs" style={{ color: col.muted }}>· sent {timeAgo(c.my.requested_at)}</span></div>
-          ) : st === "rejected" ? (
-            <p className="text-sm" style={{ color: col.muted }}>Your request wasn't approved.</p>
-          ) : (
-            <button className="border px-5 py-2.5 text-sm font-semibold" data-testid={`apply-${c.slug}`} onClick={(e) => { e.stopPropagation(); onApply(c); }} style={{ borderColor: col.accent, color: col.accent, borderRadius: btn }}>Request to join</button>
-          )}
-        </div>
-      </div>
-    </article>
+    <div className="relative flex flex-none items-center justify-center overflow-hidden rounded-lg border border-line/60" style={{ width: size, height: size, background: col.background || "rgb(var(--c-ink) / 0.08)" }}>
+      {c.brand?.logo_url ? <img src={c.brand.logo_url} alt="" className="max-h-[72%] max-w-[78%] object-contain" />
+        : c.cover ? <img src={c.cover} alt="" className="absolute inset-0 h-full w-full object-cover" />
+        : <span className="text-sm font-bold" style={{ color: col.accent || col.text }}>{(c.name || "?").split(/\s+/).slice(0, 2).map((w) => w[0]).join("").toUpperCase()}</span>}
+    </div>
   );
 }
 
-// Mobile-only stand-in for CommunityCard (see the grid split below) — a dense, portrait grid tile
-// closer to an Instagram grid / Airbnb search grid than an editorial card, so someone in several
-// communities can scan all of them without much scrolling. Always opens the detail modal on tap
-// (never acts immediately) since there's no room on a tile this small for a real action button.
-function CommunityTile({ c, onView }) {
+// One compact row per community: thumbnail, name, one line of context, one action. The full brand card
+// (cover, about, tags) opens on tap, so the list stays short and scannable.
+function CommunityRow({ c, onEnter, onApply, onView }) {
   const col = c.brand?.colors || {};
   const st = c.my?.status;
+  const accent = col.accent || "rgb(var(--c-ink))";
+  const onAccent = onColor(col.accent, col.on_accent);
+  const meta = [c.kind, `${c.members} member${c.members === 1 ? "" : "s"}`, st === "approved" && c.upcoming_events ? `${c.upcoming_events} upcoming` : null, c.country].filter(Boolean).join(" · ");
   return (
-    <article className="relative aspect-[4/5] cursor-pointer overflow-hidden rounded-xl border" data-testid={`community-tile-${c.slug}`} onClick={() => onView(c)}
-      style={{ background: col.background || "rgb(var(--c-ink) / 0.06)", borderColor: col.border || "transparent" }}>
-      {c.cover ? <img src={c.cover} alt="" className="absolute inset-0 h-full w-full object-cover" />
-        : <div className="absolute inset-0 flex items-center justify-center" style={{ background: col.accent ? `linear-gradient(135deg, ${col.accent}, ${col.background || "#000"})` : undefined }}>
-            {c.brand?.logo_url && <img src={c.brand.logo_url} alt="" className="h-10 w-auto max-w-[70%] object-contain opacity-90" />}
-          </div>}
-      <div className="absolute inset-0" style={{ background: "linear-gradient(to top, rgba(0,0,0,.85), rgba(0,0,0,.05) 55%)" }} />
-      {c.brand?.logo_url && c.cover && <img src={c.brand.logo_url} alt="" className="absolute left-2 top-2 h-5 w-auto max-w-[45%] object-contain drop-shadow" />}
-      {st === "approved" && c.my.role === "admin" && c.pending_requests > 0 && (
-        <span className="absolute right-2 top-2 flex h-5 min-w-[1.25rem] items-center justify-center rounded-full bg-red-600 px-1 text-[10px] font-bold text-white" data-testid={`tile-badge-${c.slug}`}>{c.pending_requests}</span>
-      )}
-      {st === "pending" && <span className="absolute right-2 top-2 h-2.5 w-2.5 animate-pulse rounded-full bg-amber-400" aria-hidden />}
-      <div className="absolute inset-x-0 bottom-0 p-2.5 text-white">
-        <p className="truncate text-[13px] font-bold leading-tight">{c.name}</p>
-        <p className="truncate text-[11px] text-white/70">
-          {st === "approved" ? (c.my.role === "admin" ? (c.my.platform_admin ? "Platform admin" : "Admin") : `${c.members} members`)
-            : st === "pending" ? "Request sent"
-            : st === "rejected" ? "Not approved"
-            : c.kind}
-        </p>
+    <article className="flex cursor-pointer items-center gap-3 rounded-xl border border-line bg-surface p-3 transition hover:border-ink/40 sm:gap-4 sm:p-4" data-testid={`community-${c.slug}`} onClick={() => onView(c)}
+      style={{ borderLeft: `3px solid ${accent}` }}>
+      <Thumb c={c} />
+      <div className="min-w-0 flex-1">
+        <h3 className="truncate text-base font-semibold leading-tight">{c.name}</h3>
+        <p className="mt-0.5 truncate text-xs text-muted">{meta}</p>
+        {st === "approved" ? (
+          c.my.role === "admin" && <p className="mt-1 truncate text-xs font-semibold" style={{ color: "rgb(var(--c-ink) / .8)" }}>{c.my.platform_admin ? "Platform admin" : "Admin"}{c.pending_requests ? ` · ${c.pending_requests} new request${c.pending_requests > 1 ? "s" : ""}` : ""}</p>
+        ) : st === "pending" ? (
+          <p className="mt-1 flex items-center gap-1.5 text-xs" data-testid={`pending-${c.slug}`}><span className="h-2 w-2 animate-pulse rounded-full bg-amber-400" />Request under review · sent {timeAgo(c.my.requested_at)}</p>
+        ) : st === "rejected" ? (
+          <p className="mt-1 text-xs text-muted">Your request wasn't approved.</p>
+        ) : c.tagline ? <p className="mt-1 line-clamp-1 text-xs text-muted">{c.tagline}</p> : null}
       </div>
+      {st === "approved" ? (
+        <button className="flex-none rounded-lg px-4 py-2 text-sm font-semibold" data-testid={`enter-${c.slug}`} onClick={(e) => { e.stopPropagation(); onEnter(c); }} style={{ background: accent, color: onAccent }}>Enter</button>
+      ) : !st || st === "none" ? (
+        <button className="flex-none rounded-lg border border-line px-3 py-2 text-sm font-semibold hover:border-ink" data-testid={`apply-${c.slug}`} onClick={(e) => { e.stopPropagation(); onApply(c); }}>Request<span className="hidden sm:inline"> to join</span></button>
+      ) : null}
     </article>
   );
 }
@@ -112,7 +90,7 @@ function CommunityDetailModal({ c, onClose, onEnter, onApply }) {
         <div className="p-6">
           <div className="flex flex-wrap items-center gap-2">
             <h2 className="text-2xl font-bold leading-tight" style={{ fontFamily: `"${c.brand?.heading_font}", serif` }}>{c.name}</h2>
-            <span className="shrink-0 px-2.5 py-1 text-[10px] font-bold uppercase" style={{ background: col.accent, color: col.on_accent || "#fff", borderRadius: btn, letterSpacing: "0.12em" }}>{c.kind}</span>
+            <span className="shrink-0 px-2.5 py-1 text-[10px] font-bold uppercase" style={{ background: col.accent, color: onColor(col.accent, col.on_accent), borderRadius: btn, letterSpacing: "0.12em" }}>{c.kind}</span>
           </div>
           <p className="mt-1 text-sm" style={{ color: col.muted }}>{c.tagline}</p>
           <p className="mt-4 whitespace-pre-wrap text-sm leading-relaxed" style={{ color: col.text, opacity: 0.85 }}>{c.about || "No description yet."}</p>
@@ -125,7 +103,7 @@ function CommunityDetailModal({ c, onClose, onEnter, onApply }) {
           <div className="mt-6">
             {st === "approved" ? (
               <div className="flex items-center justify-between gap-3">
-                <button className="px-5 py-2.5 text-sm font-semibold" data-testid="detail-enter" onClick={() => onEnter(c)} style={{ background: col.accent, color: col.on_accent || "#fff", borderRadius: btn }}>Enter</button>
+                <button className="px-5 py-2.5 text-sm font-semibold" data-testid="detail-enter" onClick={() => onEnter(c)} style={{ background: col.accent, color: onColor(col.accent, col.on_accent), borderRadius: btn }}>Enter</button>
                 {c.my.role === "admin" && <span className="text-xs font-semibold" style={{ color: col.accent }}>{c.my.platform_admin ? "Platform admin" : "Admin"}{c.pending_requests ? ` · ${c.pending_requests} new request${c.pending_requests > 1 ? "s" : ""}` : ""}</span>}
               </div>
             ) : st === "pending" ? (
@@ -271,6 +249,11 @@ export default function Hub() {
   const [peopleOpen, setPeopleOpen] = useState(false);
   const [peopleInitialThread, setPeopleInitialThread] = useState(null);
   const [peopleInitialProfile, setPeopleInitialProfile] = useState(null);
+  const [tab, setTab] = useState(null); // "mine" | "discover" | "admin"; null = pick a sensible default once the list loads
+  const [query, setQuery] = useState("");
+  const [limit, setLimit] = useState(12);
+  const [showFilters, setShowFilters] = useState(false);
+  const [menuOpen, setMenuOpen] = useState(false);
 
   // A community member card's "View on People" link (MemberProfile.jsx) can't open this panel
   // directly -- it's mounted here, on a different route -- so it hands off through a ?person=
@@ -304,10 +287,10 @@ export default function Hub() {
   };
   const saveProfile = async () => {
     if (pf.name.trim().length < 2) return toast.error("Enter your name.");
-    setPBusy(true);
     const yrs = ageFromBirthday(pf.birthday);
     if (pf.birthday && (yrs === null || yrs > 120)) return toast.error("Check the year of your birthday.");
     if (pf.birthday && yrs < 13) return toast.error("You need to be at least 13 to use Pathwai.");
+    setPBusy(true); // only after validation passes, so a validation message can't leave the button stuck on "loading"
     try { await api.patch("/hub/profile", { ...pf, avatar_url: pPhoto || null }); await refresh(); toast.success("Profile saved"); setEditingProfile(false); }
     catch (e) { toast.error(errMsg(e)); } finally { setPBusy(false); }
   };
@@ -320,8 +303,14 @@ export default function Hub() {
   // community's summary in one shot.
   const countries = Array.from(new Set(discover.map((c) => c.country).filter(Boolean))).sort();
   const interestTags = Array.from(new Set(discover.flatMap((c) => c.interest_tags || []))).sort();
-  const filteredDiscover = discover.filter((c) => (country === "all" || c.country === country) && (interest === "all" || (c.interest_tags || []).includes(interest)));
-  const filtersActive = country !== "all" || interest !== "all";
+  const q = query.trim().toLowerCase();
+  const filteredDiscover = discover.filter((c) => (country === "all" || c.country === country) && (interest === "all" || (c.interest_tags || []).includes(interest))
+    && (!q || [c.name, c.tagline, c.kind, c.country, ...(c.interest_tags || [])].some((x) => (x || "").toLowerCase().includes(q))));
+  const filtersActive = country !== "all" || interest !== "all" || !!q;
+  const isPlatformAdmin = (items || []).some((c) => c.my?.platform_admin);
+  const view = tab || (mine.length ? "mine" : "discover");
+  const pendingCount = mine.filter((c) => c.my.status === "pending").length;
+  const resetFilters = () => { setCountry("all"); setInterest("all"); setQuery(""); setLimit(12); };
   const doEnter = async (c) => { try { await enter(c.slug); nav("/", { replace: true }); } catch (e) { toast.error(errMsg(e)); } };
   // Opening a thread from the unified inbox: a community thread enters that community first (same
   // as clicking its card), then lands straight on the thread -- replying/deleting/reporting need that
@@ -357,13 +346,11 @@ export default function Hub() {
 
   return (
     <div className="relative min-h-screen" data-testid="hub">
-      <div className="pointer-events-none absolute inset-x-0 top-0 h-[26rem] overflow-hidden"><img src={crowd} alt="" className="h-full w-full object-cover opacity-25" /><div className="absolute inset-0" style={{ background: "linear-gradient(180deg, rgba(8,8,11,.2), rgb(var(--c-bg)))" }} /></div>
+      <div className="pointer-events-none absolute inset-x-0 top-0 h-[18rem] overflow-hidden"><img src={crowd} alt="" className="h-full w-full object-cover opacity-25" /><div className="absolute inset-0" style={{ background: "linear-gradient(180deg, rgba(8,8,11,.2), rgb(var(--c-bg)))" }} /></div>
     <div className="relative mx-auto max-w-6xl px-4 py-6 lg:px-8">
-      <header className="mb-10 flex items-center justify-between">
+      <header className="mb-8 flex items-center justify-between">
         <span className="text-3xl"><Wordmark name="Pathwai" brand={{}} /></span>
-        <div className="flex items-center gap-3">
-          <span className="hidden text-right text-xs sm:block"><span className="block font-medium">{account.name}</span><span className="text-muted">{account.email}</span></span>
-          <Link to="/about" className="btn-ghost !px-3 sm:!px-4" data-testid="hub-about">About<span className="hidden sm:inline"> Pathwai</span></Link>
+        <div className="flex items-center gap-4">
           <button onClick={() => setPeopleOpen(true)} data-testid="hub-open-people" title="People" aria-label="People" className="text-ink/80 hover:text-ink">
             <Users className="h-5 w-5" />
           </button>
@@ -371,54 +358,82 @@ export default function Hub() {
             <Mail className="h-5 w-5" />
             {inboxData?.unread > 0 && <span className="absolute -right-1.5 -top-1.5 flex h-4 min-w-[1rem] items-center justify-center rounded-full bg-red-600 px-1 text-[9px] font-bold text-white" data-testid="hub-inbox-badge">{inboxData.unread}</span>}
           </button>
-          <button onClick={openProfileEditor} data-testid="hub-edit-profile" title="Edit your Pathwai profile"><Avatar src={account.avatar_url} name={account.name} size={36} /></button>
-          <button className="btn-ghost" onClick={async () => { await logout(); nav("/login", { replace: true }); }} data-testid="hub-logout">Sign out</button>
+          <div className="relative">
+            <button onClick={() => setMenuOpen((o) => !o)} data-testid="hub-menu" aria-haspopup="menu" aria-expanded={menuOpen} title="Account"><Avatar src={account.avatar_url} name={account.name} size={36} /></button>
+            {menuOpen && (
+              <>
+                <div className="fixed inset-0 z-40" onClick={() => setMenuOpen(false)} aria-hidden />
+                <div role="menu" className="absolute right-0 top-12 z-50 w-60 overflow-hidden rounded-xl border border-line bg-surface shadow-xl" data-testid="hub-menu-panel">
+                  <div className="border-b border-line px-4 py-3"><p className="truncate text-sm font-medium">{account.name}</p><p className="truncate text-xs text-muted">{account.email}</p></div>
+                  <button role="menuitem" className="block w-full px-4 py-2.5 text-left text-sm hover:bg-ink/5" onClick={() => { setMenuOpen(false); openProfileEditor(); }} data-testid="hub-edit-profile">Edit your Pathwai profile</button>
+                  <Link role="menuitem" to="/about" className="block px-4 py-2.5 text-sm hover:bg-ink/5" data-testid="hub-about">About Pathwai</Link>
+                  <button role="menuitem" className="block w-full border-t border-line px-4 py-2.5 text-left text-sm hover:bg-ink/5" data-testid="hub-logout" onClick={async () => { await logout(); nav("/login", { replace: true }); }}>Sign out</button>
+                </div>
+              </>)}
+          </div>
         </div>
       </header>
 
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold sm:text-3xl lg:text-4xl">Your communities</h1>
-          <p className="mt-2 max-w-xl text-sm text-muted">One Pathwai login. Each community has its own members, events and look, and you have a separate profile in each — pre-filled from your <button className="underline" onClick={openProfileEditor} data-testid="hub-profile-link">Pathwai profile</button>.</p>
+          <h1 className="text-2xl font-bold sm:text-3xl lg:text-4xl">Communities</h1>
+          <p className="mt-2 max-w-xl text-sm text-muted">One Pathwai login. Each community keeps its own members, events and look.</p>
         </div>
-        <Button variant="ghost" className="border border-dashed border-line" onClick={() => setStarting(true)} data-testid="hub-start-community">+ Start your own community</Button>
+        <Button variant="ghost" className="border border-dashed border-line" onClick={() => setStarting(true)} data-testid="hub-start-community">+ Start your own</Button>
       </div>
 
       {!items ? <Spinner /> : (
         <>
-          {mine.length === 0 ? <p className="mt-8 rounded-xl border border-dashed border-line p-8 text-center text-sm text-muted">You haven't joined a community yet. Pick one below and send a request.</p> : (
-            <>
-              <div className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-3 md:hidden">{mine.map((c) => <CommunityTile key={c.slug} c={c} onView={setViewing} />)}</div>
-              <div className="mt-6 hidden gap-5 md:grid md:grid-cols-2 lg:grid-cols-3">{mine.map((c) => <CommunityCard key={c.slug} c={c} onEnter={doEnter} onView={setViewing} />)}</div>
-            </>)}
+          <div className="mt-6 flex gap-1 overflow-x-auto border-b border-line" role="tablist" aria-label="Communities">
+            {[["mine", "My communities", mine.length], ["discover", "Discover", discover.length], ...(isPlatformAdmin ? [["admin", "Platform admin", null]] : [])].map(([k, label, n]) => (
+              <button key={k} role="tab" aria-selected={view === k} onClick={() => setTab(k)} data-testid={`hub-tab-${k}`}
+                className={cx("-mb-px flex-none whitespace-nowrap border-b-2 px-4 py-3 text-sm font-medium transition-colors", view === k ? "border-ink text-ink" : "border-transparent text-muted hover:text-ink")}>
+                {label}{n !== null && <span className="ml-2 rounded-full bg-ink/10 px-2 py-0.5 text-xs">{n}</span>}
+              </button>
+            ))}
+          </div>
 
-          {discover.length > 0 && (
-            <>
-              <div className="mt-14 flex flex-wrap items-end justify-between gap-3">
-                <div>
-                  <h2 className="text-xl font-bold sm:text-2xl">Discover communities</h2>
-                  <p className="mt-1 text-sm text-muted">{discover.length} communities on Pathwai. Every community reviews requests to join — you'll get a notification when you're in.</p>
+          {view === "mine" && (
+            <div className="mt-6" data-testid="hub-mine">
+              {mine.length === 0 ? (
+                <div className="rounded-xl border border-dashed border-line p-8 text-center">
+                  <p className="text-sm text-muted">You haven't joined a community yet.</p>
+                  <Button className="mt-4" onClick={() => setTab("discover")} data-testid="hub-browse">Browse communities</Button>
                 </div>
-              </div>
-              <div className="mt-4 grid gap-3 sm:grid-cols-[1fr_1fr_auto] sm:items-center">
-                <Select data-testid="discover-country-filter" value={country} onChange={(e) => setCountry(e.target.value)}
-                  options={[{ value: "all", label: "All countries" }, ...countries.map((c) => ({ value: c, label: c }))]} />
-                <Select data-testid="discover-interest-filter" value={interest} onChange={(e) => setInterest(e.target.value)}
-                  options={[{ value: "all", label: "All interests" }, ...interestTags.map((t) => ({ value: t, label: t }))]} />
-                {filtersActive && <button className="justify-self-start text-xs text-muted underline sm:justify-self-auto" onClick={() => { setCountry("all"); setInterest("all"); }}>Clear filters</button>}
-              </div>
-              {filteredDiscover.length === 0 ? (
-                <p className="mt-8 rounded-xl border border-dashed border-line p-8 text-center text-sm text-muted">No communities match those filters.</p>
               ) : (
                 <>
-                  <div className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-3 md:hidden">{filteredDiscover.map((c) => <CommunityTile key={c.slug} c={c} onView={setViewing} />)}</div>
-                  <div className="mt-6 hidden gap-5 md:grid md:grid-cols-2 lg:grid-cols-3">{filteredDiscover.map((c) => <CommunityCard key={c.slug} c={c} onApply={(x) => { setApply(x); setF({ title: account.title || "", message: "", answers: {} }); }} onView={setViewing} />)}</div>
-                </>
-              )}
-            </>)}
-        </>)}
+                  <div className="grid grid-cols-[minmax(0,1fr)] gap-3 md:grid-cols-2">{mine.map((c) => <CommunityRow key={c.slug} c={c} onEnter={doEnter} onView={setViewing} />)}</div>
+                  {pendingCount > 0 && <p className="mt-4 text-xs text-muted">{pendingCount} request{pendingCount > 1 ? "s are" : " is"} waiting for an admin. You'll get a notification when you're in.</p>}
+                </>)}
+            </div>)}
 
-      {(items || []).some((c) => c.my?.platform_admin) && <div className="mt-12"><PlatformAccounts /></div>}
+          {view === "discover" && (
+            <div className="mt-6" data-testid="hub-discover">
+              <div className="flex flex-wrap items-center gap-3">
+                <Input className="min-w-0 flex-1 sm:max-w-sm" type="text" placeholder="Search by name, topic or city" aria-label="Search communities" data-testid="discover-search" value={query} onChange={(e) => { setQuery(e.target.value); setLimit(12); }} />
+                <button type="button" className="rounded-lg border border-line px-3 py-2 text-sm sm:hidden" onClick={() => setShowFilters((o) => !o)} aria-expanded={showFilters} data-testid="discover-filters-toggle">Filters{(country !== "all" || interest !== "all") ? " •" : ""}</button>
+                <div className={cx("w-full gap-3 sm:flex sm:w-auto", showFilters ? "grid" : "hidden")}>
+                  <Select data-testid="discover-country-filter" value={country} onChange={(e) => { setCountry(e.target.value); setLimit(12); }}
+                    options={[{ value: "all", label: "All countries" }, ...countries.map((c) => ({ value: c, label: c }))]} />
+                  <Select data-testid="discover-interest-filter" value={interest} onChange={(e) => { setInterest(e.target.value); setLimit(12); }}
+                    options={[{ value: "all", label: "All interests" }, ...interestTags.map((t) => ({ value: t, label: t }))]} />
+                </div>
+              </div>
+              <p className="mt-3 flex items-center gap-3 text-xs text-muted">
+                <span>{filtersActive ? `${filteredDiscover.length} of ${discover.length}` : discover.length} communit{discover.length === 1 ? "y" : "ies"}. Every one reviews requests to join.</span>
+                {filtersActive && <button className="underline" onClick={resetFilters} data-testid="discover-clear">Clear filters</button>}
+              </p>
+              {filteredDiscover.length === 0 ? (
+                <p className="mt-6 rounded-xl border border-dashed border-line p-8 text-center text-sm text-muted">No communities match.</p>
+              ) : (
+                <>
+                  <div className="mt-4 grid grid-cols-[minmax(0,1fr)] gap-3 md:grid-cols-2">{filteredDiscover.slice(0, limit).map((c) => <CommunityRow key={c.slug} c={c} onApply={(x) => { setApply(x); setF({ title: account.title || "", message: "", answers: {} }); }} onView={setViewing} />)}</div>
+                  {filteredDiscover.length > limit && <div className="mt-5 text-center"><Button variant="ghost" className="border border-line" onClick={() => setLimit((l) => l + 12)} data-testid="discover-more">Show {Math.min(12, filteredDiscover.length - limit)} more</Button></div>}
+                </>)}
+            </div>)}
+
+          {view === "admin" && isPlatformAdmin && <div className="mt-6"><PlatformAccounts /></div>}
+        </>)}
 
       <HubInbox open={inboxOpen} onClose={() => setInboxOpen(false)} loading={inboxLoading} data={inboxData} communities={items} onOpenThread={openThread} />
 

@@ -154,11 +154,11 @@ export default function Layout({ children }) {
       <nav className="fixed inset-x-0 bottom-0 z-40 grid border-t border-line bg-paper/90 backdrop-blur-xl backdrop-saturate-150 xl:hidden"
         style={{ gridTemplateColumns: `repeat(${Math.min(5, 1 + items.length)}, minmax(0, 1fr))`, paddingBottom: "env(safe-area-inset-bottom, 0px)" }} data-testid="tabbar">
         {[["/", "Home", TAB_ICONS["/"]], ...items.slice(0, 4).map((n) => [ROUTES[n.key], n.label, TAB_ICONS[n.key]])].map(([to, label, Icon]) => (
-          <NavLink key={to} to={to} end={to === "/"} className={({ isActive }) => cx("relative flex min-h-[52px] flex-col items-center justify-center gap-0.5 py-1.5 text-[10px] font-semibold", isActive ? "text-ink" : "text-muted")}>
+          <NavLink key={to} to={to} end={to === "/"} className={({ isActive }) => cx("relative flex min-h-[52px] min-w-0 flex-col items-center justify-center gap-0.5 overflow-hidden py-1.5 text-[10px] font-semibold", isActive ? "text-ink" : "text-muted")}>
             {/* Same counts as the desktop top nav's badges just above (`openReqs`/`inboxUnread` on
                 the "/requests"/"/inbox" NavLinks) -- shown as numbers here too, not just a bare dot,
                 so a phone and a desktop browser tell you the same thing at a glance. */}
-            {({ isActive }) => (<>{Icon && <Icon className="h-5 w-5" strokeWidth={isActive ? 2.5 : 2} aria-hidden />}<span className="truncate px-1">{label}</span>
+            {({ isActive }) => (<>{Icon && <Icon className="h-5 w-5" strokeWidth={isActive ? 2.5 : 2} aria-hidden />}<span className="max-w-full truncate px-0.5">{label}</span>
               {to === "/requests" && openReqs > 0 && <span className="absolute right-[calc(50%-22px)] top-0.5 min-w-[15px] rounded-full bg-red-600 px-[3px] text-center text-[9px] font-bold leading-[15px] text-white" aria-hidden>{openReqs}</span>}
               {to === "/inbox" && inboxUnread > 0 && <span className="absolute right-[calc(50%-22px)] top-0.5 min-w-[15px] rounded-full bg-red-600 px-[3px] text-center text-[9px] font-bold leading-[15px] text-white" aria-hidden>{inboxUnread}</span>}
               {isActive && <span className="absolute left-1/2 top-0 h-0.5 w-8 -translate-x-1/2 rounded-full" style={{ background: "var(--accent)" }} aria-hidden />}</>)}

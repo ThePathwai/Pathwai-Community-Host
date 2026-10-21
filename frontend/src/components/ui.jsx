@@ -110,8 +110,8 @@ export const Field = ({ label, children, hint }) => (
   </label>
 );
 
-export const Input = React.forwardRef((p, ref) => <input ref={ref} className={cx("input", p.className)} {...p} />);
-export const Textarea = (p) => <textarea rows={3} className={cx("input", p.className)} {...p} />;
+export const Input = React.forwardRef(({ className, ...p }, ref) => <input ref={ref} {...p} className={cx("input", className)} />);
+export const Textarea = ({ className, ...p }) => <textarea rows={3} {...p} className={cx("input", className)} />;
 export const Select = ({ options = [], className, ...p }) => (
   <select className={cx("input", className)} {...p}>
     {options.map((o) => (typeof o === "string" ? <option key={o} value={o}>{o}</option> : <option key={o.value} value={o.value}>{o.label}</option>))}

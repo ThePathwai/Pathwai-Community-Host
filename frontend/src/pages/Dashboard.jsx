@@ -122,7 +122,7 @@ export default function Dashboard() {
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div>
           <h1 className="text-2xl sm:text-3xl" data-testid="dash-greeting">Welcome back, {user.name?.split(" ")[0]}</h1>
-          <p className="mt-2 text-sm text-muted"><Inline field="brand.welcome_message" placeholder="Add a welcome message for your members" />{(config?.brand?.welcome_message || editing) && (d.community_name || config?.community_name) ? " · " : ""}{d.community_name || config?.community_name}</p>
+          <p className="mt-2 text-sm text-muted"><Inline field="brand.welcome_message" placeholder="Add a welcome message for your members" />{(() => { const nm = d.community_name || config?.community_name; const wm = config?.brand?.welcome_message || ""; const dup = !!nm && wm.toLowerCase().includes(nm.toLowerCase()); return dup ? "" : <>{(wm || editing) && nm ? " · " : ""}{nm}</>; })()}</p>
           <div className="mt-4 flex items-center gap-5 sm:gap-8">
             <div><p className="stat text-2xl sm:text-[1.75rem]" style={{ color: "var(--accent)" }} data-testid="dash-stat-members">{d.stats.members}</p><p className="eyebrow mt-1">{config?.member_label_plural || "Members"}</p></div>
             <div className="h-8 w-px shrink-0 bg-line" aria-hidden />
@@ -327,6 +327,7 @@ export default function Dashboard() {
 
         {slot("perks", (
 <Widget title="Community perks" to="/resources" icon={Gift} className="">
+          {d.featured_resources.length === 0 && <p className="text-sm text-muted">{user.role === "admin" ? "No perks yet. Add one under Perks." : "No perks yet."}</p>}
           <ul className={ROW}>
             {d.featured_resources.slice(0, 4).map((r) => (
               <li key={r.id} className={CARD}><a href={r.external_url || r.url} target="_blank" rel="noreferrer" onClick={() => trackOpen(r.id)} className="flex items-center gap-3 rounded-xl border border-line px-3 py-2 hover:border-ink/20 hover:bg-ink/5">
@@ -344,6 +345,7 @@ export default function Dashboard() {
 
         {slot("news", (
 <Widget title="Community news" to="/updates" icon={Megaphone}>
+          {d.announcements.length === 0 && <p className="text-sm text-muted">No news yet.</p>}
           <div className={"-mx-0.5 flex snap-x snap-mandatory gap-3 overflow-x-auto px-0.5 pb-1 sm:mx-0 sm:grid sm:overflow-visible sm:px-0 sm:pb-0 " + (span.news >= 8 ? "sm:grid-cols-3" : "sm:grid-cols-1")}>
             {d.announcements.slice(0, 3).map((a) => (
               <Link key={a.id} to="/updates" className="w-64 shrink-0 snap-start rounded-xl border border-line bg-ink/5 p-3 hover:border-ink/20 hover:bg-ink/10 sm:w-auto sm:shrink"><p className="line-clamp-1 text-sm font-medium lg:text-[15px]">{a.title}</p><p className="mt-1 line-clamp-2 text-xs text-muted">{a.body}</p><p className="mt-2 text-[11px] text-muted">{timeAgo(a.published_at)}</p></Link>))}

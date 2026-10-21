@@ -1,7 +1,7 @@
 import React, { useCallback, useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { toast } from "sonner";
-import { Download, FileText, Send } from "lucide-react";
+import { ChevronDown, Download, FileText, Send } from "lucide-react";
 import { api, errMsg } from "../lib/api";
 import { isDemo } from "../lib/demo";
 import { useLive } from "../lib/live";
@@ -78,6 +78,7 @@ export function ImpactPanel() {
 export function QuietCard() {
   const [d, setD] = useState(null);
   const [all, setAll] = useState(false);
+  const [fold, setFold] = useState(false); // admin can fold the list away; empty = one slim line
   const [sending, setSending] = useState(null);
   const load = useCallback(() => api.get("/admin/quiet").then((r) => setD(r.data)).catch(() => setD({ members: [], total: 0, error: true })), []);
   useEffect(() => { load(); }, [load]);
@@ -95,37 +96,47 @@ export function QuietCard() {
   };
   const open = rows.filter((m) => !m.nudged_recently);
   const shown = all ? rows : rows.slice(0, 5);
+  if (rows.length === 0) {
+    return (
+      <section className="card flex flex-wrap items-center gap-x-3 gap-y-1 !py-3" data-testid="quiet-card">
+        <h2 className="text-base">Going quiet <span className="stat ml-1 text-muted" data-testid="quiet-count">{d.total}</span></h2>
+        <p className="text-xs text-muted" data-testid="quiet-empty">Nobody has gone quiet in the last {d.days} days.</p>
+      </section>
+    );
+  }
   return (
     <section className="card" data-testid="quiet-card">
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <div>
-          <h2 className="text-base lg:text-lg">Going quiet <span className="stat ml-1 text-muted" data-testid="quiet-count">{d.total}</span></h2>
-          <p className="mt-0.5 text-xs text-muted">No visit, RSVP, perk or message in the last {d.days} days. New members get two weeks first.</p>
-        </div>
-        {open.length > 1 && <Button variant="ghost" loading={sending === "all"} onClick={() => nudge(open.map((m) => m.id), "all")} data-testid="quiet-nudge-all"><Send className="h-4 w-4" />Nudge all {open.length}</Button>}
+        <button type="button" onClick={() => setFold((v) => !v)} aria-expanded={!fold} className="flex min-w-0 items-center gap-2 text-left" data-testid="quiet-fold">
+          <ChevronDown className={"h-4 w-4 flex-none text-muted transition-transform " + (fold ? "-rotate-90" : "")} aria-hidden />
+          <span>
+            <span className="block text-base lg:text-lg">Going quiet <span className="stat ml-1 text-muted" data-testid="quiet-count">{d.total}</span></span>
+            {!fold && <span className="mt-0.5 block text-xs font-normal text-muted">No visit, RSVP, perk or message in the last {d.days} days. New members get two weeks first.</span>}
+          </span>
+        </button>
+        {!fold && open.length > 1 && <Button variant="ghost" loading={sending === "all"} onClick={() => nudge(open.map((m) => m.id), "all")} data-testid="quiet-nudge-all"><Send className="h-4 w-4" />Nudge all {open.length}</Button>}
       </div>
-      {rows.length === 0 ? (
-        <p className="mt-4 text-sm text-muted" data-testid="quiet-empty">Nobody has gone quiet. Everyone who joined more than two weeks ago has been active recently.</p>
-      ) : (
-        <ul className="mt-3 divide-y divide-line">
-          {shown.map((m) => (
-            <li key={m.id} className="flex items-center gap-3 py-2.5" data-testid={`quiet-row-${m.id}`}>
-              <Avatar src={m.avatar_url} name={m.name} size={36} />
-              <div className="min-w-0 flex-1">
-                <Link to={`/members/${m.id}`} className="block truncate text-sm font-medium hover:underline">{m.name}</Link>
-                <p className="truncate text-xs text-muted">{m.reason}</p>
-              </div>
-              {m.nudged_recently
-                ? <span className="shrink-0 text-xs text-muted" data-testid={`quiet-done-${m.id}`}>Nudged</span>
-                : <Button variant="ghost" loading={sending === m.id} onClick={() => nudge([m.id], m.id)} data-testid={`quiet-nudge-${m.id}`}><Send className="h-3.5 w-3.5" />Nudge</Button>}
-            </li>
-          ))}
-        </ul>
-      )}
-      <div className="mt-2 flex flex-wrap items-center justify-between gap-2">
-        {rows.length > 5 ? <button type="button" onClick={() => setAll((v) => !v)} className="text-xs text-muted underline underline-offset-2 hover:text-ink" data-testid="quiet-toggle">{all ? "Show fewer" : `Show all ${rows.length}`}</button> : <span />}
-        {d.nudged_30d > 0 && <p className="text-xs text-muted">{d.nudged_30d} nudged in the last 30 days · {d.came_back_30d} came back</p>}
-      </div>
+      {!fold && (
+        <>
+          <ul className="mt-3 divide-y divide-line">
+            {shown.map((m) => (
+              <li key={m.id} className="flex items-center gap-3 py-2.5" data-testid={`quiet-row-${m.id}`}>
+                <Avatar src={m.avatar_url} name={m.name} size={36} />
+                <div className="min-w-0 flex-1">
+                  <Link to={`/members/${m.id}`} className="block truncate text-sm font-medium hover:underline">{m.name}</Link>
+                  <p className="truncate text-xs text-muted">{m.reason}</p>
+                </div>
+                {m.nudged_recently
+                  ? <span className="shrink-0 text-xs text-muted" data-testid={`quiet-done-${m.id}`}>Nudged</span>
+                  : <Button variant="ghost" loading={sending === m.id} onClick={() => nudge([m.id], m.id)} data-testid={`quiet-nudge-${m.id}`}><Send className="h-3.5 w-3.5" />Nudge</Button>}
+              </li>
+            ))}
+          </ul>
+          <div className="mt-2 flex flex-wrap items-center justify-between gap-2">
+            {rows.length > 5 ? <button type="button" onClick={() => setAll((v) => !v)} className="text-xs text-muted underline underline-offset-2 hover:text-ink" data-testid="quiet-toggle">{all ? "Show fewer" : `Show all ${rows.length}`}</button> : <span />}
+            {d.nudged_30d > 0 && <p className="text-xs text-muted">{d.nudged_30d} nudged in the last 30 days · {d.came_back_30d} came back</p>}
+          </div>
+        </>)}
     </section>
   );
 }
