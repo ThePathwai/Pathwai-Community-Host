@@ -104,7 +104,7 @@ function Mark({ v }) {
 
 // One full-width row, like the FAQ / "what we do" rows on a marketing site: big title, + that turns into x,
 // hairline dividers, and a two-column body (short lede on the left, the detail on the right).
-function Row({ id, n, title, summary, lede, open, onToggle, children }) {
+function Row({ id, n, title, summary, lede, wide, open, onToggle, children }) {
   return (
     <section id={id} className="scroll-mt-24 border-t border-line" data-testid={`about-${id}`}>
       <button type="button" onClick={onToggle} aria-expanded={open} aria-controls={`about-panel-${id}`}
@@ -120,27 +120,31 @@ function Row({ id, n, title, summary, lede, open, onToggle, children }) {
       </button>
       <div id={`about-panel-${id}`} className={cx("grid transition-[grid-template-rows,opacity] duration-500 ease-out", open ? "grid-rows-[1fr] opacity-100" : "grid-rows-[0fr] opacity-0")}>
         <div className="overflow-hidden">
-          <div className="grid gap-6 pb-10 sm:grid-cols-12 sm:gap-8 sm:pb-14" hidden={!open}>
-            <p className="text-base leading-relaxed text-muted sm:col-span-4 sm:pl-20 sm:pr-4 lg:text-lg">{lede}</p>
-            <div className="sm:col-span-8">{children}</div>
-          </div>
+          {wide ? (
+            <div className="pb-10 sm:pb-14 sm:pl-20" hidden={!open}>{children}</div>
+          ) : (
+            <div className="grid gap-6 pb-10 sm:grid-cols-12 sm:gap-8 sm:pb-14" hidden={!open}>
+              <p className="text-base leading-relaxed text-muted sm:col-span-4 sm:pl-20 sm:pr-4 lg:text-lg">{lede}</p>
+              <div className="sm:col-span-8">{children}</div>
+            </div>
+          )}
         </div>
       </div>
     </section>
   );
 }
 
-const NAV = [["promises", "Why Pathwai"], ["sample", "Sample report"], ["who", "Who it's for"], ["how", "How it works"], ["market", "Competitors"], ["diff", "Compare"]];
-const OPEN_ROWS = ["who", "how", "market", "diff"]; // the rest of NAV are plain sections that are always showing
-const ALL = OPEN_ROWS;
+const NAV = [["promises", "Three promises"], ["sample", "Sample report"], ["who", "Who it's for"], ["how", "How it works"], ["market", "Competitors"], ["diff", "Why us"]];
+// Every section is a collapsible row so the page stays short; only the promises start open.
+const ALL = ["promises", "sample", "who", "how", "market", "diff", "compare"];
 
 export default function About() {
   const [kind, setKind] = useState("sponsor");
-  const [open, setOpen] = useState([]);
+  const [open, setOpen] = useState(["promises"]);
   useEffect(() => {
     document.title = "Pathwai: keep your members, prove your impact";
     const h = window.location.hash.replace("#", "");
-    if (NAV.some(([k]) => k === h)) { if (ALL.includes(h)) setOpen([h]); setTimeout(() => document.getElementById(h)?.scrollIntoView({ behavior: "smooth" }), 80); }
+    if (ALL.includes(h)) { setOpen([h]); setTimeout(() => document.getElementById(h)?.scrollIntoView({ behavior: "smooth" }), 80); }
     else window.scrollTo(0, 0);
   }, []);
   const toggle = (k) => setOpen((o) => (o.includes(k) ? o.filter((x) => x !== k) : [...o, k]));
@@ -177,48 +181,6 @@ export default function About() {
           <p className="mt-3 text-xs text-muted">The demo is a practice copy with sample data. Nothing in it touches a real community.</p>
         </div>
 
-        <section id="promises" className="scroll-mt-24 border-t border-line py-10 sm:py-14" data-testid="about-promises">
-          <p className="eyebrow">Three promises</p>
-          <div className="mt-6 grid gap-px overflow-hidden rounded-xl border border-line bg-line md:grid-cols-3">
-            {PROMISES.map(([t, d, how], i) => (
-              <div key={t} className="flex flex-col bg-surface p-6" data-testid={`about-promise-${i + 1}`}>
-                <span className="stat text-sm text-muted">{String(i + 1).padStart(2, "0")}</span>
-                <h2 className="mt-3 text-xl sm:text-2xl" style={{ textWrap: "balance" }}>{t}</h2>
-                <p className="mt-3 text-sm leading-relaxed text-muted">{d}</p>
-                <p className="mt-auto pt-5 text-xs text-ink/70">{how}</p>
-              </div>
-            ))}
-          </div>
-        </section>
-
-        <section id="sample" className="scroll-mt-24 border-t border-line py-10 sm:py-14" data-testid="about-sample">
-          <div className="flex flex-wrap items-end justify-between gap-4">
-            <div className="max-w-xl">
-              <p className="eyebrow">A sample report</p>
-              <h2 className="mt-3 text-3xl sm:text-4xl" style={{ textWrap: "balance" }}>This is what your sponsor opens.</h2>
-              <p className="mt-3 text-sm text-muted sm:text-base">One click from the admin home. Pick who it is for, and Pathwai builds it from your own records, with your Instagram reach alongside if you connect it. Everything below is made-up sample data.</p>
-            </div>
-            <div className="inline-flex rounded-full border border-line p-0.5 text-sm" role="tablist" aria-label="Report type">
-              {REPORT_TYPES.map((t) => (
-                <button key={t.kind} type="button" role="tab" aria-selected={kind === t.kind} onClick={() => setKind(t.kind)} data-testid={`about-sample-${t.kind}`}
-                  className={cx("rounded-full px-4 py-1.5 transition-colors", kind === t.kind ? "bg-ink text-paper" : "text-muted hover:text-ink")}>{t.title.replace(" report", "")}</button>
-              ))}
-            </div>
-          </div>
-          <div className="mt-8 rounded-2xl border border-line bg-surface p-5 sm:p-8">
-            <div className="mb-6 border-b border-line pb-5">
-              <p className="eyebrow">{sample.audience}</p>
-              <h3 className="mt-2 text-2xl sm:text-3xl" style={{ textWrap: "balance" }}>Northside Founders Club: {sample.headline}</h3>
-              <p className="mt-2 flex flex-wrap items-center gap-2 text-xs text-muted">{sample.period_label} <span className="chip" data-testid="about-sample-chip">Sample data</span></p>
-            </div>
-            <ReportView report={sample} />
-          </div>
-          <div className="mt-5 flex flex-wrap items-center gap-3">
-            <button type="button" onClick={() => startAdminDemo()} className="btn-primary" data-testid="about-sample-demo">Open it in the admin demo</button>
-            <p className="text-xs text-muted">Download it as a PDF, or share a read-only live link that always shows current numbers (totals only, never names).</p>
-          </div>
-        </section>
-
         <div className="mb-3 flex items-center justify-between">
           <p className="eyebrow">Explore</p>
           <button type="button" className="text-sm text-muted underline underline-offset-2 hover:text-ink" data-testid="about-toggle-all"
@@ -226,7 +188,46 @@ export default function About() {
         </div>
 
         <div className="border-b border-line">
-          <Row id="who" n={1} title="Who it's for" summary="Gated networks of founders, professionals and members."
+          <Row id="promises" n={1} title="Three promises" summary="Members stay. Everything in one place. Proof in one click." wide {...R("promises")}>
+            <div className="grid gap-px overflow-hidden rounded-xl border border-line bg-line md:grid-cols-3" data-testid="about-promises">
+              {PROMISES.map(([t, d, how], i) => (
+                <div key={t} className="flex flex-col bg-surface p-6" data-testid={`about-promise-${i + 1}`}>
+                  <span className="stat text-sm text-muted">{String(i + 1).padStart(2, "0")}</span>
+                  <h3 className="mt-3 text-xl" style={{ textWrap: "balance", textTransform: "none", letterSpacing: 0 }}>{t}</h3>
+                  <p className="mt-3 text-sm leading-relaxed text-muted">{d}</p>
+                  <p className="mt-auto pt-5 text-xs text-ink/70">{how}</p>
+                </div>
+              ))}
+            </div>
+          </Row>
+
+          <Row id="sample" n={2} title="A sample report" summary="What your sponsor, funder or board opens. Sample data." wide {...R("sample")}>
+            <div data-testid="about-sample">
+              <div className="flex flex-wrap items-end justify-between gap-4">
+                <p className="max-w-xl text-sm text-muted sm:text-base">One click from the admin home. Pick who it is for, and Pathwai builds it from your own records, with your Instagram reach alongside if you connect it. Everything below is made-up sample data.</p>
+                <div className="inline-flex rounded-full border border-line p-0.5 text-sm" role="tablist" aria-label="Report type">
+                  {REPORT_TYPES.map((t) => (
+                    <button key={t.kind} type="button" role="tab" aria-selected={kind === t.kind} onClick={() => setKind(t.kind)} data-testid={`about-sample-${t.kind}`}
+                      className={cx("rounded-full px-4 py-1.5 transition-colors", kind === t.kind ? "bg-ink text-paper" : "text-muted hover:text-ink")}>{t.title.replace(" report", "")}</button>
+                  ))}
+                </div>
+              </div>
+              <div className="mt-6 rounded-2xl border border-line bg-surface p-5 sm:p-8">
+                <div className="mb-6 border-b border-line pb-5">
+                  <p className="eyebrow">{sample.audience}</p>
+                  <h3 className="mt-2 text-2xl sm:text-3xl" style={{ textWrap: "balance" }}>Northside Founders Club: {sample.headline}</h3>
+                  <p className="mt-2 flex flex-wrap items-center gap-2 text-xs text-muted">{sample.period_label} <span className="chip" data-testid="about-sample-chip">Sample data</span></p>
+                </div>
+                <ReportView report={sample} />
+              </div>
+              <div className="mt-5 flex flex-wrap items-center gap-3">
+                <button type="button" onClick={() => startAdminDemo()} className="btn-primary" data-testid="about-sample-demo">Open it in the admin demo</button>
+                <p className="text-xs text-muted">Download it as a PDF, or share a read-only live link that always shows current numbers (totals only, never names).</p>
+              </div>
+            </div>
+          </Row>
+
+          <Row id="who" n={3} title="Who it's for" summary="Gated networks of founders, professionals and members."
             lede="Networks that need members to find each other, not just find content. Less suited if your main goal is selling courses or growing a large public audience." {...R("who")}>
             <div className="grid gap-px overflow-hidden rounded-xl border border-line bg-line sm:grid-cols-2">
               {AUDIENCES.map(([t, d]) => (
@@ -238,7 +239,7 @@ export default function About() {
             </div>
           </Row>
 
-          <Row id="how" n={2} title="How it works" summary="Set up, introduce, run, report. Four steps."
+          <Row id="how" n={4} title="How it works" summary="Set up, introduce, run, report. Four steps."
             lede="You set it up once. After that, introductions run themselves and the proof builds as the community does." {...R("how")}>
             <ol className="divide-y divide-line border-y border-line">
               {STEPS.map(([t, d], i) => (
@@ -250,7 +251,7 @@ export default function About() {
             </ol>
           </Row>
 
-          <Row id="market" n={3} title="Competitors" summary="Community platforms, association software, learning tools and free chat apps."
+          <Row id="market" n={5} title="Competitors" summary="Community platforms, association software, learning tools and free chat apps."
             lede="Plenty of good tools exist. Here is who we get compared to, and how each one differs. Costs are relative, from $ to $$$$." {...R("market")}>
             <div className="space-y-8">
               {COMPETITORS.map((g) => (
@@ -274,7 +275,7 @@ export default function About() {
             <p className="mt-5 text-xs text-muted">{PRICE_NOTE}</p>
           </Row>
 
-          <Row id="diff" n={4} title="Why Pathwai" summary="Proof built in, introductions first, branded per community."
+          <Row id="diff" n={6} title="Why Pathwai" summary="Proof built in, introductions first, branded per community."
             lede="We are not trying to be the biggest platform. We are trying to be the best one for networks that run on relationships." {...R("diff")}>
             <ul className="divide-y divide-line border-y border-line">
               {EDGES.map(([t, d]) => (
@@ -284,8 +285,11 @@ export default function About() {
                 </li>
               ))}
             </ul>
+          </Row>
 
-            <div className="mt-8 overflow-x-auto rounded-xl border border-line" data-testid="about-matrix">
+          <Row id="compare" n={7} title="Compare at a glance" summary="Pathwai next to the usual platforms, feature by feature."
+            lede="A quick yes, partly or no across the features networks ask about most." {...R("compare")}>
+            <div className="overflow-x-auto rounded-xl border border-line" data-testid="about-matrix">
               <table className="w-full min-w-[36rem] border-collapse text-left text-xs">
                 <thead>
                   <tr className="border-b border-line">
