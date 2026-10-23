@@ -64,7 +64,7 @@ export default function MembershipRequests({ onChanged }) {
       </div>
 
       {!d ? <Spinner /> : d.requests.length === 0 ? <Empty title={status === "pending" ? "No requests waiting" : "Nothing here yet"} hint={status === "pending" ? "New sign-ups will show up here for your review." : undefined} /> : (
-        <div className="grid gap-4 lg:grid-cols-2">
+        <div className="grid grid-cols-[minmax(0,1fr)] gap-4 lg:grid-cols-2">
           {d.requests.map((r) => (
             <Card key={r.id} data-testid="membership-request" className="flex flex-col gap-4">
               <div className="flex items-start gap-4">
@@ -72,7 +72,7 @@ export default function MembershipRequests({ onChanged }) {
                 <div className="min-w-0 flex-1">
                   <div className="flex flex-wrap items-center gap-2"><p className="text-lg font-semibold">{r.name}</p>{status !== "pending" && <Chip accent={r.status === "approved"}>{r.status === "approved" ? "Approved" : "Declined"}</Chip>}</div>
                   <p className="text-sm text-muted">{[r.title, r.company].filter(Boolean).join(" · ") || "No profession given"}</p>
-                  <p className="text-xs text-muted">{r.email || "No email"} · requested {fmtDate(r.requested_at)}</p>
+                  <p className="break-words text-xs text-muted">{r.email || "No email"} · requested {fmtDate(r.requested_at)}</p>
                 </div>
               </div>
               {r.join_reason && <div className="rounded-2xl bg-ink/5 p-4"><p className="eyebrow mb-1">Why they want to join</p><p className="text-sm">{r.join_reason}</p></div>}
@@ -81,7 +81,7 @@ export default function MembershipRequests({ onChanged }) {
               {declining === r.id && <div className="space-y-2"><Textarea rows={2} placeholder="Optional note for your records" value={note} onChange={(e) => setNote(e.target.value)} />
                 <div className="flex gap-2"><Button variant="ghost" onClick={() => { setDeclining(null); setNote(""); }}>Cancel</Button><Button onClick={() => decide(r.id, "reject")} loading={busy === r.id} data-testid="confirm-decline">Confirm decline</Button></div></div>}
               {declining !== r.id && (
-                <div className="mt-auto flex gap-2">
+                <div className="mt-auto flex flex-wrap gap-2">
                   <Button variant="ghost" onClick={() => setPreviewing(r)} data-testid="preview-member">Preview profile</Button>
                   {r.status !== "approved" && <Button onClick={() => decide(r.id, "approve")} loading={busy === r.id} data-testid="approve-member">Approve</Button>}
                   {r.status !== "rejected" && <Button variant="ghost" onClick={() => setDeclining(r.id)} data-testid="decline-member">Decline</Button>}

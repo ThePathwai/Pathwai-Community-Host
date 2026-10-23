@@ -19,7 +19,7 @@ const PERIODS = [[30, "Last 30 days"], [90, "Last 90 days"], [365, "Last 12 mont
 
 export const shareUrl = (slug, token) => `${window.location.origin}/r/${slug || "c"}/${token}`;
 
-export default function Reports() {
+export default function Reports({ embedded = false }) {
   const { config } = useAuth();
   const [sp, setSp] = useSearchParams();
   const nav = useNavigate();
@@ -46,7 +46,7 @@ export default function Reports() {
   };
   // Instagram numbers older than half a day are renewed quietly when the page opens (a live connection only).
   useEffect(() => { if (ig?.connected && !ig.sample && ig.fetched_at && Date.now() - new Date(ig.fetched_at).getTime() > 12 * 3600e3) refreshIg(true); }, [ig?.connected]); // eslint-disable-line
-  const goConnectIg = () => { try { sessionStorage.setItem("pathwai.admintab", "integrations"); } catch { /* ignore */ } nav("/admin"); };
+  const goConnectIg = () => { try { sessionStorage.setItem("pathwai.admintab", "integrations"); } catch { /* ignore */ } nav("/admin?tab=integrations"); };
   const loadShares = useCallback(() => api.get("/admin/report-shares").then((r) => setShares(r.data.shares || [])).catch(() => {}), []);
   useEffect(() => { loadShares(); }, [loadShares]);
 
@@ -85,7 +85,7 @@ export default function Reports() {
 
   return (
     <div className="space-y-6" data-testid="reports-page">
-      <div className="no-print"><PageHeader title="Reports" subtitle="Proof of what your community is doing, ready for the people who ask. Every number is counted from your own records." /></div>
+      {!embedded && <div className="no-print"><PageHeader title="Reports" subtitle="Proof of what your community is doing, ready for the people who ask. Every number is counted from your own records." /></div>}
 
       <div className="no-print grid gap-3 md:grid-cols-3" role="tablist" aria-label="Report type">
         {TYPES.map(([k, title, blurb]) => (

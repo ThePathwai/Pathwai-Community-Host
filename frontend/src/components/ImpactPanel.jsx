@@ -59,8 +59,8 @@ function Trend({ data }) {
 
 const PERIODS = [[30, "30 days"], [90, "90 days"], [365, "12 months"]];
 
-/** First thing on the admin home: the four numbers a sponsor, funder or board asks about, and one button to send them. */
-export function ImpactPanel() {
+/** On the Admin overview: the four numbers a sponsor, funder or board asks about, and one button to send them. */
+export function ImpactPanel({ onOpenReports }) {
   const nav = useNavigate();
   const [days, setDays] = useState(90);
   const [d, setD] = useState(null);
@@ -70,7 +70,7 @@ export function ImpactPanel() {
   useLive(null, load);
   const download = async () => {
     // The practice copy has no server to build a PDF, so it opens the same report on screen (with Print / save as PDF).
-    if (isDemo()) { nav(`/reports?type=sponsor&days=${days}`); return; }
+    if (isDemo()) { nav(`/admin?tab=reports&type=sponsor&days=${days}`); return; }
     setBusy(true);
     try { await downloadReportDeck("sponsor", days); toast.success("Slides downloaded"); } catch (e) { toast.error(await pdfError(e)); } finally { setBusy(false); }
   };
@@ -104,7 +104,7 @@ export function ImpactPanel() {
       <div className="mt-5 flex flex-wrap items-center justify-between gap-3 border-t border-line pt-4">
         <p className="min-w-0 text-xs text-muted">Counted from your own records. Share it with anyone who backs the community.</p>
         <div className="flex flex-wrap gap-2">
-          <Link to="/reports" className="btn-ghost" data-testid="impact-all-reports"><FileText className="h-4 w-4" />All reports</Link>
+          <Link to="/admin?tab=reports" onClick={onOpenReports ? (e) => { e.preventDefault(); onOpenReports(); } : undefined} className="btn-ghost" data-testid="impact-all-reports"><FileText className="h-4 w-4" />All reports</Link>
           <Button onClick={download} loading={busy} data-testid="impact-download"><Download className="h-4 w-4" />Download slides</Button>
         </div>
       </div>

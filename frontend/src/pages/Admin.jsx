@@ -1,11 +1,13 @@
 import React, { useCallback, useEffect, useState } from "react";
-import { Link } from "react-router-dom";
-import { Download, Link2, Ticket } from "lucide-react";
+import { Link, useSearchParams } from "react-router-dom";
+import { BarChart3, ChevronLeft, ChevronRight, ClipboardList, Download, FileText, LifeBuoy, Link2, Palette, Plug, ScrollText, Settings2, ShieldCheck, Ticket, Users } from "lucide-react";
 import { toast } from "sonner";
 import { api, errMsg, fmtDate } from "../lib/api";
 import { useLive } from "../lib/live";
 import { useAuth } from "../lib/auth";
-import { Button, Card, Chip, Empty, Field, Input, PageHeader, Select, Spinner, Tabs, TagInput } from "../components/ui";
+import { Button, Card, Chip, Empty, Field, Input, PageHeader, Select, Spinner, TagInput, cx } from "../components/ui";
+import { ImpactPanel, QuietCard } from "../components/ImpactPanel";
+import Reports from "./Reports";
 import AuditView from "../components/AuditView";
 import Branding from "./AdminBrand";
 import Integrations from "./AdminIntegrations";
@@ -18,15 +20,15 @@ async function pdfError(e) {
   return errMsg(e, "The PDF could not be created. Please try again.");
 }
 
-function Overview() {
-  const [o, setO] = useState(null);
+function Audits({ go }) {
+  const [loaded, setLoaded] = useState(false);
   const [kinds, setKinds] = useState([]);
   const [run, setRun] = useState({});
   const [pdf, setPdf] = useState(null);
-  const loadOverview = useCallback(() => { api.get("/admin/overview").then((r) => setO(r.data)).catch(() => {}); api.get("/admin/audits").then((r) => setKinds(r.data.audits || [])).catch(() => {}); }, []);
+  const loadOverview = useCallback(() => { api.get("/admin/audits").then((r) => setKinds(r.data.audits || [])).catch(() => {}).finally(() => setLoaded(true)); }, []);
   useEffect(() => { loadOverview(); }, [loadOverview]);
   useLive(["members", "events", "admin", "requests"], loadOverview);
-  if (!o) return <Spinner />;
+  if (!loaded) return <Spinner />;
   const runAudit = async (kind) => { setRun((x) => ({ ...x, [kind]: { ...x[kind], loading: true, error: null } })); try { const { data } = await api.post(`/admin/audits/${kind}`, {}); setRun((x) => ({ ...x, [kind]: data })); } catch (e) { setRun((x) => ({ ...x, [kind]: { error: errMsg(e) } })); } };
   const download = async (kind) => {
     setPdf(kind);
@@ -42,14 +44,13 @@ function Overview() {
   };
   return (
     <div className="space-y-6">
-      <div className="grid gap-3 sm:grid-cols-3 lg:grid-cols-6">{Object.entries(o).map(([k, v]) => <Card key={k}><p className="stat font-display text-2xl">{v}</p><p className="text-xs capitalize text-muted">{k.replace(/_/g, " ")}</p></Card>)}</div>
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
-          <h2 className="text-xl font-semibold">Audits</h2>
-          <p className="mt-1 text-sm text-muted">Live numbers from your community. Run one to see it here, or download everything as a PDF report with charts. Need something for a sponsor, an investor or your board? <Link to="/reports" className="underline" data-testid="audits-to-reports">Open Reports</Link>.</p>
+          <p className="max-w-2xl text-sm text-muted">Live numbers from your community. Run one to see it here, or download everything as a PDF report with charts. Need something for a sponsor, an investor or your board? <button type="button" onClick={() => go("reports")} className="underline" data-testid="audits-to-reports">Open Reports</button>.</p>
         </div>
         <Button onClick={() => download("all")} loading={pdf === "all"} data-testid="audit-pdf-all"><Download className="h-4 w-4" />Download full report (PDF)</Button>
       </div>
+      {kinds.length === 0 && <Empty title="No audits to run yet" hint="They appear here once your community has members and activity." />}
       <div className="grid gap-3 md:grid-cols-2">{kinds.map((a) => {
         const r = run[a.kind] || {};
         const done = !!r.tiles;
@@ -161,17 +162,143 @@ function AuditLog() {
   );
 }
 
-export default function Admin() {
-  // The old Action center tab (a dashboard of pending-item tiles that just linked into these other
-  // tabs) was redundant with them and with Overview below -- removed; the one thing it added, an
-  // at-a-glance "does anything need me" signal, now lives as a badge on the Admin link in the
-  // account menu instead (see Layout.jsx). Overview is the landing tab now.
-  const [tab, setTab] = useState(() => { try { const t = sessionStorage.getItem("pathwai.admintab"); sessionStorage.removeItem("pathwai.admintab"); return t || "overview"; } catch { return "overview"; } });
+// Everything an admin runs the community with, grouped by what they are doing. One list drives the sidebar, the overview tiles and the badges.
+const GROUPS = [
+  { title: "Insights", items: [
+    { key: "reports", label: "Reports", icon: FileText, blurb: "Sponsor, funder and board reports. Download slides or share a live link." },
+    { key: "audits", label: "Audits", icon: BarChart3, blurb: "Live checks on members, events and perks, with a PDF." },
+    { key: "audit", label: "Activity log", icon: ScrollText, blurb: "Who changed what, and when." },
+  ] },
+  { title: "People", items: [
+    { key: "members", label: "Members", icon: Users, blurb: "People who asked to join, approved or declined here.", attn: ["pending_memberships"] },
+    { key: "requests", label: "Requests", icon: ClipboardList, blurb: "Forms and info you have asked members for.", attn: ["awaiting_review", "overdue_requests"] },
+    { key: "moderation", label: "Approvals", icon: ShieldCheck, blurb: "Posts and offers waiting for your OK.", attn: ["pending_moderation"] },
+    { key: "support", label: "Support", icon: LifeBuoy, blurb: "Questions members have sent you.", attn: ["support_needing_action"] },
+    { key: "invites", label: "Invites", icon: Ticket, blurb: "Your public join link and one-time invites." },
+  ] },
+  { title: "Set up", items: [
+    { key: "brand", label: "Branding", icon: Palette, blurb: "Logo, colours, fonts and the menu." },
+    { key: "integrations", label: "Integrations", icon: Plug, blurb: "Instagram, forms, email and other connections." },
+    { key: "config", label: "Community", icon: Settings2, blurb: "Name, event types and signup questions." },
+  ] },
+];
+const ITEMS = GROUPS.flatMap((g) => g.items);
+const ATTN_ROWS = [
+  ["pending_memberships", (n) => `${n} ${n === 1 ? "person is" : "people are"} waiting to join`, "members"],
+  ["awaiting_review", (n) => `${n} ${n === 1 ? "response" : "responses"} to review`, "requests"],
+  ["overdue_requests", (n) => `${n} overdue ${n === 1 ? "request" : "requests"}`, "requests"],
+  ["support_needing_action", (n) => `${n} support ${n === 1 ? "question needs" : "questions need"} a reply`, "support"],
+  ["pending_moderation", (n) => `${n} ${n === 1 ? "item is" : "items are"} waiting for approval`, "moderation"],
+];
+const countFor = (attn, item) => (item.attn || []).reduce((n, k) => n + (attn?.[k] || 0), 0);
+const Dot = ({ n, className = "" }) => n > 0 ? <span className={cx("shrink-0 rounded-full bg-red-600 px-1.5 text-center text-[10px] font-bold leading-[18px] text-white", className)} aria-label={`${n} waiting`}>{n}</span> : null;
+
+/** The landing view: what needs you now, every tool as a labelled tile, then the headline numbers. */
+function Hub({ attn, go }) {
+  const rows = ATTN_ROWS.map(([k, text, tab]) => [k, attn?.[k] || 0, text, tab]).filter(([, n]) => n > 0);
   return (
-    <div>
-      <PageHeader title="Admin" subtitle="Configure your community and keep an eye on what's happening." />
-      <Tabs tabs={[{ value: "overview", label: "Overview" }, { value: "members", label: "Members" }, { value: "requests", label: "Requests" }, { value: "moderation", label: "Approvals" }, { value: "support", label: "Support" }, { value: "brand", label: "Branding" }, { value: "integrations", label: "Integrations" }, { value: "config", label: "Community" }, { value: "invites", label: "Invites" }, { value: "audit", label: "Audit log" }]} value={tab} onChange={setTab} />
-      {tab === "members" && <MembershipRequests />}{tab === "requests" && <AdminRequests />}{tab === "moderation" && <Moderation />}{tab === "support" && <SupportQueue />}{tab === "overview" && <Overview />}{tab === "brand" && <Branding />}{tab === "integrations" && <Integrations />}{tab === "config" && <Config />}{tab === "invites" && <Invites />}{tab === "audit" && <AuditLog />}
+    <div className="space-y-8" data-testid="admin-overview">
+      <section aria-label="Needs your attention" data-testid="admin-attention">
+        <h2 className="eyebrow mb-3">Needs your attention</h2>
+        {!attn ? <div className="h-16 animate-pulse rounded-xl bg-ink/[.06]" /> : rows.length === 0 ? (
+          <div className="card flex items-center gap-3 !p-4"><span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-ink/[.06]"><ShieldCheck className="h-4 w-4 text-muted" aria-hidden /></span><p className="text-sm"><span className="font-semibold">All caught up.</span> <span className="text-muted">Nothing is waiting on you right now.</span></p></div>
+        ) : (
+          <ul className="grid gap-2.5 sm:grid-cols-2 xl:grid-cols-3">
+            {rows.map(([k, n, text, tab]) => (
+              <li key={k}>
+                <button type="button" onClick={() => go(tab)} data-testid={`attn-${k}`} className="card card-hover flex w-full items-center gap-3 !p-3.5 text-left" style={{ borderLeft: "3px solid var(--accent)" }}>
+                  <span className="stat shrink-0 text-2xl leading-none" style={{ color: "var(--accent)" }}>{n}</span>
+                  <span className="min-w-0 flex-1 text-sm font-medium leading-snug">{text(n).replace(/^\d+ /, "")}</span>
+                  <span className="flex shrink-0 items-center text-xs text-muted">Review<ChevronRight className="h-3.5 w-3.5" aria-hidden /></span>
+                </button>
+              </li>
+            ))}
+          </ul>
+        )}
+      </section>
+
+      {GROUPS.map((g) => (
+        <section key={g.title} aria-label={g.title} data-testid={`admin-group-${g.title.toLowerCase().replace(/\s+/g, "-")}`}>
+          <h2 className="eyebrow mb-3">{g.title}</h2>
+          <div className="grid grid-cols-2 gap-2.5 xl:grid-cols-3">
+            {g.items.map((it) => {
+              const Icon = it.icon; const n = countFor(attn, it);
+              return (
+                <button key={it.key} type="button" onClick={() => go(it.key)} data-testid={`tool-${it.key}`} className="card card-hover group flex flex-col items-start gap-2.5 !p-3.5 text-left sm:flex-row sm:gap-3.5 sm:!p-4">
+                  <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-ink/[.06]"><Icon className="h-[18px] w-[18px]" strokeWidth={2.1} aria-hidden /></span>
+                  <span className="min-w-0 flex-1">
+                    <span className="flex items-center gap-2 text-[15px] font-semibold leading-tight">{it.label}<Dot n={n} /></span>
+                    <span className="mt-1 block text-xs leading-snug text-muted">{it.blurb}</span>
+                  </span>
+                  <ChevronRight className="mt-1 hidden h-4 w-4 shrink-0 text-muted transition-transform group-hover:translate-x-0.5 sm:block" aria-hidden />
+                </button>
+              );
+            })}
+          </div>
+        </section>
+      ))}
+
+      <section aria-label="At a glance" className="space-y-3" data-testid="admin-glance">
+        <h2 className="eyebrow">At a glance</h2>
+        <ImpactPanel onOpenReports={() => go("reports")} />
+        <QuietCard />
+      </section>
+    </div>
+  );
+}
+
+function Sidebar({ tab, attn, go }) {
+  const link = (active) => cx("flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-left text-sm transition-colors", active ? "bg-ink text-paper font-semibold" : "text-muted hover:bg-ink/5 hover:text-ink");
+  return (
+    <nav aria-label="Admin sections" className="hidden lg:block" data-testid="admin-sidebar">
+      <div className="sticky top-32 space-y-5">
+        <button type="button" onClick={() => go("overview")} className={link(tab === "overview")} data-testid="side-overview"><ShieldCheck className="h-4 w-4" aria-hidden />Overview</button>
+        {GROUPS.map((g) => (
+          <div key={g.title}>
+            <p className="eyebrow mb-1.5 px-3">{g.title}</p>
+            <ul className="space-y-0.5">
+              {g.items.map((it) => { const Icon = it.icon; const n = countFor(attn, it); return (
+                <li key={it.key}><button type="button" onClick={() => go(it.key)} className={link(tab === it.key)} aria-current={tab === it.key ? "page" : undefined} data-testid={`side-${it.key}`}>
+                  <Icon className="h-4 w-4 shrink-0" aria-hidden /><span className="min-w-0 flex-1 truncate">{it.label}</span><Dot n={n} /></button></li>
+              ); })}
+            </ul>
+          </div>
+        ))}
+      </div>
+    </nav>
+  );
+}
+
+export default function Admin() {
+  // The hub is the landing view; every tool opens from it (or from the sidebar). The section lives in the address
+  // (/admin?tab=members) so it can be linked to and survives a refresh; older links that stash it in sessionStorage still work.
+  const [sp, setSp] = useSearchParams();
+  const [stash] = useState(() => { try { const t = sessionStorage.getItem("pathwai.admintab"); sessionStorage.removeItem("pathwai.admintab"); return t || ""; } catch { return ""; } });
+  const asked = sp.get("tab") || stash || "overview";
+  const tab = asked === "overview" || ITEMS.some((i) => i.key === asked) ? asked : "overview";
+  const go = (t) => { setSp(t === "overview" ? {} : { tab: t }); window.scrollTo({ top: 0 }); };
+  const [attn, setAttn] = useState(null);
+  const loadAttn = useCallback(() => { api.get("/admin/action-center").then((r) => setAttn(r.data)).catch(() => setAttn((a) => a || {})); }, []);
+  useEffect(() => { loadAttn(); }, [loadAttn, tab]);
+  useLive(["members", "requests", "support", "admin"], loadAttn);
+  const meta = ITEMS.find((i) => i.key === tab);
+  const sub = tab === "reports" ? "Proof of what your community is doing, ready for the people who ask. Every number is counted from your own records." : meta?.blurb;
+  return (
+    <div data-testid="admin-page">
+      <div className="no-print">
+        {tab !== "overview" && <button type="button" onClick={() => go("overview")} className="mb-3 inline-flex items-center gap-1 text-sm text-muted hover:text-ink lg:hidden" data-testid="admin-back"><ChevronLeft className="h-4 w-4" aria-hidden />All admin tools</button>}
+        <PageHeader title={meta ? meta.label : "Admin"} subtitle={meta ? sub : "Everything you run the community with, in one place."} />
+      </div>
+      <div className="lg:grid lg:grid-cols-[13.5rem_minmax(0,1fr)] lg:gap-10">
+        <Sidebar tab={tab} attn={attn} go={go} />
+        <div className="min-w-0">
+          {tab === "overview" && <Hub attn={attn} go={go} />}
+          {tab === "reports" && <Reports embedded />}
+          {tab === "audits" && <Audits go={go} />}
+          {tab === "members" && <MembershipRequests />}{tab === "requests" && <AdminRequests />}{tab === "moderation" && <Moderation />}{tab === "support" && <SupportQueue />}
+          {tab === "brand" && <Branding />}{tab === "integrations" && <Integrations />}{tab === "config" && <Config />}{tab === "invites" && <Invites />}{tab === "audit" && <AuditLog />}
+        </div>
+      </div>
     </div>
   );
 }

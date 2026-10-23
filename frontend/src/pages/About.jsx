@@ -315,7 +315,7 @@ export default function About() {
 
           <Row id="sample" n={3} title="A sample report" summary="What a partner, sponsor, investor or board opens. Sample data." wide {...R("sample")}>
             <div data-testid="about-sample">
-              <p className="max-w-2xl text-sm text-muted sm:text-base">One click from the admin home. Pick who it is for (a sponsor, an investor or funder, your board) and Pathwai builds it from your own records, then dresses it in your colours, logo and photos as a slide deck you can download. Everything below is made-up sample data.</p>
+              <p className="max-w-2xl text-sm text-muted sm:text-base">One click from Admin. Pick who it is for (a sponsor, an investor or funder, your board) and Pathwai builds it from your own records, then dresses it in your colours, logo and photos as a slide deck you can download. Everything below is made-up sample data.</p>
               <div className="mt-6 flex flex-wrap items-center justify-between gap-x-4 gap-y-3" data-testid="about-sample-controls">
                 <div className="inline-flex max-w-full overflow-x-auto rounded-full border border-line p-0.5 text-sm" role="tablist" aria-label="Report type">
                   {REPORT_TYPES.map((t) => (

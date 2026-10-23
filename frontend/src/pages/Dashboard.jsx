@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
 import { toast } from "sonner";
 import { api, errMsg, fmtDate, timeAgo } from "../lib/api";
 import { useLive } from "../lib/live";
@@ -13,11 +13,11 @@ import UpcomingEvents from "../components/UpcomingEvents";
 import { WhyLine } from "../components/WhyMatch";
 import { fieldLabel, fieldOn } from "../lib/profile";
 import { AI_CHAT_ENABLED } from "../lib/features";
-import { Dumbbell, GraduationCap, Gift, ImagePlus, ListChecks, Megaphone, UserCheck2, UserPlus, Users } from "lucide-react";
+import { Dumbbell, GraduationCap, Gift, ImagePlus, ListChecks, Megaphone, UserPlus, Users } from "lucide-react";
 import { teamOf } from "../lib/names";
 import { LearningList, useMyLearning } from "../components/Learning";
 import { CustomizeHome, hiddenFor } from "../components/HomeWidgets";
-import { ImpactPanel, QuietCard } from "../components/ImpactPanel";
+import AdminStrip from "../components/AdminStrip";
 import Scorecard from "../components/Scorecard";
 
 // Below `lg` these become horizontally swipeable card rows instead of full vertical lists —
@@ -31,8 +31,6 @@ export default function Dashboard() {
   const { user, config } = useAuth();
   const { editing } = useEdit();
   const [d, setD] = useState(null);
-  const nav = useNavigate();
-  const goMembers = () => { try { sessionStorage.setItem("pathwai.admintab", "members"); } catch {} nav("/admin"); };
   const load = useCallback(() => api.get("/dashboard", { params: { role: user.role } }).then((r) => setD(r.data)).catch((e) => toast.error(errMsg(e))), [user.role]);
   useEffect(() => { load(); }, [load]);
   useLive(null, load);
@@ -136,25 +134,8 @@ export default function Dashboard() {
         </div>
       </div>
 
-      {/* The admin's own proof of value comes first: the numbers a sponsor, funder or board asks for, then who is drifting. */}
-      {user.role === "admin" && on("impact") && <ImpactPanel />}
-      {user.role === "admin" && on("quiet") && <QuietCard />}
-
-      {/* Just a heads-up on the home page — approving/declining happens in Admin, not inline here,
-          so this is a single notification-style row rather than a list of actionable requests. */}
-      {user.role === "admin" && on("join_requests") && (d.membership_requests_total || 0) > 0 && (
-        <button
-          type="button"
-          onClick={goMembers}
-          className="card card-hover flex w-full items-center gap-3 !p-3.5 text-left"
-          style={{ borderLeft: "3px solid var(--accent)" }}
-          data-testid="dash-join-requests"
-        >
-          <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-ink/[.06]"><UserCheck2 className="h-4 w-4 text-muted" strokeWidth={2.25} aria-hidden /></span>
-          <span className="min-w-0 flex-1 text-sm font-medium">New membership requests</span>
-          <span className="stat shrink-0 rounded-md bg-red-600 px-1.5 py-0.5 text-xs text-white">{d.membership_requests_total}</span>
-          <span className="shrink-0 text-xs text-muted">Review ›</span>
-        </button>)}
+      {/* Reports, impact numbers and the going-quiet list live in Admin. The home only points the admin at what needs them. */}
+      {user.role === "admin" && on("join_requests") && <AdminStrip />}
 
       <AboutBrand />
 

@@ -19,9 +19,7 @@ export const HOME_WIDGETS = [
   { key: "learning", label: "Learning", hint: "Programs from a connected academy (when one is connected)" },
   { key: "news", label: "News", hint: "Latest announcements" },
   { key: "new_members", label: "New members", hint: "Who just joined" },
-  { key: "join_requests", label: "Membership requests", hint: "The alert for people waiting to join", adminOnly: true },
-  { key: "impact", label: "Impact", hint: "Active members, introductions, turnout, perk results and the sponsor report", adminOnly: true },
-  { key: "quiet", label: "Going quiet", hint: "Members who have drifted away, with a one-tap nudge", adminOnly: true },
+  { key: "join_requests", label: "Admin shortcut", hint: "What needs the admin (people waiting to join, replies, approvals) with a link into Admin", adminOnly: true },
 ];
 
 /** The set of blocks hidden on this person's home screen. Admins use their own list; everyone else uses the members' list. */

@@ -42,7 +42,6 @@ import About from "./pages/About";
 import Install from "./pages/Install";
 import Teams from "./pages/Teams";
 import TeamDetail from "./pages/TeamDetail";
-import Reports from "./pages/Reports";
 import PublicReport from "./pages/PublicReport";
 
 function Protected({ children, admin }) {
@@ -56,6 +55,13 @@ function Protected({ children, admin }) {
 }
 
 const P = ({ children, admin }) => <Protected admin={admin}><Layout>{children}</Layout></Protected>;
+
+// Reports now live inside Admin; the old address (and anything bookmarked or shared with it) lands in the right place.
+function ReportsRedirect() {
+  const { search } = useLocation();
+  const q = new URLSearchParams(search); q.set("tab", "reports");
+  return <Navigate to={`/admin?${q.toString()}`} replace />;
+}
 
 export default function App() {
   const { config } = useAuth();
@@ -109,7 +115,7 @@ export default function App() {
             pattern as /messages -> /inbox above) in case anyone has the old path bookmarked. */}
         <Route path="/copilot" element={<Navigate to="/ask" replace />} />
         <Route path="/admin" element={<P admin><Admin /></P>} />
-        <Route path="/reports" element={<P admin><Reports /></P>} />
+        <Route path="/reports" element={<P admin><ReportsRedirect /></P>} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes></EditProvider>
     </>

@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import { Link, NavLink, useLocation, useNavigate } from "react-router-dom";
-import { Bell, Bookmark, Calendar, CheckSquare, ChevronDown, Dumbbell, GraduationCap, Gift, Info, Home as HomeIcon, Layers, LifeBuoy, LogOut, Megaphone, MessageSquare, Moon, Settings, Sparkles, Sun, User, UserPlus, Users, UsersRound } from "lucide-react";
+import { ShieldCheck, Bell, Bookmark, Calendar, CheckSquare, ChevronDown, Dumbbell, GraduationCap, Gift, Info, Home as HomeIcon, Layers, LifeBuoy, LogOut, Megaphone, MessageSquare, Moon, Settings, Sparkles, Sun, User, UserPlus, Users, UsersRound } from "lucide-react";
 import { applyBrand, effectiveMode, setModePref } from "../lib/theme";
 import { AI_CHAT_ENABLED } from "../lib/features";
 import { useAuth } from "../lib/auth";
@@ -87,7 +87,9 @@ export default function Layout({ children }) {
   // those sections would only be one click away on a wide desktop window (the full top nav) and
   // unreachable from a phone. Surfacing the same overflow list in the account menu keeps every
   // section reachable everywhere, matching what the desktop top nav already shows in full.
-  const overflowNav = items.slice(4);
+  // An admin's tab bar gives the fifth slot to Admin (their main toolkit), so the last section moves into the account menu.
+  const tabItems = isAdmin ? items.slice(0, 3) : items.slice(0, 4);
+  const overflowNav = items.slice(tabItems.length);
 
   return (
     <div className="min-h-screen">
@@ -95,16 +97,22 @@ export default function Layout({ children }) {
       <header className="sticky top-0 z-[45] border-b border-line/60 bg-paper/70 backdrop-blur-xl backdrop-saturate-150">
         <EditBar />
         <div className="mx-auto flex max-w-[1600px] items-center gap-2 px-4 py-2 sm:gap-4 lg:px-10">
-          <Link to="/" className="min-w-0 shrink overflow-hidden text-lg sm:text-2xl xl:max-w-[17rem] xl:text-xl 2xl:max-w-[26rem] 2xl:text-2xl" data-testid="brand"><Wordmark name={config?.community_name || "Pathwai"} /></Link>
+          <Link to="/" className="min-w-0 shrink overflow-hidden text-lg sm:text-2xl xl:max-w-[15rem] xl:text-xl 2xl:max-w-[26rem] 2xl:text-2xl" data-testid="brand"><Wordmark name={config?.community_name || "Pathwai"} /></Link>
           {editing && <button className="hidden whitespace-nowrap rounded-full border border-dashed border-ink/40 px-2 py-0.5 text-[10px] uppercase tracking-widest text-muted hover:text-ink sm:inline" onClick={() => setDrawer(true)} data-testid="edit-logo">Edit logo</button>}
           <nav className="ml-2 hidden min-w-0 flex-1 gap-1 overflow-x-auto [scrollbar-width:none] xl:flex">
             {NAV.map(([to, label]) => (
-              <NavLink key={to} to={to} end={to === "/"} className={({ isActive }) => cx("whitespace-nowrap rounded-lg px-3 py-1.5 text-sm", isActive ? "bg-ink text-paper font-semibold" : "text-muted hover:bg-ink/5 hover:text-ink")}>{label}{editing && <span role="button" className="ml-1.5 text-[10px] opacity-60 hover:opacity-100" title="Rename in Branding & menu" onClick={(e) => { e.preventDefault(); setDrawer(true); }}>✎</span>}{to === "/requests" && openReqs > 0 && <span className="ml-1.5 rounded-full bg-red-600 px-1.5 text-[10px] font-bold text-white" data-testid="badge-requests">{openReqs}</span>}{to === "/inbox" && inboxUnread > 0 && <span className="ml-1.5 rounded-full bg-red-600 px-1.5 text-[10px] font-bold text-white" data-testid="badge-inbox">{inboxUnread}</span>}</NavLink>
+              <NavLink key={to} to={to} end={to === "/"} className={({ isActive }) => cx("whitespace-nowrap rounded-lg px-2.5 py-1.5 text-sm 2xl:px-3", isActive ? "bg-ink text-paper font-semibold" : "text-muted hover:bg-ink/5 hover:text-ink")}>{label}{editing && <span role="button" className="ml-1.5 text-[10px] opacity-60 hover:opacity-100" title="Rename in Branding & menu" onClick={(e) => { e.preventDefault(); setDrawer(true); }}>✎</span>}{to === "/requests" && openReqs > 0 && <span className="ml-1.5 rounded-full bg-red-600 px-1.5 text-[10px] font-bold text-white" data-testid="badge-requests">{openReqs}</span>}{to === "/inbox" && inboxUnread > 0 && <span className="ml-1.5 rounded-full bg-red-600 px-1.5 text-[10px] font-bold text-white" data-testid="badge-inbox">{inboxUnread}</span>}</NavLink>
             ))}
             {custom.map((l) => <a key={l.url} href={l.url} target="_blank" rel="noreferrer" className="whitespace-nowrap rounded-lg px-3 py-1.5 text-sm text-muted hover:bg-ink/5">{l.label} ↗</a>)}
           </nav>
           <div className="ml-auto flex shrink-0 items-center gap-0.5 sm:gap-2">
-            <Link to="/about" className="btn-ghost !px-2 sm:!px-3" data-testid="top-about" title="About Pathwai"><Info className="h-4 w-4" /><span className="hidden sm:inline">About</span></Link>
+            {isAdmin && (
+              <NavLink to="/admin" data-testid="top-admin" aria-label="Admin" title="Admin" className={({ isActive }) => cx("btn-ghost relative hidden !px-2.5 xl:inline-flex", isActive && "!bg-ink !text-paper")}>
+                <ShieldCheck className="h-4 w-4" aria-hidden /><span className="hidden 2xl:inline">Admin</span>
+                {adminAttn > 0 && <span className="ml-0.5 rounded-full bg-red-600 px-1.5 text-[10px] font-bold leading-[16px] text-white" data-testid="top-admin-badge">{adminAttn}</span>}
+              </NavLink>
+            )}
+            <Link to="/about" className="btn-ghost !px-2 sm:!px-3" data-testid="top-about" title="About Pathwai"><Info className="h-4 w-4" /><span className="hidden sm:inline xl:hidden 2xl:inline">About</span></Link>
             <button className="btn-ghost !px-2 sm:!px-3" data-testid="mode-toggle" aria-label={mode === "dark" ? "Switch to light mode" : "Switch to dark mode"} title={mode === "dark" ? "Light mode" : "Dark mode"} onClick={() => { const n = mode === "dark" ? "light" : "dark"; setModePref(n); applyBrand(config); setMode(n); }}>{mode === "dark" ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}</button>
             {AI_CHAT_ENABLED && <Link to="/ask" className="btn-ghost !px-2 sm:!px-3" title="Ask the League"><Sparkles className="h-4 w-4" /><span className="hidden sm:inline">Ask</span></Link>}
             <Link to="/notifications" className="relative btn-ghost !px-2 sm:!px-3" data-testid="bell" aria-label="Notifications">
@@ -152,8 +160,8 @@ export default function Layout({ children }) {
       <main className="mx-auto max-w-[1600px] px-4 py-6 lg:px-10 lg:py-10">{backTo && <BackButton fallback={backTo[0]} label={`Back to ${backTo[1]}`} />}{children}</main>
       {AI_CHAT_ENABLED && loc.pathname !== "/ask" && <Link to="/ask" data-testid="ask-fab" className="btn-primary fixed bottom-5 right-5 z-40 hidden !px-4 shadow-card xl:inline-flex"><Sparkles className="h-4 w-4" />Ask</Link>}
       <nav className="fixed inset-x-0 bottom-0 z-40 grid border-t border-line bg-paper/90 backdrop-blur-xl backdrop-saturate-150 xl:hidden"
-        style={{ gridTemplateColumns: `repeat(${Math.min(5, 1 + items.length)}, minmax(0, 1fr))`, paddingBottom: "env(safe-area-inset-bottom, 0px)" }} data-testid="tabbar">
-        {[["/", "Home", TAB_ICONS["/"]], ...items.slice(0, 4).map((n) => [ROUTES[n.key], n.label, TAB_ICONS[n.key]])].map(([to, label, Icon]) => (
+        style={{ gridTemplateColumns: `repeat(${Math.min(5, 1 + tabItems.length + (isAdmin ? 1 : 0))}, minmax(0, 1fr))`, paddingBottom: "env(safe-area-inset-bottom, 0px)" }} data-testid="tabbar">
+        {[["/", "Home", TAB_ICONS["/"]], ...tabItems.map((n) => [ROUTES[n.key], n.label, TAB_ICONS[n.key]]), ...(isAdmin ? [["/admin", "Admin", ShieldCheck]] : [])].map(([to, label, Icon]) => (
           <NavLink key={to} to={to} end={to === "/"} className={({ isActive }) => cx("relative flex min-h-[52px] min-w-0 flex-col items-center justify-center gap-0.5 overflow-hidden py-1.5 text-[10px] font-semibold", isActive ? "text-ink" : "text-muted")}>
             {/* Same counts as the desktop top nav's badges just above (`openReqs`/`inboxUnread` on
                 the "/requests"/"/inbox" NavLinks) -- shown as numbers here too, not just a bare dot,
@@ -161,6 +169,7 @@ export default function Layout({ children }) {
             {({ isActive }) => (<>{Icon && <Icon className="h-5 w-5" strokeWidth={isActive ? 2.5 : 2} aria-hidden />}<span className="max-w-full truncate px-0.5">{label}</span>
               {to === "/requests" && openReqs > 0 && <span className="absolute right-[calc(50%-22px)] top-0.5 min-w-[15px] rounded-full bg-red-600 px-[3px] text-center text-[9px] font-bold leading-[15px] text-white" aria-hidden>{openReqs}</span>}
               {to === "/inbox" && inboxUnread > 0 && <span className="absolute right-[calc(50%-22px)] top-0.5 min-w-[15px] rounded-full bg-red-600 px-[3px] text-center text-[9px] font-bold leading-[15px] text-white" aria-hidden>{inboxUnread}</span>}
+              {to === "/admin" && adminAttn > 0 && <span className="absolute right-[calc(50%-22px)] top-0.5 min-w-[15px] rounded-full bg-red-600 px-[3px] text-center text-[9px] font-bold leading-[15px] text-white" aria-hidden data-testid="tab-admin-badge">{adminAttn}</span>}
               {isActive && <span className="absolute left-1/2 top-0 h-0.5 w-8 -translate-x-1/2 rounded-full" style={{ background: "var(--accent)" }} aria-hidden />}</>)}
           </NavLink>
         ))}
