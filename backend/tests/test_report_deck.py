@@ -133,3 +133,24 @@ def test_shared_link_carries_the_brand_but_never_an_email():
     assert j["brand"].get("colors", {}).get("accent") and "support_email" not in j["brand"]
     assert isinstance(j["photos"], list) and len(j["photos"]) <= 2 and "about" in j
     assert "@" not in body.text  # totals and public branding only
+
+
+@pytest.mark.parametrize("n_tiles", [0, 1, 2, 3, 4, 5, 6, 9])
+@pytest.mark.parametrize("charts", ["none", "table", "columns", "two"])
+def test_every_mix_of_tiles_and_charts_makes_one_slide(n_tiles, charts):
+    """Plug and play: whatever a community has (a lot, a little, one figure, nine), a section is still exactly one slide."""
+    tiles = [{"label": f"A fairly long label number {i}", "value": ["7", "1,284", "$12,400.50", "68%"][i % 4], "note": "with a note that runs on for a while", "accent": i == 0} for i in range(n_tiles)]
+    col = {"type": "columns", "title": "Weekly", "items": [{"label": f"W{i}", "value": i + 1} for i in range(10)]}
+    tab = {"type": "table", "title": "Rows", "columns": ["Name", "Date", "RSVPs", "Came"], "rows": [[f"Row {i}", "Oct 1", i, i] for i in range(9)]}
+    chs = {"none": [], "table": [tab], "columns": [col], "two": [col, {"type": "hbar", "title": "Top", "items": [{"label": "x" * 60, "value": 5}]}]}[charts]
+    rep = _report()
+    rep["sections"] = [{"kind": "x", "title": "T" * 90, "subtitle": "S" * 200, "tiles": tiles, "charts": chs, "insights": ["An insight that is rather long " * 6, "Another", "A third"]}]
+    pdf = report_deck.build_deck(rep, {"community_name": "A very long community name " * 4})
+    assert _pages(pdf) == (4 if n_tiles else 3)
+
+
+def test_layout_helpers_keep_text_inside_tiles():
+    assert report_deck._val_size("$12,400,000.50", 180, 88, False) <= 30
+    assert report_deck._val_size("7", 380, 210, True) <= 84
+    assert report_deck._ins_lines("x" * 2000, 380) == 3 and report_deck._ins_lines("", 380) == 1
+    assert report_deck._nat_h({"type": "table", "rows": [[1]] * 3}) < report_deck._nat_h({"type": "table", "rows": [[1]] * 7})

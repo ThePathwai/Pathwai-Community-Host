@@ -102,3 +102,26 @@ export function buildSlides(report, config) {
   slides.push({ kind: "closing" });
   return { th, slides };
 }
+
+// ---- layout shared by the on-screen deck and the downloaded one (backend/report_deck.py): the same numbers, the same rules,
+// so what is previewed is what is downloaded. y is measured down from the top of the 960 x 540 slide.
+export const BODY_TOP = 128, BODY_BOT = 478, BODY_H = BODY_BOT - BODY_TOP, GAP = 14, LEFT_W = 380;
+export const INS_SIZE = 11.5, INS_LEAD = 15, INS_GAP = 8;
+
+/** How many lines a piece of text takes (an estimate, not a measurement, so the preview and the download agree). */
+export const textLines = (text, size, width, max, factor = 0.5) => Math.max(1, Math.min(max, Math.ceil((String(text || "").length * size * factor) / Math.max(width, 1))));
+export const insLines = (text, width) => Math.max(1, Math.min(3, Math.ceil(Math.floor(String(text).length * INS_SIZE * 0.53) / Math.max(Math.floor(width - 16), 1))));
+export const insH = (items, width) => (items.length ? items.reduce((a, t) => a + insLines(t, width) * INS_LEAD + INS_GAP, 0) - INS_GAP : 0);
+
+/** Font size for a tile's number: as large as the tile allows, smaller for long values, always inside the tile. */
+export function valSize(val, w, h, big) {
+  let base = big ? Math.max(34, Math.min(84, h * 0.38)) : Math.max(30, Math.min(46, h * 0.36));
+  const n = String(val).length;
+  if (n > 6) base *= 0.78;
+  if (n > 9) base *= 0.8;
+  while (base > 20 && n * base * 0.58 > w - 40) base -= 2;
+  return base;
+}
+
+/** How much of the slide a chart wants, relative to the other chart on it. */
+export const natH = (ch) => (ch.type === "table" ? 64 + 40 * Math.min((ch.rows || []).length, 7) : ch.type === "hbar" ? 60 + 34 * Math.min((ch.items || []).length, 7) : 200);

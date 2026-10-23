@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
-import { buildSlides, useAdaptedLogo } from "../lib/deck";
+import { buildSlides, useAdaptedLogo, BODY_TOP, BODY_BOT, BODY_H, GAP, LEFT_W, INS_SIZE, INS_LEAD, INS_GAP, textLines, insLines, insH, valSize, natH } from "../lib/deck";
 import { cx } from "./ui";
 
 // The report as slides, in the community's own colours, logo, photos and story. This is what "Download slides" produces
@@ -49,92 +49,143 @@ function Brand({ th, logo, height, align = "left" }) {
 
 function Header({ th, eyebrow, title, subtitle, mark }) {
   return (
-    <div style={{ position: "absolute", left: M, right: M, top: 40 }}>
-      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-        <div style={{ display: "flex", alignItems: "center", gap: 12 }}><span style={{ width: 34, height: 4, background: th.accent }} /><span style={caps(th.muted)}>{eyebrow}</span></div>
-        {mark ? <img src={mark} alt="" style={{ height: 26, maxWidth: 120, objectFit: "contain" }} /> : <span style={{ ...caps(th.muted, 9, 1), maxWidth: 240, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{th.name}</span>}
-      </div>
-      <h2 style={{ margin: "14px 0 0", fontSize: 32, lineHeight: "36px", fontWeight: 800, color: th.text, letterSpacing: 0, textTransform: "none", fontFamily: "inherit" }}>{title}</h2>
-      {subtitle && <p style={{ margin: "6px 0 0", maxWidth: 640, fontSize: 12.5, lineHeight: "17px", color: th.muted }}>{subtitle}</p>}
-    </div>
+    <>
+      <span style={{ position: "absolute", left: M, top: 42, width: 34, height: 4, background: th.accent }} />
+      <div style={{ position: "absolute", left: M + 46, top: 41, whiteSpace: "nowrap", ...caps(th.muted), lineHeight: "10px" }}>{eyebrow}</div>
+      {mark
+        ? <img src={mark} alt="" style={{ position: "absolute", right: M, top: 34, height: 26, maxWidth: 120, objectFit: "contain", objectPosition: "right" }} />
+        : <span style={{ position: "absolute", right: M, top: 41, lineHeight: "10px", ...caps(th.muted, 9, 1), maxWidth: 240, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{th.name}</span>}
+      <h2 style={{ position: "absolute", left: M, right: M, top: 58, margin: 0, fontSize: 30, lineHeight: "34px", fontWeight: 800, color: th.text, letterSpacing: 0, textTransform: "none", fontFamily: "inherit", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{title}</h2>
+      {subtitle && <p style={{ position: "absolute", left: M, right: M, top: 96, margin: 0, fontSize: 12.5, lineHeight: "17px", color: th.muted, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{subtitle}</p>}
+    </>
   );
 }
 
 function Footer({ th, report, n }) {
   return (
-    <div style={{ position: "absolute", left: M, right: M, bottom: 20, borderTop: `1px solid ${th.border}`, paddingTop: 12, display: "flex", justifyContent: "space-between", fontSize: 8, color: th.muted }}>
-      <span>{th.name} · {report.period_label}{report.sample ? " · Sample data" : ""}</span><span>{n}</span>
+    <div style={{ position: "absolute", left: M, right: M, top: 500, borderTop: `1px solid ${th.border}`, paddingTop: 9, display: "flex", justifyContent: "space-between", fontSize: 8, lineHeight: "10px", color: th.muted }}>
+      <span style={{ whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", maxWidth: 520 }}>{th.name} · {report.period_label}{report.sample ? " · Sample data" : ""}</span><span>{n}</span>
     </div>
   );
 }
 
+const clamp = (n) => ({ display: "-webkit-box", WebkitLineClamp: n, WebkitBoxOrient: "vertical", overflow: "hidden" });
+
+// A number tile: the figure at the top, what it means at the bottom, however tall the tile is.
 function Tile({ th, t, big, h, w }) {
   const val = String(t.value ?? "");
-  const size = big ? ((h >= 180 ? 58 : 46) * (val.length <= 5 ? 1 : 0.66)) : (val.length <= 5 ? 34 : 25);
+  const pad = 20, labS = big ? 13.5 : 11.5, noteS = big ? 10.5 : 9.5, tw = w - pad - 14;
+  const labN = textLines(t.label, labS, tw, 2, big ? 0.55 : 0.5), noteN = t.note ? textLines(t.note, noteS, tw, 2) : 0;
+  const block = labN * (labS + 3) + (noteN ? noteN * (noteS + 3) + 3 : 0);
+  const size = Math.min(valSize(val, w, h, big), Math.max(20, h - 16 - block - 14));
   return (
-    <div style={{ position: "relative", width: w, height: h, background: th.panel, borderRadius: 12, padding: "14px 20px", boxSizing: "border-box", overflow: "hidden" }}>
+    <div style={{ position: "absolute", left: t.x, top: t.y, width: w, height: h, background: th.panel, borderRadius: 12, overflow: "hidden" }}>
       {t.accent && <span style={{ position: "absolute", left: 0, top: 0, bottom: 0, width: 4.5, background: th.accent }} />}
-      <div style={{ fontSize: size, lineHeight: 1.05, fontWeight: 800, color: t.accent ? th.accentFg : th.text, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{val}</div>
-      <div style={{ marginTop: 8, fontSize: big ? 12 : 10.5, lineHeight: big ? "15px" : "13px", fontWeight: big ? 700 : 400, color: th.text }}>{t.label}</div>
-      {t.note && <div style={{ marginTop: 3, fontSize: 9, lineHeight: "11.5px", color: th.muted }}>{t.note}</div>}
+      <div style={{ position: "absolute", left: pad, top: 16, width: tw + 2, fontSize: size, lineHeight: 1, fontWeight: 800, color: t.accent ? th.accentFg : th.text, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{val}</div>
+      <div style={{ position: "absolute", left: pad, bottom: 14, width: tw }}>
+        <div style={{ fontSize: labS, lineHeight: `${labS + 3}px`, fontWeight: big ? 700 : 400, color: th.text, ...clamp(2) }}>{t.label}</div>
+        {t.note && <div style={{ marginTop: 3, fontSize: noteS, lineHeight: `${noteS + 3}px`, color: th.muted, ...clamp(2) }}>{t.note}</div>}
+      </div>
     </div>
   );
 }
 
-function Chart({ th, ch, h }) {
-  const items = (ch.items || []).slice(0, ch.type === "columns" ? 10 : 7);
+function Insights({ th, items, x, y, width }) {
+  let top = y;
+  return items.map((t) => {
+    const n = insLines(t, width), at = top;
+    top += n * INS_LEAD + INS_GAP;
+    return (
+      <div key={t} style={{ position: "absolute", left: x, top: at, width, fontSize: INS_SIZE, lineHeight: `${INS_LEAD}px`, color: th.text }}>
+        <span style={{ position: "absolute", left: 0, top: 4.5, width: 6, height: 6, borderRadius: 3, background: th.accent }} />
+        <div style={{ marginLeft: 16, ...clamp(n) }}>{t}</div>
+      </div>
+    );
+  });
+}
+
+const Empty = ({ th }) => <div style={{ fontSize: 11, lineHeight: "14px", color: th.muted }}>Nothing to chart yet. This fills in as members take part.</div>;
+
+// A chart drawn inside a w x h box (the same sizes the download uses).
+function Chart({ th, ch, w, h }) {
+  const bodyH = h - 26;
+  const items = (ch.items || []).slice(0, ch.type === "columns" ? 10 : ch.type === "donut" ? 5 : 7);
   const max = Math.max(1, ...items.map((i) => i.value || 0));
   let body = null;
   if (ch.type === "columns") {
+    const n = items.length, slot = w / n, bw = Math.min(slot * 0.62, 48), base = 18, avail = bodyH - 18 - 20;
     body = (
-      <div style={{ display: "flex", alignItems: "flex-end", gap: 6, height: h - 30, borderBottom: `1px solid ${th.border}`, paddingBottom: 0 }}>
+      <div style={{ position: "relative", width: w, height: bodyH }}>
+        <span style={{ position: "absolute", left: 0, right: 0, bottom: base, height: 1, background: th.border }} />
+        {items.map((it, i) => {
+          const bh = it.value ? Math.max(avail * (it.value / max), 3) : 0, cx = i * slot + slot / 2;
+          return (
+            <React.Fragment key={i}>
+              {bh > 0 && <span style={{ position: "absolute", left: cx - bw / 2, bottom: base, width: bw, height: bh, borderRadius: `${Math.min(5, bw / 3)}px ${Math.min(5, bw / 3)}px 0 0`, background: i === n - 1 ? th.accentFg : th.accentFg + "73" }} />}
+              <span style={{ position: "absolute", left: cx - 30, width: 60, textAlign: "center", bottom: base + bh + 4, fontSize: 11, lineHeight: "13px", fontWeight: 700, color: th.text }}>{it.value}</span>
+              <span style={{ position: "absolute", left: cx - slot / 2 - 3, width: slot + 6, textAlign: "center", bottom: 2, fontSize: 8.5, lineHeight: "11px", color: th.muted, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{it.label}</span>
+            </React.Fragment>
+          );
+        })}
+      </div>
+    );
+  } else if (ch.type === "hbar") {
+    const row = Math.min(40, bodyH / Math.max(items.length, 1)), labW = w * 0.38, trackX = labW + 10, trackW = w - labW - 10 - 46;
+    body = (
+      <div style={{ position: "relative", width: w, height: bodyH }}>
         {items.map((it, i) => (
-          <div key={i} style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "flex-end", height: "100%" }}>
-            <span style={{ fontSize: 9.5, fontWeight: 700, color: th.text, marginBottom: 3 }}>{it.value}</span>
-            <span style={{ width: "58%", maxWidth: 40, height: `${Math.max((it.value / max) * 78, it.value ? 2 : 0)}%`, background: i === items.length - 1 ? th.accentFg : th.accentFg + "73", borderRadius: "4px 4px 0 0" }} />
+          <div key={i} style={{ position: "absolute", left: 0, top: i * row, width: w, height: row }}>
+            <span style={{ position: "absolute", left: 0, top: row / 2 - 8, width: labW, fontSize: 11, lineHeight: "16px", color: th.text, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{it.label}</span>
+            <span style={{ position: "absolute", left: trackX, top: row / 2 - 5, width: trackW, height: 10, borderRadius: 5, background: th.soft }} />
+            {it.value > 0 && <span style={{ position: "absolute", left: trackX, top: row / 2 - 5, width: Math.max(trackW * (it.value / max), 7), height: 10, borderRadius: 5, background: th.accentFg, opacity: i === 0 ? 1 : 0.78 }} />}
+            <span style={{ position: "absolute", left: trackX + trackW + 10, top: row / 2 - 8, fontSize: 11, lineHeight: "16px", fontWeight: 700, color: th.text, whiteSpace: "nowrap" }}>{ch.unit === "% full" ? `${it.value}%` : it.value}</span>
           </div>
         ))}
       </div>
     );
-  } else if (ch.type === "hbar") {
-    body = items.map((it, i) => (
-      <div key={i} style={{ display: "grid", gridTemplateColumns: "36% 1fr 30px", gap: 8, alignItems: "center", height: 30 }}>
-        <span style={{ fontSize: 10, color: th.text, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{it.label}</span>
-        <span style={{ height: 8, borderRadius: 4, background: th.soft, display: "block" }}><span style={{ display: "block", height: 8, borderRadius: 4, width: `${Math.max((it.value / max) * 100, it.value ? 4 : 0)}%`, background: th.accentFg, opacity: i === 0 ? 1 : 0.78 }} /></span>
-        <span style={{ fontSize: 10, fontWeight: 700, color: th.text }}>{ch.unit === "% full" ? `${it.value}%` : it.value}</span>
-      </div>
-    ));
   } else if (ch.type === "table") {
-    const cols = ch.columns || [];
-    const tpl = { 2: "65% 35%", 3: "42% 34% 24%", 4: "40% 22% 19% 19%" }[cols.length] || `repeat(${cols.length}, 1fr)`;
+    const cols = ch.columns || [], rows = (ch.rows || []).slice(0, 7);
+    const fr = { 2: [0.65, 0.35], 3: [0.46, 0.3, 0.24], 4: [0.4, 0.24, 0.18, 0.18] }[cols.length] || cols.map(() => 1 / cols.length);
+    const tpl = fr.map((f) => `${f * 100}%`).join(" "), rh = Math.min(46, (bodyH - 26) / Math.max(rows.length, 1));
     body = (
-      <div>
-        <div style={{ display: "grid", gridTemplateColumns: tpl, paddingBottom: 6, borderBottom: `1px solid ${th.text}`, ...caps(th.muted, 7.5, 1) }}>{cols.map((c) => <span key={c}>{c}</span>)}</div>
-        {(ch.rows || []).slice(0, 7).map((r, i) => (
-          <div key={i} style={{ display: "grid", gridTemplateColumns: tpl, height: 28, alignItems: "center", borderBottom: `1px solid ${th.border}`, fontSize: 9.5 }}>
-            {r.slice(0, cols.length).map((cell, j) => <span key={j} style={{ color: j ? th.muted : th.text, fontWeight: j ? 400 : 700, fontSize: j ? 9.5 : 10, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", paddingRight: 8 }}>{cell}</span>)}
+      <div style={{ width: w }}>
+        <div style={{ display: "grid", gridTemplateColumns: tpl, height: 18, paddingTop: 4, boxSizing: "border-box", borderBottom: `1px solid ${th.text}`, ...caps(th.muted, 8, 1) }}>{cols.map((c) => <span key={c} style={{ whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", paddingRight: 6 }}>{c}</span>)}</div>
+        {rows.map((r, i) => (
+          <div key={i} style={{ display: "grid", gridTemplateColumns: tpl, height: rh, alignItems: "center", boxSizing: "border-box", borderBottom: `1px solid ${th.border}` }}>
+            {r.slice(0, cols.length).map((cell, j) => <span key={j} style={{ color: j ? th.muted : th.text, fontWeight: j ? 400 : 700, fontSize: j ? 10.5 : 11.5, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", paddingRight: 10 }}>{cell}</span>)}
           </div>
         ))}
       </div>
     );
   } else if (ch.type === "donut") {
-    const total = items.reduce((a, i) => a + (i.value || 0), 0) || 1;
+    const total = items.reduce((a, i) => a + (i.value || 0), 0) || 1, r = Math.min(bodyH / 2 - 6, 88);
     let acc = 0;
     const stops = items.map((it, i) => { const a = (acc / total) * 360; acc += it.value || 0; return `${th.series[i]} ${a}deg ${(acc / total) * 360}deg`; }).join(", ");
+    const lx = r * 2 + 8 + 26 - 4, row = 26;
     body = (
-      <div style={{ display: "flex", alignItems: "center", gap: 24 }}>
-        <span style={{ width: 120, height: 120, borderRadius: "50%", background: `conic-gradient(${stops})`, display: "inline-block", WebkitMask: "radial-gradient(circle, transparent 58%, #000 59%)", mask: "radial-gradient(circle, transparent 58%, #000 59%)" }} />
-        <div style={{ flex: 1 }}>{items.map((it, i) => (
-          <div key={i} style={{ display: "flex", alignItems: "center", gap: 8, height: 22, fontSize: 10, color: th.text }}>
-            <span style={{ width: 10, height: 10, borderRadius: 2, background: th.series[i] }} /><span style={{ flex: 1 }}>{it.label}</span><b>{Math.round((100 * it.value) / total)}%</b>
-          </div>))}</div>
+      <div style={{ position: "relative", width: w, height: bodyH }}>
+        <span style={{ position: "absolute", left: 4, top: bodyH / 2 - r, width: r * 2, height: r * 2, borderRadius: "50%", background: `conic-gradient(${stops})`, WebkitMask: "radial-gradient(circle, transparent 57%, #000 58%)", mask: "radial-gradient(circle, transparent 57%, #000 58%)" }} />
+        {items.map((it, i) => (
+          <div key={i} style={{ position: "absolute", left: lx, width: w - lx, top: bodyH / 2 - (row * items.length) / 2 + i * row, height: row, display: "flex", alignItems: "center", gap: 7, fontSize: 11, color: th.text }}>
+            <span style={{ width: 11, height: 11, borderRadius: 2, background: th.series[i], flex: "none" }} />
+            <span style={{ flex: 1, minWidth: 0, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{it.label}</span><b>{Math.round((100 * it.value) / total)}%</b>
+          </div>
+        ))}
       </div>
     );
   }
   return (
-    <div>
-      <div style={{ ...caps(th.muted, 8.5, 1.2), marginBottom: 12 }}>{ch.title}</div>
+    <div style={{ width: w, height: h }}>
+      <div style={{ height: 26, ...caps(th.muted, 8.5, 1.2), whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{ch.title}</div>
       {body}
+    </div>
+  );
+}
+
+function ChartPanel({ th, ch, x, y, w, h, inset = 18 }) {
+  return (
+    <div style={{ position: "absolute", left: x, top: y, width: w, height: h, background: th.panel, borderRadius: 12, overflow: "hidden" }}>
+      <div style={{ position: "absolute", left: inset, top: 12 }}><Chart th={th} ch={ch} w={w - inset * 2} h={h - 26} /></div>
     </div>
   );
 }
@@ -162,71 +213,90 @@ function Slide({ th, report, slide, n, logos }) {
   }
   if (slide.kind === "glance") {
     const k = slide.picks.length, gap = 18, w = (W - 2 * M - gap * (k - 1)) / k;
+    const line = slide.line, band = line ? 78 : 0, extra = line ? band + 22 : 0;
+    const ch = Math.min(BODY_H - extra, 300), top = BODY_TOP + (BODY_H - ch - extra) * 0.3;
     return (
       <div style={base}>
         <Header th={th} eyebrow="At a glance" title="The numbers that matter" subtitle={`${report.period_label}. Every figure is counted from ${th.name}'s own records.`} mark={logos.mark} />
-        <div style={{ position: "absolute", left: M, top: 188, display: "flex", gap }}>
-          {slide.picks.map(({ section, tile }) => {
-            const val = String(tile.value), size = val.length <= 5 ? 54 : val.length <= 8 ? 40 : 28;
-            return (
-              <div key={section} style={{ position: "relative", width: w, height: 176, background: th.panel, borderRadius: 14, padding: "22px 24px", boxSizing: "border-box" }}>
-                <span style={{ position: "absolute", left: 0, top: 0, bottom: 0, width: 5, background: th.accent }} />
-                <div style={caps(th.muted, 8, 1.4)}>{section}</div>
-                <div style={{ marginTop: 12, fontSize: size, lineHeight: 1, fontWeight: 800, color: th.accentFg, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{val}</div>
-                <div style={{ marginTop: 14, fontSize: 12.5, lineHeight: "16px", fontWeight: 700, color: th.text }}>{tile.label}</div>
-                {tile.note && <div style={{ marginTop: 5, fontSize: 9.5, lineHeight: "12.5px", color: th.muted }}>{tile.note}</div>}
+        {slide.picks.map(({ section, tile }, i) => {
+          const val = String(tile.value);
+          let size = val.length <= 4 ? 66 : val.length <= 6 ? 54 : val.length <= 9 ? 40 : 30;
+          while (size > 20 && val.length * size * 0.58 > w - 48) size -= 2;
+          const tw = w - 48;
+          return (
+            <div key={section} style={{ position: "absolute", left: M + i * (w + gap), top, width: w, height: ch, background: th.panel, borderRadius: 14, overflow: "hidden" }}>
+              <span style={{ position: "absolute", left: 0, top: 0, bottom: 0, width: 5, background: th.accent }} />
+              <div style={{ position: "absolute", left: 24, top: 22, width: tw, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", lineHeight: "12px", ...caps(th.muted, 8.5, 1.4) }}>{section}</div>
+              <div style={{ position: "absolute", left: 24, top: 46, width: tw + 8, fontSize: size, lineHeight: 1, fontWeight: 800, color: th.accentFg, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{val}</div>
+              <div style={{ position: "absolute", left: 24, bottom: 22, width: tw }}>
+                <div style={{ fontSize: 14, lineHeight: "18px", fontWeight: 700, color: th.text, ...clamp(2) }}>{tile.label}</div>
+                {tile.note && <div style={{ marginTop: 4, fontSize: 10.5, lineHeight: "13.5px", color: th.muted, ...clamp(3) }}>{tile.note}</div>}
               </div>
-            );
-          })}
-        </div>
-        {slide.line && <div style={{ position: "absolute", left: M, right: M, top: 410, display: "flex", gap: 14 }}><span style={{ width: 4, background: th.accent, flex: "none" }} /><p style={{ margin: 0, fontSize: 14, lineHeight: "19px", color: th.text }}>{slide.line}</p></div>}
+            </div>
+          );
+        })}
+        {line && (
+          <div style={{ position: "absolute", left: M, top: top + ch + 22, width: W - 2 * M, height: band, background: th.soft, borderRadius: 12, overflow: "hidden", display: "flex", alignItems: "center" }}>
+            <span style={{ position: "absolute", left: 0, top: 0, bottom: 0, width: 5, background: th.accent }} />
+            <p style={{ margin: 0, padding: "0 30px 0 26px", fontSize: 15, lineHeight: "20px", fontWeight: 700, color: th.text, ...clamp(3) }}>{line}</p>
+          </div>
+        )}
         <Footer th={th} report={report} n={n} />
       </div>
     );
   }
   if (slide.kind === "section") {
     const { s, charts } = slide;
-    const tiles = (s.tiles || []).slice(0, 6);
-    const insights = (s.insights || []).slice(0, 3);
-    const top = 130, bottom = 62;
-    if (charts.length) {
-      const colW = 392, rows = Math.ceil(tiles.length / 2), tw = (colW - 14) / 2;
-      const tilesH = rows * 104 + (rows - 1) * 14;
-      const cx = M + colW + 44, cw = W - M - cx;
-      const cap = (H - top - bottom - (charts.length - 1) * 18) / charts.length;
-      const want = (ch) => (ch.type === "table" ? Math.min(cap, 56 + 28 * Math.min((ch.rows || []).length, 7)) : ch.type === "hbar" ? Math.min(cap, 44 + 30 * Math.min((ch.items || []).length, 7)) : cap);
+    const tiles = (s.tiles || []).slice(0, 6), insights = (s.insights || []).slice(0, 3);
+    const head = <Header th={th} eyebrow={report.title} title={s.title} subtitle={s.subtitle} mark={logos.mark} />;
+    const foot = <Footer th={th} report={report} n={n} />;
+    const T = (t, x, y, w, h, big) => <Tile key={t.label} th={th} t={{ ...t, x, y }} w={w} h={h} big={big} />;
+    if (charts.length === 1 && charts[0].type === "table" && tiles.length) {
+      const ts = tiles.slice(0, 4), tn = ts.length, width = W - 2 * M, tw = (width - GAP * (tn - 1)) / tn, th_ = 124;
+      const py = BODY_TOP + th_ + GAP, ph = BODY_BOT - py;
       return (
         <div style={base}>
-          <Header th={th} eyebrow={report.title} title={s.title} subtitle={s.subtitle} mark={logos.mark} />
-          <div style={{ position: "absolute", left: M, top, width: colW, display: "grid", gridTemplateColumns: `repeat(2, ${tw}px)`, gap: 14 }}>
-            {tiles.map((t) => <Tile key={t.label} th={th} t={t} h={104} w={tw} />)}
-          </div>
-          {insights.length > 0 && (
-            <div style={{ position: "absolute", left: M, top: top + tilesH + 18, width: colW }}>
-              {insights.map((t) => <div key={t} style={{ display: "flex", gap: 10, marginBottom: 8, fontSize: 11.5, lineHeight: "15px", color: th.text }}><span style={{ width: 6, height: 6, borderRadius: 3, background: th.accent, marginTop: 5, flex: "none" }} />{t}</div>)}
-            </div>
-          )}
-          <div style={{ position: "absolute", left: cx - 16, top, width: cw + 32 }}>
-            {charts.map((ch) => { const h = want(ch); return <div key={ch.title} style={{ background: th.panel, borderRadius: 12, padding: "16px", marginBottom: 18, height: h + 14, boxSizing: "border-box" }}><Chart th={th} ch={ch} h={h - 22} /></div>; })}
-          </div>
-          <Footer th={th} report={report} n={n} />
+          {head}
+          {ts.map((t, i) => T(t, M + i * (tw + GAP), BODY_TOP, tw, th_))}
+          <ChartPanel th={th} ch={charts[0]} x={M} y={py} w={width} h={ph} inset={22} />
+          {foot}
         </div>
       );
     }
-    const cols = Math.min(Math.max(tiles.length, 1), 4), rows = Math.ceil(tiles.length / cols), h = rows === 1 ? 190 : 140;
-    const tw = (W - 2 * M - 14 * (cols - 1)) / cols;
-    const total = rows * h + (rows - 1) * 14 + (insights.length ? insights.length * 40 + 20 : 0);
-    const y = top + Math.max(0, (H - top - bottom - total) * 0.38);
+    if (charts.length) {
+      let px = M, tilesEl = null;
+      if (tiles.length) {
+        const ih = insH(insights, LEFT_W), rows = Math.ceil(tiles.length / 2), tw = (LEFT_W - GAP) / 2;
+        const h = Math.max(88, Math.min(176, (BODY_H - (ih ? ih + 18 : 0) - (rows - 1) * GAP) / rows));
+        tilesEl = (
+          <>
+            {tiles.map((t, i) => T(t, M + (i % 2) * (tw + GAP), BODY_TOP + Math.floor(i / 2) * (h + GAP), tw, h))}
+            {insights.length > 0 && <Insights th={th} items={insights} x={M} y={BODY_TOP + rows * h + (rows - 1) * GAP + 18} width={LEFT_W} />}
+          </>
+        );
+        px = M + LEFT_W + 30;
+      }
+      const pw = W - M - px, nat = charts.map(natH), sum = nat.reduce((a, b) => a + b, 0), total = BODY_H - (charts.length - 1) * GAP;
+      let y = BODY_TOP;
+      return (
+        <div style={base}>
+          {head}
+          {tilesEl}
+          {charts.map((ch, i) => { const h = (nat[i] / sum) * total, at = y; y += h + GAP; return <ChartPanel key={ch.title} th={th} ch={ch} x={px} y={at} w={pw} h={h} />; })}
+          {foot}
+        </div>
+      );
+    }
+    const n_ = tiles.length, cols = { 1: 1, 2: 2, 3: 3, 4: 4 }[n_] || 3, rows = Math.max(1, Math.ceil(n_ / cols)), width = W - 2 * M;
+    const ih = insH(insights, width), extra = ih ? ih + 28 : 0;
+    const h = Math.min(210, (BODY_H - extra - (rows - 1) * GAP) / rows), group = n_ ? rows * h + (rows - 1) * GAP + extra : extra;
+    const y0 = BODY_TOP + (BODY_H - group) * 0.35, tw = (width - GAP * (cols - 1)) / cols;
     return (
       <div style={base}>
-        <Header th={th} eyebrow={report.title} title={s.title} subtitle={s.subtitle} mark={logos.mark} />
-        <div style={{ position: "absolute", left: M, top: y, display: "grid", gridTemplateColumns: `repeat(${cols}, ${tw}px)`, gap: 14 }}>
-          {tiles.map((t) => <Tile key={t.label} th={th} t={t} big h={h} w={tw} />)}
-        </div>
-        {insights.length > 0 && <div style={{ position: "absolute", left: M, right: M, top: y + rows * h + (rows - 1) * 14 + 22 }}>
-          {insights.map((t) => <div key={t} style={{ display: "flex", gap: 10, marginBottom: 8, fontSize: 11.5, lineHeight: "15px", color: th.text }}><span style={{ width: 6, height: 6, borderRadius: 3, background: th.accent, marginTop: 5, flex: "none" }} />{t}</div>)}
-        </div>}
-        <Footer th={th} report={report} n={n} />
+        {head}
+        {tiles.map((t, i) => T(t, M + (i % cols) * (tw + GAP), y0 + Math.floor(i / cols) * (h + GAP), tw, h, true))}
+        {insights.length > 0 && <Insights th={th} items={insights} x={M} y={n_ ? y0 + rows * h + (rows - 1) * GAP + 28 : BODY_TOP + 20} width={width} />}
+        {foot}
       </div>
     );
   }

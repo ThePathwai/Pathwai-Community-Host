@@ -1,7 +1,7 @@
 import React, { useCallback, useEffect, useState } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { toast } from "sonner";
-import { Check, Copy, Download, ExternalLink, FileText, Instagram, Link2, Printer, RefreshCw, Trash2 } from "lucide-react";
+import { Check, Circle, Copy, Download, ExternalLink, FileText, Instagram, Link2, Printer, RefreshCw, Trash2 } from "lucide-react";
 import { api, errMsg, timeAgo } from "../lib/api";
 import { useAuth } from "../lib/auth";
 import { isDemo } from "../lib/demo";
@@ -9,6 +9,7 @@ import { Button, Card, Input, PageHeader, Spinner, cx } from "../components/ui";
 import ReportView from "../components/ReportView";
 import { downloadReportDeck, downloadReportPdf } from "../components/ImpactPanel";
 import DeckPreview from "../components/DeckPreview";
+import { deckTheme } from "../lib/deck";
 
 const TYPES = [
   ["sponsor", "Sponsor report", "Reach, event turnout and perk use. For the people backing you."],
@@ -18,6 +19,34 @@ const TYPES = [
 const PERIODS = [[30, "Last 30 days"], [90, "Last 90 days"], [365, "Last 12 months"]];
 
 export const shareUrl = (slug, token) => `${window.location.origin}/r/${slug || "c"}/${token}`;
+
+
+// What the slides are made from, and what is still missing. Nothing is required: every slide adapts to what the community has.
+function DeckReadiness({ config, ig, onInstagram }) {
+  const th = deckTheme(config);
+  const photos = Math.min(th.photos.length, 2);
+  const items = [
+    { k: "logo", ok: !!(th.logo || th.mark), label: "Logo", add: "Add your logo", to: "/admin?tab=brand" },
+    { k: "photos", ok: photos >= 2, label: `Photos ${photos}/2`, add: photos ? "Add another photo" : "Add 2 photos", to: "/admin?tab=brand" },
+    { k: "story", ok: !!th.about, label: "Your story", add: "Write a short story", to: "/admin?tab=brand" },
+    { k: "contact", ok: !!(th.site || th.email), label: "Website or email", add: "Add a website or email", to: "/admin?tab=brand" },
+    { k: "ig", ok: !!ig?.connected, label: "Instagram", add: "Connect Instagram", onClick: onInstagram, hide: ig === null },
+  ].filter((i) => !i.hide);
+  const done = items.filter((i) => i.ok).length;
+  return (
+    <div className="mb-4 rounded-xl border border-line bg-surface/60 p-3" data-testid="deck-readiness">
+      <p className="mb-2 text-xs text-muted"><span className="font-semibold text-ink">{done === items.length ? "Everything is in." : `${done} of ${items.length} personal touches in.`}</span> Your colours and numbers are always used; add what is missing and the slides pick it up straight away.</p>
+      <div className="flex flex-wrap gap-2">
+        {items.map((i) => {
+          const body = (<>{i.ok ? <Check className="h-3.5 w-3.5 text-green-500" /> : <Circle className="h-3.5 w-3.5 text-muted" />}{i.ok ? i.label : i.add}</>);
+          const cls = cx("inline-flex min-h-[32px] items-center gap-1.5 rounded-full border px-3 text-xs font-medium", i.ok ? "border-line bg-surface text-ink" : "border-dashed border-ink/30 text-ink hover:bg-ink/5");
+          if (i.ok) return <span key={i.k} className={cls} data-testid={`deck-ready-${i.k}`}>{body}</span>;
+          return i.to ? <Link key={i.k} to={i.to} className={cls} data-testid={`deck-ready-${i.k}`}>{body}</Link> : <button key={i.k} type="button" onClick={i.onClick} className={cls} data-testid={`deck-ready-${i.k}`}>{body}</button>;
+        })}
+      </div>
+    </div>
+  );
+}
 
 export default function Reports({ embedded = false }) {
   const { config } = useAuth();
@@ -143,6 +172,7 @@ export default function Reports({ embedded = false }) {
           </div>
           <Input value={label} onChange={(e) => setLabel(e.target.value)} placeholder="Prepared for (optional)" maxLength={80} aria-label="Who the slides are prepared for" data-testid="deck-label" className="w-full sm:w-72" />
         </div>
+        <DeckReadiness config={config} ig={ig} onInstagram={goConnectIg} />
         {!rep ? <Spinner /> : <DeckPreview report={rep} config={config} label={label} />}
       </Card>
 
