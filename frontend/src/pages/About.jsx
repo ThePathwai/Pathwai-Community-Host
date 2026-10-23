@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { ArrowRight, Check, Minus, Plus, X } from "lucide-react";
 import { Wordmark, PoweredBy, cx } from "../components/ui";
 import ReportView from "../components/ReportView";
+import DeckPreview from "../components/DeckPreview";
 import { startAdminDemo, startDemo } from "../lib/demo";
 import { REPORT_TYPES, buildReport, sampleInstagram, sampleMetrics, withInstagram } from "../lib/sampleReport";
 
@@ -226,10 +227,18 @@ const NAV = [["circle", "Full circle"], ["promises", "What you get"], ["sample",
 // Every section is a collapsible row so the page stays short; only the first starts open.
 const ALL = ["circle", "promises", "sample", "members", "who", "how", "market", "diff", "compare"];
 // Short tab names for the sample report switcher.
+// Three made-up looks for the sample, to show the same report coming out in a community's own colours.
+const SAMPLE_BRANDS = [
+  { key: "ember", label: "Ember", colors: { accent: "#E4572E", background: "#111827", surface: "#1F2937", text: "#F9FAFB", muted: "#9CA3AF", border: "#374151", on_accent: "#FFFFFF" } },
+  { key: "meadow", label: "Meadow", colors: { accent: "#1F7A4D", background: "#F4F1E8", surface: "#FFFFFF", text: "#16241B", muted: "#5C6B61", border: "#D8D4C4", on_accent: "#FFFFFF" } },
+  { key: "violet", label: "Violet", colors: { accent: "#8B5CF6", background: "#0F0B1E", surface: "#1A1433", text: "#F5F3FF", muted: "#A79FC8", border: "#2E2552", on_accent: "#FFFFFF" } },
+];
 const TAB = { sponsor: "Sponsor", funder: "Investor or funder", board: "Board" };
 
 export default function About() {
   const [kind, setKind] = useState("sponsor");
+  const [view, setView] = useState("slides");
+  const [look, setLook] = useState(0);
   const [open, setOpen] = useState(["circle"]);
   useEffect(() => {
     document.title = "Pathwai: run your community in one place, know what is working";
@@ -241,6 +250,8 @@ export default function About() {
   const jump = (k) => { if (ALL.includes(k)) setOpen((o) => (o.includes(k) ? o : [...o, k])); setTimeout(() => document.getElementById(k)?.scrollIntoView({ behavior: "smooth" }), 60); };
   const allOpen = open.length === ALL.length;
   const sample = useMemo(() => withInstagram(buildReport(kind, sampleMetrics({ members: 64, seed: "pathwai-sample", days: 90 }), "Northside Founders Club"), sampleInstagram("pathwai-sample")), [kind]);
+  const demoConfig = useMemo(() => ({ community_name: "Northside Founders Club", brand: { colors: SAMPLE_BRANDS[look].colors },
+    about: "Northside Founders Club brings first-time founders together every month to share what is working, meet people who can help, and get started faster." }), [look]);
   const R = (k) => ({ open: open.includes(k), onToggle: () => toggle(k) });
 
   return (
@@ -305,7 +316,7 @@ export default function About() {
           <Row id="sample" n={3} title="A sample report" summary="What a partner, sponsor, investor or board opens. Sample data." wide {...R("sample")}>
             <div data-testid="about-sample">
               <div className="flex flex-wrap items-end justify-between gap-4">
-                <p className="max-w-xl text-sm text-muted sm:text-base">One click from the admin home. Pick who it is for (a sponsor, an investor or funder, your board) and Pathwai builds it from your own records, with your Instagram reach alongside if you connect it. Everything below is made-up sample data.</p>
+                <p className="max-w-xl text-sm text-muted sm:text-base">One click from the admin home. Pick who it is for (a sponsor, an investor or funder, your board) and Pathwai builds it from your own records, then dresses it in your colours, logo and photos as a slide deck you can download. Everything below is made-up sample data.</p>
                 <div className="inline-flex rounded-full border border-line p-0.5 text-sm" role="tablist" aria-label="Report type">
                   {REPORT_TYPES.map((t) => (
                     <button key={t.kind} type="button" role="tab" aria-selected={kind === t.kind} onClick={() => setKind(t.kind)} data-testid={`about-sample-${t.kind}`}
@@ -313,17 +324,36 @@ export default function About() {
                   ))}
                 </div>
               </div>
-              <div className="mt-6 rounded-2xl border border-line bg-surface p-5 sm:p-8">
-                <div className="mb-6 border-b border-line pb-5">
-                  <p className="eyebrow">{sample.audience}</p>
-                  <h3 className="mt-2 text-2xl sm:text-3xl" style={{ textWrap: "balance" }}>Northside Founders Club: {sample.headline}</h3>
-                  <p className="mt-2 flex flex-wrap items-center gap-2 text-xs text-muted">{sample.period_label} <span className="chip" data-testid="about-sample-chip">Sample data</span></p>
+              <div className="mt-5 flex flex-wrap items-center justify-between gap-3" data-testid="about-sample-controls">
+                <div className="inline-flex rounded-full border border-line p-0.5 text-sm" role="tablist" aria-label="How to view the report">
+                  {[["slides", "Slides"], ["report", "Report"]].map(([k, l]) => (
+                    <button key={k} type="button" role="tab" aria-selected={view === k} onClick={() => setView(k)} data-testid={`about-sample-view-${k}`}
+                      className={cx("rounded-full px-4 py-1.5 transition-colors", view === k ? "bg-ink text-paper" : "text-muted hover:text-ink")}>{l}</button>
+                  ))}
                 </div>
-                <ReportView report={sample} />
+                <div className="flex items-center gap-2 text-xs text-muted" data-testid="about-sample-looks">
+                  <span className="chip" data-testid="about-sample-chip">Sample data</span><span>Your colours, automatically:</span>
+                  {SAMPLE_BRANDS.map((b, i) => (
+                    <button key={b.key} type="button" onClick={() => setLook(i)} aria-pressed={look === i} aria-label={`${b.label} colours`} title={b.label} data-testid={`about-sample-look-${b.key}`}
+                      className={cx("h-7 w-7 rounded-full border-2 transition", look === i ? "border-ink" : "border-line")} style={{ background: `linear-gradient(135deg, ${b.colors.background} 50%, ${b.colors.accent} 50%)` }} />
+                  ))}
+                </div>
               </div>
+              {view === "slides" ? (
+                <div className="mt-4" data-testid="about-sample-slides"><DeckPreview report={sample} config={demoConfig} /></div>
+              ) : (
+                <div className="mt-4 rounded-2xl border border-line bg-surface p-5 sm:p-8">
+                  <div className="mb-6 border-b border-line pb-5">
+                    <p className="eyebrow">{sample.audience}</p>
+                    <h3 className="mt-2 text-2xl sm:text-3xl" style={{ textWrap: "balance" }}>Northside Founders Club: {sample.headline}</h3>
+                    <p className="mt-2 flex flex-wrap items-center gap-2 text-xs text-muted">{sample.period_label}</p>
+                  </div>
+                  <ReportView report={sample} config={demoConfig} />
+                </div>
+              )}
               <div className="mt-5 flex flex-wrap items-center gap-3">
                 <button type="button" onClick={() => startAdminDemo()} className="btn-primary" data-testid="about-sample-demo">Open it in the admin demo</button>
-                <p className="text-xs text-muted">Download it as a PDF, or share a read-only live link that always shows current numbers (totals only, never names).</p>
+                <p className="text-xs text-muted">Download the slides or a PDF, or share a read-only live link that always shows current numbers (totals only, never names).</p>
               </div>
             </div>
           </Row>

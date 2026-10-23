@@ -42,7 +42,7 @@ function Brand({ th, logo, height, align = "left" }) {
   return (
     <div style={{ display: "flex", alignItems: "center", gap: 10, fontWeight: 800, fontSize: height * 0.4, letterSpacing: 0.5, textTransform: "uppercase", color: th.text }}>
       <span style={{ width: height * 0.4, height: height * 0.4, borderRadius: height * 0.09, background: th.accent, display: "inline-block" }} />
-      <span style={{ maxWidth: 330, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{th.name}</span>
+      <span style={{ maxWidth: 440, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{th.name}</span>
     </div>
   );
 }

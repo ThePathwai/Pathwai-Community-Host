@@ -261,7 +261,7 @@ def _wordmark(c: canvas.Canvas, th: Theme, x: float, y: float, size: float, colo
     c.roundRect(x, y - 2, size * 0.9, size * 0.9, size * 0.2, fill=1, stroke=0)
     c.setFillColor(color)
     c.setFont(BOLD, size)
-    c.drawString(x + size * 1.15, y, _fit(c, th.name.upper(), BOLD, size, 330))
+    c.drawString(x + size * 1.15, y, _fit(c, th.name.upper(), BOLD, size, 440))
 
 
 def _rings(c: canvas.Canvas, cx: float, cy: float, color: colors.Color, alpha: float, radii: List[float], width: float = 1.2) -> None:
