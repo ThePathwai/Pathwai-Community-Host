@@ -102,7 +102,7 @@ export default function Login() {
         <div className="relative flex h-full flex-col justify-between p-12 text-white">
           <span className="text-4xl"><Wordmark name="Pathwai" brand={{}} /></span>
           <div>
-            <p className="font-display text-5xl font-bold leading-[1.08]">One login.<br />Every community you belong to.</p>
+            <p className="font-display text-5xl font-bold leading-[1.08]">Run your community in one place.<br />Know what is working.</p>
           </div>
         </div>
       </div>
@@ -145,11 +145,11 @@ export default function Login() {
         {!inDemo && (
           <div className="mt-6 space-y-2" data-testid="demo-links">
             <p className="eyebrow">Try the demo</p>
-            <h2 className="text-xl" style={{ textWrap: "balance" }}>Keep your members. Prove your impact.</h2>
+            <h2 className="text-xl" style={{ textWrap: "balance" }}>Run your community in one place. Know what is working.</h2>
             <p className="text-xs text-muted">A practice copy with made-up members and events. Nothing you do there is saved or touches a real community.</p>
             <div className="rounded-xl border border-ink/40 bg-surface p-4" data-testid="demo-admin-card">
               <p className="font-medium">See it as the person running a community</p>
-              <p className="mt-1 text-xs text-muted">Opens on the Impact view: active members, introductions made, event turnout and perk results, plus who is going quiet and a sponsor report you can open.</p>
+              <p className="mt-1 text-xs text-muted">Opens on the Impact view: every number set against the period before it, who is going quiet, and a report you can open and send.</p>
               <div className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-4" data-testid="demo-sample-tiles" aria-label="Sample figures">
                 {SAMPLE_TILES.map((t) => (
                   <div key={t.label} className="rounded-lg bg-ink/[.05] p-2.5"><p className="stat text-lg leading-none">{t.value}</p><p className="mt-1 text-[11px] leading-tight text-muted">{t.label}</p></div>
@@ -160,7 +160,7 @@ export default function Login() {
             </div>
             <button type="button" data-testid="demo-link-member" onClick={() => startDemo("member")}
               className="block w-full rounded-xl border border-line bg-surface p-4 text-left hover:bg-ink/5">
-              <p className="font-medium">Or see what your members see</p><p className="text-xs text-muted">Profiles, events, perks and recommended connections, each with a reason.</p>
+              <p className="font-medium">Or see what your members see</p><p className="text-xs text-muted">One front door: the community's story, perks, introductions with a reason, offers and asks, and a scorecard of how dependable it is.</p>
             </button>
             <p className="eyebrow pt-3">Or walk through a community, from either side</p>
             {DEMO_COMMUNITIES.map((c) => (

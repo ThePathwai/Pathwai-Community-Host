@@ -3,11 +3,11 @@ import { Link } from "react-router-dom";
 import { ArrowRight, Check, Minus, Plus, X } from "lucide-react";
 import { Wordmark, PoweredBy, cx } from "../components/ui";
 import ReportView from "../components/ReportView";
-import { startAdminDemo } from "../lib/demo";
+import { startAdminDemo, startDemo } from "../lib/demo";
 import { REPORT_TYPES, buildReport, sampleInstagram, sampleMetrics, withInstagram } from "../lib/sampleReport";
 
 // /about -- public (no login). Written for the person who runs a community, because they are the buyer:
-// three promises, a sample report you can read right here, then who it's for, how it works and how it compares.
+// what the admin gets (one toolset, numbers with context, proof to send), a sample report, what members get, then who it's for, how it works and how it compares.
 // Plain data below so copy edits are one-liners.
 
 const AUDIENCES = [
@@ -17,20 +17,107 @@ const AUDIENCES = [
   ["Programs & learning cohorts", "Pair it with the learning tool you already use. Pathwai handles the people side: who is in your cohort and who to meet."],
 ];
 
+// The loop the whole product is built around: a better experience for members is what creates the return for the person running the community,
+// and the return pays for a better experience again.
+const CIRCLE = [
+  { who: "Members", title: "Members feel looked after", text: "One front door: the community's story, perks, introductions with a reason, offers and asks." },
+  { who: "Members", title: "They show up and take part", text: "They attend, connect, use perks and trade value, because it is worth their time." },
+  { who: "You", title: "Pathwai counts it", text: "Every action is counted from your own records and set against the last period." },
+  { who: "You", title: "You decide with data", text: "Every number is set against the last period, so you see what is working and who is drifting." },
+  { who: "Both", title: "It comes back to members", text: "You put what you learn into better perks, events and introductions. The results also draw in partners and sponsors when you want them." },
+];
+
+function WhoChip({ who }) {
+  return <span className={cx("chip !text-[10px] uppercase tracking-wider", who === "Members" && "chip-accent")}>{who === "Both" ? "Members and you" : who === "You" ? "You" : "Members"}</span>;
+}
+
+function Circle() {
+  const R = 37; // distance of each step from the centre, as a % of the ring's width
+  const at = (i, r = R) => { const a = ((-90 + i * 72) * Math.PI) / 180; return [50 + r * Math.cos(a), 50 + r * Math.sin(a)]; };
+  // an arc between two neighbouring steps, trimmed so the arrow sits in the gap between their cards
+  const arc = (i) => {
+    const a1 = ((-90 + i * 72 + 22) * Math.PI) / 180, a2 = ((-90 + (i + 1) * 72 - 22) * Math.PI) / 180;
+    return `M ${50 + R * Math.cos(a1)} ${50 + R * Math.sin(a1)} A ${R} ${R} 0 0 1 ${50 + R * Math.cos(a2)} ${50 + R * Math.sin(a2)}`;
+  };
+  return (
+    <div data-testid="about-circle-diagram">
+      {/* phones and tablets: a plain list that loops back to the top */}
+      <ol className="space-y-3 md:hidden">
+        {CIRCLE.map((c, i) => (
+          <li key={c.title} className="rounded-xl border border-line bg-surface p-4" data-testid={`about-circle-step-${i + 1}`}>
+            <div className="flex items-center justify-between gap-3"><span className="stat text-sm text-muted">{String(i + 1).padStart(2, "0")}</span><WhoChip who={c.who} /></div>
+            <p className="mt-2 text-base font-semibold">{c.title}</p>
+            <p className="mt-1 text-sm leading-relaxed text-muted">{c.text}</p>
+          </li>
+        ))}
+        <li className="flex items-center justify-center gap-2 pt-1 text-sm font-semibold"><span aria-hidden>↻</span> And what you learn goes back to members as a better community</li>
+      </ol>
+
+      {/* desktop: the ring itself */}
+      <div className="relative mx-auto hidden aspect-square w-full max-w-[46rem] md:block" role="img" aria-label="A loop: members feel looked after, they take part, Pathwai counts it, you decide with data, and what you learn comes back to members as a better community">
+        <svg viewBox="0 0 100 100" className="absolute inset-0 h-full w-full text-ink" aria-hidden>
+          <defs>
+            <marker id="circle-arrow" viewBox="0 0 10 10" refX="7" refY="5" markerWidth="5" markerHeight="5" orient="auto-start-reverse"><path d="M 1 1 L 8 5 L 1 9 z" fill="currentColor" /></marker>
+          </defs>
+          {CIRCLE.map((_, i) => <path key={i} d={arc(i)} fill="none" stroke="currentColor" strokeOpacity=".45" strokeWidth=".5" markerEnd="url(#circle-arrow)" />)}
+        </svg>
+        <div className="absolute left-1/2 top-1/2 w-[32%] -translate-x-1/2 -translate-y-1/2 text-center">
+          <p className="eyebrow">The full circle</p>
+          <p className="font-display mt-2 text-lg leading-tight lg:text-xl" style={{ textTransform: "none", letterSpacing: 0, textWrap: "balance" }}>Members get value. Data shows what works. You give more back.</p>
+        </div>
+        {CIRCLE.map((c, i) => {
+          const [x, y] = at(i);
+          return (
+            <div key={c.title} className="absolute w-[25%] -translate-x-1/2 -translate-y-1/2 rounded-xl border border-line bg-surface p-3 shadow-card" style={{ left: `${x}%`, top: `${y}%` }} data-testid={`about-circle-step-${i + 1}`}>
+              <div className="flex items-center justify-between gap-2"><span className="stat text-xs text-muted">{String(i + 1).padStart(2, "0")}</span><WhoChip who={c.who} /></div>
+              <p className="mt-1.5 text-sm font-semibold leading-tight">{c.title}</p>
+              <p className="mt-1 text-xs leading-snug text-muted">{c.text}</p>
+            </div>
+          );
+        })}
+      </div>
+
+      <div className="mt-8 grid gap-px overflow-hidden rounded-xl border border-line bg-line sm:grid-cols-2" data-testid="about-circle-value">
+        <div className="bg-surface p-5">
+          <p className="eyebrow">What is in it for members</p>
+          <p className="mt-2 text-sm leading-relaxed text-muted">A community that is easy to belong to: everything in one place, people worth meeting, perks that are real, a way to give and ask, and proof it shows up. They feel looked after, so they stay and take part.</p>
+        </div>
+        <div className="bg-surface p-5">
+          <p className="eyebrow">What is in it for you</p>
+          <p className="mt-2 text-sm leading-relaxed text-muted">Members who stay and take part give you honest numbers to act on. You decide with data instead of guessing, you have proof ready for anyone who backs you, and what you learn goes straight back into giving members more.</p>
+        </div>
+      </div>
+      <div className="mt-5 flex flex-wrap items-center gap-3">
+        <button type="button" onClick={() => startAdminDemo()} className="btn-primary" data-testid="about-circle-admin">See it as the admin</button>
+        <button type="button" onClick={() => startDemo("member", "humber-innovation-network")} className="btn-ghost border border-line" data-testid="about-circle-member">See what members see</button>
+      </div>
+    </div>
+  );
+}
+
 const PROMISES = [
-  ["Members stay", "Every introduction comes with a reason, so people meet the right person instead of scrolling. Welcome them properly, say goodbye properly, and see who is drifting while there is still time to act.",
-    "Introductions with a reason · onboarding and off-boarding · a going-quiet list with a one-tap nudge"],
-  ["Everything about your community, in one place", "Members, events and RSVPs, perks, news, applications, messages and project teams, all in your own branded space. It replaces the spreadsheet, the group chat, the event page and the mailing list.",
+  ["One toolset, not six", "Members, events and RSVPs, perks, news, applications, messages and project teams, all in your own branded space. It replaces the spreadsheet, the group chat, the event page, the form tool and the mailing list, so nothing has to be copied from one place to another.",
     "One directory · events and turnout · perks · news · applications · teams"],
-  ["Proof in one click", "Sponsors, funders and your board ask the same questions: who is in it, who is active, who showed up, what did it do. Pathwai counts the answers from your own records and hands you a report. Share a PDF, or a live link that stays current.",
-    "Sponsor, funder and board reports · PDF or read-only live link · every number counted, never estimated"],
+  ["Decisions backed by data", "Every figure is counted from your own records and set against the period before it: active members, introductions made, event turnout, perk use. You see whether the community is growing or slipping, and who is going quiet while there is still time to bring them back.",
+    "Up or down vs last period · weekly momentum · a going-quiet list with a one-tap nudge"],
+  ["Proof ready when anyone asks", "If a partner, sponsor, investor or your board wants to know what the community did, the answer is one click away. Share a PDF, or a live link that stays current, and bring your Instagram reach in alongside.",
+    "Reports for partners, sponsors, investors and boards · PDF or live link · every number counted, never estimated"],
+];
+
+// What a member sees. Written as the reason the admin gets a better return: members who feel looked after stay, take part, and make the numbers worth sending.
+const MEMBER_GETS = [
+  ["The community's story", "Its brand, mission and what it offers, kept in one place instead of scattered across posts and group chats."],
+  ["Perks", "Offers from sponsors and partners in a single list, so the thing you promised a sponsor is the thing members actually find."],
+  ["Introductions with a reason", "Matchmaking that says who to meet and why, so a cold intro becomes a warm one."],
+  ["Offers and asks", "A simple way to say what you can give and what you need. Members swap value without the organizer in the middle."],
+  ["A community you can count on", "A scorecard of how many people show up, how many events were held, how many introductions led to a conversation and how much help was given. Totals only, never names."],
 ];
 
 const STEPS = [
   ["Set up your community in an afternoon", "Your name, colours and logo. Import your members or invite them. Decide who gets in and what they see."],
-  ["Members build a profile and get introduced", "Who they are, what they offer and what they are asking for. Pathwai suggests who to meet and says why, so a cold intro becomes a warm one."],
-  ["You run it from one place, and see what is working", "Approve members, post events and news, add perks and message the community. The Impact view shows who is active, who is drifting and what turned out."],
-  ["Send the proof when someone asks", "Pick sponsor, funder or board, choose the period, and download the PDF or share a live link. No spreadsheet-wrangling the night before."],
+  ["Members join and are looked after", "Each member builds a profile and pitch card, finds perks, offers and asks in one place, and is introduced to the right people with a reason."],
+  ["You see what is working", "The Impact view sets every number against the period before it, shows weekly momentum and lists who is going quiet, with a one-tap nudge."],
+  ["Send the proof when someone asks", "Pick sponsor, investor or board, choose the period, and download the PDF or share a live link. No spreadsheet-wrangling the night before."],
 ];
 
 const COMPETITORS = [
@@ -73,7 +160,7 @@ const COMPETITORS = [
 const MATRIX = {
   cols: ["Pathwai", "Circle", "Mighty", "Skool", "Hivebrite", "Chat apps"],
   rows: [
-    ["Impact reports for sponsors and funders, shareable as a live link", "Y", "P", "P", "N", "P", "N"],
+    ["Impact reports for sponsors and investors, shareable as a live link", "Y", "P", "P", "N", "P", "N"],
     ["Matches members and explains why", "Y", "N", "P", "N", "P", "N"],
     ["Pitch cards, offers and asks", "Y", "N", "N", "N", "N", "N"],
     ["Own look and feel per community", "Y", "Y", "P", "N", "Y", "N"],
@@ -86,11 +173,12 @@ const MATRIX = {
 };
 
 const EDGES = [
-  ["Proof is built in", "Reports for sponsors, funders and boards come from the same records you already run the community on. Nothing to export, merge or chase."],
+  ["One toolset instead of a stack", "Pathwai replaces the separate tools you stitch together today, so your data lives in one place and lines up."],
+  ["Context on every number", "Each figure is shown against the period before it, so you, a board or an investor sees direction, not just a total."],
+  ["Proof is built in", "Reports for partners, sponsors, investors and boards come from the same records you already run the community on. Nothing to export, merge or chase."],
   ["Introductions, not just posts", "Most platforms give you a place to talk. Pathwai tells members who to talk to, and why."],
   ["Built for networks, not audiences", "Applications, approvals, gated directories and organizer tools come first, not course checkout."],
   ["Every community looks like itself", "Each community gets its own colours, logo, naming and navigation. Members keep one Pathwai login."],
-  ["It works with your tools", "Keep your learning platform, forms and calendar. Pathwai layers the people side on top."],
   ["Priced for the rest of us", "Aimed at networks that cannot justify a four-figure monthly platform bill."],
 ];
 
@@ -134,15 +222,17 @@ function Row({ id, n, title, summary, lede, wide, open, onToggle, children }) {
   );
 }
 
-const NAV = [["promises", "Three promises"], ["sample", "Sample report"], ["who", "Who it's for"], ["how", "How it works"], ["market", "Competitors"], ["diff", "Why us"]];
-// Every section is a collapsible row so the page stays short; only the promises start open.
-const ALL = ["promises", "sample", "who", "how", "market", "diff", "compare"];
+const NAV = [["circle", "Full circle"], ["promises", "What you get"], ["sample", "Sample report"], ["members", "For members"], ["who", "Who it's for"], ["how", "How it works"], ["market", "Competitors"], ["diff", "Why us"]];
+// Every section is a collapsible row so the page stays short; only the first starts open.
+const ALL = ["circle", "promises", "sample", "members", "who", "how", "market", "diff", "compare"];
+// Short tab names for the sample report switcher.
+const TAB = { sponsor: "Sponsor", funder: "Investor or funder", board: "Board" };
 
 export default function About() {
   const [kind, setKind] = useState("sponsor");
-  const [open, setOpen] = useState(["promises"]);
+  const [open, setOpen] = useState(["circle"]);
   useEffect(() => {
-    document.title = "Pathwai: keep your members, prove your impact";
+    document.title = "Pathwai: run your community in one place, know what is working";
     const h = window.location.hash.replace("#", "");
     if (ALL.includes(h)) { setOpen([h]); setTimeout(() => document.getElementById(h)?.scrollIntoView({ behavior: "smooth" }), 80); }
     else window.scrollTo(0, 0);
@@ -170,9 +260,16 @@ export default function About() {
 
       <main className="mx-auto max-w-6xl px-4 lg:px-8">
         <div className="py-10 sm:py-16">
-          <p className="eyebrow">For the people who run communities</p>
-          <h1 className="mt-4 max-w-4xl text-4xl sm:text-5xl lg:text-6xl" style={{ textWrap: "balance" }}>Keep your members. Prove your impact.</h1>
-          <p className="mt-6 max-w-2xl text-base text-muted sm:text-lg">Pathwai is the home for your accelerator, alumni group, club or congregation: members, events, perks and introductions in one place, and a report your sponsors, funders and board will trust, one click away.</p>
+          <p className="eyebrow">Community software for organizers</p>
+          <h1 className="mt-4 max-w-4xl text-4xl sm:text-5xl lg:text-6xl" style={{ textWrap: "balance" }}>Run your whole community in one place. Know what is working.</h1>
+          <p className="mt-6 max-w-2xl text-base text-muted sm:text-lg">Your members get one place for perks, events and introductions. You get every tool and every number together, so you can make decisions with data and show your results to anyone who backs the community.</p>
+          <div className="mt-8 grid max-w-4xl gap-px overflow-hidden rounded-xl border border-line bg-line sm:grid-cols-3" data-testid="about-hero-points">
+            {[["For your members", "One place to belong: your story, perks, events, introductions, offers and asks."],
+              ["For you", "One toolset instead of a stack: members, events, applications, messages and reports."],
+              ["For your decisions", "Every number counted from your own records and set against the last period."]].map(([t, d]) => (
+              <div key={t} className="bg-surface p-4"><p className="text-sm font-semibold">{t}</p><p className="mt-1 text-xs leading-relaxed text-muted">{d}</p></div>
+            ))}
+          </div>
           <div className="mt-8 flex flex-wrap items-center gap-3">
             <button type="button" onClick={() => startAdminDemo()} className="btn-primary" data-testid="about-demo">Try the admin demo</button>
             <Link to="/signup" className="btn-ghost border border-line" data-testid="about-signup">Get started</Link>
@@ -188,7 +285,11 @@ export default function About() {
         </div>
 
         <div className="border-b border-line">
-          <Row id="promises" n={1} title="Three promises" summary="Members stay. Everything in one place. Proof in one click." wide {...R("promises")}>
+          <Row id="circle" n={1} title="The full circle" summary="Members get value, data shows what works, and you give more back." wide {...R("circle")}>
+            <Circle />
+          </Row>
+
+          <Row id="promises" n={2} title="What you get" summary="One toolset, decisions backed by data, proof ready when asked." wide {...R("promises")}>
             <div className="grid gap-px overflow-hidden rounded-xl border border-line bg-line md:grid-cols-3" data-testid="about-promises">
               {PROMISES.map(([t, d, how], i) => (
                 <div key={t} className="flex flex-col bg-surface p-6" data-testid={`about-promise-${i + 1}`}>
@@ -201,14 +302,14 @@ export default function About() {
             </div>
           </Row>
 
-          <Row id="sample" n={2} title="A sample report" summary="What your sponsor, funder or board opens. Sample data." wide {...R("sample")}>
+          <Row id="sample" n={3} title="A sample report" summary="What a partner, sponsor, investor or board opens. Sample data." wide {...R("sample")}>
             <div data-testid="about-sample">
               <div className="flex flex-wrap items-end justify-between gap-4">
-                <p className="max-w-xl text-sm text-muted sm:text-base">One click from the admin home. Pick who it is for, and Pathwai builds it from your own records, with your Instagram reach alongside if you connect it. Everything below is made-up sample data.</p>
+                <p className="max-w-xl text-sm text-muted sm:text-base">One click from the admin home. Pick who it is for (a sponsor, an investor or funder, your board) and Pathwai builds it from your own records, with your Instagram reach alongside if you connect it. Everything below is made-up sample data.</p>
                 <div className="inline-flex rounded-full border border-line p-0.5 text-sm" role="tablist" aria-label="Report type">
                   {REPORT_TYPES.map((t) => (
                     <button key={t.kind} type="button" role="tab" aria-selected={kind === t.kind} onClick={() => setKind(t.kind)} data-testid={`about-sample-${t.kind}`}
-                      className={cx("rounded-full px-4 py-1.5 transition-colors", kind === t.kind ? "bg-ink text-paper" : "text-muted hover:text-ink")}>{t.title.replace(" report", "")}</button>
+                      className={cx("rounded-full px-4 py-1.5 transition-colors", kind === t.kind ? "bg-ink text-paper" : "text-muted hover:text-ink")}>{TAB[t.kind] || t.title}</button>
                   ))}
                 </div>
               </div>
@@ -227,8 +328,20 @@ export default function About() {
             </div>
           </Row>
 
-          <Row id="who" n={3} title="Who it's for" summary="Gated networks of founders, professionals and members."
-            lede="Networks that need members to find each other, not just find content. Less suited if your main goal is selling courses or growing a large public audience." {...R("who")}>
+          <Row id="members" n={4} title="What your members get" summary="One front door: story, perks, introductions, offers and asks, and how reliable the community is."
+            lede="Members get one place for everything about the community, and it should make them feel good: looked after, introduced and part of something that shows up. That is what keeps them, it gives you honest data to decide with, and what you learn goes back into giving them more." {...R("members")}>
+            <div className="grid gap-px overflow-hidden rounded-xl border border-line bg-line sm:grid-cols-2" data-testid="about-member-gets">
+              {MEMBER_GETS.map(([t, d]) => (
+                <div key={t} className="bg-surface p-5">
+                  <p className="text-base font-semibold">{t}</p>
+                  <p className="mt-2 text-sm leading-relaxed text-muted">{d}</p>
+                </div>
+              ))}
+            </div>
+          </Row>
+
+          <Row id="who" n={5} title="Who it's for" summary="Gated networks of founders, professionals and members."
+            lede="Organizers who want to run on data, may answer to partners, sponsors, investors or a board, and need members to find each other, not just find content. Less suited if your main goal is selling courses or growing a large public audience." {...R("who")}>
             <div className="grid gap-px overflow-hidden rounded-xl border border-line bg-line sm:grid-cols-2">
               {AUDIENCES.map(([t, d]) => (
                 <div key={t} className="bg-surface p-5">
@@ -239,7 +352,7 @@ export default function About() {
             </div>
           </Row>
 
-          <Row id="how" n={4} title="How it works" summary="Set up, introduce, run, report. Four steps."
+          <Row id="how" n={6} title="How it works" summary="Set up, look after members, see what works, send the proof."
             lede="You set it up once. After that, introductions run themselves and the proof builds as the community does." {...R("how")}>
             <ol className="divide-y divide-line border-y border-line">
               {STEPS.map(([t, d], i) => (
@@ -251,7 +364,7 @@ export default function About() {
             </ol>
           </Row>
 
-          <Row id="market" n={5} title="Competitors" summary="Community platforms, association software, learning tools and free chat apps."
+          <Row id="market" n={7} title="Competitors" summary="Community platforms, association software, learning tools and free chat apps."
             lede="Plenty of good tools exist. Here is who we get compared to, and how each one differs. Costs are relative, from $ to $$$$." {...R("market")}>
             <div className="space-y-8">
               {COMPETITORS.map((g) => (
@@ -275,7 +388,7 @@ export default function About() {
             <p className="mt-5 text-xs text-muted">{PRICE_NOTE}</p>
           </Row>
 
-          <Row id="diff" n={6} title="Why Pathwai" summary="Proof built in, introductions first, branded per community."
+          <Row id="diff" n={8} title="Why Pathwai" summary="One toolset, context on every number, proof built in."
             lede="We are not trying to be the biggest platform. We are trying to be the best one for networks that run on relationships." {...R("diff")}>
             <ul className="divide-y divide-line border-y border-line">
               {EDGES.map(([t, d]) => (
@@ -287,7 +400,7 @@ export default function About() {
             </ul>
           </Row>
 
-          <Row id="compare" n={7} title="Compare at a glance" summary="Pathwai next to the usual platforms, feature by feature."
+          <Row id="compare" n={9} title="Compare at a glance" summary="Pathwai next to the usual platforms, feature by feature."
             lede="A quick yes, partly or no across the features networks ask about most." {...R("compare")}>
             <div className="overflow-x-auto rounded-xl border border-line" data-testid="about-matrix">
               <table className="w-full min-w-[36rem] border-collapse text-left text-xs">

@@ -18,6 +18,7 @@ import { teamOf } from "../lib/names";
 import { LearningList, useMyLearning } from "../components/Learning";
 import { CustomizeHome, hiddenFor } from "../components/HomeWidgets";
 import { ImpactPanel, QuietCard } from "../components/ImpactPanel";
+import Scorecard from "../components/Scorecard";
 
 // Below `lg` these become horizontally swipeable card rows instead of full vertical lists —
 // everything stays on one continuous scroll (nothing hidden behind a tab), it just takes a
@@ -156,6 +157,8 @@ export default function Dashboard() {
         </button>)}
 
       <AboutBrand />
+
+      {user.role !== "admin" && on("reliability") && <Scorecard />}
 
       <div className="grid grid-cols-2 gap-2.5 lg:hidden">
         {on("profile") && (

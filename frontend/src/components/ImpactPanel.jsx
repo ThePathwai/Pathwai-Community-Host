@@ -21,6 +21,39 @@ export async function downloadReportPdf(kind, days, include = "") {
   setTimeout(() => URL.revokeObjectURL(url), 4000);
 }
 
+/** How a number moved against the period before it: up, down or flat, in words a board would use. */
+function Delta({ d }) {
+  const v = d.value;
+  const cls = v > 0 ? "text-green-400" : v < 0 ? "text-red-400" : "text-muted";
+  return (
+    <p className={cx("mt-1.5 text-xs font-semibold", cls)} data-testid="impact-delta">
+      {v > 0 ? "▲ +" : v < 0 ? "▼ −" : "● "}{v === 0 ? "No change" : Math.abs(v)} <span className="font-normal text-muted">{d.label}</span>
+    </p>
+  );
+}
+
+/** Active members per week for the last eight weeks: the shape of the community's momentum at a glance. */
+function Trend({ data }) {
+  const max = Math.max(1, ...data.map((w) => w.value));
+  const first = data[0].value, last = data[data.length - 1].value;
+  return (
+    <div className="mt-5 border-t border-line pt-4" data-testid="impact-trend">
+      <div className="flex flex-wrap items-baseline justify-between gap-2">
+        <p className="eyebrow">Active members per week</p>
+        <p className="text-xs text-muted">{first} → <span className="font-semibold text-ink">{last}</span> over {data.length} weeks</p>
+      </div>
+      <div className="mt-3 flex h-12 items-end gap-1.5" role="img" aria-label={`Active members per week, from ${first} to ${last}`}>
+        {data.map((w, i) => (
+          <div key={i} className="flex h-full flex-1 flex-col justify-end" title={`${w.label}: ${w.value}`}>
+            <div className="w-full rounded-sm" style={{ height: `${Math.max(6, (w.value / max) * 100)}%`, background: i === data.length - 1 ? "var(--accent)" : "rgb(var(--c-ink) / 0.22)" }} />
+          </div>
+        ))}
+      </div>
+      <div className="mt-1.5 flex justify-between text-[10px] text-muted"><span>{data[0].label}</span><span>{data[data.length - 1].label}</span></div>
+    </div>
+  );
+}
+
 const PERIODS = [[30, "30 days"], [90, "90 days"], [365, "12 months"]];
 
 /** First thing on the admin home: the four numbers a sponsor, funder or board asks about, and one button to send them. */
@@ -56,18 +89,20 @@ export function ImpactPanel() {
       <div className="mt-4 grid grid-cols-2 gap-x-6 gap-y-5 lg:grid-cols-4" aria-busy={!d}>
         {(d?.cards || [null, null, null, null]).map((c, i) => c ? (
           <div key={c.key} data-testid={`impact-${c.key}`} className="min-w-0">
-            <p className="eyebrow">{c.label}</p>
+            <p className="eyebrow break-words">{c.label}</p>
             <p className="mt-1.5 flex items-baseline gap-1.5"><span className="stat text-3xl leading-none" style={{ color: c.key === "active" ? "var(--accent)" : undefined }}>{c.value}</span>
               <span className="text-sm text-muted">{c.of || c.unit}</span></p>
+            {c.delta && <Delta d={c.delta} />}
             <p className="mt-1.5 text-xs leading-snug text-muted">{c.note}</p>
           </div>
         ) : <div key={i} className="h-16 animate-pulse rounded-lg bg-ink/[.06]" />)}
       </div>
+      {d?.weekly?.length > 1 && <Trend data={d.weekly} />}
       <div className="mt-5 flex flex-wrap items-center justify-between gap-3 border-t border-line pt-4">
-        <p className="min-w-0 text-xs text-muted">Counted from your own records. Send it to a sponsor, funder or your board.</p>
+        <p className="min-w-0 text-xs text-muted">Counted from your own records. Share it with anyone who backs the community.</p>
         <div className="flex flex-wrap gap-2">
           <Link to="/reports" className="btn-ghost" data-testid="impact-all-reports"><FileText className="h-4 w-4" />All reports</Link>
-          <Button onClick={download} loading={busy} data-testid="impact-download"><Download className="h-4 w-4" />Download sponsor report</Button>
+          <Button onClick={download} loading={busy} data-testid="impact-download"><Download className="h-4 w-4" />Download report</Button>
         </div>
       </div>
     </section>

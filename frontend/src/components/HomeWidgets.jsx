@@ -14,6 +14,7 @@ export const HOME_WIDGETS = [
   { key: "events", label: "Upcoming events", hint: "The short list of what's coming up" },
   { key: "todo", label: "To-do", hint: "Forms and updates the team has asked for" },
   { key: "connections", label: "Recommended connections", hint: "People picked for each person" },
+  { key: "reliability", label: "Community scorecard", hint: "How dependable the community is: show-up rate, events held, introductions, help answered", memberOnly: true },
   { key: "perks", label: "Perks", hint: "Offers and perks from the community" },
   { key: "learning", label: "Learning", hint: "Programs from a connected academy (when one is connected)" },
   { key: "news", label: "News", hint: "Latest announcements" },
@@ -59,7 +60,7 @@ export function HomeWidgetsPanel() {
           <React.Fragment key={w.key}>
             <div className="min-w-0"><p className="text-sm font-medium">{w.label}</p><p className="text-xs text-muted">{w.hint}</p></div>
             <div className="flex w-14 justify-center">{w.adminOnly ? <span className="text-xs text-muted">n/a</span> : <Switch on={!hidden.member.has(w.key)} onChange={(v) => flip("member", w.key, v)} label={`${w.label} on the members' home`} testid={`hw-member-${w.key}`} />}</div>
-            <div className="flex w-14 justify-center"><Switch on={!hidden.admin.has(w.key)} onChange={(v) => flip("admin", w.key, v)} label={`${w.label} on the admin home`} testid={`hw-admin-${w.key}`} /></div>
+            <div className="flex w-14 justify-center">{w.memberOnly ? <span className="text-xs text-muted">n/a</span> : <Switch on={!hidden.admin.has(w.key)} onChange={(v) => flip("admin", w.key, v)} label={`${w.label} on the admin home`} testid={`hw-admin-${w.key}`} />}</div>
           </React.Fragment>
         ))}
       </div>

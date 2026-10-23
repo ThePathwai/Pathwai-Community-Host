@@ -1,7 +1,7 @@
 // The in-browser demo's stand-in for backend/routes/impact.py: the Impact numbers, sponsor / funder / board reports,
 // read-only share links and the "going quiet" list. Every figure is sample data (and labelled that way on screen),
 // made from the demo community's own member, event and perk lists so it looks like that community.
-import { sampleMetrics, impactCards, buildReport, withInstagram, sampleInstagram, REPORT_TYPES, PERIODS } from "../lib/sampleReport";
+import { sampleMetrics, impactCards, reliabilityCards, buildReport, withInstagram, sampleInstagram, REPORT_TYPES, PERIODS } from "../lib/sampleReport";
 
 const hash = (s) => String(s || "x").split("").reduce((a, c) => (a * 31 + c.charCodeAt(0)) >>> 0, 7);
 const err = (status, detail) => ({ status, data: { detail } });
@@ -28,6 +28,7 @@ export function impactHandler({ method, path, body, params, store, users, events
     }).sort((a, b) => Number(a.nudged_recently) - Number(b.nudged_recently) || b.days_quiet - a.days_quiet);
   };
 
+  if (path === "/community/reliability" && method === "get") return { status: 200, data: reliabilityCards(metrics()) };
   if (path === "/admin/impact" && method === "get") return { status: 200, data: { ...impactCards(metrics()), quiet: quietRows().length } };
   if (path === "/admin/instagram" && method === "get") {
     const ig = sampleInstagram(community);

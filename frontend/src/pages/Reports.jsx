@@ -11,7 +11,7 @@ import { downloadReportPdf } from "../components/ImpactPanel";
 
 const TYPES = [
   ["sponsor", "Sponsor report", "Reach, event turnout and perk use. For the people backing you."],
-  ["funder", "Funder report", "People served, connections made and help given. For grant reporting."],
+  ["funder", "Funder or investor report", "People served, connections made, participation and help given. The traction a funder or investor asks about."],
   ["board", "Board report", "Who is active, who is drifting, what is next. For your leadership."],
 ];
 const PERIODS = [[30, "Last 30 days"], [90, "Last 90 days"], [365, "Last 12 months"]];
@@ -102,12 +102,12 @@ export default function Reports() {
             </>
           ) : ig?.connected ? (
             <>
-              <p className="min-w-0 flex-1 text-sm text-muted">Instagram is connected but has no numbers yet.</p>
+              <p className="min-w-[14rem] flex-1 text-sm text-muted">Instagram is connected but has no numbers yet.</p>
               <Button variant="ghost" onClick={() => refreshIg(false)} loading={busy === "ig"} data-testid="report-ig-refresh"><RefreshCw className="h-4 w-4" />Pull numbers now</Button>
             </>
           ) : (
             <>
-              <p className="min-w-0 flex-1 text-sm text-muted"><span className="font-medium text-ink">Add your Instagram reach.</span> Sponsors like seeing followers, reach and who the audience is next to your community numbers.</p>
+              <p className="min-w-[14rem] flex-1 text-sm text-muted"><span className="font-medium text-ink">Add your Instagram reach.</span> Show followers, reach and who the audience is next to your community numbers.</p>
               <Button variant="ghost" onClick={goConnectIg} data-testid="report-ig-connect">Connect Instagram</Button>
             </>
           )}

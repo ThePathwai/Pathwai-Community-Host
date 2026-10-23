@@ -5,7 +5,7 @@
 
 export const REPORT_TYPES = [
   { kind: "sponsor", title: "Sponsor report", audience: "For sponsors and partners", headline: "What your support reached", blurb: "Reach, event turnout and how members used the perks you backed." },
-  { kind: "funder", title: "Funder report", audience: "For funders and grant reporting", headline: "Who this community served, and what happened", blurb: "People served, connections made, participation and the help given." },
+  { kind: "funder", title: "Funder or investor report", audience: "For funders and investors", headline: "Who this community serves, and the traction behind it", blurb: "People served, connections made, participation and the help given: the traction a funder or investor asks about." },
   { kind: "board", title: "Board report", audience: "For the board or leadership team", headline: "How the community is doing", blurb: "Health of the membership: who is active, who is drifting, and what is coming up." },
 ];
 export const PERIODS = [{ days: 30, label: "Last 30 days" }, { days: 90, label: "Last 90 days" }, { days: 365, label: "Last 12 months" }];
@@ -52,18 +52,37 @@ export function sampleMetrics({ members = 64, seed = "sample", days = 90, eventT
     event_rows, event_goers: Math.round(n * (0.4 + r() * 0.2)), perk_opens, perk_users: Math.round(Math.min(n * 0.7, perk_opens * 0.6)), perks_offered: Math.max(pkTitles.length, 5), top_perks,
     weekly, joins, sup_resolved: Math.round(n * 0.14 * scale) + 1, sup_open: 2 + Math.round(r() * 4), completeness: 70 + Math.round(r() * 18), pending_apps: Math.round(r() * 4),
     nudged: 0, came_back: 0,
+    // how the community looked in the window before this one (drawn last so every figure above stays exactly as it was)
+    prev: { active: Math.round(active * (0.78 + r() * 0.1)), intros_made: Math.max(0, Math.round(intros_made * (0.68 + r() * 0.15))), events_held: Math.max(1, events_held - (r() > 0.5 ? 1 : 0)), perk_opens: Math.round(perk_opens * (0.74 + r() * 0.16)) },
   };
 }
 
 export function impactCards(m) {
   const turnout = m.turnout_pct != null ? `${m.turnout_pct}% showed up` : `${m.rsvps} RSVPs`;
+  const label = m.days === 365 ? "vs the 12 months before" : `vs previous ${m.days} days`;
+  const mv = (cur, before) => (m.prev ? { delta: { value: cur - before, label } } : {});
   return {
+    weekly: m.weekly,
     period_days: m.days, period_label: (PERIODS.find((p) => p.days === m.days) || {}).label || `Last ${m.days} days`, quiet: m.quiet, sample: !!m.sample,
     cards: [
-      { key: "active", label: "Active members", value: String(m.active), of: `of ${m.members}`, note: `${m.active_pct}% did something in the last 30 days`, to: null },
-      { key: "intros", label: "Introductions made", value: String(m.intros_made), note: `${m.intros_sent} asked for · ${m.people_connected} people connected`, to: "/requests" },
-      { key: "turnout", label: "Event turnout", value: String(m.events_held), unit: m.events_held === 1 ? "event" : "events", note: `${m.rsvps} RSVPs · ${turnout}`, to: "/events" },
-      { key: "perks", label: "Perk results", value: String(m.perk_opens), unit: "opens", note: `${m.perk_users} members used a perk · ${m.perks_offered} offered`, to: "/resources" },
+      { key: "active", label: "Active members", value: String(m.active), of: `of ${m.members}`, note: `${m.active_pct}% did something in the last 30 days`, to: null, ...mv(m.active, m.prev?.active) },
+      { key: "intros", label: "Introductions made", value: String(m.intros_made), note: `${m.intros_sent} asked for · ${m.people_connected} people connected`, to: "/requests", ...mv(m.intros_made, m.prev?.intros_made) },
+      { key: "turnout", label: "Event turnout", value: String(m.events_held), unit: m.events_held === 1 ? "event" : "events", note: `${m.rsvps} RSVPs · ${turnout}`, to: "/events", ...mv(m.events_held, m.prev?.events_held) },
+      { key: "perks", label: "Perk results", value: String(m.perk_opens), unit: "opens", note: `${m.perk_users} members used a perk · ${m.perks_offered} offered`, to: "/resources", ...mv(m.perk_opens, m.prev?.perk_opens) },
+    ],
+  };
+}
+
+/** What members see about how dependable their community is (mirrors reliability_summary in backend/impact.py). */
+export function reliabilityCards(m) {
+  const t = m.turnout_pct;
+  return {
+    sample: !!m.sample, period_days: m.days, period_label: (PERIODS.find((p) => p.days === m.days) || {}).label || `Last ${m.days} days`,
+    tiles: [
+      { key: "show", label: "Members who show up", value: t != null ? `${t}%` : "n/a", note: t != null ? "of RSVPs came along" : "Shown once events use check-in" },
+      { key: "events", label: "Events held", value: String(m.events_held), note: `${m.upcoming} coming up` },
+      { key: "intros", label: "Introductions made", value: String(m.intros_made), note: `${m.people_connected} people connected` },
+      { key: "help", label: "Help requests answered", value: String(m.sup_resolved), note: `${m.sup_open} still open` },
     ],
   };
 }

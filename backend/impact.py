@@ -19,7 +19,7 @@ NUDGE_COOLDOWN_DAYS = 7
 
 REPORT_TYPES: Dict[str, Dict[str, str]] = {
     "sponsor": {"title": "Sponsor report", "audience": "For sponsors and partners", "headline": "What your support reached", "blurb": "Reach, event turnout and how members used the perks you backed."},
-    "funder": {"title": "Funder report", "audience": "For funders and grant reporting", "headline": "Who this community served, and what happened", "blurb": "People served, connections made, participation and the help given."},
+    "funder": {"title": "Funder or investor report", "audience": "For funders and investors", "headline": "Who this community serves, and the traction behind it", "blurb": "People served, connections made, participation and the help given: the traction a funder or investor asks about."},
     "board": {"title": "Board report", "audience": "For the board or leadership team", "headline": "How the community is doing", "blurb": "Health of the membership: who is active, who is drifting, and what is coming up."},
 }
 PERIODS = {30: "Last 30 days", 90: "Last 90 days", 365: "Last 12 months"}
@@ -115,9 +115,9 @@ def compute(d: Dict[str, Any], days: int = 90) -> Dict[str, Any]:
     quiet = quiet_list(d, ACTIVE_DAYS)
 
     connects = d["connects"]
-    intros_sent = sum(1 for c in connects if (t := _dt(c.get("created_at"))) and t >= since)
-    intros_made = sum(1 for c in connects if c.get("status") == "accepted" and (t := _dt(c.get("updated_at") or c.get("created_at"))) and t >= since)
-    people_connected = len({x for c in connects if c.get("status") == "accepted" and (t := _dt(c.get("updated_at") or c.get("created_at"))) and t >= since for x in (c.get("sender_id"), c.get("recipient_id"))} & mids)
+    intros_sent = sum(1 for c in connects if (t := _dt(c.get("created_at"))) and since <= t <= now)
+    intros_made = sum(1 for c in connects if c.get("status") == "accepted" and (t := _dt(c.get("updated_at") or c.get("created_at"))) and since <= t <= now)
+    people_connected = len({x for c in connects if c.get("status") == "accepted" and (t := _dt(c.get("updated_at") or c.get("created_at"))) and since <= t <= now for x in (c.get("sender_id"), c.get("recipient_id"))} & mids)
 
     past = [e for e in d["events"] if (s := _dt(e.get("starts_at"))) and since <= s <= now]
     upcoming = [e for e in d["events"] if (s := _dt(e.get("starts_at"))) and s > now]
@@ -133,7 +133,7 @@ def compute(d: Dict[str, Any], days: int = 90) -> Dict[str, Any]:
                         str(len(e.get("attended_ids") or [])) if e.get("attended_ids") else "n/a"])
     event_goers = len({uid for e in past for uid in (e.get("attendee_ids") or []) if uid in mids})
 
-    opens = [r for r in d["engagement"] if (t := _dt(r.get("at"))) and t >= since]
+    opens = [r for r in d["engagement"] if (t := _dt(r.get("at"))) and since <= t <= now]
     rname = {r["id"]: r for r in d["resources"]}
     by_perk = Counter(r.get("resource_id") for r in opens if r.get("resource_id") in rname)
     perk_users = len({r.get("user_id") for r in opens} & mids)
@@ -151,7 +151,7 @@ def compute(d: Dict[str, Any], days: int = 90) -> Dict[str, Any]:
         joins.append({"label": first.strftime("%b"), "value": sum(1 for u in members if (j := _joined(u)) and first <= j < nxt)})
 
     sup = d["support"]
-    sup_resolved = sum(1 for s in sup if s.get("status") in ("resolved", "closed") and (t := _dt(s.get("updated_at") or s.get("created_at"))) and t >= since)
+    sup_resolved = sum(1 for s in sup if s.get("status") in ("resolved", "closed") and (t := _dt(s.get("updated_at") or s.get("created_at"))) and since <= t <= now)
     sup_open = sum(1 for s in sup if s.get("status") not in ("resolved", "closed"))
     comp = int(round(sum(_completeness(u) for u in members) / len(members))) if members else 0
     nudged = [n for n in d["nudges"] if (t := _dt(n.get("at"))) and t >= now - timedelta(days=30)]
@@ -169,10 +169,18 @@ def compute(d: Dict[str, Any], days: int = 90) -> Dict[str, Any]:
     }
 
 
-def impact_summary(m: Dict[str, Any]) -> Dict[str, Any]:
-    """The four headline numbers for the admin home, in plain words."""
+def previous(d: Dict[str, Any], days: int = 90) -> Dict[str, Any]:
+    """The same numbers for the window just before this one, as the community looked then: only people who had joined and
+    only things that had happened by that date. Used to show whether each number is going up or down."""
+    then = d["now"] - timedelta(days=days)
+    users = [u for u in d["users"] if (j := _joined(u)) is None or j <= then]
+    return compute({**d, "now": then, "users": users, "acts": [(u, t) for u, t in d["acts"] if t <= then]}, days)
+
+
+def impact_summary(m: Dict[str, Any], prev: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
+    """The four headline numbers for the admin home, in plain words, with how each moved against the window before."""
     turnout = f"{m['turnout_pct']}% showed up" if m["turnout_pct"] is not None else f"{m['rsvps']} RSVPs"
-    return {
+    out = {
         "period_days": m["days"], "period_label": PERIODS.get(m["days"], f"Last {m['days']} days"),
         "cards": [
             {"key": "active", "label": "Active members", "value": f"{m['active']}", "of": f"of {m['members']}", "note": f"{m['active_pct']}% did something in the last {ACTIVE_DAYS} days", "to": None},
@@ -181,6 +189,28 @@ def impact_summary(m: Dict[str, Any]) -> Dict[str, Any]:
             {"key": "perks", "label": "Perk results", "value": f"{m['perk_opens']}", "unit": "opens", "note": f"{m['perk_users']} members used a perk · {m['perks_offered']} offered", "to": "/resources"},
         ],
         "quiet": m["quiet"],
+        "weekly": m["weekly"],
+    }
+    if prev and prev["members"] > 0:
+        label = f"vs previous {m['days']} days" if m["days"] != 365 else "vs the 12 months before"
+        pairs = {"active": ("active", "active"), "intros": ("intros_made", "intros_made"), "turnout": ("events_held", "events_held"), "perks": ("perk_opens", "perk_opens")}
+        for c in out["cards"]:
+            k = pairs[c["key"]][0]
+            c["delta"] = {"value": m[k] - prev[k], "label": label}
+    return out
+
+
+def reliability_summary(m: Dict[str, Any]) -> Dict[str, Any]:
+    """What members see about how dependable their community is: totals only, never names. Same counts the admin sends to sponsors."""
+    t = m["turnout_pct"]
+    return {
+        "period_days": m["days"], "period_label": PERIODS.get(m["days"], f"Last {m['days']} days"),
+        "tiles": [
+            {"key": "show", "label": "Members who show up", "value": f"{t}%" if t is not None else "n/a", "note": "of RSVPs came along" if t is not None else "Shown once events use check-in"},
+            {"key": "events", "label": "Events held", "value": str(m["events_held"]), "note": f"{m['upcoming']} coming up"},
+            {"key": "intros", "label": "Introductions made", "value": str(m["intros_made"]), "note": f"{m['people_connected']} people connected"},
+            {"key": "help", "label": "Help requests answered", "value": str(m["sup_resolved"]), "note": f"{m['sup_open']} still open"},
+        ],
     }
 
 

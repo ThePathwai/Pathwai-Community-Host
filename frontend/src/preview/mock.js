@@ -544,8 +544,9 @@ function attendanceCall(method, eventId, body, config) {
 // The in-browser Impact / reports / going-quiet backend (see impact.js): sample numbers made from this community's own lists.
 function impactCall(method, path, body, config) {
   const publicRead = path.startsWith("/public/report/");
+  const memberRead = path === "/community/reliability"; // any signed-in member of the community, totals only
   if (!publicRead && (!S.role || !S.community)) return fail(config, 401, "Not authenticated");
-  if (!publicRead && !isAdminHere()) return fail(config, 403, "Insufficient permissions");
+  if (!publicRead && !memberRead && !isAdminHere()) return fail(config, 403, "Insufficient permissions");
   const slug = S.community || "demo";
   const bk = S.community ? book() : { shared: {} }; bk.shared = bk.shared || {};
   const store = (bk.shared.impact = bk.shared.impact || { shares: [], nudged: {} });
@@ -605,7 +606,7 @@ function computePeople(limit = 8) {
 function get(path, p, config) {
   if (path.startsWith("/classes")) return classesCall("get", path, {}, p, config);
   if (path.startsWith("/teams")) return teamsCall("get", path, {}, config);
-  if (/^\/(admin\/(impact|report-types|reports\/|report-shares|quiet|instagram)|public\/report\/)/.test(path)) return impactCall("get", path, {}, config);
+  if (/^\/(admin\/(impact|report-types|reports\/|report-shares|quiet|instagram)|public\/report\/)/.test(path) || path === "/community/reliability") return impactCall("get", path, {}, config);
   if (path === "/admin/blasts/history") {
     let blasts = S.extra.blasts || [];
     if (p.audience_type) blasts = blasts.filter((b) => b.audience?.type === p.audience_type);

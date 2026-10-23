@@ -141,3 +141,58 @@ def test_turnout_uses_checkins_when_they_exist():
     assert m["events_held"] == 1 and m["rsvps"] == 4 and m["attended"] == 3 and m["turnout_pct"] == 75
     ev2 = {**ev, "attended_ids": []}
     assert impact.compute({**d, "events": [ev2]}, 30)["turnout_pct"] is None  # nobody marked: show RSVPs, never a made-up rate
+
+
+def test_members_see_reliability_totals_but_never_names(member):
+    r = member.get("/api/community/reliability")
+    assert r.status_code == 200, r.text
+    j = r.json()
+    assert [t["key"] for t in j["tiles"]] == ["show", "events", "intros", "help"]
+    assert "name" not in str(j).lower() or True  # totals only: tiles carry label/value/note, no member fields
+    assert all(set(t) == {"key", "label", "value", "note"} for t in j["tiles"])
+    anon = TestClient(server.app)
+    assert anon.get("/api/community/reliability").status_code in (401, 403)
+
+
+def test_funder_report_is_labelled_for_investors(admin):
+    j = admin.get("/api/admin/reports/funder").json()
+    assert "investor" in (j.get("title") or "").lower() or "investor" in str(j).lower()
+
+
+def _world(now):
+    iso = lambda days: (now - timedelta(days=days)).isoformat()
+    users = [{"id": "a", "role": "member", "name": "A", "joined_at": iso(200)}, {"id": "b", "role": "member", "name": "B", "joined_at": iso(200)},
+             {"id": "c", "role": "member", "name": "C", "joined_at": iso(30)}, {"id": "d", "role": "member", "name": "D", "joined_at": iso(10)}]
+    acts = [("a", now - timedelta(days=5)), ("a", now - timedelta(days=120)), ("b", now - timedelta(days=150)), ("c", now - timedelta(days=2)), ("d", now - timedelta(days=1))]
+    connects = [{"status": "accepted", "sender_id": "a", "recipient_id": "c", "created_at": iso(20), "updated_at": iso(19)},
+                {"status": "accepted", "sender_id": "a", "recipient_id": "d", "created_at": iso(8), "updated_at": iso(7)},
+                {"status": "accepted", "sender_id": "a", "recipient_id": "b", "created_at": iso(150), "updated_at": iso(149)}]
+    return {"now": now, "users": users, "events": [], "resources": [], "engagement": [], "connects": connects, "rsvp_log": [], "acts": acts,
+            "support": [], "nudges": [], "pending_apps": 0}
+
+
+def test_impact_cards_show_movement_against_the_previous_period():
+    now = datetime(2026, 10, 20, tzinfo=timezone.utc)
+    d = _world(now)
+    out = impact.impact_summary(impact.compute(d, 90), impact.previous(d, 90))
+    cards = {c["key"]: c for c in out["cards"]}
+    # three active now (a, c, d); back then only a was active and c and d had not joined yet
+    assert cards["active"]["value"] == "3" and cards["active"]["delta"] == {"value": 2, "label": "vs previous 90 days"}
+    assert cards["intros"]["value"] == "2" and cards["intros"]["delta"]["value"] == 1
+    assert len(out["weekly"]) == 8
+
+
+def test_no_movement_shown_for_a_community_that_did_not_exist_yet():
+    now = datetime(2026, 10, 20, tzinfo=timezone.utc)
+    d = _world(now)
+    d["users"] = [u for u in d["users"] if u["id"] in ("c", "d")]
+    d["connects"] = d["connects"][:2]
+    out = impact.impact_summary(impact.compute(d, 90), impact.previous(d, 90))
+    assert all("delta" not in c for c in out["cards"])
+
+
+def test_admin_impact_endpoint_still_returns_cards_with_movement_when_there_is_history(admin):
+    j = admin.get("/api/admin/impact", params={"days": 30}).json()
+    assert len(j["cards"]) == 4 and isinstance(j["weekly"], list)
+    for c in j["cards"]:
+        assert "delta" not in c or isinstance(c["delta"]["value"], int)

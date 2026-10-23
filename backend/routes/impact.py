@@ -1,6 +1,7 @@
 """Impact, reports and "going quiet" for community admins.
 
   GET  /admin/impact?days=            the four headline numbers for the admin home
+  GET  /community/reliability?days=   the member-facing "how dependable is this community" totals
   GET  /admin/reports/{type}?days=    a sponsor / funder / board report as data
   GET  /admin/reports/{type}.pdf      the same report as a PDF
   GET/POST/DELETE /admin/report-shares   read-only live links to share instead of a PDF
@@ -17,7 +18,7 @@ from pydantic import BaseModel
 
 import audit_pdf
 import impact
-from auth import require_role
+from auth import get_current_user, require_role
 from database import db
 from ._common import audit, now_iso
 from .notifications import notify
@@ -53,10 +54,18 @@ def _include(raw: Optional[str]) -> List[str]:
     return [x for x in (raw or "").split(",") if x in ("instagram",)]
 
 
+@router.get("/community/reliability")
+async def community_reliability(days: int = Query(90), me: dict = Depends(get_current_user)):
+    """Any signed-in member: how dependable this community is (totals only), from the same records as the admin's reports."""
+    d = await impact.load(db)
+    return impact.reliability_summary(impact.compute(d, _days(days)))
+
+
 @router.get("/admin/impact")
 async def get_impact(days: int = Query(90), me: dict = Depends(require_role("admin"))):
     d = await impact.load(db)
-    return impact.impact_summary(impact.compute(d, _days(days)))
+    n = _days(days)
+    return impact.impact_summary(impact.compute(d, n), impact.previous(d, n))
 
 
 @router.get("/admin/report-types")

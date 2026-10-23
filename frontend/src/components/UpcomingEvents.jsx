@@ -14,7 +14,7 @@ export default function UpcomingEvents({ events = [], total, max = 3, className 
   return (
     <section data-testid="dash-events" className={"relative flex flex-col overflow-hidden rounded-2xl p-4 lg:p-5 " + className}
       style={{ background: "var(--accent)", backgroundImage: "var(--accent-grad, none)", color: "var(--on-accent)", boxShadow: "0 14px 36px -18px var(--accent)" }}>
-      <div className="mb-3 flex items-center justify-between gap-2">
+      <div className="mb-3 flex flex-wrap items-center justify-between gap-x-2 gap-y-1.5">
         <h2 className="flex items-center gap-2 whitespace-nowrap text-base"><CalendarDays className="h-4 w-4" strokeWidth={2.25} aria-hidden />Upcoming events</h2>
         {n > 0 && <span className="stat whitespace-nowrap rounded-full px-2.5 py-0.5 text-[11px]" style={{ background: soft(18) }}>{n} coming up</span>}
       </div>
