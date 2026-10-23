@@ -211,7 +211,7 @@ function Row({ id, n, title, summary, lede, wide, open, onToggle, children }) {
           {wide ? (
             <div className="pb-10 sm:pb-14 sm:pl-20" hidden={!open}>{children}</div>
           ) : (
-            <div className="grid gap-6 pb-10 sm:grid-cols-12 sm:gap-8 sm:pb-14" hidden={!open}>
+            <div className="grid grid-cols-[minmax(0,1fr)] gap-6 pb-10 sm:grid-cols-12 sm:gap-8 sm:pb-14" hidden={!open}>
               <p className="text-base leading-relaxed text-muted sm:col-span-4 sm:pl-20 sm:pr-4 lg:text-lg">{lede}</p>
               <div className="sm:col-span-8">{children}</div>
             </div>
@@ -246,12 +246,12 @@ export default function About() {
   return (
     <div className="w-full" data-testid="about">
       <header className="glass sticky top-0 z-30 border-b border-line/60">
-        <div className="mx-auto flex max-w-6xl items-center justify-between gap-4 px-4 py-3 lg:px-8">
-          <Link to="/" className="text-2xl"><Wordmark name="Pathwai" brand={{}} /></Link>
-          <nav className="hidden items-center gap-6 whitespace-nowrap text-sm lg:flex" aria-label="About sections">
+        <div className="mx-auto flex max-w-7xl items-center justify-between gap-4 px-4 py-3 lg:px-8">
+          <Link to="/" className="shrink-0 text-2xl"><Wordmark name="Pathwai" brand={{}} /></Link>
+          <nav className="hidden min-w-0 items-center gap-4 whitespace-nowrap text-[13px] xl:flex" aria-label="About sections">
             {NAV.map(([k, label]) => <button key={k} type="button" onClick={() => jump(k)} className="text-muted hover:text-ink" data-testid={`about-nav-${k}`}>{label}</button>)}
           </nav>
-          <div className="flex items-center gap-2">
+          <div className="flex shrink-0 items-center gap-2">
             <Link to="/login" className="btn-ghost hidden whitespace-nowrap sm:inline-flex" data-testid="about-signin">Sign in</Link>
             <button type="button" onClick={() => startAdminDemo()} className="btn-primary whitespace-nowrap" data-testid="about-demo-top">Try the demo</button>
           </div>
