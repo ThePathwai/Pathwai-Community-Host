@@ -9,7 +9,7 @@
 # separate frontend/backend on two *.up.railway.app domains would hit), Stripe/Twilio webhooks and
 # uploads share the same domain, and there is a single thing to deploy. The separate
 # backend/Dockerfile and frontend/Dockerfile still work if you really want two services (see DEPLOY.md).
-FROM node:20-alpine AS web
+FROM node:26-alpine AS web
 WORKDIR /web
 COPY frontend/package.json frontend/yarn.lock ./
 RUN yarn install --frozen-lockfile
