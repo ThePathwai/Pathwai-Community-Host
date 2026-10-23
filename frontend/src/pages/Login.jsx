@@ -8,13 +8,23 @@ import { DEMO_COMMUNITIES, demoRole, inDemoTab, isDemo, leaveDemo, startAdminDem
 import { HowItWorks } from "../components/IntroTour";
 import { applyBrand } from "../lib/theme";
 import crowd from "../assets/crowd.jpg";
-import { Button, Card, Field, Input, MembershipStatusCard, PoweredBy, Wordmark } from "../components/ui";
+import { Button, Card, Field, Input, MembershipStatusCard, PoweredBy, Wordmark, cx } from "../components/ui";
 import SocialAuthButtons from "../components/SocialAuthButtons";
 
 // Four sample figures for the demo entry (the same sample the About page and the admin demo use).
 const SAMPLE_TILES = (() => { const m = sampleMetrics({ members: 64, seed: "pathwai-sample" }); return [
-  { label: "Members active", value: `${m.active_pct}%` }, { label: "Introductions made", value: m.intros_made },
+  { label: "Members active", value: `${m.active_pct}%` }, { label: "Intros made", value: m.intros_made },
   { label: "Event turnout", value: `${m.turnout_pct}%` }, { label: "Perk opens", value: m.perk_opens }]; })();
+
+// A row of tabs: only the chosen one is shown, so the page never needs scrolling to see everything it offers.
+const Seg = ({ value, onChange, items, testPrefix, className = "" }) => (
+  <div role="tablist" className={cx("grid gap-1 rounded-xl border border-line bg-surface p-1", className)} style={{ gridTemplateColumns: `repeat(${items.length}, minmax(0, 1fr))` }}>
+    {items.map(([k, label]) => (
+      <button key={k} type="button" role="tab" aria-selected={value === k} data-testid={`${testPrefix}-${k}`} onClick={() => onChange(k)}
+        className={cx("truncate rounded-lg px-2 py-2 text-sm font-medium transition-colors", value === k ? "bg-ink text-paper" : "text-muted hover:text-ink")}>{label}</button>
+    ))}
+  </div>
+);
 
 export default function Login() {
   const { login, applySession, refresh, enter } = useAuth();
@@ -33,6 +43,9 @@ export default function Login() {
   const [busy, setBusy] = useState(false);
   const [demo, setDemo] = useState({ accounts: [], password: "" });
   const inDemo = isDemo();
+  // Two tabs: sign in (the default) and try the demo. /login?tab=demo opens the demo tab directly.
+  const [tab, setTab] = useState(params.get("tab") === "demo" ? "demo" : "signin");
+  const [demoTab, setDemoTab] = useState("admin");
 
   useEffect(() => { api.get("/auth/demo-accounts").then((r) => setDemo(r.data)).catch(() => {}); }, []);
   // /login?demo=member|admin|host (what the "Try the demo" buttons open) signs straight in to the in-browser demo.
@@ -90,9 +103,14 @@ export default function Login() {
     nav("/hub", { replace: true });
   };
 
+  const hostAcct = { demo_role: "host", email: "host@thevillage.example", label: "Community host demo", description: "Sign in as the host of The Village, a private dinner club, and review who has asked to join." };
+  const demoItems = [...(inDemo ? [] : [["admin", "Admin"], ["member", "Member"], ["communities", "Examples"]]), ...(demo.accounts.length ? [["accounts", "Accounts"]] : [])];
+  const demoShown = demoItems.some(([k]) => k === demoTab) ? demoTab : demoItems[0]?.[0];
+  const showDemoTab = !inDemo || demo.accounts.length > 0;
+
   return (
-    <div className="grid min-h-screen lg:grid-cols-2">
-      <div className="pointer-events-none fixed inset-x-0 top-0 z-30 flex justify-end gap-2 px-4 py-4 lg:px-8">
+    <div className="grid min-h-[100dvh] grid-cols-[minmax(0,1fr)] lg:grid-cols-2">
+      <div className="pointer-events-none fixed inset-x-0 top-0 z-30 hidden justify-end gap-2 px-4 py-4 lg:flex lg:px-8">
         <Link to="/install" className="btn-ghost pointer-events-auto border border-line bg-paper/70 backdrop-blur" data-testid="login-install">Get the app</Link>
         <Link to="/about" className="btn-ghost pointer-events-auto border border-line bg-paper/70 backdrop-blur" data-testid="login-about">About Pathwai <span aria-hidden>→</span></Link>
       </div>
@@ -106,74 +124,99 @@ export default function Login() {
           </div>
         </div>
       </div>
-      <div className="mx-auto flex w-full max-w-md flex-col justify-center px-4 py-10">
-        <span className="mb-6 text-2xl lg:hidden"><Wordmark name={joinInfo?.name || "Pathwai"} brand={joinInfo?.brand || {}} /></span>
-        <h1 className="mb-1 text-2xl font-bold sm:text-3xl">Sign in to Pathwai</h1>
-        <p className="mb-6 text-sm text-muted">
-          {/* Every community requires admin approval now -- no community can auto-approve a join request. */}
-          {joinInfo ? <>Sign in to join <strong>{joinInfo.name}</strong> — an admin will need to approve you.</> : "One account for all your communities."}
-        </p>
-        <Card>
-          <SocialAuthButtons onSignedIn={onSocialSignedIn} disabled={busy} joinSlug={joinSlug} />
-          <div className="my-5 flex items-center gap-3 text-xs text-muted">
-            <span className="h-px flex-1 bg-line" /> or continue with email <span className="h-px flex-1 bg-line" />
+      <div className="mx-auto flex w-full min-w-0 max-w-md flex-col justify-center gap-3 px-4 py-4 lg:gap-4 lg:py-10">
+        {/* phones and tablets: the logo and the two links share one row, so nothing floats over the form */}
+        <div className="flex items-center justify-between gap-2 lg:hidden">
+          <span className="min-w-0 text-xl"><Wordmark name={joinInfo?.name || "Pathwai"} brand={joinInfo?.brand || {}} /></span>
+          <div className="flex shrink-0 items-center gap-1.5">
+            <Link to="/install" className="btn-ghost border border-line !px-3 !py-1.5 text-xs" data-testid="login-install-mobile">Get the app</Link>
+            <Link to="/about" className="btn-ghost border border-line !px-3 !py-1.5 text-xs" data-testid="login-about-mobile">About</Link>
           </div>
-          <form className="space-y-4" onSubmit={(e) => { e.preventDefault(); go(email, password); }}>
-            <Field label="Email"><Input data-testid="login-email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} required /></Field>
-            <Field label={<span className="flex items-center justify-between">Password <Link className="text-xs font-normal normal-case text-muted underline" to="/forgot-password" data-testid="forgot-password-link">Forgot password?</Link></span>}>
-              <Input data-testid="login-password" type="password" value={password} onChange={(e) => setPassword(e.target.value)} required />
-            </Field>
-            {status ? (
-              <MembershipStatusCard status={status} communityName={joinInfo?.name} testId="login-status" />
-            ) : err && <p className="text-sm text-red-400" data-testid="login-error">{err}</p>}
-            <Button type="submit" loading={busy} className="w-full" data-testid="login-submit">Sign in</Button>
-          </form>
-          <p className="mt-4 text-center text-sm text-muted">New to Pathwai? <Link className="underline" to="/signup">Create your account</Link></p>
-        </Card>
-        <p className="mt-4 text-center"><HowItWorks /></p>
-        {demo.accounts.length > 0 && (
-          <div className="mt-6 space-y-2">
-            <p className="eyebrow">Try the demo</p>
-            {[...demo.accounts, ...(demo.accounts.length ? [{ demo_role: "host", email: "host@thevillage.example", label: "Community host demo", description: "Sign in as the host of The Village, a private dinner club, and review who has asked to join." }] : [])].map((a) => (
-              <button key={a.demo_role} data-testid={`demo-login-${a.demo_role}`} onClick={() => go(a.email, demo.password)}
-                className="w-full rounded-xl border border-line bg-surface p-4 text-left hover:bg-ink/5">
-                <p className="font-medium">{a.label}</p><p className="text-xs text-muted">{a.description}</p>
-              </button>
-            ))}
+        </div>
+
+        {showDemoTab && <Seg value={tab} onChange={setTab} testPrefix="login-tab" items={[["signin", "Sign in"], ["demo", "Try the demo"]]} />}
+
+        {tab === "signin" && (
+          <div data-testid="login-pane-signin">
+            <p className="mb-3 text-sm text-muted">
+              {/* Every community requires admin approval now -- no community can auto-approve a join request. */}
+              {joinInfo ? <>Sign in to join <strong>{joinInfo.name}</strong> — an admin will need to approve you.</> : "One account for all your communities."}
+            </p>
+            <Card>
+              <SocialAuthButtons onSignedIn={onSocialSignedIn} disabled={busy} joinSlug={joinSlug} />
+              <div className="my-4 flex items-center gap-3 text-xs text-muted">
+                <span className="h-px flex-1 bg-line" /> or continue with email <span className="h-px flex-1 bg-line" />
+              </div>
+              <form className="space-y-3" onSubmit={(e) => { e.preventDefault(); go(email, password); }}>
+                <Field label="Email"><Input data-testid="login-email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} required /></Field>
+                <Field label={<span className="flex items-center justify-between">Password <Link className="text-xs font-normal normal-case text-muted underline" to="/forgot-password" data-testid="forgot-password-link">Forgot password?</Link></span>}>
+                  <Input data-testid="login-password" type="password" value={password} onChange={(e) => setPassword(e.target.value)} required />
+                </Field>
+                {status ? (
+                  <MembershipStatusCard status={status} communityName={joinInfo?.name} testId="login-status" />
+                ) : err && <p className="text-sm text-red-400" data-testid="login-error">{err}</p>}
+                <Button type="submit" loading={busy} className="w-full" data-testid="login-submit">Sign in</Button>
+              </form>
+              <p className="mt-3 text-center text-sm text-muted">New to Pathwai? <Link className="underline" to="/signup">Create your account</Link></p>
+            </Card>
+            <p className="mt-3 text-center"><HowItWorks /></p>
           </div>
         )}
-        {!inDemo && (
-          <div className="mt-6 space-y-2" data-testid="demo-links">
-            <p className="eyebrow">Try the demo</p>
-            <h2 className="text-xl" style={{ textWrap: "balance" }}>Run your community in one place. Know what is working.</h2>
-            <p className="text-xs text-muted">A practice copy with made-up members and events. Nothing you do there is saved or touches a real community.</p>
-            <div className="rounded-xl border border-ink/40 bg-surface p-4" data-testid="demo-admin-card">
-              <p className="font-medium">See it as the person running a community</p>
-              <p className="mt-1 text-xs text-muted">Opens on the Impact view: every number set against the period before it, who is going quiet, and a report you can open and send.</p>
-              <div className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-4" data-testid="demo-sample-tiles" aria-label="Sample figures">
-                {SAMPLE_TILES.map((t) => (
-                  <div key={t.label} className="rounded-lg bg-ink/[.05] p-2.5"><p className="stat text-lg leading-none">{t.value}</p><p className="mt-1 text-[11px] leading-tight text-muted">{t.label}</p></div>
+
+        {tab === "demo" && showDemoTab && (
+          <div className="space-y-3" data-testid="demo-links">
+            <div>
+              <h2 className="text-lg leading-snug" style={{ textWrap: "balance" }}>Look around a practice community</h2>
+              <p className="mt-1 text-xs text-muted">Made-up members and events. Nothing you do there is saved or touches a real community.</p>
+            </div>
+            <Seg value={demoShown} onChange={setDemoTab} testPrefix="demo-tab" items={demoItems} />
+
+            {demoShown === "admin" && (
+              <div className="rounded-xl border border-ink/40 bg-surface p-4" data-testid="demo-admin-card">
+                <p className="font-medium">See it as the person running a community</p>
+                <p className="mt-1 text-xs text-muted">Every number set against the last period, who is going quiet, and a report you can open and send.</p>
+                <div className="mt-3 grid grid-cols-4 gap-1.5" data-testid="demo-sample-tiles" aria-label="Sample figures">
+                  {SAMPLE_TILES.map((t) => (
+                    <div key={t.label} className="min-w-0 rounded-lg bg-ink/[.05] p-2"><p className="stat text-base leading-none">{t.value}</p><p className="mt-1 break-words text-[10px] leading-tight text-muted">{t.label}</p></div>
+                  ))}
+                </div>
+                <p className="mt-1.5 text-[11px] text-muted">Sample data. <Link to="/about#sample" className="underline" data-testid="demo-see-report">See a full sample report</Link></p>
+                <button type="button" data-testid="demo-link-admin" onClick={() => startAdminDemo()} className="btn-primary mt-3 w-full">Open the admin demo</button>
+              </div>
+            )}
+
+            {demoShown === "member" && (
+              <div className="rounded-xl border border-line bg-surface p-4">
+                <p className="font-medium">See what your members see</p>
+                <p className="mt-1 text-xs text-muted">One front door: the community's story, perks, introductions with a reason, offers and asks, and a scorecard of how dependable it is.</p>
+                <button type="button" data-testid="demo-link-member" onClick={() => startDemo("member")} className="btn-primary mt-3 w-full">Open the member demo</button>
+              </div>
+            )}
+
+            {demoShown === "communities" && (
+              <div className="space-y-2">
+                {DEMO_COMMUNITIES.map((c) => (
+                  <div key={c.slug} className="flex items-center gap-2 rounded-xl border border-line bg-surface p-2.5" data-testid={`demo-community-${c.slug}`}>
+                    <div className="min-w-0 flex-1"><p className="truncate text-sm font-medium">{c.name}</p><p className="truncate text-[11px] text-muted" title={c.blurb}>{c.blurb}</p></div>
+                    <button type="button" className="btn-ghost shrink-0 border border-line !px-2.5 !py-1.5 text-xs" data-testid={`demo-${c.slug}-member`} onClick={() => startDemo("member", c.slug)}>Member</button>
+                    <button type="button" className="btn-ghost shrink-0 border border-line !px-2.5 !py-1.5 text-xs" data-testid={`demo-${c.slug}-admin`} onClick={() => startDemo("admin", c.slug)}>Admin</button>
+                  </div>))}
+              </div>
+            )}
+
+            {demoShown === "accounts" && demo.accounts.length > 0 && (
+              <div className="space-y-2">
+                {[...demo.accounts, hostAcct].map((a) => (
+                  <button key={a.demo_role} data-testid={`demo-login-${a.demo_role}`} onClick={() => go(a.email, demo.password)}
+                    className="w-full rounded-xl border border-line bg-surface p-3 text-left hover:bg-ink/5">
+                    <p className="text-sm font-medium">{a.label}</p><p className="text-xs text-muted">{a.description}</p>
+                  </button>
                 ))}
               </div>
-              <p className="mt-1.5 text-[11px] text-muted">Sample data. <Link to="/about#sample" className="underline" data-testid="demo-see-report">See a full sample report</Link></p>
-              <button type="button" data-testid="demo-link-admin" onClick={() => startAdminDemo()} className="btn-primary mt-3 w-full">Open the admin demo</button>
-            </div>
-            <button type="button" data-testid="demo-link-member" onClick={() => startDemo("member")}
-              className="block w-full rounded-xl border border-line bg-surface p-4 text-left hover:bg-ink/5">
-              <p className="font-medium">Or see what your members see</p><p className="text-xs text-muted">One front door: the community's story, perks, introductions with a reason, offers and asks, and a scorecard of how dependable it is.</p>
-            </button>
-            <p className="eyebrow pt-3">Or walk through a community, from either side</p>
-            {DEMO_COMMUNITIES.map((c) => (
-              <div key={c.slug} className="rounded-xl border border-line bg-surface p-4" data-testid={`demo-community-${c.slug}`}>
-                <p className="font-medium">{c.name}</p><p className="text-xs text-muted">{c.blurb}</p>
-                <div className="mt-3 flex gap-2">
-                  <button type="button" className="btn-ghost flex-1" data-testid={`demo-${c.slug}-member`} onClick={() => startDemo("member", c.slug)}>As a member</button>
-                  <button type="button" className="btn-ghost flex-1" data-testid={`demo-${c.slug}-admin`} onClick={() => startDemo("admin", c.slug)}>As the admin</button>
-                </div>
-              </div>))}
+            )}
           </div>
         )}
-        <PoweredBy className="mt-10 text-center" />
+        <PoweredBy className="mt-2 text-center" />
       </div>
     </div>
   );
