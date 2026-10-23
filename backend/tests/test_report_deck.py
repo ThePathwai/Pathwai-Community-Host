@@ -154,3 +154,36 @@ def test_layout_helpers_keep_text_inside_tiles():
     assert report_deck._val_size("7", 380, 210, True) <= 84
     assert report_deck._ins_lines("x" * 2000, 380) == 3 and report_deck._ins_lines("", 380) == 1
     assert report_deck._nat_h({"type": "table", "rows": [[1]] * 3}) < report_deck._nat_h({"type": "table", "rows": [[1]] * 7})
+
+
+def test_selection_takes_out_only_what_was_switched_off():
+    rep = _report()
+    keys = report_deck.selection_keys(rep)
+    assert "glance" in keys and "s:reach" in keys and "t:reach:Members" in keys and "c:reach:Active per week" in keys and "i:reach:0" in keys
+    out = report_deck.apply_selection(rep, ["t:reach:Members", "i:reach:0", "s:perks", "bogus"])
+    assert [s["kind"] for s in out["sections"]] == ["reach", "events", "health"]
+    assert [t["label"] for t in out["sections"][0]["tiles"]] == ["Active"] and out["sections"][0]["insights"] == []
+    assert len(rep["sections"]) == 4 and len(rep["sections"][0]["tiles"]) == 2  # the full report is untouched
+    assert report_deck.apply_selection(rep, []) is rep
+    # a section with nothing left is dropped, and the glance slide can go
+    gone = report_deck.apply_selection(rep, ["t:events:Held", "c:events:Recent", "glance"])
+    assert "events" not in [s["kind"] for s in gone["sections"]] and gone["hide_glance"] is True
+    assert _pages(report_deck.build_deck(gone, {})) == 5  # cover, 3 sections, close (no glance)
+    assert report_deck.clean_hidden(["a", 3, None, "a"], rep) == []
+
+
+def test_deck_selection_is_saved_per_report_type_and_used_by_the_download():
+    a = _login("admin@yourcommunity.app")
+    assert _login("demo@yourcommunity.app").put("/api/admin/deck-selection/sponsor", json={"hidden": []}).status_code == 403
+    assert a.get("/api/admin/deck-selection/sponsor").json()["hidden"] == []
+    assert a.put("/api/admin/deck-selection/nope", json={"hidden": []}).status_code == 400
+    rep = a.get("/api/admin/reports/sponsor").json()
+    first = rep["sections"][0]
+    r = a.put("/api/admin/deck-selection/sponsor", json={"hidden": ["glance", f"s:{first['kind']}", "junk"]})
+    assert r.status_code == 200 and r.json()["hidden"] == ["glance", f"s:{first['kind']}", "junk"]
+    assert a.get("/api/admin/deck-selection/funder").json()["hidden"] == []
+    full = len(rep["sections"]) + 3  # cover, glance, closing
+    pdf = a.get("/api/admin/reports/sponsor/deck.pdf").content
+    assert _pages(pdf) == full - 2  # no glance, one section fewer
+    a.put("/api/admin/deck-selection/sponsor", json={"hidden": []})
+    assert _pages(a.get("/api/admin/reports/sponsor/deck.pdf").content) == full

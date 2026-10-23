@@ -43,6 +43,13 @@ export function impactHandler({ method, path, body, params, store, users, events
     const built = buildReport(rep[1], metrics(), communityName);
     return { status: 200, data: wantIg ? { ...withInstagram(built, sampleInstagram(community)), sample: true } : built };
   }
+  const dsel = path.match(/^\/admin\/deck-selection\/([a-z]+)$/);
+  if (dsel) {
+    if (!REPORT_TYPES.some((t) => t.kind === dsel[1])) return err(400, "Unknown report type");
+    store.deckSel = store.deckSel || {};
+    if (method === "put") store.deckSel[dsel[1]] = (body.hidden || []).filter((h) => typeof h === "string").slice(0, 300);
+    return { status: 200, data: { kind: dsel[1], hidden: store.deckSel[dsel[1]] || [] } };
+  }
   if (path === "/admin/report-shares" && method === "get") return { status: 200, data: { shares: store.shares.filter((s) => !s.revoked) } };
   if (path === "/admin/report-shares" && method === "post") {
     if (!REPORT_TYPES.some((t) => t.kind === body.kind)) return err(400, "Unknown report type");

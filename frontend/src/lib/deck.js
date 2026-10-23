@@ -85,6 +85,30 @@ export function useAdaptedLogo(src, bgRgb, fgRgb) {
 
 const hasData = (ch) => (ch.type === "table" ? (ch.rows || []).length > 0 : ["columns", "hbar", "donut"].includes(ch.type) && (ch.items || []).some((i) => i.value > 0));
 
+// ---- what the admin chose to show (mirrors report_deck.apply_selection: the same keys, so preview and download agree)
+export const sectionId = (s) => String(s.kind || s.title || "");
+export function selectionKeys(report) {
+  const keys = ["glance"];
+  for (const s of report?.sections || []) {
+    const id = sectionId(s);
+    keys.push(`s:${id}`, ...(s.tiles || []).map((t) => `t:${id}:${t.label ?? ""}`), ...(s.charts || []).map((c) => `c:${id}:${c.title ?? ""}`), ...(s.insights || []).map((_, n) => `i:${id}:${n}`));
+  }
+  return keys;
+}
+/** The report with what was switched off taken out; a section with nothing left is dropped. */
+export function applySelection(report, hidden) {
+  const hide = new Set(hidden || []);
+  if (!report || !hide.size) return report;
+  const sections = [];
+  for (const s of report.sections || []) {
+    const id = sectionId(s);
+    if (hide.has(`s:${id}`)) continue;
+    const ns = { ...s, tiles: (s.tiles || []).filter((t) => !hide.has(`t:${id}:${t.label ?? ""}`)), charts: (s.charts || []).filter((c) => !hide.has(`c:${id}:${c.title ?? ""}`)), insights: (s.insights || []).filter((_, n) => !hide.has(`i:${id}:${n}`)) };
+    if (ns.tiles.length || ns.charts.length || ns.insights.length) sections.push(ns);
+  }
+  return { ...report, sections, hide_glance: hide.has("glance") };
+}
+
 /** The slides, in order: cover, at a glance, one per section, closing. */
 export function buildSlides(report, config) {
   const th = deckTheme(config);
@@ -94,7 +118,7 @@ export function buildSlides(report, config) {
     const tiles = s.tiles || [];
     if (tiles.length) picks.push({ section: s.title, tile: tiles.find((t) => t.accent) || tiles[0] });
   }
-  if (picks.length) {
+  if (picks.length && !report.hide_glance) {
     const line = (report.sections || []).flatMap((s) => s.insights || [])[0] || "";
     slides.push({ kind: "glance", picks: picks.slice(0, 4), line });
   }

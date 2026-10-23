@@ -304,6 +304,51 @@ def _val_size(val: str, w: float, h: float, big: bool) -> float:
     return base
 
 
+# ---------------------------------------------------------------- what the admin chose to show
+def section_id(s: dict) -> str:
+    return str(s.get("kind") or s.get("title") or "")
+
+
+def selection_keys(rep: Dict[str, Any]) -> List[str]:
+    """Every thing in a report an admin can switch off, as stable keys: s:<section>, t:<section>:<number label>, c:<section>:<chart title>, i:<section>:<n>, glance."""
+    keys = ["glance"]
+    for s in rep.get("sections") or []:
+        sid = section_id(s)
+        keys.append(f"s:{sid}")
+        keys += [f"t:{sid}:{t.get('label', '')}" for t in s.get("tiles") or []]
+        keys += [f"c:{sid}:{c.get('title', '')}" for c in s.get("charts") or []]
+        keys += [f"i:{sid}:{n}" for n, _ in enumerate(s.get("insights") or [])]
+    return keys
+
+
+def clean_hidden(hidden: Any, rep: Optional[Dict[str, Any]] = None) -> List[str]:
+    """Only strings, bounded, and (when a report is given) only keys that exist in it."""
+    out = [h[:200] for h in (hidden or []) if isinstance(h, str)][:300]
+    if rep is not None:
+        ok = set(selection_keys(rep))
+        out = [h for h in out if h in ok]
+    return list(dict.fromkeys(out))
+
+
+def apply_selection(rep: Dict[str, Any], hidden: Any) -> Dict[str, Any]:
+    """The report with what the admin switched off taken out. A section with nothing left is dropped; the full report is never changed."""
+    hide = set(clean_hidden(hidden))
+    if not hide:
+        return rep
+    secs = []
+    for s in rep.get("sections") or []:
+        sid = section_id(s)
+        if f"s:{sid}" in hide:
+            continue
+        ns = {**s,
+              "tiles": [t for t in s.get("tiles") or [] if f"t:{sid}:{t.get('label', '')}" not in hide],
+              "charts": [c for c in s.get("charts") or [] if f"c:{sid}:{c.get('title', '')}" not in hide],
+              "insights": [x for n, x in enumerate(s.get("insights") or []) if f"i:{sid}:{n}" not in hide]}
+        if ns["tiles"] or ns["charts"] or ns["insights"]:
+            secs.append(ns)
+    return {**rep, "sections": secs, "hide_glance": "glance" in hide}
+
+
 # ---------------------------------------------------------------- charts (drawn within x, y .. x+w, y+h; y is the bottom)
 def _chart_title(c: canvas.Canvas, th: Theme, title: str, x: float, y_top: float, w: float) -> float:
     _caps(c, _fit(c, title.upper(), BOLD, 8.5, w), x, y_top - 9, 8.5, th.muted, 1.2)
@@ -609,7 +654,7 @@ class _Deck:
             t = next((x for x in tiles if x.get("accent")), tiles[0])
             picks.append((s, t))
         picks = picks[:4]
-        if not picks:
+        if not picks or rep.get("hide_glance"):
             return
         self.background(c)
         self.header(c, "At a glance", "The numbers that matter", f"{rep.get('period_label', '')}. Every figure is counted from {th.name}'s own records.")

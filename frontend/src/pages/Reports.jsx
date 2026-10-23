@@ -1,7 +1,7 @@
-import React, { useCallback, useEffect, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { toast } from "sonner";
-import { Check, Circle, Copy, Download, ExternalLink, FileText, Instagram, Link2, Printer, RefreshCw, Trash2 } from "lucide-react";
+import { Check, ChevronDown, Circle, Copy, Download, ExternalLink, FileText, Instagram, Link2, Printer, RefreshCw, Trash2 } from "lucide-react";
 import { api, errMsg, timeAgo } from "../lib/api";
 import { useAuth } from "../lib/auth";
 import { isDemo } from "../lib/demo";
@@ -9,7 +9,7 @@ import { Button, Card, Input, PageHeader, Spinner, cx } from "../components/ui";
 import ReportView from "../components/ReportView";
 import { downloadReportDeck, downloadReportPdf } from "../components/ImpactPanel";
 import DeckPreview from "../components/DeckPreview";
-import { deckTheme } from "../lib/deck";
+import { applySelection, deckTheme, sectionId } from "../lib/deck";
 
 const TYPES = [
   ["sponsor", "Sponsor report", "Reach, event turnout and perk use. For the people backing you."],
@@ -20,6 +20,62 @@ const PERIODS = [[30, "Last 30 days"], [90, "Last 90 days"], [365, "Last 12 mont
 
 export const shareUrl = (slug, token) => `${window.location.origin}/r/${slug || "c"}/${token}`;
 
+
+function PickBox({ k, children, sub, disabled, strong, hide, flip }) {
+  return (
+    <label className={cx("flex min-h-[32px] cursor-pointer items-start gap-2 rounded-lg px-2 py-1.5 text-sm hover:bg-ink/5", disabled && "opacity-45")}>
+      <input type="checkbox" className="mt-0.5 h-4 w-4 shrink-0" checked={!hide.has(k)} onChange={() => flip(k)} data-testid={`deck-pick-${k}`} />
+      <span className="min-w-0"><span className={cx("break-words", strong && "font-semibold")}>{children}</span>{sub && <span className="block text-xs text-muted">{sub}</span>}</span>
+    </label>
+  );
+}
+
+// Which sections, figures, charts and insights go on the slides. Saved for the report type, used by the preview and the download.
+function DeckPicker({ rep, hidden, setHidden }) {
+  const [open, setOpen] = useState(false);
+  const hide = new Set(hidden);
+  const secs = rep.sections || [];
+  const flip = (key) => setHidden(hide.has(key) ? hidden.filter((k) => k !== key) : [...hidden, key]);
+  let total = 0, shown = 0;
+  for (const s of secs) {
+    const id = sectionId(s);
+    const items = [...(s.tiles || []).map((t) => `t:${id}:${t.label ?? ""}`), ...(s.charts || []).map((c) => `c:${id}:${c.title ?? ""}`), ...(s.insights || []).map((_, n) => `i:${id}:${n}`)];
+    total += items.length;
+    if (!hide.has(`s:${id}`)) shown += items.filter((k) => !hide.has(k)).length;
+  }
+  return (
+    <div className="mb-4 rounded-xl border border-line" data-testid="deck-picker">
+      <button type="button" onClick={() => setOpen((o) => !o)} aria-expanded={open} className="flex w-full items-center justify-between gap-3 px-3 py-2.5 text-left" data-testid="deck-picker-toggle">
+        <span className="min-w-0 text-sm"><span className="font-semibold">Choose what is in the slides</span> <span className="text-muted">· showing {shown} of {total} items{hidden.includes("glance") ? ", no summary slide" : ""}</span></span>
+        <ChevronDown className={cx("h-4 w-4 shrink-0 transition-transform", open && "rotate-180")} />
+      </button>
+      {open && (
+        <div className="border-t border-line p-3">
+          <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
+            <PickBox hide={hide} flip={flip} k="glance" strong>"At a glance" summary slide</PickBox>
+            <button type="button" className="btn-ghost text-xs" disabled={!hidden.length} onClick={() => setHidden([])} data-testid="deck-pick-reset">Show everything</button>
+          </div>
+          <div className="grid grid-cols-[minmax(0,1fr)] gap-3 md:grid-cols-2">
+            {secs.map((s) => {
+              const id = sectionId(s), off = hide.has(`s:${id}`);
+              return (
+                <div key={id} className="rounded-lg border border-line p-2">
+                  <PickBox hide={hide} flip={flip} k={`s:${id}`} strong>{s.title}</PickBox>
+                  <div className="ml-4 border-l border-line pl-2">
+                    {(s.tiles || []).map((t) => <PickBox hide={hide} flip={flip} key={`t${t.label}`} k={`t:${id}:${t.label ?? ""}`} disabled={off} sub={String(t.value)}>{t.label}</PickBox>)}
+                    {(s.charts || []).map((c) => <PickBox hide={hide} flip={flip} key={`c${c.title}`} k={`c:${id}:${c.title ?? ""}`} disabled={off} sub="Chart">{c.title}</PickBox>)}
+                    {(s.insights || []).map((x, n) => <PickBox hide={hide} flip={flip} key={`i${n}`} k={`i:${id}:${n}`} disabled={off} sub="Sentence">{x.length > 80 ? `${x.slice(0, 80)}…` : x}</PickBox>)}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+          <p className="mt-3 text-xs text-muted">Your choice is saved for this kind of report. The cover and closing slides are always included, and the on-screen report and shared links still show everything.</p>
+        </div>
+      )}
+    </div>
+  );
+}
 
 // What the slides are made from, and what is still missing. Nothing is required: every slide adapts to what the community has.
 function DeckReadiness({ config, ig, onInstagram }) {
@@ -62,6 +118,18 @@ export default function Reports({ embedded = false }) {
   const [busy, setBusy] = useState("");
   const [copied, setCopied] = useState("");
   const demo = isDemo();
+  const [hidden, setHiddenState] = useState([]);
+  const saving = useRef(null);
+  useEffect(() => { setHiddenState([]); api.get(`/admin/deck-selection/${kind}`).then((r) => setHiddenState(r.data.hidden || [])).catch(() => {}); }, [kind]);
+  const flushSave = async () => { if (saving.current) { const f = saving.current; saving.current = null; clearTimeout(f.t); await f.run(); } };
+  const setHidden = (next) => {
+    setHiddenState(next);
+    if (saving.current) clearTimeout(saving.current.t);
+    const run = () => api.put(`/admin/deck-selection/${kind}`, { hidden: next }).catch((e) => toast.error(errMsg(e, "That choice could not be saved.")));
+    saving.current = { run, t: setTimeout(() => { saving.current = null; run(); }, 500) };
+  };
+  useEffect(() => () => { if (saving.current) { clearTimeout(saving.current.t); saving.current.run(); } }, []);
+  const deckRep = useMemo(() => applySelection(rep, hidden), [rep, hidden]);
   const set = (patch) => { const n = new URLSearchParams(sp); Object.entries(patch).forEach(([k, v]) => n.set(k, v)); setSp(n, { replace: true }); };
 
   const include = igOn && ig?.has_data ? "instagram" : "";
@@ -89,7 +157,7 @@ export default function Reports({ embedded = false }) {
   const slides = async () => {
     if (demo) { toast.message("Slides download from a live community. In this practice copy, flip through the preview below."); return; }
     setBusy("deck");
-    try { await downloadReportDeck(kind, days, include, label); toast.success("Slides downloaded"); }
+    try { await flushSave(); await downloadReportDeck(kind, days, include, label); toast.success("Slides downloaded"); }
     catch (e) { let m; try { const t = await e?.response?.data?.text?.(); m = JSON.parse(t).detail; } catch { /* ignore */ } toast.error(m || errMsg(e, "The slides could not be created.")); }
     finally { setBusy(""); }
   };
@@ -173,7 +241,8 @@ export default function Reports({ embedded = false }) {
           <Input value={label} onChange={(e) => setLabel(e.target.value)} placeholder="Prepared for (optional)" maxLength={80} aria-label="Who the slides are prepared for" data-testid="deck-label" className="w-full sm:w-72" />
         </div>
         <DeckReadiness config={config} ig={ig} onInstagram={goConnectIg} />
-        {!rep ? <Spinner /> : <DeckPreview report={rep} config={config} label={label} />}
+        {rep && <DeckPicker rep={rep} hidden={hidden} setHidden={setHidden} />}
+        {!rep ? <Spinner /> : <DeckPreview report={deckRep} config={config} label={label} />}
       </Card>
 
       <Card className="print-area">

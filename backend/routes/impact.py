@@ -86,12 +86,38 @@ async def report_pdf(kind: str, days: int = Query(90), include: str = Query(""),
     return Response(pdf, media_type="application/pdf", headers={"Content-Disposition": f'attachment; filename="{slug}-{kind}-report-{datetime.utcnow().strftime("%Y-%m-%d")}.pdf"', "Cache-Control": "no-store"})
 
 
+async def _saved_hidden(kind: str) -> List[str]:
+    doc = await db.deck_selection.find_one({"kind": kind}) or {}
+    return report_deck.clean_hidden(doc.get("hidden"))
+
+
+class DeckSelectionIn(BaseModel):
+    hidden: List[str] = []
+
+
+@router.get("/admin/deck-selection/{kind}")
+async def get_deck_selection(kind: str, me: dict = Depends(require_role("admin"))):
+    """What this community switched off for the slides of one report type (empty = everything is shown)."""
+    _check_kind(kind)
+    return {"kind": kind, "hidden": await _saved_hidden(kind)}
+
+
+@router.put("/admin/deck-selection/{kind}")
+async def put_deck_selection(kind: str, body: DeckSelectionIn, me: dict = Depends(require_role("admin"))):
+    _check_kind(kind)
+    hidden = report_deck.clean_hidden(body.hidden)
+    await db.deck_selection.update_one({"kind": kind}, {"$set": {"kind": kind, "hidden": hidden, "updated_at": now_iso(), "updated_by": me["id"]}}, upsert=True)
+    await audit(me["id"], "admin.deck_selection", "report", kind, {"hidden": len(hidden)})
+    return {"kind": kind, "hidden": hidden}
+
+
 @router.get("/admin/reports/{kind}/deck.pdf")
 async def report_deck_pdf(kind: str, days: int = Query(90), include: str = Query(""), label: str = Query(""), me: dict = Depends(require_role("admin"))):
     """The same report as a widescreen slide deck in the community's own colours, logo, photos and story."""
     _check_kind(kind)
     cfg = await _config()
     rep = await _report(kind, days, _include(include))
+    rep = report_deck.apply_selection(rep, await _saved_hidden(kind))
     if label.strip():
         rep["label"] = label.strip()[:80]
     pdf = report_deck.build_deck(rep, cfg)
