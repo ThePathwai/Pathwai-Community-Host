@@ -69,6 +69,7 @@ function Footer({ th, report, n }) {
   );
 }
 
+const fv = (v) => (typeof v === "number" ? v.toLocaleString("en-US") : v);
 const clamp = (n) => ({ display: "-webkit-box", WebkitLineClamp: n, WebkitBoxOrient: "vertical", overflow: "hidden" });
 
 // A number tile: the figure at the top, what it means at the bottom, however tall the tile is.
@@ -122,7 +123,7 @@ function Chart({ th, ch, w, h }) {
           return (
             <React.Fragment key={i}>
               {bh > 0 && <span style={{ position: "absolute", left: cx - bw / 2, bottom: base, width: bw, height: bh, borderRadius: `${Math.min(5, bw / 3)}px ${Math.min(5, bw / 3)}px 0 0`, background: i === n - 1 ? th.accentFg : th.accentFg + "73" }} />}
-              <span style={{ position: "absolute", left: cx - 30, width: 60, textAlign: "center", bottom: base + bh + 4, fontSize: 11, lineHeight: "13px", fontWeight: 700, color: th.text }}>{it.value}</span>
+              <span style={{ position: "absolute", left: cx - 30, width: 60, textAlign: "center", bottom: base + bh + 4, fontSize: 11, lineHeight: "13px", fontWeight: 700, color: th.text }}>{fv(it.value)}</span>
               <span style={{ position: "absolute", left: cx - slot / 2 - 3, width: slot + 6, textAlign: "center", bottom: 2, fontSize: 8.5, lineHeight: "11px", color: th.muted, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{it.label}</span>
             </React.Fragment>
           );
@@ -130,7 +131,7 @@ function Chart({ th, ch, w, h }) {
       </div>
     );
   } else if (ch.type === "hbar") {
-    const row = Math.min(40, bodyH / Math.max(items.length, 1)), labW = w * 0.38, trackX = labW + 10, trackW = w - labW - 10 - 46;
+    const row = Math.min(40, bodyH / Math.max(items.length, 1)), labW = w * 0.38, trackX = labW + 10, trackW = w - labW - 10 - 58;
     body = (
       <div style={{ position: "relative", width: w, height: bodyH }}>
         {items.map((it, i) => (
@@ -138,7 +139,7 @@ function Chart({ th, ch, w, h }) {
             <span style={{ position: "absolute", left: 0, top: row / 2 - 8, width: labW, fontSize: 11, lineHeight: "16px", color: th.text, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{it.label}</span>
             <span style={{ position: "absolute", left: trackX, top: row / 2 - 5, width: trackW, height: 10, borderRadius: 5, background: th.soft }} />
             {it.value > 0 && <span style={{ position: "absolute", left: trackX, top: row / 2 - 5, width: Math.max(trackW * (it.value / max), 7), height: 10, borderRadius: 5, background: th.accentFg, opacity: i === 0 ? 1 : 0.78 }} />}
-            <span style={{ position: "absolute", left: trackX + trackW + 10, top: row / 2 - 8, fontSize: 11, lineHeight: "16px", fontWeight: 700, color: th.text, whiteSpace: "nowrap" }}>{ch.unit === "% full" ? `${it.value}%` : it.value}</span>
+            <span style={{ position: "absolute", left: trackX + trackW + 10, top: row / 2 - 8, fontSize: 11, lineHeight: "16px", fontWeight: 700, color: th.text, whiteSpace: "nowrap" }}>{ch.unit === "% full" ? `${it.value}%` : fv(it.value)}</span>
           </div>
         ))}
       </div>

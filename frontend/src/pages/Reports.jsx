@@ -7,6 +7,7 @@ import { useAuth } from "../lib/auth";
 import { isDemo } from "../lib/demo";
 import { Button, Card, Input, PageHeader, Spinner, Textarea, cx } from "../components/ui";
 import ReportView from "../components/ReportView";
+import { TikTokIcon } from "../components/SocialIcons";
 import { downloadReportDeck, downloadReportPdf } from "../components/ImpactPanel";
 import DeckPreview from "../components/DeckPreview";
 import { applySelection, deckTheme, sectionId } from "../lib/deck";
@@ -143,7 +144,7 @@ function OfferEditor({ onSaved }) {
 }
 
 // What the slides are made from, and what is still missing. Nothing is required: every slide adapts to what the community has.
-function DeckReadiness({ config, ig, onInstagram }) {
+function DeckReadiness({ config, ig, tt, onConnect }) {
   const th = deckTheme(config);
   const photos = Math.min(th.photos.length, 2);
   const items = [
@@ -151,7 +152,8 @@ function DeckReadiness({ config, ig, onInstagram }) {
     { k: "photos", ok: photos >= 2, label: `Photos ${photos}/2`, add: photos ? "Add another photo" : "Add 2 photos", to: "/admin?tab=brand" },
     { k: "story", ok: !!th.about, label: "Your story", add: "Write a short story", to: "/admin?tab=brand" },
     { k: "contact", ok: !!(th.site || th.email), label: "Website or email", add: "Add a website or email", to: "/admin?tab=brand" },
-    { k: "ig", ok: !!ig?.connected, label: "Instagram", add: "Connect Instagram", onClick: onInstagram, hide: ig === null },
+    { k: "ig", ok: !!ig?.connected, label: "Instagram", add: "Connect Instagram", onClick: onConnect, hide: ig === null },
+    { k: "tt", ok: !!tt?.connected, label: "TikTok", add: "Connect TikTok", onClick: onConnect, hide: tt === null },
   ].filter((i) => !i.hide);
   const done = items.filter((i) => i.ok).length;
   return (
@@ -175,8 +177,12 @@ export default function Reports({ embedded = false }) {
   const nav = useNavigate();
   const kind = TYPES.some(([k]) => k === sp.get("type")) ? sp.get("type") : "sponsor";
   const days = PERIODS.some(([n]) => n === Number(sp.get("days"))) ? Number(sp.get("days")) : 90;
-  const igOn = sp.get("ig") === "1";
+  const demoNow = isDemo();
+  // a live community leaves social reach out until it is ticked; the demo shows it with both accounts connected
+  const igOn = demoNow ? sp.get("ig") !== "0" : sp.get("ig") === "1";
+  const ttOn = demoNow ? sp.get("tt") !== "0" : sp.get("tt") === "1";
   const [ig, setIg] = useState(null);
+  const [tt, setTt] = useState(null);
   const [rep, setRep] = useState(null);
   const [reload, setReload] = useState(0);
   const [shares, setShares] = useState([]);
@@ -198,18 +204,22 @@ export default function Reports({ embedded = false }) {
   const deckRep = useMemo(() => applySelection(rep, hidden), [rep, hidden]);
   const set = (patch) => { const n = new URLSearchParams(sp); Object.entries(patch).forEach(([k, v]) => n.set(k, v)); setSp(n, { replace: true }); };
 
-  const include = igOn && ig?.has_data ? "instagram" : "";
-  useEffect(() => { if (ig === null) return; setRep(null); api.get(`/admin/reports/${kind}`, { params: { days, include } }).then((r) => setRep(r.data)).catch((e) => toast.error(errMsg(e))); }, [kind, days, include, ig === null, reload]); // eslint-disable-line
+  const include = [igOn && ig?.has_data && "instagram", ttOn && tt?.has_data && "tiktok"].filter(Boolean).join(",");
+  useEffect(() => { if (ig === null || tt === null) return; setRep(null); api.get(`/admin/reports/${kind}`, { params: { days, include } }).then((r) => setRep(r.data)).catch((e) => toast.error(errMsg(e))); }, [kind, days, include, ig === null, tt === null, reload]); // eslint-disable-line
   const loadIg = useCallback(() => api.get("/admin/instagram").then((r) => setIg(r.data)).catch(() => setIg({ connected: false })), []);
   useEffect(() => { loadIg(); }, [loadIg]);
-  const refreshIg = async (quiet) => {
-    setBusy("ig");
-    try { await api.post("/admin/integrations/instagram/sync"); await loadIg(); if (!quiet) toast.success("Instagram numbers updated"); }
+  const loadTt = useCallback(() => api.get("/admin/tiktok").then((r) => setTt(r.data)).catch(() => setTt({ connected: false })), []);
+  useEffect(() => { loadTt(); }, [loadTt]);
+  const refreshSocial = async (which, quiet) => {
+    const [name, path, load] = which === "tt" ? ["TikTok", "tiktok", loadTt] : ["Instagram", "instagram", loadIg];
+    setBusy(which);
+    try { await api.post(`/admin/integrations/${path}/sync`); await load(); if (!quiet) toast.success(`${name} numbers updated`); }
     catch (e) { if (!quiet) toast.error(errMsg(e)); } finally { setBusy(""); }
   };
-  // Instagram numbers older than half a day are renewed quietly when the page opens (a live connection only).
-  useEffect(() => { if (ig?.connected && !ig.sample && ig.fetched_at && Date.now() - new Date(ig.fetched_at).getTime() > 12 * 3600e3) refreshIg(true); }, [ig?.connected]); // eslint-disable-line
-  const goConnectIg = () => { try { sessionStorage.setItem("pathwai.admintab", "integrations"); } catch { /* ignore */ } nav("/admin?tab=integrations"); };
+  // numbers older than half a day are renewed quietly when the page opens (a live connection only).
+  useEffect(() => { if (ig?.connected && !ig.sample && ig.fetched_at && Date.now() - new Date(ig.fetched_at).getTime() > 12 * 3600e3) refreshSocial("ig", true); }, [ig?.connected]); // eslint-disable-line
+  useEffect(() => { if (tt?.connected && !tt.sample && tt.fetched_at && Date.now() - new Date(tt.fetched_at).getTime() > 12 * 3600e3) refreshSocial("tt", true); }, [tt?.connected]); // eslint-disable-line
+  const goConnect = () => { try { sessionStorage.setItem("pathwai.admintab", "integrations"); } catch { /* ignore */ } nav("/admin?tab=integrations"); };
   const loadShares = useCallback(() => api.get("/admin/report-shares").then((r) => setShares(r.data.shares || [])).catch(() => {}), []);
   useEffect(() => { loadShares(); }, [loadShares]);
 
@@ -261,28 +271,37 @@ export default function Reports({ embedded = false }) {
       </div>
 
       <Card className="no-print" data-testid="report-instagram">
-        <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
-          <Instagram className="h-5 w-5 shrink-0 text-muted" />
-          {ig?.connected && ig.has_data ? (
-            <>
-              <label className="flex min-w-0 flex-1 cursor-pointer items-center gap-2.5 text-sm">
-                <input type="checkbox" className="accent-accent" checked={igOn} onChange={(e) => set({ ig: e.target.checked ? "1" : "0" })} data-testid="report-ig-toggle" />
-                <span className="min-w-0"><span className="font-medium">Include Instagram reach</span> <span className="text-muted">@{ig.handle} · {ig.followers?.toLocaleString("en-US")} followers · updated {timeAgo(ig.fetched_at)}{ig.sample ? " · sample numbers" : ""}</span></span>
-              </label>
-              <Button variant="ghost" onClick={() => refreshIg(false)} loading={busy === "ig"} data-testid="report-ig-refresh"><RefreshCw className="h-4 w-4" />Update numbers</Button>
-            </>
-          ) : ig?.connected ? (
-            <>
-              <p className="min-w-[14rem] flex-1 text-sm text-muted">Instagram is connected but has no numbers yet.</p>
-              <Button variant="ghost" onClick={() => refreshIg(false)} loading={busy === "ig"} data-testid="report-ig-refresh"><RefreshCw className="h-4 w-4" />Pull numbers now</Button>
-            </>
-          ) : (
-            <>
-              <p className="min-w-[14rem] flex-1 text-sm text-muted"><span className="font-medium text-ink">Add your Instagram reach.</span> Show followers, reach and who the audience is next to your community numbers.</p>
-              <Button variant="ghost" onClick={goConnectIg} data-testid="report-ig-connect">Connect Instagram</Button>
-            </>
-          )}
+        <p className="mb-3 text-sm font-semibold">Social reach</p>
+        <div className="space-y-3" data-testid="report-social">
+          {[
+            { k: "ig", name: "Instagram", Icon: Instagram, st: ig, on: igOn, param: "ig", unit: "reach" },
+            { k: "tt", name: "TikTok", Icon: TikTokIcon, st: tt, on: ttOn, param: "tt", unit: "views" },
+          ].map(({ k, name, Icon, st, on, param }) => (
+            <div key={k} className="flex flex-wrap items-center gap-x-4 gap-y-2" data-testid={`report-${k}-row`}>
+              <Icon className="h-5 w-5 shrink-0 text-muted" />
+              {st?.connected && st.has_data ? (
+                <>
+                  <label className="flex min-w-0 flex-1 cursor-pointer items-center gap-2.5 text-sm">
+                    <input type="checkbox" className="accent-accent" checked={on} onChange={(e) => set({ [param]: e.target.checked ? "1" : "0" })} data-testid={`report-${k}-toggle`} />
+                    <span className="min-w-0"><span className="font-medium">Include {name}</span> <span className="text-muted">@{st.handle} · {st.followers?.toLocaleString("en-US")} followers · updated {timeAgo(st.fetched_at)}{st.sample ? " · sample numbers" : ""}</span></span>
+                  </label>
+                  <Button variant="ghost" onClick={() => refreshSocial(k, false)} loading={busy === k} data-testid={`report-${k}-refresh`}><RefreshCw className="h-4 w-4" />Update numbers</Button>
+                </>
+              ) : st?.connected ? (
+                <>
+                  <p className="min-w-[14rem] flex-1 text-sm text-muted">{name} is connected but has no numbers yet.</p>
+                  <Button variant="ghost" onClick={() => refreshSocial(k, false)} loading={busy === k} data-testid={`report-${k}-refresh`}><RefreshCw className="h-4 w-4" />Pull numbers now</Button>
+                </>
+              ) : (
+                <>
+                  <p className="min-w-[14rem] flex-1 text-sm text-muted"><span className="font-medium text-ink">Add your {name} reach.</span> Followers and {k === "tt" ? "video views" : "reach"} next to your community numbers.</p>
+                  <Button variant="ghost" onClick={goConnect} data-testid={`report-${k}-connect`}>Connect {name}</Button>
+                </>
+              )}
+            </div>
+          ))}
         </div>
+        {ig?.has_data && tt?.has_data && <p className="mt-3 text-xs text-muted">With both ticked, the report adds a combined "Social reach" section, then each account on its own.</p>}
       </Card>
 
       <div className="no-print flex flex-wrap items-center justify-between gap-3">
@@ -308,7 +327,7 @@ export default function Reports({ embedded = false }) {
           </div>
           <Input value={label} onChange={(e) => setLabel(e.target.value)} placeholder="Prepared for (optional)" maxLength={80} aria-label="Who the slides are prepared for" data-testid="deck-label" className="w-full sm:w-72" />
         </div>
-        <DeckReadiness config={config} ig={ig} onInstagram={goConnectIg} />
+        <DeckReadiness config={config} ig={ig} tt={tt} onConnect={goConnect} />
         {rep && <DeckPicker rep={rep} hidden={hidden} setHidden={setHidden} />}
         {!rep ? <Spinner /> : <DeckPreview report={deckRep} config={config} label={label} />}
       </Card>

@@ -178,7 +178,7 @@ const GROUPS = [
   ] },
   { title: "Set up", items: [
     { key: "brand", label: "Branding", icon: Palette, blurb: "Logo, colours, fonts and the menu." },
-    { key: "integrations", label: "Integrations", icon: Plug, blurb: "Instagram, forms, email and other connections." },
+    { key: "integrations", label: "Integrations", icon: Plug, blurb: "Instagram, TikTok, forms, email and other connections." },
     { key: "config", label: "Community", icon: Settings2, blurb: "Name, event types and signup questions." },
   ] },
 ];

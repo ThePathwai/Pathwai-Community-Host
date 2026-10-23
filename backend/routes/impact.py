@@ -49,14 +49,17 @@ async def _report(kind: str, days: int, include: Optional[List[str]] = None) -> 
         offer = (await db.partnership_offer.find_one({"_key": "singleton"}) or {}).get("offer")
         offer = impact.clean_offer(offer) if offer is not None else None
     rep = impact.build_report(impact.compute(d, _days(days)), kind, cfg.get("community_name") or "Community", offer)
-    if "instagram" in (include or []):  # only what the last sync saved: a shared link never makes a live call to Instagram
+    if "instagram" in (include or []) or "tiktok" in (include or []):  # only what the last sync saved: a shared link never makes a live call to Instagram or TikTok
         import instagram
-        rep = impact.add_instagram(rep, await instagram.latest(db), await instagram.history(db))
+        import tiktok
+        ig = await instagram.latest(db) if "instagram" in include else None
+        tt = await tiktok.latest(db) if "tiktok" in include else None
+        rep = impact.add_social(rep, ig, await instagram.history(db) if ig else None, tt, await tiktok.history(db) if tt else None)
     return rep
 
 
 def _include(raw: Optional[str]) -> List[str]:
-    return [x for x in (raw or "").split(",") if x in ("instagram",)]
+    return [x for x in (raw or "").split(",") if x in ("instagram", "tiktok")]
 
 
 @router.get("/community/reliability")
@@ -224,6 +227,15 @@ async def instagram_status(me: dict = Depends(require_role("admin"))):
     import instagram
     d = await db.integrations.find_one({"provider": "instagram"}) or {}
     snap = await instagram.latest(db)
+    return {"connected": bool(d.get("enabled") and d.get("credentials")), "has_data": bool(snap), "fetched_at": (snap or {}).get("fetched_at"),
+            "handle": ((snap or {}).get("account") or {}).get("username"), "followers": ((snap or {}).get("account") or {}).get("followers"), "sample": bool((snap or {}).get("sample"))}
+
+
+@router.get("/admin/tiktok")
+async def tiktok_status(me: dict = Depends(require_role("admin"))):
+    import tiktok
+    d = await db.integrations.find_one({"provider": "tiktok"}) or {}
+    snap = await tiktok.latest(db)
     return {"connected": bool(d.get("enabled") and d.get("credentials")), "has_data": bool(snap), "fetched_at": (snap or {}).get("fetched_at"),
             "handle": ((snap or {}).get("account") or {}).get("username"), "followers": ((snap or {}).get("account") or {}).get("followers"), "sample": bool((snap or {}).get("sample"))}
 

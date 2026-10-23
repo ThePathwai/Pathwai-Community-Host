@@ -1,13 +1,13 @@
 // The in-browser demo's stand-in for backend/routes/impact.py: the Impact numbers, sponsor / funder / board reports,
 // read-only share links and the "going quiet" list. Every figure is sample data (and labelled that way on screen),
 // made from the demo community's own member, event and perk lists so it looks like that community.
-import { sampleMetrics, impactCards, reliabilityCards, buildReport, DEFAULT_OFFER, cleanOffer, withInstagram, sampleInstagram, REPORT_TYPES, PERIODS } from "../lib/sampleReport";
+import { sampleMetrics, impactCards, reliabilityCards, buildReport, DEFAULT_OFFER, cleanOffer, withSocial, sampleInstagram, sampleTikTok, REPORT_TYPES, PERIODS } from "../lib/sampleReport";
 
 const hash = (s) => String(s || "x").split("").reduce((a, c) => (a * 31 + c.charCodeAt(0)) >>> 0, 7);
 const err = (status, detail) => ({ status, data: { detail } });
 const DAY = 86400000;
 
-export function impactHandler({ method, path, body, params, store, users, events, resources, community, communityName, instagramOn, config: cfg }) {
+export function impactHandler({ method, path, body, params, store, users, events, resources, community, communityName, instagramOn, tiktokOn, config: cfg }) {
   const days = PERIODS.some((p) => p.days === Number(params?.days)) ? Number(params.days) : 90;
   const people = (users || []).filter((u) => u.role !== "admin");
   const metrics = (d = days) => sampleMetrics({
@@ -34,14 +34,19 @@ export function impactHandler({ method, path, body, params, store, users, events
     const ig = sampleInstagram(community);
     return { status: 200, data: { connected: !!instagramOn, has_data: !!instagramOn, fetched_at: instagramOn ? new Date().toISOString() : null, handle: instagramOn ? ig.account.username : null, followers: instagramOn ? ig.account.followers : null, sample: true } };
   }
+  if (path === "/admin/tiktok" && method === "get") {
+    const tt = sampleTikTok(community);
+    return { status: 200, data: { connected: !!tiktokOn, has_data: !!tiktokOn, fetched_at: tiktokOn ? new Date().toISOString() : null, handle: tiktokOn ? tt.account.username : null, followers: tiktokOn ? tt.account.followers : null, sample: true } };
+  }
   if (path === "/admin/report-types" && method === "get") return { status: 200, data: { types: REPORT_TYPES, periods: PERIODS } };
   const rep = path.match(/^\/admin\/reports\/([a-z]+)(\.pdf)?$/);
   if (rep && method === "get") {
     if (!REPORT_TYPES.some((t) => t.kind === rep[1])) return err(400, "Unknown report type");
     if (rep[2]) return err(400, "PDF files are made by a live community. In this practice copy, use Print / save as PDF on the report page.");
-    const wantIg = String(params?.include || "").split(",").includes("instagram") && instagramOn;
+    const inc = String(params?.include || "").split(",");
     const built = buildReport(rep[1], metrics(), communityName, store.offer || null);
-    return { status: 200, data: wantIg ? { ...withInstagram(built, sampleInstagram(community)), sample: true } : built };
+    const soc = { instagram: inc.includes("instagram") && instagramOn ? sampleInstagram(community) : null, tiktok: inc.includes("tiktok") && tiktokOn ? sampleTikTok(community) : null };
+    return { status: 200, data: soc.instagram || soc.tiktok ? { ...withSocial(built, soc), sample: true } : built };
   }
   if (path === "/admin/partnership-offer") {
     if (method === "put") store.offer = cleanOffer({ give: body.give, ask: body.ask });
@@ -59,7 +64,7 @@ export function impactHandler({ method, path, body, params, store, users, events
   if (path === "/admin/report-shares" && method === "post") {
     if (!REPORT_TYPES.some((t) => t.kind === body.kind)) return err(400, "Unknown report type");
     const s = { id: "sh-" + Math.random().toString(36).slice(2, 8), token: "demo-" + Math.random().toString(36).slice(2, 14), kind: body.kind, days: PERIODS.some((p) => p.days === body.days) ? body.days : 90,
-      label: (body.label || "").trim().slice(0, 80) || null, include: (body.include || []).filter((x) => x === "instagram"), created_at: new Date().toISOString(), views: 0, last_viewed_at: null, revoked: false };
+      label: (body.label || "").trim().slice(0, 80) || null, include: (body.include || []).filter((x) => x === "instagram" || x === "tiktok"), created_at: new Date().toISOString(), views: 0, last_viewed_at: null, revoked: false };
     store.shares.unshift(s);
     return { status: 201, data: s };
   }
@@ -87,7 +92,7 @@ export function impactHandler({ method, path, body, params, store, users, events
     if (!s) return err(404, "This link is no longer active.");
     s.views = (s.views || 0) + 1;
     const built = buildReport(s.kind, metrics(s.days), communityName, store.offer || null);
-    const withIg = (s.include || []).includes("instagram") && instagramOn ? withInstagram(built, sampleInstagram(community)) : built;
+    const withIg = withSocial(built, { instagram: (s.include || []).includes("instagram") && instagramOn ? sampleInstagram(community) : null, tiktok: (s.include || []).includes("tiktok") && tiktokOn ? sampleTikTok(community) : null });
     const { support_email: _drop, ...brand } = (cfg && cfg.brand) || {};
     return { status: 200, data: { ...withIg, label: s.label, read_only: true, live: true, brand: { ...brand, accent: brand.colors?.accent }, photos: ((cfg && cfg.gallery_photos) || []).slice(0, 2), about: ((cfg && cfg.about) || "").slice(0, 400), about_url: (cfg && cfg.about_url) || "" } };
   }

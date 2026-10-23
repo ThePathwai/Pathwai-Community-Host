@@ -304,7 +304,7 @@ def _val_size(val: str, w: float, h: float, big: bool) -> float:
         base *= 0.78
     if n > 9:
         base *= 0.8
-    while base > 20 and n * base * 0.58 > w - 40:
+    while base > 18 and n * base * 0.64 > w - 40:
         base -= 2
     return base
 
@@ -358,6 +358,11 @@ def apply_selection(rep: Dict[str, Any], hidden: Any) -> Dict[str, Any]:
 
 
 # ---------------------------------------------------------------- charts (drawn within x, y .. x+w, y+h; y is the bottom)
+def _fv(v: Any) -> str:
+    """A chart number with thousands separators (3,610), words and decimals left alone."""
+    return f"{v:,}" if isinstance(v, int) and not isinstance(v, bool) else str(v)
+
+
 def _chart_title(c: canvas.Canvas, th: Theme, title: str, x: float, y_top: float, w: float) -> float:
     _caps(c, _fit(c, title.upper(), BOLD, 8.5, w), x, y_top - 9, 8.5, th.muted, 1.2)
     return y_top - 26
@@ -388,7 +393,7 @@ def _columns(c, th: Theme, items: List[dict], x: float, y: float, w: float, h: f
             c.roundRect(cx - bw / 2, base, bw, bh, min(5, bw / 3), fill=1, stroke=0)
         c.setFillColor(th.text)
         c.setFont(BOLD, 11)
-        c.drawCentredString(cx, base + bh + 5, str(it["value"]))
+        c.drawCentredString(cx, base + bh + 5, _fv(it["value"]))
         c.setFillColor(th.muted)
         c.setFont(FONT, 8.5)
         c.drawCentredString(cx, y + 3, _fit(c, str(it["label"]), FONT, 8.5, slot + 6))
@@ -401,7 +406,7 @@ def _hbar(c, th: Theme, items: List[dict], x: float, y: float, w: float, h: floa
     row = min(40.0, h / len(items))
     vmax = max(i["value"] for i in items) or 1
     label_w = w * 0.38
-    track_x, track_w = x + label_w + 10, w - label_w - 10 - 46
+    track_x, track_w = x + label_w + 10, w - label_w - 10 - 58
     for i, it in enumerate(items):
         ry = y + h - (i + 1) * row
         c.setFillColor(th.text)
@@ -415,7 +420,7 @@ def _hbar(c, th: Theme, items: List[dict], x: float, y: float, w: float, h: floa
             c.roundRect(track_x, ry + row / 2 - 5, bw, 10, 5, fill=1, stroke=0)
         c.setFillColor(th.text)
         c.setFont(BOLD, 11)
-        c.drawString(track_x + track_w + 10, ry + row / 2 - 4, f"{it['value']}%" if unit == "% full" else str(it["value"]))
+        c.drawString(track_x + track_w + 10, ry + row / 2 - 4, f"{it['value']}%" if unit == "% full" else _fv(it["value"]))
 
 
 def _table(c, th: Theme, cols: List[str], rows: List[List[Any]], x: float, y: float, w: float, h: float) -> None:

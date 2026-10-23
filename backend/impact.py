@@ -391,3 +391,70 @@ def add_instagram(report: Dict[str, Any], snap: Optional[Dict[str, Any]], hist: 
     secs = list(report["sections"])
     secs.insert(1 if report["type"] == "sponsor" else len(secs), sec)  # a sponsor sees reach straight after the headline numbers
     return {**report, "sections": secs, "sample": bool(report.get("sample") or snap.get("sample"))}
+
+
+def tiktok_section(snap: Dict[str, Any], hist: List[Dict[str, Any]]) -> Dict[str, Any]:
+    a, t = snap["account"], snap.get("totals") or {}
+    charts: List[Dict[str, Any]] = []
+    pts = [h for h in hist if h.get("followers") is not None]
+    if len(pts) >= 2:
+        charts.append({"type": "columns", "title": "Followers over time", "items": [{"label": datetime.fromisoformat(h["day"]).strftime("%b %-d"), "value": h["followers"]} for h in pts[-8:]]})
+    if snap.get("top_posts"):
+        charts.append({"type": "table", "title": "Best recent videos", "columns": ["Video", "Views", "Likes", "Shares"],
+                       "rows": [[p.get("caption") or "(no caption)", _n(p.get("views")), _n(p.get("likes")), _n(p.get("shares"))] for p in snap["top_posts"]]})
+    inter = (t.get("likes") or 0) + (t.get("comments") or 0) + (t.get("shares") or 0)
+    insights = []
+    if t.get("videos_posted") and t.get("views"):
+        insights.append(f"{_plural(t['videos_posted'], 'video')} posted in the last 30 days were watched {t['views']:,} times, about {t['views'] // t['videos_posted']:,} each.")
+    if t.get("views") and inter:
+        insights.append(f"{inter:,} likes, comments and shares: {_pct(inter, t['views'])}% of views led to a reaction.")
+    return {"kind": "tiktok", "title": "TikTok reach", "subtitle": f"@{a.get('username')}. Last 30 days. TikTok counts views of videos posted in the period, not unique accounts.",
+            "tiles": [_tile("Followers", _n(a["followers"]), "", True), _tile("Video views", _n(t.get("views")), "videos posted in last 30 days"), _tile("Likes", _n(t.get("likes"))),
+                      _tile("Shares", _n(t.get("shares"))), _tile("Videos posted", _n(t.get("videos_posted")), "last 30 days")],
+            "charts": charts, "insights": insights}
+
+
+def _sum(*vals: Optional[int]) -> Optional[int]:
+    got = [v for v in vals if isinstance(v, (int, float))]
+    return int(sum(got)) if got else None
+
+
+def social_section(ig: Dict[str, Any], tt: Dict[str, Any]) -> Dict[str, Any]:
+    """Instagram and TikTok together, then each on its own below: overall followers and views, and how they split."""
+    ia, it, ta, tt_ = ig["account"], ig.get("totals") or {}, tt["account"], tt.get("totals") or {}
+    followers = ia["followers"] + ta["followers"]
+    views = _sum(it.get("views"), tt_.get("views"))
+    tt_inter = _sum(tt_.get("likes"), tt_.get("comments"), tt_.get("shares"))
+    inter = _sum(it.get("total_interactions"), tt_inter)
+    split = lambda a, b: [{"label": "Instagram", "value": a or 0}, {"label": "TikTok", "value": b or 0}]  # noqa: E731
+    insights = [f"Together the two accounts have {followers:,} followers. Someone who follows both is counted on each, so treat it as an upper bound."]
+    if views:
+        lead = "Instagram" if (it.get("views") or 0) >= (tt_.get("views") or 0) else "TikTok"
+        share = _pct(max(it.get("views") or 0, tt_.get("views") or 0), views)
+        insights.append(f"Content was viewed {views:,} times across both in the last 30 days; {lead} drove {share}% of those views.")
+    return {"kind": "social", "title": "Social reach", "subtitle": "Instagram and TikTok together, then each on its own. Last 30 days.",
+            "tiles": [_tile("Followers across both", _n(followers), f"Instagram {_n(ia['followers'])} · TikTok {_n(ta['followers'])}", True),
+                      _tile("Views, last 30 days", _n(views), f"Instagram {_n(it.get('views'))} · TikTok {_n(tt_.get('views'))}"),
+                      _tile("Reactions and interactions", _n(inter), "likes, comments, shares, saves"),
+                      _tile("Instagram accounts reached", _n(it.get("reach")), "unique accounts, last 30 days")],
+            "charts": [{"type": "hbar", "title": "Followers by platform", "items": split(ia["followers"], ta["followers"])},
+                       {"type": "hbar", "title": "Views by platform, last 30 days", "items": split(it.get("views"), tt_.get("views"))}],
+            "insights": insights}
+
+
+def add_social(report: Dict[str, Any], ig: Optional[Dict[str, Any]] = None, ig_hist: Optional[List[Dict[str, Any]]] = None,
+               tt: Optional[Dict[str, Any]] = None, tt_hist: Optional[List[Dict[str, Any]]] = None) -> Dict[str, Any]:
+    """Whatever social accounts are connected and ticked: both together as 'Social reach' then each alone, or just the one."""
+    new: List[Dict[str, Any]] = []
+    if ig and tt:
+        new.append(social_section(ig, tt))
+    if ig:
+        new.append(instagram_section(ig, ig_hist or []))
+    if tt:
+        new.append(tiktok_section(tt, tt_hist or []))
+    if not new:
+        return report
+    secs = list(report["sections"])
+    at = 1 if report["type"] == "sponsor" else len(secs)  # a sponsor sees reach straight after the headline numbers
+    secs[at:at] = new
+    return {**report, "sections": secs, "sample": bool(report.get("sample") or (ig or {}).get("sample") or (tt or {}).get("sample"))}

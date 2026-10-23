@@ -170,7 +170,7 @@ export function sampleInstagram(seed = "sample") {
   const posts = caps.map((caption, i) => { const pr = Math.round(reach * (0.06 + r() * 0.14)); return { caption, kind: i % 2 ? "Post" : "Reel", reach: pr, likes: Math.round(pr * (0.04 + r() * 0.06)) }; }).sort((a, b) => b.reach - a.reach);
   return {
     sample: true, account: { username: "yourcommunity", followers },
-    totals: { reach, views: Math.round(reach * (1.6 + r() * 0.8)), accounts_engaged: Math.round(reach * (0.04 + r() * 0.05)), profile_links_taps: Math.round(reach * (0.004 + r() * 0.008)) },
+    totals: { reach, views: Math.round(reach * (1.6 + r() * 0.8)), accounts_engaged: Math.round(reach * (0.04 + r() * 0.05)), total_interactions: Math.round(reach * (0.07 + r() * 0.07)), profile_links_taps: Math.round(reach * (0.004 + r() * 0.008)) },
     audience: { country: split(["Canada", "United States", "United Kingdom", "Nigeria", "Jamaica"], [0.62, 0.17, 0.06, 0.05, 0.03]), city: split(["Toronto", "Mississauga", "Brampton", "Ottawa", "New York"], [0.34, 0.1, 0.06, 0.05, 0.04]),
       age: split(["18-24", "25-34", "35-44", "45-54", "55-64"], [0.22, 0.43, 0.2, 0.08, 0.03]), gender: split(["Women", "Men", "Not specified"], [0.57, 0.41, 0.02]) },
     top_posts: posts,
@@ -192,6 +192,53 @@ export function instagramSection(snap) {
   return { kind: "instagram", title: "Instagram reach", subtitle: `@${a.username}. Last 30 days. Reach counts accounts, not followers, and includes people who don't follow.`,
     tiles: [tile("Followers", fmt(a.followers), "", true), tile("Accounts reached", fmt(t.reach), "last 30 days"), tile("Views", fmt(t.views), "last 30 days"), tile("Accounts engaged", fmt(t.accounts_engaged)), tile("Profile link taps", fmt(t.profile_links_taps))],
     charts, insights };
+}
+// ---- TikTok (mirrors backend/tiktok.py and impact.tiktok_section) ----
+export function sampleTikTok(seed = "sample") {
+  const r = rng(hash("tt" + seed));
+  const followers = 3200 + Math.round(r() * 10800);
+  const names = ["Founders mixer in 30 seconds", "Meet our newest members", "What happens at Demo Day", "Perk spotlight: cloud credits", "Pitch night highlights", "A day in the community"];
+  const posts = names.map((caption) => { const views = Math.round(followers * (0.6 + r() * 2.8)); return { caption, views, likes: Math.round(views * (0.06 + r() * 0.06)), comments: Math.round(views * (0.004 + r() * 0.008)), shares: Math.round(views * (0.01 + r() * 0.02)) }; });
+  const sum = (k) => posts.reduce((a, p) => a + p[k], 0);
+  return { sample: true, account: { username: "yourcommunity", followers }, totals: { videos_posted: posts.length, views: sum("views"), likes: sum("likes"), comments: sum("comments"), shares: sum("shares") }, top_posts: [...posts].sort((a, b) => b.views - a.views).slice(0, 5) };
+}
+export function tiktokSection(snap) {
+  const a = snap.account, t = snap.totals || {};
+  const inter = (t.likes || 0) + (t.comments || 0) + (t.shares || 0);
+  const charts = [];
+  if (snap.top_posts?.length) charts.push({ type: "table", title: "Best recent videos", columns: ["Video", "Views", "Likes", "Shares"], rows: snap.top_posts.map((p) => [p.caption, fmt(p.views), fmt(p.likes), fmt(p.shares)]) });
+  const insights = [];
+  if (t.videos_posted && t.views) insights.push(`${plural(t.videos_posted, "video")} posted in the last 30 days were watched ${t.views.toLocaleString("en-US")} times, about ${Math.floor(t.views / t.videos_posted).toLocaleString("en-US")} each.`);
+  if (t.views && inter) insights.push(`${inter.toLocaleString("en-US")} likes, comments and shares: ${pct(inter, t.views)}% of views led to a reaction.`);
+  return { kind: "tiktok", title: "TikTok reach", subtitle: `@${a.username}. Last 30 days. TikTok counts views of videos posted in the period, not unique accounts.`,
+    tiles: [tile("Followers", fmt(a.followers), "", true), tile("Video views", fmt(t.views), "videos posted in last 30 days"), tile("Likes", fmt(t.likes)), tile("Shares", fmt(t.shares)), tile("Videos posted", fmt(t.videos_posted), "last 30 days")],
+    charts, insights };
+}
+const sumOf = (...v) => { const got = v.filter((x) => typeof x === "number"); return got.length ? got.reduce((a, b) => a + b, 0) : null; };
+/** Instagram and TikTok together: overall followers and views, and how they split. */
+export function socialSection(ig, tt) {
+  const it = ig.totals || {}, tt_ = tt.totals || {};
+  const followers = ig.account.followers + tt.account.followers;
+  const views = sumOf(it.views, tt_.views);
+  const inter = sumOf(it.total_interactions, sumOf(tt_.likes, tt_.comments, tt_.shares));
+  const split = (a, b) => [{ label: "Instagram", value: a || 0 }, { label: "TikTok", value: b || 0 }];
+  const insights = [`Together the two accounts have ${followers.toLocaleString("en-US")} followers. Someone who follows both is counted on each, so treat it as an upper bound.`];
+  if (views) { const lead = (it.views || 0) >= (tt_.views || 0) ? "Instagram" : "TikTok"; insights.push(`Content was viewed ${views.toLocaleString("en-US")} times across both in the last 30 days; ${lead} drove ${pct(Math.max(it.views || 0, tt_.views || 0), views)}% of those views.`); }
+  return { kind: "social", title: "Social reach", subtitle: "Instagram and TikTok together, then each on its own. Last 30 days.",
+    tiles: [tile("Followers across both", fmt(followers), `Instagram ${fmt(ig.account.followers)} · TikTok ${fmt(tt.account.followers)}`, true), tile("Views, last 30 days", fmt(views), `Instagram ${fmt(it.views)} · TikTok ${fmt(tt_.views)}`),
+      tile("Reactions and interactions", fmt(inter), "likes, comments, shares, saves"), tile("Instagram accounts reached", fmt(it.reach), "unique accounts, last 30 days")],
+    charts: [{ type: "hbar", title: "Followers by platform", items: split(ig.account.followers, tt.account.followers) }, { type: "hbar", title: "Views by platform, last 30 days", items: split(it.views, tt_.views) }], insights };
+}
+/** Adds whichever of Instagram and TikTok are given: both together as "Social reach" then each alone, or just the one. Straight after the headline numbers for a sponsor, at the end otherwise. */
+export function withSocial(report, { instagram = null, tiktok = null } = {}) {
+  const add = [];
+  if (instagram && tiktok) add.push(socialSection(instagram, tiktok));
+  if (instagram) add.push(instagramSection(instagram));
+  if (tiktok) add.push(tiktokSection(tiktok));
+  if (!add.length) return report;
+  const secs = [...report.sections];
+  secs.splice(report.type === "sponsor" ? 1 : secs.length, 0, ...add);
+  return { ...report, sections: secs };
 }
 /** Adds the Instagram section to a built report: straight after the headline numbers for a sponsor, at the end otherwise. */
 export function withInstagram(report, snap) {

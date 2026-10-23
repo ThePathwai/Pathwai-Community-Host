@@ -144,7 +144,7 @@ export function valSize(val, w, h, big) {
   const n = String(val).length;
   if (n > 6) base *= 0.78;
   if (n > 9) base *= 0.8;
-  while (base > 20 && n * base * 0.58 > w - 40) base -= 2;
+  while (base > 18 && n * base * 0.64 > w - 40) base -= 2;
   return base;
 }
 

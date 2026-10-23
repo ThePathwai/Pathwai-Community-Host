@@ -193,7 +193,8 @@ const integ = () => {
       bk.integrations = clone([DISCO, ...base]);
     }
   }
-  if (!bk.integrations.some((x) => x.provider === "instagram")) bk.integrations.push(clone(INSTAGRAM));
+  // every demo shows what the reports look like with Instagram and TikTok connected (sample numbers)
+  for (const [prov, tpl] of [["instagram", INSTAGRAM], ["tiktok", TIKTOK]]) if (!bk.integrations.some((x) => x.provider === prov)) bk.integrations.push(clone(tpl));
   return bk.integrations;
 };
 const DISCO = { provider: "disco", label: "Disco", kind: "api", preview: true, description: "Preview: show the Disco programs your members are in, and how far along they are, inside your community. Try it with the key \"demo\". Live connections are switched on per Academy once its Disco API access (Enterprise plan) is confirmed.",
@@ -201,10 +202,13 @@ const DISCO = { provider: "disco", label: "Disco", kind: "api", preview: true, d
   setting_fields: [], docs: "https://docs.disco.co/api", enabled: false, status: "disconnected", demo: false, masked: {}, settings: {}, last_sync_at: null, last_result: null, last_error: null, log: [], webhook_path: null, webhook_url: null };
 const INSTAGRAM = { provider: "instagram", label: "Instagram", kind: "api", preview: false, description: "Bring your Instagram Business or Creator analytics into Pathwai: followers, 30-day reach, who your audience is and your best posts. Add it to sponsor, funder and board reports. Try it with the token \"demo\".",
   capabilities: ["Followers and 30-day reach", "Audience by country, city, age and gender", "Best recent posts", "Adds a section to your reports"], credential_fields: [{ key: "api_key", label: "Instagram access token", placeholder: "Instagram User access token  (or 'demo' to try it)" }],
-  setting_fields: [], docs: "https://developers.facebook.com/docs/instagram-platform/instagram-api-with-instagram-login", enabled: false, status: "disconnected", demo: false, masked: {}, settings: {}, last_sync_at: null, last_result: null, last_error: null, log: [], webhook_path: null, webhook_url: null };
+  setting_fields: [], docs: "https://developers.facebook.com/docs/instagram-platform/instagram-api-with-instagram-login", enabled: true, status: "demo", demo: true, masked: { api_key: "demo" }, settings: {}, last_sync_at: null, last_result: null, last_error: null, log: [], webhook_path: null, webhook_url: null };
+const TIKTOK = { provider: "tiktok", label: "TikTok", kind: "api", preview: false, description: "Bring your TikTok account into Pathwai: followers, video views, likes and your best recent videos. It sits beside Instagram in your reports, with the two added together for your overall social reach. Try it with the client key \"demo\".",
+  capabilities: ["Followers, likes and videos", "Views, likes and shares for the last 30 days", "Best recent videos", "Combined with Instagram into one social reach"], credential_fields: [{ key: "client_key", label: "Client key", placeholder: "From your TikTok developer app  (or 'demo' to try it)" }, { key: "client_secret", label: "Client secret", placeholder: "From your TikTok developer app" }, { key: "refresh_token", label: "Refresh token", placeholder: "From authorizing your account with user.info.stat and video.list" }],
+  setting_fields: [], docs: "https://developers.tiktok.com/doc/tiktok-api-v2-get-user-info/", enabled: true, status: "demo", demo: true, masked: { client_key: "demo" }, settings: {}, last_sync_at: null, last_result: null, last_error: null, log: [], webhook_path: null, webhook_url: null };
 const stripeOn = () => integ().find((p) => p.provider === "stripe")?.enabled;
 const PLANS = [{ key: "member", label: "Community member", amount_cents: 4900, interval: "month" }, { key: "founder", label: "Founder plan", amount_cents: 12900, interval: "month" }];
-const SYNC = { airtable: { imported: 12, updated: 4, skipped: 1 }, luma: { events_imported: 5, rsvps_synced: 18 }, stripe: { plans: 2, payments: 3 }, disco: { programs: 4, enrollments: 24, unmatched_members: 0 }, instagram: { followers: 4812, reach_30d: 15240, posts_read: 5 } };
+const SYNC = { airtable: { imported: 12, updated: 4, skipped: 1 }, luma: { events_imported: 5, rsvps_synced: 18 }, stripe: { plans: 2, payments: 3 }, disco: { programs: 4, enrollments: 24, unmatched_members: 0 }, instagram: { followers: 4812, reach_30d: 15240, posts_read: 5 }, tiktok: { followers: 6340, views_30d: 41800, videos_read: 5 } };
 function integWrite(method, path, body, config) {
   const m = path.match(/^\/admin\/integrations\/(\w+)(?:\/(test|sync))?$/);
   if (!m) return null;
@@ -218,12 +222,12 @@ function integWrite(method, path, body, config) {
     p.log = [{ at: now, ok: true, message: "Sync complete (demo)" }, ...(p.log || [])].slice(0, 10);
     return ok(config, { ok: true, result: p.last_result });
   }
-  const key = (body.credentials || {}).api_key || (body.credentials || {}).account_sid;
+  const key = (body.credentials || {}).api_key || (body.credentials || {}).account_sid || (body.credentials || {}).client_key;
   if (p.kind === "link") Object.assign(p, { enabled: true, status: "connected" });
   else {
     if (!key && !p.enabled) return fail(config, 400, "Enter your credentials first");
     p.enabled = true; p.status = "connected"; p.demo = !key || String(key).startsWith("demo") || p.demo;
-    if (key) p.masked = { api_key: "••••" + String(key).slice(-4) };
+    if (key) p.masked = { [p.provider === "tiktok" ? "client_key" : "api_key"]: "••••" + String(key).slice(-4) };
     p.settings = { ...(p.settings || {}), ...(body.settings || {}) };
     if (p.provider === "stripe") p.settings.plans = (body.settings || {}).plans || p.settings.plans || PLANS;
   }
@@ -551,9 +555,10 @@ function impactCall(method, path, body, config) {
   const bk = S.community ? book() : { shared: {} }; bk.shared = bk.shared || {};
   const store = (bk.shared.impact = bk.shared.impact || { shares: [], nudged: {} });
   const instagramOn = S.community ? !!(integ().find((x) => x.provider === "instagram") || {}).enabled : false;
+  const tiktokOn = S.community ? !!(integ().find((x) => x.provider === "tiktok") || {}).enabled : false;
   const v = S.role ? view() : {};
   const r = impactHandler({ method, path, body, params: config.params || {}, store, users: v["/users"] || [], events: v["/events"] || [], resources: v["/resources"] || [], community: slug,
-    instagramOn, config: (S.data.public || {})["/community/config"], communityName: ((S.community && (S.data.public || {})["/community/config"]) || {}).community_name || "Your community" });
+    instagramOn, tiktokOn, config: (S.data.public || {})["/community/config"], communityName: ((S.community && (S.data.public || {})["/community/config"]) || {}).community_name || "Your community" });
   if (!r) return ok(config, { ok: true });
   return r.status >= 400 ? fail(config, r.status, r.data?.detail || "Something went wrong") : ok(config, r.data, r.status);
 }
@@ -606,7 +611,7 @@ function computePeople(limit = 8) {
 function get(path, p, config) {
   if (path.startsWith("/classes")) return classesCall("get", path, {}, p, config);
   if (path.startsWith("/teams")) return teamsCall("get", path, {}, config);
-  if (/^\/(admin\/(impact|report-types|reports\/|report-shares|deck-selection|partnership-offer|quiet|instagram)|public\/report\/)/.test(path) || path === "/community/reliability") return impactCall("get", path, {}, config);
+  if (/^\/(admin\/(impact|report-types|reports\/|report-shares|deck-selection|partnership-offer|quiet|instagram|tiktok)|public\/report\/)/.test(path) || path === "/community/reliability") return impactCall("get", path, {}, config);
   if (path === "/admin/blasts/history") {
     let blasts = S.extra.blasts || [];
     if (p.audience_type) blasts = blasts.filter((b) => b.audience?.type === p.audience_type);

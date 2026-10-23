@@ -96,6 +96,17 @@ PROVIDERS: Dict[str, Dict[str, Any]] = {
         "defaults": {},
         "docs": "https://developers.facebook.com/docs/instagram-platform/instagram-api-with-instagram-login",
     },
+    "tiktok": {
+        "label": "TikTok", "kind": "api",
+        "description": "Bring your TikTok account into Pathwai: followers, video views, likes and your best recent videos. It sits beside Instagram in your reports, with the two added together for your overall social reach. Try it with the client key \"demo\".",
+        "capabilities": ["Followers, likes and videos", "Views, likes and shares for the last 30 days", "Best recent videos", "Combined with Instagram into one social reach"],
+        "credentials": [{"key": "client_key", "label": "Client key", "placeholder": "From your TikTok developer app  (or 'demo' to try it)"},
+                        {"key": "client_secret", "label": "Client secret", "placeholder": "From your TikTok developer app"},
+                        {"key": "refresh_token", "label": "Refresh token", "placeholder": "From authorizing your account with user.info.stat and video.list"}],
+        "settings": [],
+        "defaults": {},
+        "docs": "https://developers.tiktok.com/doc/tiktok-api-v2-get-user-info/",
+    },
     "stripe": {
         "label": "Stripe", "kind": "api",
         "description": "Charge membership dues and sell event tickets with Stripe Checkout; payments update member status automatically.",
@@ -144,7 +155,7 @@ async def _creds(provider: str) -> Dict[str, str]:
 
 
 def _is_demo(c: Dict[str, str]) -> bool:
-    return (c.get("api_key") or c.get("account_sid") or "").lower().startswith("demo")
+    return (c.get("api_key") or c.get("account_sid") or c.get("client_key") or "").lower().startswith("demo")
 
 
 async def _log(provider: str, level: str, msg: str, **fields) -> None:
@@ -470,6 +481,42 @@ async def instagram_sync(c, s) -> Dict[str, Any]:
     return {"followers": snap["account"]["followers"], "reach_30d": t.get("reach") if t.get("reach") is not None else "n/a", "posts_read": len(snap.get("top_posts") or [])}
 
 
+# --------------------------------------------------------------------------- TikTok analytics
+async def _tiktok_token(c) -> str:
+    """A fresh day-long access token from the saved refresh token; a renewed refresh token (TikTok may rotate it) is saved straight away."""
+    import tiktok
+    try:
+        access, new_refresh = await tiktok.refresh_access(c.get("client_key", ""), c.get("client_secret", ""), c.get("refresh_token", ""))
+    except tiktok.TikTokError as exc:
+        raise IntegrationError(str(exc))
+    if new_refresh and new_refresh != c.get("refresh_token"):
+        await db.integrations.update_one({"provider": "tiktok"}, {"$set": {"credentials.refresh_token": enc(new_refresh), "token_refreshed_at": now_iso()}})
+    return access
+
+
+async def tiktok_test(c, s) -> str:
+    import tiktok
+    if tiktok.is_demo(c.get("client_key", "")):
+        return "Demo mode: connected to @yourcommunity on TikTok (sample numbers)."
+    if not (c.get("client_secret") and c.get("refresh_token")):
+        raise IntegrationError("Add the client secret and the refresh token as well as the client key.")
+    try:
+        me = await tiktok.whoami(await _tiktok_token(c))
+    except tiktok.TikTokError as exc:
+        raise IntegrationError(str(exc))
+    return f"Connected to @{me.get('username') or me.get('display_name')} ({me.get('follower_count', 0):,} followers)."
+
+
+async def tiktok_sync(c, s) -> Dict[str, Any]:
+    import tiktok
+    try:
+        snap = tiktok.demo_snapshot(current_community() or "demo") if tiktok.is_demo(c.get("client_key", "")) else await tiktok.fetch_snapshot(await _tiktok_token(c))
+    except tiktok.TikTokError as exc:
+        raise IntegrationError(str(exc))
+    await tiktok.save_snapshot(db, snap)
+    return {"followers": snap["account"]["followers"], "views_30d": (snap.get("totals") or {}).get("views", 0), "videos_read": len(snap.get("top_posts") or [])}
+
+
 # --------------------------------------------------------------------------- Stripe
 STRIPE = "https://api.stripe.com/v1"
 
@@ -679,8 +726,8 @@ async def sendgrid_test(c, s) -> str:
     return f"Connected to SendGrid ({j.get('type', 'account')})"
 
 
-TESTS = {"airtable": airtable_test, "luma": luma_test, "disco": disco_test, "instagram": instagram_test, "stripe": stripe_test, "twilio": twilio_test, "sendgrid": sendgrid_test}
-SYNCS = {"airtable": airtable_sync, "luma": luma_sync, "disco": disco_sync, "instagram": instagram_sync, "stripe": stripe_sync}
+TESTS = {"airtable": airtable_test, "luma": luma_test, "disco": disco_test, "instagram": instagram_test, "tiktok": tiktok_test, "stripe": stripe_test, "twilio": twilio_test, "sendgrid": sendgrid_test}
+SYNCS = {"airtable": airtable_sync, "luma": luma_sync, "disco": disco_sync, "instagram": instagram_sync, "tiktok": tiktok_sync, "stripe": stripe_sync}
 
 
 WEBHOOKS = {"stripe": "/api/webhooks/stripe", "twilio": "/api/webhooks/twilio"}  # sendgrid has no inbound webhook yet
@@ -790,6 +837,9 @@ async def disconnect_integration(provider: str, me: dict = Depends(require_role(
     if provider == "instagram":  # the saved numbers go with the connection, so a shared report can't keep showing them
         await db.instagram_latest.delete_many({})
         await db.instagram_history.delete_many({})
+    if provider == "tiktok":
+        await db.tiktok_latest.delete_many({})
+        await db.tiktok_history.delete_many({})
     await audit(me["id"], "integration.disconnected", "integration", provider)
     return {"ok": True}
 

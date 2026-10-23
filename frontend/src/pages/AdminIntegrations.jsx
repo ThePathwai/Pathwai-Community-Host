@@ -45,6 +45,7 @@ function Provider({ p, reload }) {
         </div>
       </div>
       {p.preview && <p className="mt-3 rounded-lg border border-line bg-ink/5 p-3 text-sm" data-testid={`preview-${p.provider}`}>Live connections aren't switched on yet. They need Disco's API (Enterprise plan) and a key from your Disco admin. Until then, try it with the key <code>demo</code>.</p>}
+      {p.provider === "tiktok" && !p.enabled && <p className="mt-3 rounded-lg border border-line bg-ink/5 p-3 text-sm" data-testid="tiktok-setup">TikTok needs a free developer app (at developers.tiktok.com) using the Display API, with the <code>user.info.profile</code>, <code>user.info.stat</code> and <code>video.list</code> permissions approved. Authorize your own account once to get the refresh token. Not ready yet? Try it with the client key <code>demo</code>.</p>}
       {p.last_error && <p className="mt-3 rounded-lg border border-red-400/40 bg-red-500/10 p-3 text-sm text-red-400">{p.last_error}</p>}
       {p.last_sync_at && !p.last_error && <p className="mt-3 text-xs text-muted">Last sync {timeAgo(p.last_sync_at)} · {Object.entries(p.last_result || {}).map(([k, v]) => `${k.replace(/_/g, " ")} ${v}`).join(", ")}</p>}
       {p.provider === "google_forms" && p.enabled && <GoogleFormsSetup />}

@@ -5,7 +5,7 @@ import { Wordmark, PoweredBy, cx } from "../components/ui";
 import ReportView from "../components/ReportView";
 import DeckPreview from "../components/DeckPreview";
 import { startAdminDemo, startDemo } from "../lib/demo";
-import { REPORT_TYPES, buildReport, sampleInstagram, sampleMetrics, withInstagram } from "../lib/sampleReport";
+import { REPORT_TYPES, buildReport, sampleInstagram, sampleMetrics, sampleTikTok, withSocial } from "../lib/sampleReport";
 
 // /about -- public (no login). Written for the person who runs a community, because they are the buyer:
 // what the admin gets (one toolset, numbers with context, proof to send), a sample report, what members get, then who it's for, how it works and how it compares.
@@ -101,7 +101,7 @@ const PROMISES = [
     "One directory · events and turnout · perks · news · applications · teams"],
   ["Decisions backed by data", "Every figure is counted from your own records and set against the period before it: active members, introductions made, event turnout, perk use. You see whether the community is growing or slipping, and who is going quiet while there is still time to bring them back.",
     "Up or down vs last period · weekly momentum · a going-quiet list with a one-tap nudge"],
-  ["Proof ready when anyone asks", "If a partner, sponsor, investor or your board wants to know what the community did, the answer is one click away. Share a PDF, or a live link that stays current, and bring your Instagram reach in alongside.",
+  ["Proof ready when anyone asks", "If a partner, sponsor, investor or your board wants to know what the community did, the answer is one click away. Share a PDF, or a live link that stays current, and bring your Instagram and TikTok reach in alongside, shown separately and added together.",
     "Reports for partners, sponsors, investors and boards · PDF or live link · every number counted, never estimated"],
 ];
 
@@ -249,7 +249,7 @@ export default function About() {
   const toggle = (k) => setOpen((o) => (o.includes(k) ? o.filter((x) => x !== k) : [...o, k]));
   const jump = (k) => { if (ALL.includes(k)) setOpen((o) => (o.includes(k) ? o : [...o, k])); setTimeout(() => document.getElementById(k)?.scrollIntoView({ behavior: "smooth" }), 60); };
   const allOpen = open.length === ALL.length;
-  const sample = useMemo(() => withInstagram(buildReport(kind, sampleMetrics({ members: 64, seed: "pathwai-sample", days: 90 }), "Northside Founders Club"), sampleInstagram("pathwai-sample")), [kind]);
+  const sample = useMemo(() => withSocial(buildReport(kind, sampleMetrics({ members: 64, seed: "pathwai-sample", days: 90 }), "Northside Founders Club"), { instagram: sampleInstagram("pathwai-sample"), tiktok: sampleTikTok("pathwai-sample") }), [kind]);
   const demoConfig = useMemo(() => ({ community_name: "Northside Founders Club", brand: { colors: SAMPLE_BRANDS[look].colors },
     about: "Northside Founders Club brings first-time founders together every month to share what is working, meet people who can help, and get started faster." }), [look]);
   const R = (k) => ({ open: open.includes(k), onToggle: () => toggle(k) });
