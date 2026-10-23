@@ -7,7 +7,7 @@ const hash = (s) => String(s || "x").split("").reduce((a, c) => (a * 31 + c.char
 const err = (status, detail) => ({ status, data: { detail } });
 const DAY = 86400000;
 
-export function impactHandler({ method, path, body, params, store, users, events, resources, community, communityName, instagramOn }) {
+export function impactHandler({ method, path, body, params, store, users, events, resources, community, communityName, instagramOn, config: cfg }) {
   const days = PERIODS.some((p) => p.days === Number(params?.days)) ? Number(params.days) : 90;
   const people = (users || []).filter((u) => u.role !== "admin");
   const metrics = (d = days) => sampleMetrics({
@@ -76,7 +76,8 @@ export function impactHandler({ method, path, body, params, store, users, events
     s.views = (s.views || 0) + 1;
     const built = buildReport(s.kind, metrics(s.days), communityName);
     const withIg = (s.include || []).includes("instagram") && instagramOn ? withInstagram(built, sampleInstagram(community)) : built;
-    return { status: 200, data: { ...withIg, label: s.label, read_only: true, live: true, brand: {} } };
+    const { support_email: _drop, ...brand } = (cfg && cfg.brand) || {};
+    return { status: 200, data: { ...withIg, label: s.label, read_only: true, live: true, brand: { ...brand, accent: brand.colors?.accent }, photos: ((cfg && cfg.gallery_photos) || []).slice(0, 2), about: ((cfg && cfg.about) || "").slice(0, 400), about_url: (cfg && cfg.about_url) || "" } };
   }
   return null;
 }

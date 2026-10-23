@@ -553,7 +553,7 @@ function impactCall(method, path, body, config) {
   const instagramOn = S.community ? !!(integ().find((x) => x.provider === "instagram") || {}).enabled : false;
   const v = S.role ? view() : {};
   const r = impactHandler({ method, path, body, params: config.params || {}, store, users: v["/users"] || [], events: v["/events"] || [], resources: v["/resources"] || [], community: slug,
-    instagramOn, communityName: ((S.community && (S.data.public || {})["/community/config"]) || {}).community_name || "Your community" });
+    instagramOn, config: (S.data.public || {})["/community/config"], communityName: ((S.community && (S.data.public || {})["/community/config"]) || {}).community_name || "Your community" });
   if (!r) return ok(config, { ok: true });
   return r.status >= 400 ? fail(config, r.status, r.data?.detail || "Something went wrong") : ok(config, r.data, r.status);
 }

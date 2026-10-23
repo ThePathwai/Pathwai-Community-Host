@@ -1,13 +1,14 @@
 import React, { useCallback, useEffect, useState } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { toast } from "sonner";
-import { Check, Copy, Download, ExternalLink, Instagram, Link2, Printer, RefreshCw, Trash2 } from "lucide-react";
+import { Check, Copy, Download, ExternalLink, FileText, Instagram, Link2, Printer, RefreshCw, Trash2 } from "lucide-react";
 import { api, errMsg, timeAgo } from "../lib/api";
 import { useAuth } from "../lib/auth";
 import { isDemo } from "../lib/demo";
 import { Button, Card, Input, PageHeader, Spinner, cx } from "../components/ui";
 import ReportView from "../components/ReportView";
-import { downloadReportPdf } from "../components/ImpactPanel";
+import { downloadReportDeck, downloadReportPdf } from "../components/ImpactPanel";
+import DeckPreview from "../components/DeckPreview";
 
 const TYPES = [
   ["sponsor", "Sponsor report", "Reach, event turnout and perk use. For the people backing you."],
@@ -54,6 +55,13 @@ export default function Reports() {
     setBusy("pdf");
     try { await downloadReportPdf(kind, days, include); toast.success("PDF downloaded"); }
     catch (e) { let m; try { const t = await e?.response?.data?.text?.(); m = JSON.parse(t).detail; } catch { /* ignore */ } toast.error(m || errMsg(e, "The PDF could not be created.")); }
+    finally { setBusy(""); }
+  };
+  const slides = async () => {
+    if (demo) { toast.message("Slides download from a live community. In this practice copy, flip through the preview below."); return; }
+    setBusy("deck");
+    try { await downloadReportDeck(kind, days, include, label); toast.success("Slides downloaded"); }
+    catch (e) { let m; try { const t = await e?.response?.data?.text?.(); m = JSON.parse(t).detail; } catch { /* ignore */ } toast.error(m || errMsg(e, "The slides could not be created.")); }
     finally { setBusy(""); }
   };
   const create = async () => {
@@ -121,8 +129,22 @@ export default function Reports() {
               className={cx("rounded-full px-3 py-1.5 transition-colors", days === n ? "bg-ink text-paper" : "text-muted hover:text-ink")}>{text}</button>
           ))}
         </div>
-        <Button onClick={pdf} loading={busy === "pdf"} variant="ghost" data-testid="report-pdf">{demo ? <Printer className="h-4 w-4" /> : <Download className="h-4 w-4" />}{demo ? "Print / save as PDF" : "Download PDF"}</Button>
+        <div className="flex flex-wrap gap-2">
+          <Button onClick={slides} loading={busy === "deck"} data-testid="report-slides"><Download className="h-4 w-4" />Download slides</Button>
+          <Button onClick={pdf} loading={busy === "pdf"} variant="ghost" data-testid="report-pdf">{demo ? <Printer className="h-4 w-4" /> : <FileText className="h-4 w-4" />}{demo ? "Print / save as PDF" : "Download as a document"}</Button>
+        </div>
       </div>
+
+      <Card className="no-print" data-testid="report-deck">
+        <div className="mb-4 flex flex-wrap items-end justify-between gap-3">
+          <div className="min-w-0">
+            <h3 className="text-base font-semibold">Your slides</h3>
+            <p className="mt-1 max-w-xl text-sm text-muted">Made automatically in your community's colours, logo, photos and story, ready to present or send. Flip through them here, then download.</p>
+          </div>
+          <Input value={label} onChange={(e) => setLabel(e.target.value)} placeholder="Prepared for (optional)" maxLength={80} aria-label="Who the slides are prepared for" data-testid="deck-label" className="w-full sm:w-72" />
+        </div>
+        {!rep ? <Spinner /> : <DeckPreview report={rep} config={config} label={label} />}
+      </Card>
 
       <Card className="print-area">
         {!rep ? <Spinner /> : (
@@ -133,7 +155,7 @@ export default function Reports() {
               <p className="mt-2 flex flex-wrap items-center gap-2 text-xs text-muted">{rep.period_label} · Generated {new Date(rep.generated_at).toLocaleDateString(undefined, { dateStyle: "long" })}
                 {rep.sample && <span className="chip" data-testid="report-sample">Sample data</span>}</p>
             </div>
-            <ReportView report={rep} />
+            <ReportView report={rep} config={config} />
           </>
         )}
       </Card>

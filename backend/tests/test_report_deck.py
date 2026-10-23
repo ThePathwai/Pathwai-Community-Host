@@ -1,0 +1,135 @@
+"""The branded slide deck: every community's report comes out in its own colours, logo and photos."""
+import base64
+import io
+import os
+import re
+import sys
+
+sys.path.insert(0, os.path.dirname(os.path.dirname(__file__)))
+os.environ["USE_MOCK_DB"] = "true"
+
+import pytest
+from fastapi.testclient import TestClient
+from PIL import Image, ImageDraw
+from reportlab.lib import colors
+
+import impact
+import report_deck
+import server
+
+
+def _uri(im, fmt="PNG"):
+    b = io.BytesIO()
+    im.save(b, fmt)
+    return f"data:image/{fmt.lower()};base64," + base64.b64encode(b.getvalue()).decode()
+
+
+def _logo(rgb):
+    im = Image.new("RGBA", (400, 120), (0, 0, 0, 0))
+    ImageDraw.Draw(im).rectangle([0, 20, 400, 100], fill=rgb + (255,))
+    return im
+
+
+def _pages(pdf: bytes) -> int:
+    return len(re.findall(rb"/Type\s*/Page\b", pdf))
+
+
+def _report(kind="sponsor"):
+    # a small hand-made report, so the deck is tested without a database
+    tile = lambda l, v, n="", a=False: {"label": l, "value": v, "note": n, "accent": a}  # noqa: E731
+    return {"type": kind, "title": "Sponsor report", "audience": "For sponsors", "headline": "What your support reached", "community": "Test Club",
+            "generated_at": "2026-10-01T12:00:00", "period_days": 90, "period_label": "Last 90 days",
+            "sections": [
+                {"kind": "reach", "title": "Reach", "subtitle": "Who is taking part.", "tiles": [tile("Members", 40, "", True), tile("Active", 22, "55%")],
+                 "charts": [{"type": "columns", "title": "Active per week", "items": [{"label": f"W{i}", "value": i + 2} for i in range(8)]}], "insights": ["22 of 40 were active."]},
+                {"kind": "perks", "title": "Perks", "subtitle": "Use.", "tiles": [tile("Opens", 9, "", True)],
+                 "charts": [{"type": "hbar", "title": "Top", "items": [{"label": "Free hour", "value": 5}, {"label": "Credits", "value": 4}]}, {"type": "donut", "title": "Mix", "items": [{"label": "A", "value": 3}, {"label": "B", "value": 1}]}], "insights": []},
+                {"kind": "events", "title": "Events", "subtitle": "Held.", "tiles": [tile("Held", 2)],
+                 "charts": [{"type": "table", "title": "Recent", "columns": ["Event", "Date", "RSVPs", "Came"], "rows": [["Mixer", "Oct 1", 9, 7]]}], "insights": []},
+                {"kind": "health", "title": "Empty", "subtitle": "Nothing yet.", "tiles": [tile("None", 0)], "charts": [{"type": "columns", "title": "Zeros", "items": [{"label": "a", "value": 0}]}], "insights": []},
+            ]}
+
+
+def test_deck_has_cover_glance_a_slide_per_section_and_a_close():
+    pdf = report_deck.build_deck(_report(), {"community_name": "Test Club"})
+    assert pdf[:4] == b"%PDF"
+    assert _pages(pdf) == 2 + 4 + 1
+
+
+@pytest.mark.parametrize("palette", [
+    {"accent": "#0F6E38", "background": "#F5F8F4", "surface": "#FFFFFF", "text": "#10261A"},   # light, green
+    {"accent": "#FFD60A", "background": "#FFFFFF", "surface": "#F6F6F6", "text": "#111111"},   # yellow on white: the accent alone would not read
+    {"accent": "#EBEBEB", "background": "#0D0D0D", "surface": "#171717", "text": "#EBEBEB"},   # dark
+    {"accent": "#F00F21", "background": "#0A0A0A", "surface": "#161616", "text": "#F4F1EA"},
+    {"accent": "nonsense", "background": "", "text": None},                                    # bad values fall back instead of failing
+])
+def test_deck_builds_in_any_palette(palette):
+    assert report_deck.build_deck(_report(), {"community_name": "X", "brand": {"colors": palette}})[:4] == b"%PDF"
+
+
+def test_text_and_chart_colours_always_have_enough_contrast():
+    for accent, bg, text in [("#FFD60A", "#FFFFFF", "#FFFFFF"), ("#111111", "#0D0D0D", "#222222"), ("#EBEBEB", "#FFFFFF", "#F0F0F0")]:
+        th = report_deck.Theme({"brand": {"colors": {"accent": accent, "background": bg, "text": text}}})
+        assert report_deck._contrast(th.text, th.bg) >= 4.5
+        assert report_deck._contrast(th.accent_fg, th.bg) >= 3
+        assert report_deck._contrast(th.on_accent, th.accent) >= 4.5
+
+
+def test_logo_and_photos_are_used_and_a_vanishing_logo_is_recoloured():
+    th_bg = colors.HexColor("#0D0D0D")
+    black = report_deck._logo_for(_uri(_logo((10, 10, 10))), th_bg, True, colors.white)
+    assert black is not None and black[1] == pytest.approx(400 / 120, rel=0.02)  # shown, with its own proportions
+    pdf = report_deck.build_deck(_report(), {"community_name": "Pic Club", "brand": {"colors": {"background": "#0D0D0D"}, "logo_url": _uri(_logo((10, 10, 10)))},
+                                              "gallery_photos": [_uri(Image.new("RGB", (800, 1000), (30, 90, 160)), "JPEG"), _uri(Image.new("RGB", (800, 1000), (160, 60, 30)), "JPEG")]})
+    plain = report_deck.build_deck(_report(), {"community_name": "Pic Club", "brand": {"colors": {"background": "#0D0D0D"}}})
+    assert len(pdf) > len(plain)  # the photos and logo really are in the file
+
+
+def test_bad_images_never_break_the_deck_and_private_hosts_are_refused():
+    for url in ("https://127.0.0.1/logo.png", "https://localhost/x.png", "http://example.com/x.png", "file:///etc/passwd", "data:image/png;base64,@@@", "/api/uploads/missing.png", ""):
+        assert report_deck._load_bytes(url) is None
+    cfg = {"community_name": "Odd", "brand": {"logo_url": "https://127.0.0.1/logo.png"}, "gallery_photos": ["file:///etc/passwd", 5]}
+    assert report_deck.build_deck(_report(), cfg)[:4] == b"%PDF"
+
+
+def test_sparse_and_empty_reports_still_make_a_deck():
+    rep = _report()
+    rep["sections"] = [{"kind": "x", "title": "Only", "subtitle": "", "tiles": [{"label": "N", "value": "n/a", "note": "", "accent": False}], "charts": [], "insights": []}]
+    assert _pages(report_deck.build_deck(rep, {})) == 4
+    rep["sections"] = []
+    assert report_deck.build_deck(rep, {})[:4] == b"%PDF"
+
+
+def test_non_latin_text_does_not_crash():
+    rep = _report()
+    rep["community"] = "Émigrés 東京 😀"
+    assert report_deck.build_deck(rep, {"community_name": "Émigrés 東京 😀"})[:4] == b"%PDF"
+
+
+def _login(email):
+    c = TestClient(server.app)
+    c.__enter__()
+    assert c.post("/api/auth/login", json={"email": email, "password": "Demo123!"}).status_code == 200
+    return c
+
+
+def test_deck_endpoint_is_admin_only_and_names_the_file():
+    m = _login("demo@yourcommunity.app")
+    assert m.get("/api/admin/reports/sponsor/deck.pdf").status_code == 403
+    a = _login("admin@yourcommunity.app")
+    for kind in impact.REPORT_TYPES:
+        r = a.get(f"/api/admin/reports/{kind}/deck.pdf", params={"days": 30, "label": "Acme Bank"})
+        assert r.status_code == 200 and r.content[:4] == b"%PDF"
+        assert "slides" in r.headers["content-disposition"] and r.headers["content-disposition"].endswith('.pdf"')
+    assert a.get("/api/admin/reports/nope/deck.pdf").status_code == 400
+
+
+def test_shared_link_carries_the_brand_but_never_an_email():
+    a = _login("admin@yourcommunity.app")
+    s = a.post("/api/admin/report-shares", json={"kind": "sponsor", "days": 90, "label": "Acme Bank"}).json()
+    body = TestClient(server.app).get(f"/api/public/report/{s['token']}")
+    assert body.status_code == 200
+    j = body.json()
+    assert j["brand"].get("colors", {}).get("accent") and "support_email" not in j["brand"]
+    assert isinstance(j["photos"], list) and len(j["photos"]) <= 2 and "about" in j
+    assert "@" not in body.text  # totals and public branding only

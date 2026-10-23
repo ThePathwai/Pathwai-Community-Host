@@ -12,9 +12,12 @@ async function pdfError(e) {
   try { const t = await e?.response?.data?.text?.(); const j = t && JSON.parse(t); if (j?.detail) return j.detail; } catch { /* fall through */ }
   return errMsg(e, "The PDF could not be created. Please try again.");
 }
-export async function downloadReportPdf(kind, days, include = "") {
-  const r = await api.get(`/admin/reports/${kind}.pdf`, { params: { days, include }, responseType: "blob" });
-  const name = (/filename="?([^";]+)"?/.exec(r.headers?.["content-disposition"] || "") || [])[1] || `${kind}-report.pdf`;
+export async function downloadReportPdf(kind, days, include = "") { return downloadFile(`/admin/reports/${kind}.pdf`, { days, include }, `${kind}-report.pdf`); }
+/** The same report as a slide deck in the community's own colours, logo and photos. `label` names who it is prepared for. */
+export async function downloadReportDeck(kind, days, include = "", label = "") { return downloadFile(`/admin/reports/${kind}/deck.pdf`, { days, include, label }, `${kind}-slides.pdf`); }
+async function downloadFile(path, params, fallbackName) {
+  const r = await api.get(path, { params, responseType: "blob" });
+  const name = (/filename="?([^";]+)"?/.exec(r.headers?.["content-disposition"] || "") || [])[1] || fallbackName;
   const url = URL.createObjectURL(r.data);
   const a = document.createElement("a");
   a.href = url; a.download = name; document.body.appendChild(a); a.click(); a.remove();
@@ -69,7 +72,7 @@ export function ImpactPanel() {
     // The practice copy has no server to build a PDF, so it opens the same report on screen (with Print / save as PDF).
     if (isDemo()) { nav(`/reports?type=sponsor&days=${days}`); return; }
     setBusy(true);
-    try { await downloadReportPdf("sponsor", days); toast.success("Sponsor report downloaded"); } catch (e) { toast.error(await pdfError(e)); } finally { setBusy(false); }
+    try { await downloadReportDeck("sponsor", days); toast.success("Slides downloaded"); } catch (e) { toast.error(await pdfError(e)); } finally { setBusy(false); }
   };
   if (d?.error) return null;
   return (
@@ -102,7 +105,7 @@ export function ImpactPanel() {
         <p className="min-w-0 text-xs text-muted">Counted from your own records. Share it with anyone who backs the community.</p>
         <div className="flex flex-wrap gap-2">
           <Link to="/reports" className="btn-ghost" data-testid="impact-all-reports"><FileText className="h-4 w-4" />All reports</Link>
-          <Button onClick={download} loading={busy} data-testid="impact-download"><Download className="h-4 w-4" />Download report</Button>
+          <Button onClick={download} loading={busy} data-testid="impact-download"><Download className="h-4 w-4" />Download slides</Button>
         </div>
       </div>
     </section>

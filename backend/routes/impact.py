@@ -17,6 +17,7 @@ from fastapi import APIRouter, Depends, HTTPException, Query, Response
 from pydantic import BaseModel
 
 import audit_pdf
+import report_deck
 import impact
 from auth import get_current_user, require_role
 from database import db
@@ -85,6 +86,20 @@ async def report_pdf(kind: str, days: int = Query(90), include: str = Query(""),
     return Response(pdf, media_type="application/pdf", headers={"Content-Disposition": f'attachment; filename="{slug}-{kind}-report-{datetime.utcnow().strftime("%Y-%m-%d")}.pdf"', "Cache-Control": "no-store"})
 
 
+@router.get("/admin/reports/{kind}/deck.pdf")
+async def report_deck_pdf(kind: str, days: int = Query(90), include: str = Query(""), label: str = Query(""), me: dict = Depends(require_role("admin"))):
+    """The same report as a widescreen slide deck in the community's own colours, logo, photos and story."""
+    _check_kind(kind)
+    cfg = await _config()
+    rep = await _report(kind, days, _include(include))
+    if label.strip():
+        rep["label"] = label.strip()[:80]
+    pdf = report_deck.build_deck(rep, cfg)
+    slug = "".join(ch if ch.isalnum() else "-" for ch in rep["community"].lower()).strip("-") or "community"
+    await audit(me["id"], "admin.report_deck", "report", kind)
+    return Response(pdf, media_type="application/pdf", headers={"Content-Disposition": f'attachment; filename="{slug}-{kind}-slides-{datetime.utcnow().strftime("%Y-%m-%d")}.pdf"', "Cache-Control": "no-store"})
+
+
 @router.get("/admin/reports/{kind}")
 async def report_json(kind: str, days: int = Query(90), include: str = Query(""), me: dict = Depends(require_role("admin"))):
     _check_kind(kind)
@@ -136,9 +151,15 @@ async def public_report(token: str):
     await db.report_shares.update_one({"id": s["id"]}, {"$inc": {"views": 1}, "$set": {"last_viewed_at": now_iso()}})
     rep = await _report(s["kind"], s.get("days") or 90, s.get("include") or [])
     cfg = await _config()
-    brand = cfg.get("brand") or {}
-    return {**rep, "label": s.get("label"), "read_only": True, "live": True,
-            "brand": {"accent": (brand.get("colors") or {}).get("accent") or (cfg.get("theme") or {}).get("accent"), "logo_url": brand.get("logo_url")}}
+    # the community's own look, so the shared page and its slides come out in its colours, logo and photos (a support email is left out:
+    # a shared link carries totals and public branding only, never an address)
+    brand = {k: v for k, v in (cfg.get("brand") or {}).items() if k != "support_email"}
+    brand["accent"] = (brand.get("colors") or {}).get("accent") or (cfg.get("theme") or {}).get("accent")
+    photos = [p for p in (cfg.get("gallery_photos") or []) if isinstance(p, str)][:2]
+    if len(photos) < 2 and isinstance(cfg.get("dashboard_cover_url"), str) and cfg["dashboard_cover_url"] not in photos:
+        photos.append(cfg["dashboard_cover_url"])
+    return {**rep, "label": s.get("label"), "read_only": True, "live": True, "brand": brand,
+            "photos": photos, "about": (cfg.get("about") or "")[:400], "about_url": cfg.get("about_url") or ""}
 
 
 # ---------- Instagram status (for the Reports page) ----------

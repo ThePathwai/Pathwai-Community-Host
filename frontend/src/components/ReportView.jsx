@@ -1,10 +1,12 @@
 import React from "react";
-import { AuditTiles, Chart } from "./AuditView";
+import { AuditTiles, Chart, SeriesCtx } from "./AuditView";
+import { deckTheme } from "../lib/deck";
 
 // Draws a sponsor / funder / board report (backend/impact.py build_report, or lib/sampleReport.js in the demo).
 // Used on the Reports page, the shared read-only page and the sample report on the About page.
-export default function ReportView({ report, compact = false }) {
-  return (
+export default function ReportView({ report, compact = false, config = null }) {
+  const series = config ? deckTheme(config).series : null; // the same chart colours the downloaded slides use
+  const body = (
     <div className="space-y-8" data-testid={`report-${report.type}`}>
       {report.sections.map((s) => (
         <section key={s.kind} data-testid={`report-section-${s.kind}`}>
@@ -19,4 +21,5 @@ export default function ReportView({ report, compact = false }) {
       ))}
     </div>
   );
+  return series ? <SeriesCtx.Provider value={series}>{body}</SeriesCtx.Provider> : body;
 }

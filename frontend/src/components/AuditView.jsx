@@ -1,9 +1,11 @@
-import React from "react";
+import React, { createContext, useContext } from "react";
 import { cx } from "./ui";
 
 // Draws one audit (the JSON from POST /admin/audits/{kind}): stat tiles, charts and plain-language takeaways.
 // The PDF (backend/audit_pdf.py) is built from the same data, with the same colours in the same order.
-const SERIES = ["#2A78D6", "#EB6834", "#1BAF7A", "#EDA100", "#E87BA4"];
+const DEFAULT_SERIES = ["#2A78D6", "#EB6834", "#1BAF7A", "#EDA100", "#E87BA4"];
+// A report can draw its charts in the community's own colours (see ReportView); audits keep the fixed set.
+export const SeriesCtx = createContext(DEFAULT_SERIES);
 
 export function AuditTiles({ tiles }) {
   return (
@@ -20,6 +22,7 @@ export function AuditTiles({ tiles }) {
 }
 
 function HBar({ items, unit, max }) {
+  const SERIES = useContext(SeriesCtx);
   const top = max || Math.max(1, ...items.map((i) => i.value));
   return (
     <ul className="space-y-2">
@@ -35,6 +38,7 @@ function HBar({ items, unit, max }) {
 }
 
 function Columns({ items }) {
+  const SERIES = useContext(SeriesCtx);
   const top = Math.max(1, ...items.map((i) => i.value));
   return (
     <div className="flex h-36 items-end gap-2 border-b border-line/70 pb-5">
@@ -50,6 +54,7 @@ function Columns({ items }) {
 }
 
 function Donut({ items }) {
+  const SERIES = useContext(SeriesCtx);
   const rows = items.slice(0, 5);
   const total = rows.reduce((s, i) => s + i.value, 0) || 1;
   let acc = 0;
@@ -69,6 +74,7 @@ function Donut({ items }) {
 }
 
 function Pairs({ items, a, b }) {
+  const SERIES = useContext(SeriesCtx);
   const top = Math.max(1, ...items.flatMap((i) => [i.asks, i.helpers]));
   return (
     <div>
