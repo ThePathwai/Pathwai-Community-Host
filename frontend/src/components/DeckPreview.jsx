@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
-import { buildSlides, useAdaptedLogo, BODY_TOP, BODY_BOT, BODY_H, GAP, LEFT_W, INS_SIZE, INS_LEAD, INS_GAP, textLines, insLines, insH, valSize, natH } from "../lib/deck";
+import { buildSlides, useAdaptedLogo, BODY_TOP, BODY_BOT, BODY_H, GAP, LEFT_W, INS_SIZE, INS_LEAD, INS_GAP, textLines, insLines, insH, valSize, natH, cardsLayout, cardLines } from "../lib/deck";
 import { cx } from "./ui";
 
 // The report as slides, in the community's own colours, logo, photos and story. This is what "Download slides" produces
@@ -251,6 +251,30 @@ function Slide({ th, report, slide, n, logos }) {
     const head = <Header th={th} eyebrow={report.title} title={s.title} subtitle={s.subtitle} mark={logos.mark} />;
     const foot = <Footer th={th} report={report} n={n} />;
     const T = (t, x, y, w, h, big) => <Tile key={t.label} th={th} t={{ ...t, x, y }} w={w} h={h} big={big} />;
+    if (s.cards?.length) {
+      const cards = s.cards.slice(0, 6), { cols, w, h, y0 } = cardsLayout(cards.length), iw = w - 44;
+      const tsz = w > 300 ? 20 : 16;
+      return (
+        <div style={base}>
+          {head}
+          {cards.map((cd, i) => {
+            const tl = textLines(cd.title, tsz, iw, 2, 0.56), room = h - 22 - 14 - tl * (tsz + 5) - 10 - 20;
+            let size = w > 300 ? 16 : 13.5;
+            while (size > 10.5 && cardLines(cd.text, size, iw) * size * 1.4 > room) size -= 0.5;
+            const maxLines = Math.max(1, Math.floor(room / (size * 1.4)));
+            return (
+              <div key={cd.title} style={{ position: "absolute", left: M + (i % cols) * (w + GAP), top: y0 + Math.floor(i / cols) * (h + GAP), width: w, height: h, background: th.panel, borderRadius: 12, overflow: "hidden" }}>
+                <span style={{ position: "absolute", left: 0, top: 0, bottom: 0, width: 4.5, background: th.accent }} />
+                <div style={{ position: "absolute", left: 22, top: 17, width: iw, fontSize: 10, lineHeight: "12px", fontWeight: 700, color: th.accentFg }}>{String(i + 1).padStart(2, "0")}</div>
+                <div style={{ position: "absolute", left: 22, top: 36, width: iw, fontSize: tsz, lineHeight: `${tsz + 5}px`, fontWeight: 700, color: th.text, ...clamp(2) }}>{cd.title}</div>
+                <div style={{ position: "absolute", left: 22, top: 36 + tl * (tsz + 5) + 5, width: iw, fontSize: size, lineHeight: `${size * 1.4}px`, color: th.muted, ...clamp(maxLines) }}>{cd.text}</div>
+              </div>
+            );
+          })}
+          {foot}
+        </div>
+      );
+    }
     if (charts.length === 1 && charts[0].type === "table" && tiles.length) {
       const ts = tiles.slice(0, 4), tn = ts.length, width = W - 2 * M, tw = (width - GAP * (tn - 1)) / tn, th_ = 124;
       const py = BODY_TOP + th_ + GAP, ph = BODY_BOT - py;
@@ -306,7 +330,7 @@ function Slide({ th, report, slide, n, logos }) {
       <Panel th={th} photo={th.photos[1]} side="right" rings={{ cx: 0, cy: H * 0.62 }} />
       <div style={{ position: "absolute", left: M, top: M }}><Brand th={th} logo={logos.bg} height={46} /></div>
       <div style={{ position: "absolute", left: M, top: 150, width: W * 0.62 - M - 56 }}>
-        <h1 style={{ margin: 0, fontSize: 50, lineHeight: "54px", fontWeight: 800, color: th.text, textTransform: "none", letterSpacing: 0, fontFamily: "inherit" }}>Thank you.</h1>
+        <h1 style={{ margin: 0, fontSize: report.type === "sponsor" ? 40 : 50, lineHeight: "54px", fontWeight: 800, color: th.text, textTransform: "none", letterSpacing: 0, fontFamily: "inherit" }}>{report.type === "sponsor" ? "Let's work together." : "Thank you."}</h1>
         <div style={{ width: 54, height: 5, background: th.accent, margin: "16px 0" }} />
         {th.about && <p style={{ margin: 0, fontSize: 13, lineHeight: "19px", color: th.muted, display: "-webkit-box", WebkitLineClamp: 5, WebkitBoxOrient: "vertical", overflow: "hidden" }}>{th.about}</p>}
         <div style={{ marginTop: 14 }}>{[th.site, th.email].filter(Boolean).map((x) => <div key={x} style={{ display: "flex", gap: 10, alignItems: "center", fontSize: 12, fontWeight: 700, color: th.text, height: 24 }}><span style={{ width: 6, height: 6, borderRadius: 3, background: th.accent }} />{x}</div>)}</div>

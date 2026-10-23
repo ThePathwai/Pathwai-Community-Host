@@ -233,7 +233,7 @@ const SAMPLE_BRANDS = [
   { key: "meadow", label: "Meadow", colors: { accent: "#1F7A4D", background: "#F4F1E8", surface: "#FFFFFF", text: "#16241B", muted: "#5C6B61", border: "#D8D4C4", on_accent: "#FFFFFF" } },
   { key: "violet", label: "Violet", colors: { accent: "#8B5CF6", background: "#0F0B1E", surface: "#1A1433", text: "#F5F3FF", muted: "#A79FC8", border: "#2E2552", on_accent: "#FFFFFF" } },
 ];
-const TAB = { sponsor: "Sponsor", funder: "Investor or funder", board: "Board" };
+const TAB = { sponsor: "Brand partner", funder: "Investor or funder", board: "Board" };
 
 export default function About() {
   const [kind, setKind] = useState("sponsor");

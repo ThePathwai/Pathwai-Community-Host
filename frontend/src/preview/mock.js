@@ -606,7 +606,7 @@ function computePeople(limit = 8) {
 function get(path, p, config) {
   if (path.startsWith("/classes")) return classesCall("get", path, {}, p, config);
   if (path.startsWith("/teams")) return teamsCall("get", path, {}, config);
-  if (/^\/(admin\/(impact|report-types|reports\/|report-shares|deck-selection|quiet|instagram)|public\/report\/)/.test(path) || path === "/community/reliability") return impactCall("get", path, {}, config);
+  if (/^\/(admin\/(impact|report-types|reports\/|report-shares|deck-selection|partnership-offer|quiet|instagram)|public\/report\/)/.test(path) || path === "/community/reliability") return impactCall("get", path, {}, config);
   if (path === "/admin/blasts/history") {
     let blasts = S.extra.blasts || [];
     if (p.audience_type) blasts = blasts.filter((b) => b.audience?.type === p.audience_type);
@@ -1008,7 +1008,7 @@ function get(path, p, config) {
 function write(method, path, body, config) {
   if (path.startsWith("/classes")) return classesCall(method, path, body, config.params || {}, config);
   if (path.startsWith("/teams")) return teamsCall(method, path, body, config);
-  if (/^\/admin\/(report-shares|deck-selection|quiet)/.test(path)) return impactCall(method, path, body, config);
+  if (/^\/admin\/(report-shares|deck-selection|partnership-offer|quiet)/.test(path)) return impactCall(method, path, body, config);
   const attW = path.match(/^\/admin\/events\/([^/]+)\/attendance$/);
   if (attW && method === "post") return attendanceCall("post", attW[1], body, config);
   if (path === "/auth/login") {

@@ -297,6 +297,16 @@ def _chart(ch: Dict[str, Any], width: float):
     return None
 
 
+def _Cards(cards: List[Dict[str, Any]], brand: Any) -> Any:
+    """What we offer / ask for: a title and a sentence or two each, two to a row."""
+    cell = lambda c: [Paragraph(f"<b>{escape(_t(c['title']))}</b>", S_H3), Paragraph(escape(_t(c.get("text", ""))), S_BODY)]  # noqa: E731
+    rows = [[cell(cards[i]), cell(cards[i + 1]) if i + 1 < len(cards) else ""] for i in range(0, len(cards), 2)]
+    t = Table(rows, colWidths=[CONTENT_W / 2, CONTENT_W / 2])
+    t.setStyle(TableStyle([("VALIGN", (0, 0), (-1, -1), "TOP"), ("BOX", (0, 0), (-1, -1), 0.6, FAINT), ("INNERGRID", (0, 0), (-1, -1), 0.6, FAINT),
+                           ("LEFTPADDING", (0, 0), (-1, -1), 12), ("RIGHTPADDING", (0, 0), (-1, -1), 12), ("TOPPADDING", (0, 0), (-1, -1), 8), ("BOTTOMPADDING", (0, 0), (-1, -1), 8)]))
+    return t
+
+
 def build_pdf(report: Dict[str, Any], config: Dict[str, Any], ai_text: Optional[str] = None, only_kind: Optional[str] = None, label: Optional[str] = None) -> bytes:
     """`label` swaps the "Community audit" wording for another document name (the sponsor/funder/board reports reuse this)."""
     brand = _brand(config)
@@ -353,7 +363,10 @@ def build_pdf(report: Dict[str, Any], config: Dict[str, Any], ai_text: Optional[
     # --- one page-ish per audit ---
     for idx, s in enumerate(sections):
         st += [Paragraph(f"{idx + 1:02d}" if not only_kind else "AUDIT", S_EYE), Paragraph(escape(_t(s["title"])), S_H2), Spacer(1, 2), Paragraph(escape(_t(s["subtitle"])), S_MUTED), Spacer(1, 12)]
-        st += [_Tiles(s["tiles"], CONTENT_W, brand), Spacer(1, 16)]
+        if s["tiles"]:
+            st += [_Tiles(s["tiles"], CONTENT_W, brand), Spacer(1, 16)]
+        if s.get("cards"):
+            st += [_Cards(s["cards"], brand), Spacer(1, 10)]
         for ch in s["charts"]:
             fl = _chart(ch, CONTENT_W)
             if fl is None:

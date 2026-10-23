@@ -1,18 +1,18 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { toast } from "sonner";
-import { Check, ChevronDown, Circle, Copy, Download, ExternalLink, FileText, Instagram, Link2, Printer, RefreshCw, Trash2 } from "lucide-react";
+import { Check, ChevronDown, Circle, Copy, Plus, X, Download, ExternalLink, FileText, Instagram, Link2, Printer, RefreshCw, Trash2 } from "lucide-react";
 import { api, errMsg, timeAgo } from "../lib/api";
 import { useAuth } from "../lib/auth";
 import { isDemo } from "../lib/demo";
-import { Button, Card, Input, PageHeader, Spinner, cx } from "../components/ui";
+import { Button, Card, Input, PageHeader, Spinner, Textarea, cx } from "../components/ui";
 import ReportView from "../components/ReportView";
 import { downloadReportDeck, downloadReportPdf } from "../components/ImpactPanel";
 import DeckPreview from "../components/DeckPreview";
 import { applySelection, deckTheme, sectionId } from "../lib/deck";
 
 const TYPES = [
-  ["sponsor", "Sponsor report", "Reach, event turnout and perk use. For the people backing you."],
+  ["sponsor", "Partnership proposal", "Why a brand should work with you: who you reach, what you do for them, and what you ask in return."],
   ["funder", "Funder or investor report", "People served, connections made, participation and help given. The traction a funder or investor asks about."],
   ["board", "Board report", "Who is active, who is drifting, what is next. For your leadership."],
 ];
@@ -39,7 +39,7 @@ function DeckPicker({ rep, hidden, setHidden }) {
   let total = 0, shown = 0;
   for (const s of secs) {
     const id = sectionId(s);
-    const items = [...(s.tiles || []).map((t) => `t:${id}:${t.label ?? ""}`), ...(s.charts || []).map((c) => `c:${id}:${c.title ?? ""}`), ...(s.insights || []).map((_, n) => `i:${id}:${n}`)];
+    const items = [...(s.tiles || []).map((t) => `t:${id}:${t.label ?? ""}`), ...(s.charts || []).map((c) => `c:${id}:${c.title ?? ""}`), ...(s.insights || []).map((_, n) => `i:${id}:${n}`), ...(s.cards || []).map((c) => `k:${id}:${c.title ?? ""}`)];
     total += items.length;
     if (!hide.has(`s:${id}`)) shown += items.filter((k) => !hide.has(k)).length;
   }
@@ -64,6 +64,7 @@ function DeckPicker({ rep, hidden, setHidden }) {
                   <div className="ml-4 border-l border-line pl-2">
                     {(s.tiles || []).map((t) => <PickBox hide={hide} flip={flip} key={`t${t.label}`} k={`t:${id}:${t.label ?? ""}`} disabled={off} sub={String(t.value)}>{t.label}</PickBox>)}
                     {(s.charts || []).map((c) => <PickBox hide={hide} flip={flip} key={`c${c.title}`} k={`c:${id}:${c.title ?? ""}`} disabled={off} sub="Chart">{c.title}</PickBox>)}
+                    {(s.cards || []).map((c) => <PickBox key={`k${c.title}`} hide={hide} flip={flip} k={`k:${id}:${c.title ?? ""}`} disabled={off} sub="Offer">{c.title}</PickBox>)}
                     {(s.insights || []).map((x, n) => <PickBox hide={hide} flip={flip} key={`i${n}`} k={`i:${id}:${n}`} disabled={off} sub="Sentence">{x.length > 80 ? `${x.slice(0, 80)}…` : x}</PickBox>)}
                   </div>
                 </div>
@@ -74,6 +75,70 @@ function DeckPicker({ rep, hidden, setHidden }) {
         </div>
       )}
     </div>
+  );
+}
+
+// What the community offers a brand and asks in return: the cards on the partnership proposal. Starts as suggested wording.
+function OfferEditor({ onSaved }) {
+  const [open, setOpen] = useState(false);
+  const [offer, setOffer] = useState(null);
+  const [custom, setCustom] = useState(false);
+  const [busy, setBusy] = useState("");
+  useEffect(() => { api.get("/admin/partnership-offer").then((r) => { setOffer(r.data.offer); setCustom(r.data.custom); }).catch(() => {}); }, []);
+  if (!offer) return null;
+  const edit = (side, i, patch) => setOffer({ ...offer, [side]: offer[side].map((c, n) => (n === i ? { ...c, ...patch } : c)) });
+  const remove = (side, i) => setOffer({ ...offer, [side]: offer[side].filter((_, n) => n !== i) });
+  const add = (side) => setOffer({ ...offer, [side]: [...offer[side], { title: "", text: "" }] });
+  const save = async () => {
+    setBusy("save");
+    try { const r = await api.put("/admin/partnership-offer", offer); setOffer(r.data.offer); setCustom(true); toast.success("Saved. Your slides and report are updated."); onSaved(); }
+    catch (e) { toast.error(errMsg(e)); } finally { setBusy(""); }
+  };
+  const reset = async () => {
+    setBusy("reset");
+    try { const r = await api.delete("/admin/partnership-offer"); setOffer(r.data.offer); setCustom(false); toast.success("Back to the suggested wording."); onSaved(); }
+    catch (e) { toast.error(errMsg(e)); } finally { setBusy(""); }
+  };
+  const side = (k, title, hint) => (
+    <div>
+      <h4 className="text-sm font-semibold">{title}</h4>
+      <p className="mb-2 text-xs text-muted">{hint}</p>
+      <div className="space-y-2">
+        {offer[k].map((c, i) => (
+          <div key={i} className="rounded-lg border border-line p-2.5" data-testid={`offer-${k}-${i}`}>
+            <div className="flex items-center gap-2">
+              <Input value={c.title} onChange={(e) => edit(k, i, { title: e.target.value })} maxLength={60} placeholder="Short title" aria-label={`${title} ${i + 1} title`} className="min-w-0 flex-1" data-testid={`offer-${k}-${i}-title`} />
+              <button type="button" className="btn-ghost !px-2" onClick={() => remove(k, i)} aria-label={`Remove ${c.title || "this card"}`}><X className="h-4 w-4" /></button>
+            </div>
+            <Textarea rows={2} value={c.text} onChange={(e) => edit(k, i, { text: e.target.value })} maxLength={240} placeholder="One or two sentences" aria-label={`${title} ${i + 1} text`} className="mt-2" data-testid={`offer-${k}-${i}-text`} />
+          </div>
+        ))}
+      </div>
+      {offer[k].length < 6 && <button type="button" className="btn-ghost mt-2 text-xs" onClick={() => add(k)} data-testid={`offer-${k}-add`}><Plus className="h-3.5 w-3.5" />Add</button>}
+    </div>
+  );
+  return (
+    <Card className="no-print" data-testid="offer-editor">
+      <button type="button" onClick={() => setOpen((o) => !o)} aria-expanded={open} className="flex w-full items-center justify-between gap-3 text-left" data-testid="offer-toggle">
+        <span className="min-w-0">
+          <span className="block text-base font-semibold">What you offer a brand, and what you ask for</span>
+          <span className="block text-sm text-muted">{offer.give.length} things you do for them · {offer.ask.length} you ask for in return{custom ? "" : " · suggested wording, make it yours"}</span>
+        </span>
+        <ChevronDown className={cx("h-4 w-4 shrink-0 transition-transform", open && "rotate-180")} />
+      </button>
+      {open && (
+        <div className="mt-4 space-y-5">
+          <div className="grid grid-cols-[minmax(0,1fr)] gap-6 lg:grid-cols-2">
+            {side("give", "What we do for you", "How you promote their brand: posts, event shout-outs, a perk, a thank-you.")}
+            {side("ask", "What we ask in return", "For example product samples for guests and in-person activations at your events.")}
+          </div>
+          <div className="flex flex-wrap gap-2">
+            <Button onClick={save} loading={busy === "save"} data-testid="offer-save">Save</Button>
+            {custom && <Button variant="ghost" onClick={reset} loading={busy === "reset"} data-testid="offer-reset">Back to suggested wording</Button>}
+          </div>
+        </div>
+      )}
+    </Card>
   );
 }
 
@@ -113,6 +178,7 @@ export default function Reports({ embedded = false }) {
   const igOn = sp.get("ig") === "1";
   const [ig, setIg] = useState(null);
   const [rep, setRep] = useState(null);
+  const [reload, setReload] = useState(0);
   const [shares, setShares] = useState([]);
   const [label, setLabel] = useState("");
   const [busy, setBusy] = useState("");
@@ -133,7 +199,7 @@ export default function Reports({ embedded = false }) {
   const set = (patch) => { const n = new URLSearchParams(sp); Object.entries(patch).forEach(([k, v]) => n.set(k, v)); setSp(n, { replace: true }); };
 
   const include = igOn && ig?.has_data ? "instagram" : "";
-  useEffect(() => { if (ig === null) return; setRep(null); api.get(`/admin/reports/${kind}`, { params: { days, include } }).then((r) => setRep(r.data)).catch((e) => toast.error(errMsg(e))); }, [kind, days, include, ig === null]); // eslint-disable-line
+  useEffect(() => { if (ig === null) return; setRep(null); api.get(`/admin/reports/${kind}`, { params: { days, include } }).then((r) => setRep(r.data)).catch((e) => toast.error(errMsg(e))); }, [kind, days, include, ig === null, reload]); // eslint-disable-line
   const loadIg = useCallback(() => api.get("/admin/instagram").then((r) => setIg(r.data)).catch(() => setIg({ connected: false })), []);
   useEffect(() => { loadIg(); }, [loadIg]);
   const refreshIg = async (quiet) => {
@@ -231,6 +297,8 @@ export default function Reports({ embedded = false }) {
           <Button onClick={pdf} loading={busy === "pdf"} variant="ghost" data-testid="report-pdf">{demo ? <Printer className="h-4 w-4" /> : <FileText className="h-4 w-4" />}{demo ? "Print / save as PDF" : "Download as a document"}</Button>
         </div>
       </div>
+
+      {kind === "sponsor" && <OfferEditor onSaved={() => setReload((n) => n + 1)} />}
 
       <Card className="no-print" data-testid="report-deck">
         <div className="mb-4 flex flex-wrap items-end justify-between gap-3">

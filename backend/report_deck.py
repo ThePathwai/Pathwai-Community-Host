@@ -291,6 +291,11 @@ def _ins_h(items: List[str], width: float) -> float:
     return sum(_ins_lines(t, width) * INS_LEAD + INS_GAP for t in items) - INS_GAP if items else 0.0
 
 
+def _card_lines(text: str, size: float, width: float) -> int:
+    """Lines a card's sentence takes (an estimate shared with the preview)."""
+    return max(1, -(-int(len(text) * size * 0.5) // max(int(width), 1)))
+
+
 def _val_size(val: str, w: float, h: float, big: bool) -> float:
     """Font size for a tile's number: as large as the tile allows, smaller for long values, always inside the tile."""
     base = max(34.0, min(84.0, h * 0.38)) if big else max(30.0, min(46.0, h * 0.36))
@@ -318,6 +323,7 @@ def selection_keys(rep: Dict[str, Any]) -> List[str]:
         keys += [f"t:{sid}:{t.get('label', '')}" for t in s.get("tiles") or []]
         keys += [f"c:{sid}:{c.get('title', '')}" for c in s.get("charts") or []]
         keys += [f"i:{sid}:{n}" for n, _ in enumerate(s.get("insights") or [])]
+        keys += [f"k:{sid}:{c.get('title', '')}" for c in s.get("cards") or []]
     return keys
 
 
@@ -344,7 +350,9 @@ def apply_selection(rep: Dict[str, Any], hidden: Any) -> Dict[str, Any]:
               "tiles": [t for t in s.get("tiles") or [] if f"t:{sid}:{t.get('label', '')}" not in hide],
               "charts": [c for c in s.get("charts") or [] if f"c:{sid}:{c.get('title', '')}" not in hide],
               "insights": [x for n, x in enumerate(s.get("insights") or []) if f"i:{sid}:{n}" not in hide]}
-        if ns["tiles"] or ns["charts"] or ns["insights"]:
+        if s.get("cards"):
+            ns["cards"] = [c for c in s["cards"] if f"k:{sid}:{c.get('title', '')}" not in hide]
+        if ns["tiles"] or ns["charts"] or ns["insights"] or ns.get("cards"):
             secs.append(ns)
     return {**rep, "sections": secs, "hide_glance": "glance" in hide}
 
@@ -718,7 +726,9 @@ class _Deck:
         tiles = (s.get("tiles") or [])[:6]
         charts = [ch for ch in (s.get("charts") or []) if ch.get("type") in ("columns", "hbar", "table", "donut") and _has_data(ch)][:2]
         insights = (s.get("insights") or [])[:3]
-        if charts and len(charts) == 1 and charts[0].get("type") == "table" and tiles:
+        if s.get("cards"):
+            self._cards(c, s["cards"][:6])
+        elif charts and len(charts) == 1 and charts[0].get("type") == "table" and tiles:
             self._tiles_over_table(c, tiles, charts[0])
         elif charts:
             self._with_charts(c, tiles, charts, insights)
@@ -726,6 +736,49 @@ class _Deck:
             self._tiles_only(c, tiles, insights)
         self.footer(c)
         self.next(c)
+
+    # ---- numbered cards: what we offer and what we ask for. Text is sized to fit, never cut mid-sentence where it can be helped
+    def _cards(self, c, cards: List[dict]) -> None:
+        th = self.th
+        n = len(cards)
+        cols = {1: 1, 2: 2, 3: 3, 4: 2}.get(n, 3)
+        rows = -(-n // cols)
+        width = PW - 2 * MARGIN
+        w = (width - GAP * (cols - 1)) / cols
+        h = min(200.0 if rows == 1 else 230.0, (BODY_H - (rows - 1) * GAP) / rows)
+        group = rows * h + (rows - 1) * GAP
+        y0 = BODY_TOP - (BODY_H - group) * 0.35
+        iw = w - 44
+        for i, cd in enumerate(cards):
+            x = MARGIN + (i % cols) * (w + GAP)
+            top = y0 - (i // cols) * (h + GAP)
+            c.setFillColor(th.panel)
+            c.roundRect(x, top - h, w, h, 12, fill=1, stroke=0)
+            c.setFillColor(th.accent)
+            c.roundRect(x, top - h, 4.5, h, 2.2, fill=1, stroke=0)
+            tsz = 20.0 if w > 300 else 16.0
+            title = simpleSplit(_t(cd.get("title", "")), BOLD, tsz, iw)[:2]
+            text = _t(cd.get("text", ""))
+            room = h - 22 - 14 - len(title) * (tsz + 5) - 10 - 20
+            size = 16.0 if w > 300 else 13.5
+            while size > 10.5 and _card_lines(text, size, iw) * size * 1.4 > room:
+                size -= 0.5
+            lines = simpleSplit(text, FONT, size, iw)[: max(1, int(room // (size * 1.4)))]
+            c.setFillColor(th.accent_fg)
+            c.setFont(BOLD, 10)
+            c.drawString(x + 22, top - 28, f"{i + 1:02d}")
+            y = top - 28 - 10 - tsz
+            c.setFillColor(th.text)
+            c.setFont(BOLD, tsz)
+            for ln in title:
+                c.drawString(x + 22, y, ln)
+                y -= tsz + 5
+            y -= 5
+            c.setFillColor(th.muted)
+            c.setFont(FONT, size)
+            for ln in lines:
+                c.drawString(x + 22, y, ln)
+                y -= size * 1.4
 
     def _with_charts(self, c, tiles: List[dict], charts: List[dict], insights: List[str]) -> None:
         th = self.th
@@ -807,7 +860,7 @@ class _Deck:
             _draw_logo(c, self.logo_on_bg, MARGIN, PH - MARGIN - 46, 220, 46)
         else:
             _wordmark(c, th, MARGIN, PH - MARGIN - 18, 16, th.text)
-        _para(c, "Thank you.", MARGIN, 360, text_w, BOLD, 50, th.text, 54, 1)
+        _para(c, "Let's work together." if self.rep.get("type") == "sponsor" else "Thank you.", MARGIN, 360, text_w, BOLD, 50 if self.rep.get("type") != "sponsor" else 40, th.text, 54, 1)
         c.setFillColor(th.accent)
         c.rect(MARGIN, 292, 54, 5, fill=1, stroke=0)
         y = 276

@@ -18,10 +18,40 @@ GRACE_DAYS = 14          # a new member isn't "quiet" in their first two weeks
 NUDGE_COOLDOWN_DAYS = 7
 
 REPORT_TYPES: Dict[str, Dict[str, str]] = {
-    "sponsor": {"title": "Sponsor report", "audience": "For sponsors and partners", "headline": "What your support reached", "blurb": "Reach, event turnout and how members used the perks you backed."},
+    "sponsor": {"title": "Partnership proposal", "audience": "For brands and sponsors", "headline": "Why partner with us, and what we do for you", "blurb": "Who you would reach, how they show up, what we do to promote your brand, and what we ask in return."},
     "funder": {"title": "Funder or investor report", "audience": "For funders and investors", "headline": "Who this community serves, and the traction behind it", "blurb": "People served, connections made, participation and the help given: the traction a funder or investor asks about."},
     "board": {"title": "Board report", "audience": "For the board or leadership team", "headline": "How the community is doing", "blurb": "Health of the membership: who is active, who is drifting, and what is coming up."},
 }
+# What a community offers a brand and what it asks in return, as editable cards. This is the starting text; an admin rewrites it.
+DEFAULT_OFFER: Dict[str, List[Dict[str, str]]] = {
+    "give": [
+        {"title": "Promotion to our community", "text": "Your brand featured to our members across our social media, event announcements and member updates."},
+        {"title": "A perk members can use", "text": "Your offer listed in our member perks, with the number of members who open it counted for you."},
+        {"title": "A presence at our events", "text": "Your name and product in front of guests at our events, with a thank-you from the host."},
+        {"title": "Results after", "text": "A short report after the partnership: reach, attendance and perk opens, counted from our own records."},
+    ],
+    "ask": [
+        {"title": "Product samples", "text": "Samples for our members and guests to try, so they experience your brand first-hand."},
+        {"title": "In-person activations", "text": "A table, tasting, demo or pop-up at our events, so guests can meet your brand face to face."},
+    ],
+}
+
+
+def clean_offer(raw: Any) -> Dict[str, List[Dict[str, str]]]:
+    """An offer from an admin: at most 6 cards a side, each with a title (kept short) and a sentence or two."""
+    out: Dict[str, List[Dict[str, str]]] = {}
+    for side in ("give", "ask"):
+        cards = []
+        for c in ((raw or {}).get(side) or [])[:6] if isinstance(raw, dict) else []:
+            if not isinstance(c, dict):
+                continue
+            t, x = str(c.get("title") or "").strip()[:60], str(c.get("text") or "").strip()[:240]
+            if t:
+                cards.append({"title": t, "text": x})
+        out[side] = cards
+    return out
+
+
 PERIODS = {30: "Last 30 days", 90: "Last 90 days", 365: "Last 12 months"}
 
 
@@ -230,7 +260,7 @@ def _insights(m: Dict[str, Any]) -> List[str]:
     return out
 
 
-def build_report(m: Dict[str, Any], kind: str, community: str) -> Dict[str, Any]:
+def build_report(m: Dict[str, Any], kind: str, community: str, offer: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
     meta = REPORT_TYPES[kind]
     period = PERIODS.get(m["days"], f"Last {m['days']} days")
     turnout = f"{m['turnout_pct']}%" if m["turnout_pct"] is not None else "n/a"
@@ -260,14 +290,21 @@ def build_report(m: Dict[str, Any], kind: str, community: str) -> Dict[str, Any]
     support = {"kind": "support", "title": "Help given", "subtitle": f"Requests members raised and how many were answered. {period}.",
                "tiles": [_tile("Help requests answered", m["sup_resolved"], "", True), _tile("Still open", m["sup_open"]), _tile("Introductions made", m["intros_made"])], "charts": [], "insights": []}
     if kind == "sponsor":
+        # a pitch, not a results report: who you would reach, proof they show up and act, what we do for you, what we ask in return
+        reach.update(title="Who you would reach", subtitle=f"The people in our community and how often they take part. {period}.", insights=_insights(m))
+        events.update(title="People who show up", subtitle=f"Events held and how many came. {period}.")
+        perks.update(title="Members who act on offers", subtitle=f"How members used what partners offered them. {period}.")
+        of = clean_offer(offer if offer is not None else DEFAULT_OFFER)
         sections = [reach, events, perks]
-        sections[0]["insights"] = _insights(m)
+        for key, title, sub in (("give", "What we do for you", "How we promote your brand."), ("ask", "What we ask in return", "Product samples and in-person activations for our guests.")):
+            if of[key]:
+                sections.append({"kind": f"offer_{key}", "title": title, "subtitle": sub, "tiles": [], "charts": [], "insights": [], "cards": of[key]})
     elif kind == "funder":
         sections = [served, intros, events, support]
     else:
         sections = [health, reach, events, perks]
         sections[1]["charts"] = [sections[1]["charts"][1]]
-    sections = [s for s in sections if s["tiles"]]
+    sections = [s for s in sections if s["tiles"] or s.get("cards")]
     return {"type": kind, "title": meta["title"], "audience": meta["audience"], "headline": meta["headline"], "community": community,
             "generated_at": m["now"].isoformat(), "period_days": m["days"], "period_label": period, "sections": sections}
 

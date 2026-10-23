@@ -4,7 +4,7 @@
 // buildReport() below mirrors its section layout so the same ReportView draws either one.
 
 export const REPORT_TYPES = [
-  { kind: "sponsor", title: "Sponsor report", audience: "For sponsors and partners", headline: "What your support reached", blurb: "Reach, event turnout and how members used the perks you backed." },
+  { kind: "sponsor", title: "Partnership proposal", audience: "For brands and sponsors", headline: "Why partner with us, and what we do for you", blurb: "Who you would reach, how they show up, what we do to promote your brand, and what we ask in return." },
   { kind: "funder", title: "Funder or investor report", audience: "For funders and investors", headline: "Who this community serves, and the traction behind it", blurb: "People served, connections made, participation and the help given: the traction a funder or investor asks about." },
   { kind: "board", title: "Board report", audience: "For the board or leadership team", headline: "How the community is doing", blurb: "Health of the membership: who is active, who is drifting, and what is coming up." },
 ];
@@ -97,7 +97,28 @@ function insights(m) {
   return out;
 }
 
-export function buildReport(kind, m, community = "Your community") {
+// What a community offers a brand and asks in return (mirrors backend/impact.py DEFAULT_OFFER and clean_offer).
+export const DEFAULT_OFFER = {
+  give: [
+    { title: "Promotion to our community", text: "Your brand featured to our members across our social media, event announcements and member updates." },
+    { title: "A perk members can use", text: "Your offer listed in our member perks, with the number of members who open it counted for you." },
+    { title: "A presence at our events", text: "Your name and product in front of guests at our events, with a thank-you from the host." },
+    { title: "Results after", text: "A short report after the partnership: reach, attendance and perk opens, counted from our own records." },
+  ],
+  ask: [
+    { title: "Product samples", text: "Samples for our members and guests to try, so they experience your brand first-hand." },
+    { title: "In-person activations", text: "A table, tasting, demo or pop-up at our events, so guests can meet your brand face to face." },
+  ],
+};
+export function cleanOffer(raw) {
+  const out = {};
+  for (const side of ["give", "ask"]) {
+    out[side] = (Array.isArray(raw?.[side]) ? raw[side] : []).slice(0, 6).map((c) => ({ title: String(c?.title || "").trim().slice(0, 60), text: String(c?.text || "").trim().slice(0, 240) })).filter((c) => c.title);
+  }
+  return out;
+}
+
+export function buildReport(kind, m, community = "Your community", offer = null) {
   const meta = REPORT_TYPES.find((t) => t.kind === kind) || REPORT_TYPES[0];
   const period = (PERIODS.find((p) => p.days === m.days) || {}).label || `Last ${m.days} days`;
   const turnout = m.turnout_pct != null ? `${m.turnout_pct}%` : "n/a";
@@ -122,7 +143,17 @@ export function buildReport(kind, m, community = "Your community") {
   const support = { kind: "support", title: "Help given", subtitle: `Requests members raised and how many were answered. ${period}.`,
     tiles: [tile("Help requests answered", m.sup_resolved, "", true), tile("Still open", m.sup_open), tile("Introductions made", m.intros_made)], charts: [], insights: [] };
   let sections;
-  if (kind === "sponsor") { reach.insights = insights(m); sections = [reach, events, perks]; }
+  if (kind === "sponsor") {
+    // a pitch, not a results report: who you would reach, proof they show up and act, what we do for you, what we ask in return
+    Object.assign(reach, { title: "Who you would reach", subtitle: `The people in our community and how often they take part. ${period}.`, insights: insights(m) });
+    Object.assign(events, { title: "People who show up", subtitle: `Events held and how many came. ${period}.` });
+    Object.assign(perks, { title: "Members who act on offers", subtitle: `How members used what partners offered them. ${period}.` });
+    const of = cleanOffer(offer || DEFAULT_OFFER);
+    sections = [reach, events, perks];
+    [["give", "What we do for you", "How we promote your brand."], ["ask", "What we ask in return", "Product samples and in-person activations for our guests."]].forEach(([k, title, subtitle]) => {
+      if (of[k].length) sections.push({ kind: `offer_${k}`, title, subtitle, tiles: [], charts: [], insights: [], cards: of[k] });
+    });
+  }
   else if (kind === "funder") sections = [served, connections, events, support];
   else { const r2 = { ...reach, charts: [reach.charts[1]] }; sections = [health, r2, events, perks]; }
   return { type: kind, title: meta.title, audience: meta.audience, headline: meta.headline, community, generated_at: new Date().toISOString(), period_days: m.days, period_label: period, sections, sample: !!m.sample };

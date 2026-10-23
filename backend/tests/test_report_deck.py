@@ -187,3 +187,40 @@ def test_deck_selection_is_saved_per_report_type_and_used_by_the_download():
     assert _pages(pdf) == full - 2  # no glance, one section fewer
     a.put("/api/admin/deck-selection/sponsor", json={"hidden": []})
     assert _pages(a.get("/api/admin/reports/sponsor/deck.pdf").content) == full
+
+
+def test_sponsor_report_is_a_partnership_proposal_with_an_offer_and_an_ask():
+    a = _login("admin@yourcommunity.app")
+    rep = a.get("/api/admin/reports/sponsor").json()
+    assert rep["title"] == "Partnership proposal" and "partner" in rep["headline"].lower()
+    kinds = [s["kind"] for s in rep["sections"]]
+    assert kinds[-2:] == ["offer_give", "offer_ask"]
+    ask = next(s for s in rep["sections"] if s["kind"] == "offer_ask")
+    assert {"Product samples", "In-person activations"} <= {c["title"] for c in ask["cards"]}
+    # the other report types are unchanged
+    assert not any(str(s["kind"]).startswith("offer_") for k in ("funder", "board") for s in a.get(f"/api/admin/reports/{k}").json()["sections"])
+    # the document and the slides both carry it
+    assert a.get("/api/admin/reports/sponsor.pdf").content[:4] == b"%PDF"
+    pdf = a.get("/api/admin/reports/sponsor/deck.pdf").content
+    assert _pages(pdf) == len(rep["sections"]) + 3
+
+
+def test_offer_is_editable_cleaned_and_resettable():
+    a = _login("admin@yourcommunity.app")
+    assert _login("demo@yourcommunity.app").put("/api/admin/partnership-offer", json={"give": [], "ask": []}).status_code == 403
+    got = a.get("/api/admin/partnership-offer").json()
+    assert got["custom"] is False and len(got["offer"]["give"]) >= 3
+    mine = {"give": [{"title": "  Feature on our stories  ", "text": "x" * 500}, {"title": "", "text": "dropped"}, "junk"], "ask": [{"title": "Free samples", "text": "For 50 guests"}]}
+    r = a.put("/api/admin/partnership-offer", json={"give": [c for c in mine["give"] if isinstance(c, dict)], "ask": mine["ask"]}).json()
+    assert r["custom"] is True and [c["title"] for c in r["offer"]["give"]] == ["Feature on our stories"] and len(r["offer"]["give"][0]["text"]) == 240
+    rep = a.get("/api/admin/reports/sponsor").json()
+    assert next(s for s in rep["sections"] if s["kind"] == "offer_ask")["cards"][0]["title"] == "Free samples"
+    # a card can be left out of the slides like any other item
+    assert a.put("/api/admin/deck-selection/sponsor", json={"hidden": ["k:offer_ask:Free samples"]}).status_code == 200
+    assert _pages(a.get("/api/admin/reports/sponsor/deck.pdf").content) == len(rep["sections"]) + 3 - 1
+    a.put("/api/admin/deck-selection/sponsor", json={"hidden": []})
+    # an empty side drops that section; resetting brings the suggested wording back
+    a.put("/api/admin/partnership-offer", json={"give": [], "ask": []})
+    assert [s["kind"] for s in a.get("/api/admin/reports/sponsor").json()["sections"]][-1] != "offer_ask"
+    assert a.delete("/api/admin/partnership-offer").json()["custom"] is False
+    assert a.get("/api/admin/reports/sponsor").json()["sections"][-1]["kind"] == "offer_ask"

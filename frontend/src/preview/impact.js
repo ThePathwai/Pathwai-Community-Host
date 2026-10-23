@@ -1,7 +1,7 @@
 // The in-browser demo's stand-in for backend/routes/impact.py: the Impact numbers, sponsor / funder / board reports,
 // read-only share links and the "going quiet" list. Every figure is sample data (and labelled that way on screen),
 // made from the demo community's own member, event and perk lists so it looks like that community.
-import { sampleMetrics, impactCards, reliabilityCards, buildReport, withInstagram, sampleInstagram, REPORT_TYPES, PERIODS } from "../lib/sampleReport";
+import { sampleMetrics, impactCards, reliabilityCards, buildReport, DEFAULT_OFFER, cleanOffer, withInstagram, sampleInstagram, REPORT_TYPES, PERIODS } from "../lib/sampleReport";
 
 const hash = (s) => String(s || "x").split("").reduce((a, c) => (a * 31 + c.charCodeAt(0)) >>> 0, 7);
 const err = (status, detail) => ({ status, data: { detail } });
@@ -40,8 +40,13 @@ export function impactHandler({ method, path, body, params, store, users, events
     if (!REPORT_TYPES.some((t) => t.kind === rep[1])) return err(400, "Unknown report type");
     if (rep[2]) return err(400, "PDF files are made by a live community. In this practice copy, use Print / save as PDF on the report page.");
     const wantIg = String(params?.include || "").split(",").includes("instagram") && instagramOn;
-    const built = buildReport(rep[1], metrics(), communityName);
+    const built = buildReport(rep[1], metrics(), communityName, store.offer || null);
     return { status: 200, data: wantIg ? { ...withInstagram(built, sampleInstagram(community)), sample: true } : built };
+  }
+  if (path === "/admin/partnership-offer") {
+    if (method === "put") store.offer = cleanOffer({ give: body.give, ask: body.ask });
+    if (method === "delete") store.offer = null;
+    return { status: 200, data: { offer: store.offer || DEFAULT_OFFER, custom: !!store.offer } };
   }
   const dsel = path.match(/^\/admin\/deck-selection\/([a-z]+)$/);
   if (dsel) {
@@ -81,7 +86,7 @@ export function impactHandler({ method, path, body, params, store, users, events
     const s = store.shares.find((x) => x.token === pub[1] && !x.revoked) || (pub[1] === "sample" ? { kind: "sponsor", days: 90, label: null } : null);
     if (!s) return err(404, "This link is no longer active.");
     s.views = (s.views || 0) + 1;
-    const built = buildReport(s.kind, metrics(s.days), communityName);
+    const built = buildReport(s.kind, metrics(s.days), communityName, store.offer || null);
     const withIg = (s.include || []).includes("instagram") && instagramOn ? withInstagram(built, sampleInstagram(community)) : built;
     const { support_email: _drop, ...brand } = (cfg && cfg.brand) || {};
     return { status: 200, data: { ...withIg, label: s.label, read_only: true, live: true, brand: { ...brand, accent: brand.colors?.accent }, photos: ((cfg && cfg.gallery_photos) || []).slice(0, 2), about: ((cfg && cfg.about) || "").slice(0, 400), about_url: (cfg && cfg.about_url) || "" } };

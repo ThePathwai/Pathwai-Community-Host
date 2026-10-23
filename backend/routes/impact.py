@@ -44,7 +44,11 @@ def _check_kind(kind: str) -> None:
 async def _report(kind: str, days: int, include: Optional[List[str]] = None) -> dict:
     cfg = await _config()
     d = await impact.load(db)
-    rep = impact.build_report(impact.compute(d, _days(days)), kind, cfg.get("community_name") or "Community")
+    offer = None
+    if kind == "sponsor":
+        offer = (await db.partnership_offer.find_one({"_key": "singleton"}) or {}).get("offer")
+        offer = impact.clean_offer(offer) if offer is not None else None
+    rep = impact.build_report(impact.compute(d, _days(days)), kind, cfg.get("community_name") or "Community", offer)
     if "instagram" in (include or []):  # only what the last sync saved: a shared link never makes a live call to Instagram
         import instagram
         rep = impact.add_instagram(rep, await instagram.latest(db), await instagram.history(db))
@@ -84,6 +88,32 @@ async def report_pdf(kind: str, days: int = Query(90), include: str = Query(""),
     slug = "".join(ch if ch.isalnum() else "-" for ch in rep["community"].lower()).strip("-") or "community"
     await audit(me["id"], "admin.report_pdf", "report", kind)
     return Response(pdf, media_type="application/pdf", headers={"Content-Disposition": f'attachment; filename="{slug}-{kind}-report-{datetime.utcnow().strftime("%Y-%m-%d")}.pdf"', "Cache-Control": "no-store"})
+
+
+class OfferIn(BaseModel):
+    give: List[dict] = []
+    ask: List[dict] = []
+
+
+@router.get("/admin/partnership-offer")
+async def get_offer(me: dict = Depends(require_role("admin"))):
+    """What this community offers a brand and asks in return (the cards on the partnership proposal). Starts as sensible text to edit."""
+    doc = await db.partnership_offer.find_one({"_key": "singleton"}) or {}
+    return {"offer": impact.clean_offer(doc["offer"]) if doc.get("offer") is not None else impact.DEFAULT_OFFER, "custom": doc.get("offer") is not None}
+
+
+@router.put("/admin/partnership-offer")
+async def put_offer(body: OfferIn, me: dict = Depends(require_role("admin"))):
+    offer = impact.clean_offer({"give": body.give, "ask": body.ask})
+    await db.partnership_offer.update_one({"_key": "singleton"}, {"$set": {"_key": "singleton", "offer": offer, "updated_at": now_iso(), "updated_by": me["id"]}}, upsert=True)
+    await audit(me["id"], "admin.partnership_offer", "report", "sponsor")
+    return {"offer": offer, "custom": True}
+
+
+@router.delete("/admin/partnership-offer")
+async def reset_offer(me: dict = Depends(require_role("admin"))):
+    await db.partnership_offer.delete_one({"_key": "singleton"})
+    return {"offer": impact.DEFAULT_OFFER, "custom": False}
 
 
 async def _saved_hidden(kind: str) -> List[str]:

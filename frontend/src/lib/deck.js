@@ -91,7 +91,7 @@ export function selectionKeys(report) {
   const keys = ["glance"];
   for (const s of report?.sections || []) {
     const id = sectionId(s);
-    keys.push(`s:${id}`, ...(s.tiles || []).map((t) => `t:${id}:${t.label ?? ""}`), ...(s.charts || []).map((c) => `c:${id}:${c.title ?? ""}`), ...(s.insights || []).map((_, n) => `i:${id}:${n}`));
+    keys.push(`s:${id}`, ...(s.tiles || []).map((t) => `t:${id}:${t.label ?? ""}`), ...(s.charts || []).map((c) => `c:${id}:${c.title ?? ""}`), ...(s.insights || []).map((_, n) => `i:${id}:${n}`), ...(s.cards || []).map((c) => `k:${id}:${c.title ?? ""}`));
   }
   return keys;
 }
@@ -104,7 +104,8 @@ export function applySelection(report, hidden) {
     const id = sectionId(s);
     if (hide.has(`s:${id}`)) continue;
     const ns = { ...s, tiles: (s.tiles || []).filter((t) => !hide.has(`t:${id}:${t.label ?? ""}`)), charts: (s.charts || []).filter((c) => !hide.has(`c:${id}:${c.title ?? ""}`)), insights: (s.insights || []).filter((_, n) => !hide.has(`i:${id}:${n}`)) };
-    if (ns.tiles.length || ns.charts.length || ns.insights.length) sections.push(ns);
+    if (s.cards) ns.cards = s.cards.filter((c) => !hide.has(`k:${id}:${c.title ?? ""}`));
+    if (ns.tiles.length || ns.charts.length || ns.insights.length || ns.cards?.length) sections.push(ns);
   }
   return { ...report, sections, hide_glance: hide.has("glance") };
 }
@@ -149,3 +150,13 @@ export function valSize(val, w, h, big) {
 
 /** How much of the slide a chart wants, relative to the other chart on it. */
 export const natH = (ch) => (ch.type === "table" ? 64 + 40 * Math.min((ch.rows || []).length, 7) : ch.type === "hbar" ? 60 + 34 * Math.min((ch.items || []).length, 7) : 200);
+
+/** Layout of the numbered cards (what we offer / ask for): same rules as report_deck._cards. */
+export function cardsLayout(n) {
+  const cols = { 1: 1, 2: 2, 3: 3, 4: 2 }[n] || 3, rows = Math.ceil(n / cols), width = 960 - 2 * 56;
+  const w = (width - GAP * (cols - 1)) / cols;
+  const h = Math.min(rows === 1 ? 200 : 230, (BODY_H - (rows - 1) * GAP) / rows);
+  const y0 = BODY_TOP + (BODY_H - (rows * h + (rows - 1) * GAP)) * 0.35;
+  return { cols, rows, w, h, y0 };
+}
+export const cardLines = (text, size, width) => Math.max(1, Math.ceil(Math.floor(String(text).length * size * 0.5) / Math.max(Math.floor(width), 1)));
