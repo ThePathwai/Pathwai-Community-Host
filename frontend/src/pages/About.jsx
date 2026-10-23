@@ -269,7 +269,7 @@ export default function About() {
         </div>
       </header>
 
-      <main className="mx-auto max-w-6xl px-4 lg:px-8">
+      <main className="mx-auto max-w-7xl px-4 lg:px-8">
         <div className="py-10 sm:py-16">
           <p className="eyebrow">Community software for organizers</p>
           <h1 className="mt-4 max-w-4xl text-4xl sm:text-5xl lg:text-6xl" style={{ textWrap: "balance" }}>Run your whole community in one place. Know what is working.</h1>
@@ -315,29 +315,30 @@ export default function About() {
 
           <Row id="sample" n={3} title="A sample report" summary="What a partner, sponsor, investor or board opens. Sample data." wide {...R("sample")}>
             <div data-testid="about-sample">
-              <div className="flex flex-wrap items-end justify-between gap-4">
-                <p className="max-w-xl text-sm text-muted sm:text-base">One click from the admin home. Pick who it is for (a sponsor, an investor or funder, your board) and Pathwai builds it from your own records, then dresses it in your colours, logo and photos as a slide deck you can download. Everything below is made-up sample data.</p>
-                <div className="inline-flex rounded-full border border-line p-0.5 text-sm" role="tablist" aria-label="Report type">
+              <p className="max-w-2xl text-sm text-muted sm:text-base">One click from the admin home. Pick who it is for (a sponsor, an investor or funder, your board) and Pathwai builds it from your own records, then dresses it in your colours, logo and photos as a slide deck you can download. Everything below is made-up sample data.</p>
+              <div className="mt-6 flex flex-wrap items-center justify-between gap-x-4 gap-y-3" data-testid="about-sample-controls">
+                <div className="inline-flex max-w-full overflow-x-auto rounded-full border border-line p-0.5 text-sm" role="tablist" aria-label="Report type">
                   {REPORT_TYPES.map((t) => (
                     <button key={t.kind} type="button" role="tab" aria-selected={kind === t.kind} onClick={() => setKind(t.kind)} data-testid={`about-sample-${t.kind}`}
-                      className={cx("rounded-full px-4 py-1.5 transition-colors", kind === t.kind ? "bg-ink text-paper" : "text-muted hover:text-ink")}>{TAB[t.kind] || t.title}</button>
+                      className={cx("whitespace-nowrap rounded-full px-4 py-1.5 transition-colors", kind === t.kind ? "bg-ink text-paper" : "text-muted hover:text-ink")}>{TAB[t.kind] || t.title}</button>
                   ))}
                 </div>
-              </div>
-              <div className="mt-5 flex flex-wrap items-center justify-between gap-3" data-testid="about-sample-controls">
                 <div className="inline-flex rounded-full border border-line p-0.5 text-sm" role="tablist" aria-label="How to view the report">
                   {[["slides", "Slides"], ["report", "Report"]].map(([k, l]) => (
                     <button key={k} type="button" role="tab" aria-selected={view === k} onClick={() => setView(k)} data-testid={`about-sample-view-${k}`}
                       className={cx("rounded-full px-4 py-1.5 transition-colors", view === k ? "bg-ink text-paper" : "text-muted hover:text-ink")}>{l}</button>
                   ))}
                 </div>
-                <div className="flex items-center gap-2 text-xs text-muted" data-testid="about-sample-looks">
-                  <span className="chip" data-testid="about-sample-chip">Sample data</span><span>Your colours, automatically:</span>
+              </div>
+              <div className="mt-3 flex flex-wrap items-center justify-between gap-x-4 gap-y-2 text-xs text-muted" data-testid="about-sample-looks">
+                <span className="chip whitespace-nowrap" data-testid="about-sample-chip">Sample data</span>
+                <span className="flex items-center gap-2">
+                  <span>Your colours, automatically</span>
                   {SAMPLE_BRANDS.map((b, i) => (
                     <button key={b.key} type="button" onClick={() => setLook(i)} aria-pressed={look === i} aria-label={`${b.label} colours`} title={b.label} data-testid={`about-sample-look-${b.key}`}
-                      className={cx("h-7 w-7 rounded-full border-2 transition", look === i ? "border-ink" : "border-line")} style={{ background: `linear-gradient(135deg, ${b.colors.background} 50%, ${b.colors.accent} 50%)` }} />
+                      className={cx("h-7 w-7 flex-none rounded-full border-2 transition", look === i ? "border-ink" : "border-line")} style={{ background: `linear-gradient(135deg, ${b.colors.background} 50%, ${b.colors.accent} 50%)` }} />
                   ))}
-                </div>
+                </span>
               </div>
               {view === "slides" ? (
                 <div className="mt-4" data-testid="about-sample-slides"><DeckPreview report={sample} config={demoConfig} /></div>
@@ -360,7 +361,7 @@ export default function About() {
 
           <Row id="members" n={4} title="What your members get" summary="One front door: story, perks, introductions, offers and asks, and how reliable the community is."
             lede="Members get one place for everything about the community, and it should make them feel good: looked after, introduced and part of something that shows up. That is what keeps them, it gives you honest data to decide with, and what you learn goes back into giving them more." {...R("members")}>
-            <div className="grid gap-px overflow-hidden rounded-xl border border-line bg-line sm:grid-cols-2" data-testid="about-member-gets">
+            <div className="grid gap-px overflow-hidden rounded-xl border border-line bg-line sm:grid-cols-2 sm:[&>:last-child:nth-child(odd)]:col-span-2" data-testid="about-member-gets">
               {MEMBER_GETS.map(([t, d]) => (
                 <div key={t} className="bg-surface p-5">
                   <p className="text-base font-semibold">{t}</p>
