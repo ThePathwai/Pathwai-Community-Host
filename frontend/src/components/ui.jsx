@@ -7,6 +7,7 @@ import { Inline } from "./EditKit";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../lib/auth";
 import { Loader2 } from "lucide-react";
+import { BUILD } from "../lib/build";
 
 export const cx = (...a) => a.filter(Boolean).join(" ");
 
@@ -379,6 +380,8 @@ export const PoweredBy = ({ className = "" }) => (
     <Link to="/terms" className="underline-offset-2 hover:underline" data-testid="footer-terms">Terms</Link>
     <span aria-hidden>·</span>
     <Link to="/privacy" className="underline-offset-2 hover:underline" data-testid="footer-privacy">Privacy</Link>
+    <span aria-hidden>·</span>
+    <span data-testid="build-id" title="Which version of Pathwai this page is running">Build {BUILD || "dev"}</span>
   </p>
 );
 // "I agree to the Terms of Service and Privacy Policy" -- the required tick on every account-creating

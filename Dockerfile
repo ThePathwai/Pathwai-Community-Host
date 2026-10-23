@@ -20,10 +20,13 @@ ARG REACT_APP_AI_CHAT_ENABLED=false
 # Shown on the public Terms / Privacy pages (/terms, /privacy). Set both before launch.
 ARG REACT_APP_LEGAL_EMAIL=""
 ARG REACT_APP_LEGAL_ENTITY=""
+# Railway supplies the commit being built; it is stamped into the app so a page can say which build it is.
+ARG RAILWAY_GIT_COMMIT_SHA=""
 ENV REACT_APP_BACKEND_URL="" \
     REACT_APP_AI_CHAT_ENABLED=$REACT_APP_AI_CHAT_ENABLED \
     REACT_APP_LEGAL_EMAIL=$REACT_APP_LEGAL_EMAIL \
     REACT_APP_LEGAL_ENTITY=$REACT_APP_LEGAL_ENTITY \
+    REACT_APP_BUILD_ID=$RAILWAY_GIT_COMMIT_SHA \
     CI=false \
     GENERATE_SOURCEMAP=false
 RUN yarn build

@@ -9,6 +9,7 @@ import { AuthProvider } from "./lib/auth";
 import { api } from "./lib/api";
 import { prepareDemo } from "./lib/demo";
 import DemoBanner from "./components/DemoBanner";
+import { refreshIfStale } from "./lib/build";
 
 // iPhone Safari ignores user-scalable=no, so block its pinch gesture directly (touch screens only).
 if (typeof window !== "undefined" && ("ontouchstart" in window || navigator.maxTouchPoints > 0)) {
@@ -32,3 +33,4 @@ async function start() {
   );
 }
 start();
+refreshIfStale();

@@ -632,6 +632,13 @@ async def root():
     return {"app": "Pathwai", "status": "ok"}
 
 
+@api_router.get("/version")
+async def version():
+    """Which build is running (the git commit Railway deployed). The web app compares this with the build it
+    was loaded from and refreshes itself when a browser is still holding an older copy."""
+    return {"build": (os.environ.get("RAILWAY_GIT_COMMIT_SHA") or "")[:7]}
+
+
 @api_router.get("/health")
 async def health():
     """Liveness + database reachability, for Railway's healthcheck / an uptime monitor."""
