@@ -31,7 +31,7 @@ ENV REACT_APP_BACKEND_URL="" \
     GENERATE_SOURCEMAP=false
 RUN yarn build
 
-FROM python:3.11-slim
+FROM python:3.15-slim
 WORKDIR /app
 # gcc is needed to build a couple of native wheels (bcrypt/cryptography) on some platforms.
 RUN apt-get update \
