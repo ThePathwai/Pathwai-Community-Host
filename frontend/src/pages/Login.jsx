@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { Link, useLocation, useNavigate, useSearchParams } from "react-router-dom";
 import { toast } from "sonner";
+import { CalendarDays, Gift, Mail, Smartphone, Ticket, Users } from "lucide-react";
 import { api, errMsg } from "../lib/api";
 import { useAuth } from "../lib/auth";
 import { sampleMetrics } from "../lib/sampleReport";
@@ -120,7 +121,12 @@ export default function Login() {
         <div className="relative flex h-full flex-col justify-between p-12 text-white">
           <span className="text-4xl"><Wordmark name="Pathwai" brand={{}} /></span>
           <div>
-            <p className="font-display text-5xl font-bold leading-[1.08]">Run your community in one place.<br />Know what is working.</p>
+            <p className="font-display text-5xl font-bold leading-[1.08]">Your whole community.<br />One app.</p>
+            <div className="mt-6 flex max-w-md flex-wrap gap-2" aria-label="Built in">
+              {[[Users, "Members"], [CalendarDays, "Events"], [Ticket, "Tickets"], [Smartphone, "Texts"], [Mail, "Email"], [Gift, "Perks"]].map(([Icon, l]) => (
+                <span key={l} className="inline-flex items-center gap-1.5 rounded-full border border-white/25 bg-white/10 px-3 py-1.5 text-sm backdrop-blur"><Icon className="h-4 w-4" />{l}</span>
+              ))}
+            </div>
           </div>
         </div>
       </div>
@@ -167,14 +173,14 @@ export default function Login() {
           <div className="space-y-3" data-testid="demo-links">
             <div>
               <h2 className="text-lg leading-snug" style={{ textWrap: "balance" }}>Look around a practice community</h2>
-              <p className="mt-1 text-xs text-muted">Made-up members and events. Nothing you do there is saved or touches a real community.</p>
+              <p className="mt-1 text-xs text-muted">Sample data. Nothing is saved.</p>
             </div>
             <Seg value={demoShown} onChange={setDemoTab} testPrefix="demo-tab" items={demoItems} />
 
             {demoShown === "admin" && (
               <div className="rounded-xl border border-ink/40 bg-surface p-4" data-testid="demo-admin-card">
                 <p className="font-medium">See it as the person running a community</p>
-                <p className="mt-1 text-xs text-muted">Every number set against the last period, who is going quiet, and a report you can open and send.</p>
+                <p className="mt-1 text-xs text-muted">Numbers, who is going quiet, a report to send.</p>
                 <div className="mt-3 grid grid-cols-4 gap-1.5" data-testid="demo-sample-tiles" aria-label="Sample figures">
                   {SAMPLE_TILES.map((t) => (
                     <div key={t.label} className="min-w-0 rounded-lg bg-ink/[.05] p-2"><p className="stat text-base leading-none">{t.value}</p><p className="mt-1 break-words text-[10px] leading-tight text-muted">{t.label}</p></div>
@@ -188,7 +194,7 @@ export default function Login() {
             {demoShown === "member" && (
               <div className="rounded-xl border border-line bg-surface p-4">
                 <p className="font-medium">See what your members see</p>
-                <p className="mt-1 text-xs text-muted">One front door: the community's story, perks, introductions with a reason, offers and asks, and a scorecard of how dependable it is.</p>
+                <p className="mt-1 text-xs text-muted">Perks, intros, offers and asks.</p>
                 <button type="button" data-testid="demo-link-member" onClick={() => startDemo("member")} className="btn-primary mt-3 w-full">Open the member demo</button>
               </div>
             )}

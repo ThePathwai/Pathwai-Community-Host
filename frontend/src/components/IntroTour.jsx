@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import { useLocation, useNavigate, useSearchParams } from "react-router-dom";
-import { ArrowLeftRight, CalendarDays, Check, ChevronLeft, ChevronRight, CreditCard, FileText, Handshake, Mail, MapPin, MessageCircle, Pause, Play, RotateCcw, Sparkles, Table2, X } from "lucide-react";
+import { ArrowLeftRight, CalendarDays, Check, ChevronLeft, ChevronRight, Handshake, Mail, MapPin, MessageCircle, Pause, Play, RotateCcw, Smartphone, Sparkles, Table2, Ticket, X } from "lucide-react";
 import { useAuth } from "../lib/auth";
 import { isDemo, startDemo } from "../lib/demo";
 import ScrollLock from "./ScrollLock";
@@ -38,12 +38,12 @@ export function HowItWorks({ className = "" }) {
 // ---- visuals --------------------------------------------------------------------------------------
 // Each tool starts scattered ([x0,y0]) and, in the first beat, flies into a ring around Pathwai ([x,y]).
 const TOOLS = [
-  { k: "Forms", Icon: FileText, x: 17, y: 20, x0: 12, y0: 40, r: "-4deg" },
-  { k: "Sheets", Icon: Table2, x: 50, y: 10, x0: 70, y0: 14, r: "3deg" },
-  { k: "Calendar", Icon: CalendarDays, x: 83, y: 20, x0: 88, y0: 52, r: "-2deg" },
-  { k: "Email", Icon: Mail, x: 17, y: 80, x0: 24, y0: 88, r: "4deg" },
-  { k: "Chats", Icon: MessageCircle, x: 50, y: 90, x0: 46, y0: 58, r: "-3deg" },
-  { k: "Payments", Icon: CreditCard, x: 83, y: 80, x0: 66, y0: 84, r: "2deg" },
+  { k: "Sheets", Icon: Table2, x: 17, y: 20, x0: 12, y0: 40, r: "-4deg" },
+  { k: "Event page", Icon: CalendarDays, x: 50, y: 10, x0: 70, y0: 14, r: "3deg" },
+  { k: "Ticketing", Icon: Ticket, x: 83, y: 20, x0: 88, y0: 52, r: "-2deg" },
+  { k: "Email list", Icon: Mail, x: 17, y: 80, x0: 24, y0: 88, r: "4deg" },
+  { k: "Group chat", Icon: MessageCircle, x: 50, y: 90, x0: 46, y0: 58, r: "-3deg" },
+  { k: "Texts", Icon: Smartphone, x: 83, y: 80, x0: 66, y0: 84, r: "2deg" },
 ];
 
 function ConvergeVisual() {
@@ -142,12 +142,12 @@ const BEATS = [
     ms: 3400, Visual: ConvergeVisual,
     text: (
       <div className="grid">
-        <div className="pw-textout col-start-1 row-start-1" style={{ "--dur": "1.55s" }}><Headline>Your community lives in 12 different tools.</Headline><Sub>None of them talk to each other.</Sub></div>
-        <div className="pw-textin col-start-1 row-start-1" style={{ "--dl": "1.6s" }}><Headline>Pathwai puts it all in one place.</Headline><Sub>Forms, calendars, payments, chat. Connected.</Sub></div>
+        <div className="pw-textout col-start-1 row-start-1" style={{ "--dur": "1.55s" }}><Headline>Your community runs on a pile of tools.</Headline><Sub>None of them talk to each other.</Sub></div>
+        <div className="pw-textin col-start-1 row-start-1" style={{ "--dl": "1.6s" }}><Headline>Pathwai is all of them. One app.</Headline><Sub>Members, events, tickets, texts and email. Built in.</Sub></div>
       </div>),
   },
-  { ms: 2900, Visual: ProfileVisual, text: <div><Headline>Every member brings value.</Headline><Sub>Skills, connections, resources. Way more than a ticket to your event.</Sub></div> },
-  { ms: 2900, Visual: ExchangeVisual, text: <div><Headline>Members trade it.</Headline><Sub>Pathwai shows who can help whom, at events and between them.</Sub></div> },
+  { ms: 2900, Visual: ProfileVisual, text: <div><Headline>Every member brings value.</Headline><Sub>Skills, contacts, know-how.</Sub></div> },
+  { ms: 2900, Visual: ExchangeVisual, text: <div><Headline>Members trade it.</Headline><Sub>Pathwai shows who can help whom.</Sub></div> },
 ];
 const END = BEATS.length;
 
@@ -259,7 +259,7 @@ export default function IntroTour() {
         ) : (
           <div className="flex flex-1 flex-col items-center justify-center gap-7 py-3 text-center pw-pop" data-testid="intro-end">
             <NetworkVisual />
-            <div><Headline>More value. Less juggling.</Headline><Sub>Join a community, or start your own.</Sub></div>
+            <div><Headline>More value. Less juggling.</Headline><Sub>Join a community or start one.</Sub></div>
             <div className="w-full space-y-2.5">
               <button type="button" className="btn-primary w-full" data-testid="intro-start" onClick={() => close(() => nav("/signup"))}><Check className="h-4 w-4" /> Get started</button>
               <div className="flex gap-2.5">
