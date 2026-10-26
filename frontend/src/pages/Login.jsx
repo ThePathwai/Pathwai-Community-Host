@@ -46,7 +46,7 @@ export default function Login() {
   const inDemo = isDemo();
   // Two tabs: sign in (the default) and try the demo. /login?tab=demo opens the demo tab directly.
   const [tab, setTab] = useState(params.get("tab") === "demo" ? "demo" : "signin");
-  const [demoTab, setDemoTab] = useState("admin");
+  const [demoTab, setDemoTab] = useState("communities");
 
   useEffect(() => { api.get("/auth/demo-accounts").then((r) => setDemo(r.data)).catch(() => {}); }, []);
   // /login?demo=member|admin|host (what the "Try the demo" buttons open) signs straight in to the in-browser demo.
@@ -105,7 +105,7 @@ export default function Login() {
   };
 
   const hostAcct = { demo_role: "host", email: "host@thevillage.example", label: "Community host demo", description: "Sign in as the host of The Village, a private dinner club, and review who has asked to join." };
-  const demoItems = [...(inDemo ? [] : [["admin", "Admin"], ["member", "Member"], ["communities", "Examples"]]), ...(demo.accounts.length ? [["accounts", "Accounts"]] : [])];
+  const demoItems = [...(inDemo ? [] : [["communities", "Examples"], ["admin", "Admin"], ["member", "Member"]]), ...(demo.accounts.length ? [["accounts", "Accounts"]] : [])];
   const demoShown = demoItems.some(([k]) => k === demoTab) ? demoTab : demoItems[0]?.[0];
   const showDemoTab = !inDemo || demo.accounts.length > 0;
 
@@ -195,13 +195,24 @@ export default function Login() {
               <div className="rounded-xl border border-line bg-surface p-4">
                 <p className="font-medium">See what your members see</p>
                 <p className="mt-1 text-xs text-muted">Perks, intros, offers and asks.</p>
-                <button type="button" data-testid="demo-link-member" onClick={() => startDemo("member")} className="btn-primary mt-3 w-full">Open the member demo</button>
+                <button type="button" data-testid="demo-link-member" onClick={() => startDemo("member", "humber-innovation-network")} className="btn-primary mt-3 w-full">Open the member demo</button>
               </div>
             )}
 
             {demoShown === "communities" && (
               <div className="space-y-2">
-                {DEMO_COMMUNITIES.map((c) => (
+                {DEMO_COMMUNITIES.filter((c) => c.featured).map((c) => (
+                  <div key={c.slug} className="rounded-xl border-2 bg-surface p-4" style={{ borderColor: c.accent }} data-testid={`demo-featured-${c.slug}`}>
+                    <p className="eyebrow">Featured demo</p>
+                    <p className="mt-1 text-lg font-semibold leading-tight">{c.name}</p>
+                    {c.tagline && <p className="mt-0.5 text-xs text-muted">{c.tagline}</p>}
+                    <div className="mt-3 grid grid-cols-2 gap-2">
+                      <button type="button" className="rounded-lg px-3 py-2.5 text-sm font-semibold" style={{ background: c.accent, color: "#fff" }} data-testid={`demo-${c.slug}-member`} onClick={() => startDemo("member", c.slug)}>As a member</button>
+                      <button type="button" className="rounded-lg border px-3 py-2.5 text-sm font-semibold" style={{ borderColor: c.accent }} data-testid={`demo-${c.slug}-admin`} onClick={() => startDemo("admin", c.slug)}>As the admin</button>
+                    </div>
+                    <Link to={`/demo/${c.short}`} className="mt-2 block text-center text-xs text-muted underline" data-testid={`demo-${c.slug}-page`}>Open its demo page (to share a link)</Link>
+                  </div>))}
+                {DEMO_COMMUNITIES.filter((c) => !c.featured).map((c) => (
                   <div key={c.slug} className="flex items-center gap-2 rounded-xl border border-line bg-surface p-2.5" data-testid={`demo-community-${c.slug}`}>
                     <div className="min-w-0 flex-1"><p className="truncate text-sm font-medium">{c.name}</p><p className="truncate text-[11px] text-muted" title={c.blurb}>{c.blurb}</p></div>
                     <button type="button" className="btn-ghost shrink-0 border border-line !px-2.5 !py-1.5 text-xs" data-testid={`demo-${c.slug}-member`} onClick={() => startDemo("member", c.slug)}>Member</button>

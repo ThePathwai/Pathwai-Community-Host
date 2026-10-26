@@ -102,13 +102,13 @@ export default function BlastComposer() {
               <Field label="Send to"><Select value={type} onChange={(e) => setType(e.target.value)} options={AUD} data-testid="blast-audience" /></Field>
               {type === "event" && <Field label="Event"><Select value={eventId} onChange={(e) => setEventId(e.target.value)} options={events.map((e) => ({ value: e.id, label: `${e.title} · ${fmtDate(e.starts_at)}` }))} /></Field>}
             </div>
-            {email && <Field label="Email subject" hint="Defaults to the first line of your message if left blank."><Input value={subject} onChange={(e) => setSubject(e.target.value)} placeholder="Doors open at 7 tonight" data-testid="blast-subject" /></Field>}
+            {email && <Field label="Email subject" hint="Defaults to the first line of your message if left blank."><Input value={subject} onChange={(e) => setSubject(e.target.value)} placeholder={config?.blast_example?.subject || "Doors open at 7 tonight"} data-testid="blast-subject" /></Field>}
             {aud && (!aud.sms_available || !aud.email_available) && (
               <p className="rounded-lg border border-line bg-ink/5 p-3 text-sm text-muted" data-testid="blast-unavailable">
                 {!aud.sms_available && !aud.email_available ? "Text and email sending are being switched on for Pathwai. You can send in the app now." : !aud.sms_available ? "Text messaging is being switched on for Pathwai. Email and in-app messages work now." : "Email sending is being switched on for Pathwai. Texts and in-app messages work now."}
               </p>)}
             <Field label="Message" hint={sms ? `${msg.length} characters · your community's name goes first and "Reply STOP to opt out." is added, so each text is ${perText} segment${perText === 1 ? "" : "s"}.` : `${msg.length} characters`}>
-              <Textarea rows={5} maxLength={sms ? 420 : 1600} value={msg} onChange={(e) => setMsg(e.target.value)} placeholder="Doors open at 7pm tonight. Bring your ticket and a friend." data-testid="blast-message" />
+              <Textarea rows={5} maxLength={sms ? 420 : 1600} value={msg} onChange={(e) => setMsg(e.target.value)} placeholder={config?.blast_example?.message || "Doors open at 7pm tonight. Bring your ticket and a friend."} data-testid="blast-message" />
             </Field>
             {aud && (sms || email || internal) && (
               <div className="rounded-lg border border-line bg-ink/5 p-3 text-sm" data-testid="blast-count">

@@ -29,11 +29,12 @@ export default function DemoBanner() {
     } catch (e) { toast.error(`That demo has no ${other} side to switch to.`); } finally { setBusy(false); }
   };
   return (
-    <div className="flex flex-wrap items-center justify-center gap-x-3 gap-y-1 bg-accent px-3 py-1.5 text-center text-xs font-medium text-on-accent" style={{ background: "var(--accent, #F00F21)", color: "var(--on-accent, #fff)" }} data-testid="demo-banner">
-      <span>{side && slug ? `You're in the demo as ${side === "admin" ? "the admin" : "a member"}. Both sides share the same practice data in this tab.` : "You're in the demo: made-up members and events. Nothing here is saved or shared."}</span>
+    <div className="flex flex-wrap items-center justify-center gap-x-3 gap-y-1 bg-accent px-3 py-1.5 text-center text-[11px] font-medium text-on-accent sm:text-xs" style={{ background: "var(--accent, #F00F21)", color: "var(--on-accent, #fff)" }} data-testid="demo-banner">
+      <span className="hidden sm:inline">{side && slug ? `You're in the demo as ${side === "admin" ? "the admin" : "a member"}. Both sides share the same practice data in this tab.` : "You're in the demo: made-up members and events. Nothing here is saved or shared."}</span>
+      <span className="sm:hidden">{side && slug ? `Demo · ${side === "admin" ? "admin" : "member"}` : "Demo · sample data"}</span>
       {side && slug && <button type="button" onClick={swap} disabled={busy} className="rounded-full bg-white/20 px-2.5 py-0.5 font-semibold underline-offset-2 hover:bg-white/30" data-testid="demo-switch">{busy ? "Switching…" : `View as ${other === "admin" ? "admin" : "member"}`}</button>}
-      <button type="button" onClick={() => window.location.reload()} className="underline underline-offset-2" data-testid="demo-restart">Restart demo</button>
-      <button type="button" onClick={exitDemo} className="underline underline-offset-2" data-testid="demo-exit">Exit demo</button>
+      <button type="button" onClick={() => window.location.reload()} className="underline underline-offset-2" data-testid="demo-restart">Restart<span className="max-sm:hidden"> demo</span></button>
+      <button type="button" onClick={exitDemo} className="underline underline-offset-2" data-testid="demo-exit">Exit<span className="max-sm:hidden"> demo</span></button>
     </div>
   );
 }

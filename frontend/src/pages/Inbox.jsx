@@ -166,7 +166,7 @@ export default function Inbox() {
         <Input type="date" className="!w-auto" value={dateTo} onChange={(e) => setDateTo(e.target.value)} aria-label="To date" data-testid="inbox-date-to" />
         {active && <button className="text-xs text-muted underline" onClick={clearFilters} data-testid="inbox-clear-filters">Clear filters</button>}
       </div>
-      <div className="grid gap-4 lg:grid-cols-[320px_1fr] lg:items-start">
+      <div className="grid grid-cols-[minmax(0,1fr)] gap-4 lg:grid-cols-[320px_1fr] lg:items-start">
         <div className={cx("space-y-1.5 lg:block", threadId ? "hidden" : "block")}>
           {!list ? <Spinner /> : filteredList.length === 0 ? (
             list.length === 0 ? (

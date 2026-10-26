@@ -362,10 +362,11 @@ export const Wordmark = ({ name, className = "", brand }) => {
   const b = brand || config?.brand || {};
   const own = !name || name === "Pathwai";
   const logo = b.logo_url || b.logo_mark_url;
+  const long = (name || "").length > 20;   // a long name wraps to two small lines on a phone instead of being cut off
   return (
     <span className={"inline-flex min-w-0 max-w-full items-center gap-2.5 font-black uppercase tracking-tight " + className} style={{ textTransform: "var(--heading-transform)" }}>
       {logo ? <img src={logo} alt="" className="h-[1.4em] w-auto max-w-[7em] shrink-0 object-contain sm:h-[2em] sm:max-w-[10em]" style={b.logo_adapts ? { filter: "var(--mark-filter, none)" } : undefined} /> : own && <img src={wordmarkWhite} alt="Pathwai" className="h-[1.2em] w-auto shrink-0 sm:h-[1.5em]" style={{ filter: "var(--mark-filter, none)" }} />}
-      {(logo || !own) && (!b.logo_url || b.show_name_with_logo !== false) && <span className={"truncate " + (logo ? "max-sm:hidden" : "")}>{name || "Pathwai"}</span>}
+      {(logo || !own) && (!b.logo_url || b.show_name_with_logo !== false) && <span className={(long ? "max-sm:line-clamp-2 max-sm:text-[0.8em] max-sm:leading-[1.1] sm:truncate " : "truncate ") + (logo ? "max-sm:hidden" : "")}>{name || "Pathwai"}</span>}
     </span>
   );
 };

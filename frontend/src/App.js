@@ -7,6 +7,7 @@ import { EditProvider } from "./components/EditKit";
 import Layout from "./components/Layout";
 import { Spinner } from "./components/ui";
 import Login from "./pages/Login";
+import DemoLanding from "./pages/DemoLanding";
 import Signup from "./pages/Signup";
 import ForgotPassword from "./pages/ForgotPassword";
 import ResetPassword from "./pages/ResetPassword";
@@ -74,6 +75,8 @@ export default function App() {
         <Route path="/signup" element={<Signup />} />
         <Route path="/forgot-password" element={<ForgotPassword />} />
         <Route path="/about" element={<About />} />
+        <Route path="/demo/:short" element={<DemoLanding />} />
+        <Route path="/humber" element={<Navigate to="/demo/humber" replace />} />
         <Route path="/install" element={<Install />} />
         <Route path="/r/:slug/:token" element={<PublicReport />} />
         <Route path="/terms" element={<Legal doc="terms" />} />

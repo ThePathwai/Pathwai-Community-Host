@@ -38,10 +38,18 @@ export const exitDemo = () => leaveDemo("/login");
 export const startAdminDemo = () => startDemo("admin", "humber-innovation-network");
 
 // Practice communities worth walking through, each open from both the member side and the admin side.
+// `featured` ones are shown first and big. Each opens at /demo/<short> (a page with a Member button and an Admin button that
+// works the same on a phone and a desktop), so a link can be sent to someone as it is.
 export const DEMO_COMMUNITIES = [
-  { slug: "grace", name: "C3 Film Team", blurb: "A church's creative team: skills, shoots, onboarding and project teams anyone can start." },
-  { slug: "club-pto", name: "Club PTO", blurb: "A padel club: Skill Lab coaching, sponsors and a member skill exchange." },
-  { slug: "the-village", name: "The Village", blurb: "A private dinner club: guests, long-table dinners and the host's guest list." },
-  { slug: "humber-innovation-network", name: "Humber Innovation Network", blurb: "Founders, investors and mentors, with pitch days." },
-  { slug: "toronto-hyrox-crew", name: "Toronto Hyrox Crew", blurb: "A fitness racing crew: training sessions, race prep and perks." },
+  { slug: "humber-innovation-network", short: "humber", featured: true, name: "Humber Innovation Network", accent: "#0B4EA2", blurb: "Founders, investors and mentors, with pitch days.",
+    tagline: "Where founders meet capital, mentors and customers.",
+    member: ["People with pitches", "Intros with a reason", "Pitch days", "Perks", "Academy"], admin: ["Applications", "Texts and email", "Impact reports", "Import your data", "Disco academy"] },
+  { slug: "grace", short: "c3", name: "C3 Film Team", blurb: "A church's creative team: skills, shoots, onboarding and project teams anyone can start." },
+  { slug: "club-pto", short: "club-pto", name: "Club PTO", blurb: "A padel club: Skill Lab coaching, sponsors and a member skill exchange." },
+  { slug: "the-village", short: "the-village", name: "The Village", blurb: "A private dinner club: guests, long-table dinners and the host's guest list." },
+  { slug: "toronto-hyrox-crew", short: "hyrox", name: "Toronto Hyrox Crew", blurb: "A fitness racing crew: training sessions, race prep and perks." },
 ];
+// The community a /demo/<short> link (or the older /humber style) points at.
+export const demoCommunity = (key) => DEMO_COMMUNITIES.find((c) => c.short === key || c.slug === key) || null;
+// The link that drops someone straight into one side of a practice community (the same on phone and desktop).
+export const demoLink = (role, slug) => `${window.location.origin}/login?demo=${role}&c=${encodeURIComponent(slug)}`;

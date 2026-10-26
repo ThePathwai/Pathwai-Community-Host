@@ -332,6 +332,50 @@ export function humberLearningFor(uid, roster) {
   return out.sort((a, b) => (a.status !== "enrolled") - (b.status !== "enrolled") || a.name.localeCompare(b.name));
 }
 
+// Conversations already in the inbox when the demo opens, so neither side starts on an empty screen. They are real threads in the
+// demo's own store, so replying works. `unread` ones were last written by the other person. (Made up, like everything here.)
+export function humberThreads() {
+  const m = (id, sender, body, d, h, min = 0) => ({ id, sender_id: sender, body, created_at: iso(at(d, h, min)) });
+  const T = (id, parts, subject, msgs, readBy = []) => ({
+    id, participant_ids: parts.slice().sort(), subject, context: null, created_at: msgs[0].created_at,
+    messages: msgs.map((x) => ({ ...x, thread_id: id })), read_at: Object.fromEntries(readBy.map((u) => [u, iso(at(0, 6))])),
+  });
+  return [
+    T("hm-t1", [DANA, ME], "Your Pitch Day slot", [
+      m("hm-t1-1", DANA, "Hi Fife, you're confirmed for Pitch Day. Five minutes, then judges' questions. Can you send your deck by Friday so we can load it?", -2, 15),
+      m("hm-t1-2", ME, "Thank you! Deck goes over Thursday night. Is there a mic or do I present from my own laptop?", -2, 16, 20),
+      m("hm-t1-3", DANA, "Our laptop, with a clicker. Bring a PDF backup on a USB stick and you're set.", -1, 9, 40),
+    ], [ME]),
+    T("hm-t2", ["u-hm-priyanka", ME], "Intro: wellness sponsors", [
+      m("hm-t2-1", ME, "Hi Priyanka, I'm pitching a community platform for wellness event brands and I'm looking for sponsor intros. Could I get ten minutes at office hours?", -4, 11),
+      m("hm-t2-2", "u-hm-priyanka", "Happy to. Send your one-liner and the number of events you run a month. I know two founders who sell into that crowd and I'll ask if they're open to a chat.", -3, 18, 10),
+    ]),
+    T("hm-t3", ["u-hm-helen", ME], "Free legal hour", [
+      m("hm-t3-1", ME, "Hi Helen, I'd like to book the free legal hour for founders. It's about a founder agreement.", -6, 10),
+      m("hm-t3-2", "u-hm-helen", "Booked for next Tuesday at 2pm. Send me the draft the day before and I'll make sure the right person reads it.", -5, 14, 30),
+    ], [ME]),
+    T("hm-t4", [DANA, "u-hm-marcus"], "Judging Pitch Day", [
+      m("hm-t4-1", DANA, "Marcus, would you join the judging panel for Pitch Day? Five judges, 34 finalists, and lunch is on us.", -3, 9),
+      m("hm-t4-2", "u-hm-marcus", "Yes, I'm in. Send the finalist list when you have it and I'll flag any seed-stage companies I'd like to meet afterwards.", -2, 17, 5),
+    ], [DANA]),
+    T("hm-t5", [DANA, "u-hm-amina"], "Clinic pilot intro", [
+      m("hm-t5-1", "u-hm-amina", "Dana, Nadia offered to introduce me to a clinic for the Tidewell pilot. Could you connect us? I'd like to start before term ends.", -1, 12),
+    ]),
+    T("hm-t6", [DANA, "u-hm-helen"], "Sponsoring student pitch events", [
+      m("hm-t6-1", "u-hm-helen", "We'd like to sponsor both pitch events this term and offer student founders a startup banking package. What would be most useful for the programs team?", -1, 16, 45),
+    ]),
+  ];
+}
+
+/** Two past text and email blasts for the admin's "Blasts" tab (not sent to anyone: this is the demo). */
+export function humberBlasts() {
+  const when = (d, h) => iso(at(d, h));
+  return [
+    { id: "hm-b1", slug: HUMBER_SLUG, message: "Pitch Practice Lab is tonight at 5:30 PM, North Campus. Bring your deck and a printed one-liner.", subject: null, channel: "sms", audience: { type: "event", event_id: "hm-e3" }, internal: true, internal_sent: 9, sms_sent: 8, sms_failed: 0, email_sent: 0, email_failed: 0, sms_credits_used: 8, demo: true, at: when(-1, 11) },
+    { id: "hm-b2", slug: HUMBER_SLUG, message: "Pitch Day applications are open. Apply with your deck and a one-line ask. Applications close in two weeks.", subject: "Pitch Day applications are open", channel: "email", audience: { type: "all" }, internal: true, internal_sent: 20, sms_sent: 0, sms_failed: 0, email_sent: 18, email_failed: 0, sms_credits_used: 0, demo: true, at: when(-5, 10) },
+  ];
+}
+
 export function buildHumber(fixtures, deps) {
   return buildDemo(fixtures, deps, {
     slug: HUMBER_SLUG, prefix: "hm", name: "Humber Innovation Network", tagline: "Where Humber founders meet capital, mentors and customers.", hubKind: "Innovation & entrepreneurship network",
@@ -343,6 +387,7 @@ export function buildHumber(fixtures, deps) {
     },
     completion: { percent: 100, missing: [], missing_keys: [], sections: { "About you": { done: 5, total: 5 }, "Skills & interests": { done: 2, total: 2 }, "Goals & support": { done: 2, total: 2 } } },
     config: {
+      blast_example: { subject: "Pitch Practice Lab is tonight", message: "Pitch Practice Lab is tonight at 5:30 PM, North Campus. Bring your deck and a printed one-liner." },
       community_kind: "Innovation & entrepreneurship network", community_type: "professional", interest_tags: ["Startups", "Innovation"],
       about: "A network that connects student and alumni founders from Humber Polytechnic with investors, industry leaders and innovation partners. Founders put their pitch on their profile and meet the people who can fund, advise or become their first customer. Pitch days, office hours, mixers and mentor matching run all term. This is a demo community: every person, venture and number is made up.",
       about_url: "", about_cta: "",

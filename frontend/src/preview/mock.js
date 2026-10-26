@@ -8,7 +8,7 @@ import { buildYvetta, YVETTA_SLUG } from "./yvetta";
 import { buildHyrox, HYROX_SLUG } from "./hyrox";
 import { buildClubPto, CLUBPTO_SLUG } from "./clubpto";
 import { buildC3Film, C3_SLUG } from "./c3film";
-import { buildHumber, HUMBER_SLUG, humberLearning, humberLearningFor } from "./humber";
+import { buildHumber, HUMBER_SLUG, humberBlasts, humberLearning, humberLearningFor, humberThreads } from "./humber";
 import { classesHandler, newClassesState } from "./classes";
 import { eventsImport, guestsImport } from "./importMock";
 import { segments, smsBody } from "../lib/messaging";
@@ -344,7 +344,11 @@ function withRsvpFields(e) {
 // Unlike those, a thread carries its own `messages` array right on the record (simpler than two
 // linked collections for a mock), and there's no per-login recorded fixture for it at all — like
 // /admin/blasts/history below, this is answered live rather than looked up from a captured snapshot.
-function threadStore() { return sharedContent("message_threads"); }
+function threadStore() {
+  const st = sharedContent("message_threads");
+  if (!st.seeded && slugOf() === HUMBER_SLUG) { st.seeded = true; st.created.push(...humberThreads()); }   // Humber opens with conversations already going
+  return st;
+}
 function threadUserById(id) {
   const all = mergedList(view()["/users"] || [], "users", false);
   return all.find((u) => u.id === id) || { id, name: "Former member", avatar_url: null, title: null };
@@ -618,7 +622,8 @@ function get(path, p, config) {
   if (path.startsWith("/teams")) return teamsCall("get", path, {}, config);
   if (/^\/(admin\/(impact|report-types|reports\/|report-shares|deck-selection|partnership-offer|quiet|instagram|tiktok)|public\/report\/)/.test(path) || path === "/community/reliability") return impactCall("get", path, {}, config);
   if (path === "/admin/blasts/history") {
-    let blasts = S.extra.blasts || [];
+    if (slugOf() === HUMBER_SLUG && !S.extra.humberBlasts) { S.extra.humberBlasts = true; S.extra.blasts = [...(S.extra.blasts || []), ...humberBlasts()].sort((a, b) => b.at.localeCompare(a.at)); }
+    let blasts = (S.extra.blasts || []).filter((b) => !b.slug || b.slug === slugOf());
     if (p.audience_type) blasts = blasts.filter((b) => b.audience?.type === p.audience_type);
     if (p.since) blasts = blasts.filter((b) => b.at >= p.since);
     if (p.until) blasts = blasts.filter((b) => b.at <= p.until);
