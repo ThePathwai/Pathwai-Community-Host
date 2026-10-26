@@ -1,29 +1,28 @@
-"""Message blasts: one admin composer, sent by text (Twilio), email (SendGrid), or both.
+"""Message blasts: one admin composer, sent by text, email, in-app, or any mix of them.
 
-Only members who opted in to each channel (Settings → Notifications) and have the needed contact info receive
-anything — a phone number for text (CASL/TCPA opt-in required), an email address for email. Every text ends with
-an opt-out line, and STOP replies turn a member's texting off automatically. Demo credentials ('demo') simulate
-sends so the whole flow can be tried without a real Twilio or SendGrid account."""
+Sending is built in. Pathwai runs its own Twilio and SendGrid (see messaging.py), so a community admin never
+connects anything: they write the message, pick the people, and it goes out under the community's name. Texts
+use credits (1 credit = 1 text segment to 1 person); email and in-app are free.
+
+Only members who opted in to each channel (Settings -> Notifications) and have the needed contact info receive
+anything -- a phone number for text (CASL/TCPA opt-in required), an email address for email. Every text ends with
+an opt-out line, and a STOP reply turns texting off for that phone number everywhere on Pathwai. In the demo
+environment sends are simulated, so the whole flow can be tried without real messages going out."""
 from __future__ import annotations
 
 import asyncio
-import base64
-import hashlib
-import hmac
-import re
 import uuid
 from typing import Any, Dict, List, Optional
 
-import httpx
 from fastapi import APIRouter, Depends, HTTPException, Request
 from pydantic import BaseModel, Field
 
-from auth import get_current_user, require_role
-from database import db
-from urllib.parse import quote
-
+import messaging as msg
+from auth import rate_limit, require_role
+from database import COMMUNITY_SLUGS, db, dbfor
+from messaging import to_e164
 from ._common import audit, clean, now_iso, public_base_url
-from .integrations import _creds, _doc, _is_demo, _twh
+from .hub import is_platform_admin
 from .notifications import notify
 
 router = APIRouter(tags=["blasts"])
@@ -47,18 +46,6 @@ async def _fan_out(items: List[Any], fn) -> List[Optional[Exception]]:
 
     return list(await asyncio.gather(*(one(i) for i in items)))
 
-
-def to_e164(raw: Optional[str], default_cc: str = "1") -> Optional[str]:
-    digits = re.sub(r"[^\d+]", "", raw or "")
-    if not digits:
-        return None
-    if digits.startswith("+"):
-        d = digits[1:]
-    elif len(digits) == 10:
-        d = default_cc + digits
-    else:
-        d = digits
-    return "+" + d if 10 <= len(d) <= 15 else None
 
 
 class Audience(BaseModel):
@@ -87,11 +74,12 @@ async def _members(aud: Audience) -> List[dict]:
 async def resolve(aud: Audience) -> Dict[str, Any]:
     """Split the audience by channel: who can be texted, who can be emailed, and who's skipped and why."""
     people = await _members(aud)
+    stopped = await msg.opted_out_phones()  # replied STOP to Pathwai's number, in any community
     sms, email, sms_no_phone, sms_not_opted, email_not_opted = [], [], 0, 0, 0
     for u in people:
         notifs = (u.get("settings") or {}).get("notifications") or {}
         phone = to_e164((u.get("contact") or {}).get("phone") or u.get("phone"))
-        if notifs.get("sms", False):
+        if notifs.get("sms", False) and not (phone and phone in stopped):
             if phone:
                 sms.append({"id": u["id"], "name": u.get("name"), "phone": phone})
             else:
@@ -110,15 +98,44 @@ async def resolve(aud: Audience) -> Dict[str, Any]:
             "sms_no_phone": sms_no_phone, "sms_not_opted_in": sms_not_opted, "email_not_opted_in": email_not_opted}
 
 
+async def _community_name() -> str:
+    cfg = await db.community_config.find_one({"_key": "singleton"}) or {}
+    return (cfg.get("community_name") or cfg.get("name") or "Your community").strip()
+
+
+async def _status(me: Optional[dict] = None) -> Dict[str, Any]:
+    acct = await msg.account()
+    return {"sms_available": msg.sms_available(), "email_available": msg.email_available(), "simulated": msg.simulated(),
+            "sms_credits": acct["sms_credits"], "sms_used": acct["sms_used"],
+            "can_grant": bool(me and is_platform_admin(me.get("email")))}
+
+
+@router.get("/admin/messaging")
+async def messaging_status(me: dict = Depends(require_role("admin"))):
+    """What this community can send right now, and how many text credits it has left."""
+    return await _status(me)
+
+
+class GrantIn(BaseModel):
+    credits: int = Field(ge=1, le=1_000_000)
+
+
+@router.post("/admin/messaging/credits")
+async def grant_credits(body: GrantIn, me: dict = Depends(require_role("admin"))):
+    """Pathwai staff only: add text credits to this community (until self-serve top-ups exist)."""
+    if not is_platform_admin(me.get("email")):
+        raise HTTPException(status_code=403, detail="Only the Pathwai team can add text credits.")
+    acct = await msg.grant(body.credits)
+    await audit(me["id"], "messaging.credits_granted", "community", None, {"credits": body.credits})
+    return {**(await _status(me)), **acct}
+
+
 @router.post("/admin/blasts/audience")
-async def audience(aud: Audience, _: dict = Depends(require_role("admin"))):
+async def audience(aud: Audience, me: dict = Depends(require_role("admin"))):
     r = await resolve(aud)
-    tw, sg = await _doc("twilio"), await _doc("sendgrid")
     return {"sms_count": len(r["sms"]), "email_count": len(r["email"]), "total_members": r["total_members"],
             "sms_no_phone": r["sms_no_phone"], "sms_not_opted_in": r["sms_not_opted_in"], "email_not_opted_in": r["email_not_opted_in"],
-            "twilio_connected": bool(tw.get("enabled")), "sendgrid_connected": bool(sg.get("enabled")),
-            "sms_demo": _is_demo(await _creds("twilio")) if tw.get("enabled") else False,
-            "email_demo": _is_demo(await _creds("sendgrid")) if sg.get("enabled") else False}
+            **(await _status(me))}
 
 
 class SendIn(BaseModel):
@@ -127,45 +144,19 @@ class SendIn(BaseModel):
     channel: str = "sms"  # sms | email | both | none (none = Pathwai Internal only, see `internal` below)
     # A third, independent send option alongside text/email: an in-app notification (see
     # routes/notifications.py's notify()) to everyone in the audience. Kept separate from `channel`
-    # rather than folded into its enum, since it isn't gated by Twilio/SendGrid or by a member's
-    # SMS/email opt-in settings the way those two are -- it can be sent alone (channel="none") or
+    # rather than folded into its enum, since it isn't gated by a member's SMS/email opt-in
+    # settings the way those two are -- it can be sent alone (channel="none") or
     # alongside either or both of the others.
     internal: bool = False
     audience: Audience = Audience()
 
 
-async def _send_sms(c: Dict[str, str], s: Dict[str, Any], to: str, body: str) -> None:
-    data = {"To": to, "Body": body}
-    if s.get("messaging_service_sid"):
-        data["MessagingServiceSid"] = s["messaging_service_sid"]
-    else:
-        data["From"] = s["from_number"]
-    async with httpx.AsyncClient(timeout=15) as client:
-        r = await client.post(f"https://api.twilio.com/2010-04-01/Accounts/{quote(c['account_sid'], safe='')}/Messages.json", headers=_twh(c), data=data)
-    if r.status_code >= 400:
-        try:
-            msg = r.json().get("message")
-        except Exception:  # noqa: BLE001
-            msg = r.text[:120]
-        raise RuntimeError(msg or f"HTTP {r.status_code}")
-
-
-async def _send_email(c: Dict[str, str], s: Dict[str, Any], to: str, name: str, subject: str, body: str) -> None:
-    # SendGrid rejects empty/null names, so only include a name when there is one.
-    payload = {
-        "personalizations": [{"to": [{"email": to, **({"name": name} if name else {})}]}],
-        "from": {"email": s.get("from_email"), **({"name": s["from_name"]} if s.get("from_name") else {})},
-        "subject": subject,
-        "content": [{"type": "text/plain", "value": body + EMAIL_FOOTER}],
-    }
-    async with httpx.AsyncClient(timeout=15) as client:
-        r = await client.post("https://api.sendgrid.com/v3/mail/send", headers={"Authorization": f"Bearer {c['api_key']}"}, json=payload)
-    if r.status_code >= 400:
-        try:
-            msg = r.json().get("errors", [{}])[0].get("message")
-        except Exception:  # noqa: BLE001
-            msg = r.text[:120]
-        raise RuntimeError(msg or f"HTTP {r.status_code}")
+def _sms_body(community: str, message: str) -> str:
+    """The text as sent: who it is from, the message, and the opt-out line (unless the admin already wrote one)."""
+    body = f"{community}: {message.strip()}"
+    if "stop" not in message.lower():
+        body += OPT_OUT
+    return body
 
 
 @router.post("/admin/blasts/send")
@@ -175,20 +166,11 @@ async def send_blast(body: SendIn, me: dict = Depends(require_role("admin"))):
     want_sms, want_email, want_internal = body.channel in ("sms", "both"), body.channel in ("email", "both"), body.internal
     if not (want_sms or want_email or want_internal):
         raise HTTPException(status_code=400, detail="Choose at least one way to send this: text, email or Pathwai Internal.")
-    tw, sg = (await _doc("twilio")) if want_sms else {}, (await _doc("sendgrid")) if want_email else {}
-    if want_sms and not (tw.get("enabled") and tw.get("credentials")):
-        raise HTTPException(status_code=400, detail="Connect Twilio first (Admin → Integrations) to send texts.")
-    if want_email and not (sg.get("enabled") and sg.get("credentials")):
-        raise HTTPException(status_code=400, detail="Connect SendGrid first (Admin → Integrations) to send email.")
-    tc = await _creds("twilio") if want_sms else {}
-    ts = {**(tw.get("settings") or {})}
-    ec = await _creds("sendgrid") if want_email else {}
-    es = {**(sg.get("settings") or {})}
-    sms_demo, email_demo = _is_demo(tc), _is_demo(ec)
-    if want_sms and not sms_demo and not (ts.get("from_number") or ts.get("messaging_service_sid")):
-        raise HTTPException(status_code=400, detail="Add a sending number in the Twilio settings.")
-    if want_email and not email_demo and not es.get("from_email"):
-        raise HTTPException(status_code=400, detail="Add a from email in the SendGrid settings.")
+    if want_sms and not msg.sms_available():
+        raise HTTPException(status_code=400, detail="Text messaging isn't switched on yet. Send by email or in the app for now.")
+    if want_email and not msg.email_available():
+        raise HTTPException(status_code=400, detail="Email sending isn't switched on yet. Send in the app for now.")
+    await rate_limit("blast", me["id"], 30, 3600, "That's a lot of messages for now. Try again in a little while.")
 
     r = await resolve(body.audience)
     # Total reach across just the channels actually chosen -- Pathwai Internal reaches everyone in
@@ -200,17 +182,21 @@ async def send_blast(body: SendIn, me: dict = Depends(require_role("admin"))):
     if len(r["sms"]) > MAX_RECIPIENTS or len(r["email"]) > MAX_RECIPIENTS or len(r["people"]) > MAX_RECIPIENTS:
         raise HTTPException(status_code=400, detail=f"That audience is over {MAX_RECIPIENTS} people. Narrow it down.")
 
-    text = body.message.strip()
-    if want_sms and "stop" not in text.lower():
-        text += OPT_OUT
+    community = await _community_name()
+    text = _sms_body(community, body.message)
+    per_text = msg.segments(text)
+    cost = per_text * len(r["sms"]) if want_sms else 0
+    if want_sms and r["sms"]:
+        if not await msg.spend(cost):
+            have = (await msg.account())["sms_credits"]
+            raise HTTPException(status_code=400, detail=f"This text needs {cost:,} credits ({len(r['sms']):,} people, {per_text} per text) and you have {have:,}. Shorten it, narrow the audience or ask for more credits.")
     subject = (body.subject or "").strip() or (body.message.strip()[:60] + ("…" if len(body.message.strip()) > 60 else ""))
 
     sms_sent = sms_failed = email_sent = email_failed = 0
     errors: List[str] = []
     if want_sms:
         async def _one_sms(p):
-            if not sms_demo:
-                await _send_sms(tc, ts, p["phone"], text)
+            await msg.send_sms(p["phone"], text)
 
         for p, exc in zip(r["sms"], await _fan_out(r["sms"], _one_sms)):
             if exc is None:
@@ -219,10 +205,11 @@ async def send_blast(body: SendIn, me: dict = Depends(require_role("admin"))):
                 sms_failed += 1
                 if len(errors) < 6:
                     errors.append(f"Text to {p['name']}: {exc}")
+        await msg.refund(sms_failed * per_text)  # people who didn't get one aren't charged
+        cost -= sms_failed * per_text
     if want_email:
         async def _one_email(p):
-            if not email_demo:
-                await _send_email(ec, es, p["email"], p["name"] or "", subject, body.message.strip())
+            await msg.send_email(p["email"], p["name"] or "", subject, body.message.strip(), from_name=community, reply_to=me.get("email"), footer=EMAIL_FOOTER)
 
         for p, exc in zip(r["email"], await _fan_out(r["email"], _one_email)):
             if exc is None:
@@ -234,8 +221,8 @@ async def send_blast(body: SendIn, me: dict = Depends(require_role("admin"))):
 
     internal_sent = 0
     if want_internal:
-        # No integration, no opt-in gate, never fails mid-send the way a text or email can -- it's
-        # just a notification row per member, the same mechanism a membership request or a reported
+        # No opt-in gate, never fails mid-send the way a text or email can -- it's just a
+        # notification row per member, the same mechanism a membership request or a reported
         # message uses to reach someone inside the product.
         for u in r["people"]:
             await notify(u["id"], "blast", subject, body.message.strip(), link="/updates")
@@ -244,12 +231,13 @@ async def send_blast(body: SendIn, me: dict = Depends(require_role("admin"))):
     doc = {"id": str(uuid.uuid4()), "message": body.message.strip(), "subject": subject if (want_email or want_internal) else None, "channel": body.channel,
            "internal": want_internal, "internal_sent": internal_sent,
            "audience": body.audience.model_dump(), "sms_sent": sms_sent, "sms_failed": sms_failed, "email_sent": email_sent, "email_failed": email_failed,
+           "sms_credits_used": cost if want_sms else 0,
            "skipped": {"sms_no_phone": r["sms_no_phone"], "sms_not_opted_in": r["sms_not_opted_in"], "email_not_opted_in": r["email_not_opted_in"]},
-           "errors": errors, "demo": (sms_demo if want_sms else True) and (email_demo if want_email else True),
+           "errors": errors, "demo": msg.simulated() and (want_sms or want_email),
            "by": me["id"], "by_name": me.get("name"), "at": now_iso()}
     await db.message_blasts.insert_one(dict(doc))
     await audit(me["id"], "blast.sent", "blast", doc["id"], {"channel": body.channel, "internal": want_internal, "sms_sent": sms_sent, "email_sent": email_sent, "internal_sent": internal_sent})
-    return doc
+    return {**doc, "sms_credits_left": (await msg.account())["sms_credits"]}
 
 
 @router.get("/admin/blasts/history")
@@ -278,33 +266,36 @@ async def history(
     return {"blasts": [clean(b) async for b in db.message_blasts.find(q).sort("at", -1).limit(100)]}
 
 
-def verify_twilio_signature(url: str, params: Dict[str, str], signature: str, token: str) -> bool:
-    payload = url + "".join(k + params[k] for k in sorted(params))
-    mac = base64.b64encode(hmac.new(token.encode(), payload.encode(), hashlib.sha1).digest()).decode()
-    return hmac.compare_digest(mac, signature or "")
+STOP_WORDS = ("stop", "stopall", "unsubscribe", "cancel", "end", "quit")
+START_WORDS = ("start", "unstop", "yes")  # "yes" only counts for a number that had said STOP
 
 
 @router.post("/webhooks/twilio")
 async def twilio_inbound(request: Request):
-    """Twilio calls this when someone replies. STOP/UNSUBSCRIBE turns their texts off; START turns them back on."""
-    tw = await _doc("twilio")
-    c = await _creds("twilio")
-    if not tw.get("enabled"):
-        raise HTTPException(status_code=400, detail="Twilio isn't connected")
+    """Twilio calls this when someone replies to Pathwai's number. STOP turns their texts off, START turns them back on.
+
+    The number is shared by every community, so the reply applies everywhere: the phone goes on (or off) a
+    platform-wide list, and every member profile with that phone is switched to match."""
     form = {k: str(v) for k, v in (await request.form()).items()}
-    if not _is_demo(c):
+    if not msg.simulated():
+        if not msg.sms_ready():
+            raise HTTPException(status_code=400, detail="Text messaging isn't switched on")
         # Twilio signs the exact public URL it called. Behind Railway's proxy this server sees an internal
         # host/scheme, so check the externally visible URL(s) as well as the raw one.
         q = ("?" + request.url.query) if request.url.query else ""
         candidates = {str(request.url), f"{public_base_url(request)}{request.url.path}{q}"}
         sig = request.headers.get("x-twilio-signature", "")
-        if not any(verify_twilio_signature(u, form, sig, c.get("auth_token", "")) for u in candidates):
+        if not any(msg.verify_twilio_signature(u, form, sig) for u in candidates):
             raise HTTPException(status_code=400, detail="Bad signature")
     word = (form.get("Body") or "").strip().lower()
     phone = to_e164(form.get("From"))
-    if phone and word in ("stop", "stopall", "unsubscribe", "cancel", "end", "quit", "start", "unstop"):
-        on = word in ("start", "unstop")
-        async for u in db.users.find({}):
-            if to_e164((u.get("contact") or {}).get("phone") or u.get("phone")) == phone:
-                await db.users.update_one({"id": u["id"]}, {"$set": {"settings.notifications.sms": on}})
+    if phone and word in STOP_WORDS + START_WORDS:
+        on = word in START_WORDS
+        if on and phone not in await msg.opted_out_phones():
+            return {"ok": True}  # a "yes" to some other question must not switch texting back on
+        await msg.set_opt_out(phone, stopped=not on)
+        for slug in list(COMMUNITY_SLUGS):
+            async for u in dbfor(slug).users.find({"$or": [{"contact.phone": {"$exists": True, "$ne": ""}}, {"phone": {"$exists": True, "$ne": ""}}]}):
+                if to_e164((u.get("contact") or {}).get("phone") or u.get("phone")) == phone:
+                    await dbfor(slug).users.update_one({"id": u["id"]}, {"$set": {"settings.notifications.sms": on}})
     return {"ok": True}

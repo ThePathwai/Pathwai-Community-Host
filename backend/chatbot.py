@@ -93,7 +93,7 @@ async def build_context_prompt(db, me: Optional[dict]) -> str:
     # Upcoming events
     events = [e async for e in db.events.find({"is_past": {"$ne": True}}).sort("starts_at", 1).limit(8)]
     if events:
-        lines.append("UPCOMING EVENTS (Luma):")
+        lines.append("UPCOMING EVENTS:")
         for e in events:
             who = f"by {e.get('host')}" if e.get("host") else ""
             where = e.get("location") or e.get("venue") or ""

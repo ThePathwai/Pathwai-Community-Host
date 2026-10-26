@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect, useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
-import { BarChart3, ChevronLeft, ChevronRight, ClipboardList, Download, FileText, LifeBuoy, Link2, Palette, Plug, ScrollText, Settings2, ShieldCheck, Ticket, Users } from "lucide-react";
+import { BarChart3, ChevronLeft, ChevronRight, ClipboardList, Download, FileText, LifeBuoy, Link2, Palette, Plug, ScrollText, Settings2, ShieldCheck, Ticket, Upload, Users } from "lucide-react";
 import { toast } from "sonner";
 import { api, errMsg, fmtDate } from "../lib/api";
 import { useLive } from "../lib/live";
@@ -11,6 +11,7 @@ import Reports from "./Reports";
 import AuditView from "../components/AuditView";
 import Branding from "./AdminBrand";
 import Integrations from "./AdminIntegrations";
+import ImportData from "./ImportData";
 import MembershipRequests from "./AdminMembers";
 import { AdminRequests, Moderation, SupportQueue } from "./AdminPortal";
 
@@ -178,7 +179,8 @@ const GROUPS = [
   ] },
   { title: "Set up", items: [
     { key: "brand", label: "Branding", icon: Palette, blurb: "Logo, colours, fonts and the menu." },
-    { key: "integrations", label: "Integrations", icon: Plug, blurb: "Instagram, TikTok, forms, email and other connections." },
+    { key: "import", label: "Import your data", icon: Upload, blurb: "Bring in members, events and guest lists from a spreadsheet or a link." },
+    { key: "integrations", label: "Connections", icon: Plug, blurb: "Stripe payments, Instagram, TikTok and form tools." },
     { key: "config", label: "Community", icon: Settings2, blurb: "Name, event types and signup questions." },
   ] },
 ];
@@ -296,7 +298,7 @@ export default function Admin() {
           {tab === "reports" && <Reports embedded />}
           {tab === "audits" && <Audits go={go} />}
           {tab === "members" && <MembershipRequests />}{tab === "requests" && <AdminRequests />}{tab === "moderation" && <Moderation />}{tab === "support" && <SupportQueue />}
-          {tab === "brand" && <Branding />}{tab === "integrations" && <Integrations />}{tab === "config" && <Config />}{tab === "invites" && <Invites />}{tab === "audit" && <AuditLog />}
+          {tab === "brand" && <Branding />}{tab === "integrations" && <Integrations go={go} />}{tab === "import" && <ImportData />}{tab === "config" && <Config />}{tab === "invites" && <Invites />}{tab === "audit" && <AuditLog />}
         </div>
       </div>
     </div>

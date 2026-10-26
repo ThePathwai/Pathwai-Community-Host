@@ -240,16 +240,13 @@ def test_platform_admin_can_enter_and_edit_every_community():
 
 
 def test_message_blast_text_email_and_both():
+    """Texts and email are built in: no connecting anything first, and the demo environment simulates the sends."""
     from fastapi.testclient import TestClient
     import server
     with TestClient(server.app) as c:
         assert c.post("/api/auth/login", json={"email": "admin@yourcommunity.app", "password": "Demo123!"}).status_code == 200
-        assert c.post("/api/admin/blasts/send", json={"message": "hi", "channel": "sms"}).status_code == 400
-        assert c.post("/api/admin/blasts/send", json={"message": "hi", "channel": "email"}).status_code == 400
-        assert c.put("/api/admin/integrations/twilio", json={"credentials": {"account_sid": "demo", "auth_token": "demo"}, "settings": {"from_number": "+14165550100"}}).status_code == 200
-        assert c.put("/api/admin/integrations/sendgrid", json={"credentials": {"api_key": "demo"}, "settings": {"from_email": "hello@example.com", "from_name": "Test"}}).status_code == 200
-        assert c.post("/api/admin/integrations/twilio/test").json()["ok"]
-        assert c.post("/api/admin/integrations/sendgrid/test").json()["ok"]
+        st = c.get("/api/admin/messaging").json()
+        assert st["sms_available"] and st["email_available"] and st["simulated"] and st["sms_credits"] > 0
         # Maya opts in to texts (email defaults on)
         c.post("/api/auth/logout")
         c.post("/api/auth/login", json={"email": "demo@yourcommunity.app", "password": "Demo123!"})
@@ -257,9 +254,11 @@ def test_message_blast_text_email_and_both():
         c.post("/api/auth/logout")
         c.post("/api/auth/login", json={"email": "admin@yourcommunity.app", "password": "Demo123!"})
         a = c.post("/api/admin/blasts/audience", json={"type": "all"}).json()
-        assert a["sms_count"] >= 1 and a["email_count"] >= 1 and a["twilio_connected"] and a["sendgrid_connected"]
+        assert a["sms_count"] >= 1 and a["email_count"] >= 1 and a["sms_available"] and a["email_available"]
+        before = c.get("/api/admin/messaging").json()["sms_credits"]
         r = c.post("/api/admin/blasts/send", json={"message": "Doors open at 7pm tonight", "channel": "both", "audience": {"type": "all"}}).json()
         assert r["sms_sent"] == a["sms_count"] and r["email_sent"] == a["email_count"] and r["demo"]
+        assert r["sms_credits_used"] >= r["sms_sent"] and r["sms_credits_left"] == before - r["sms_credits_used"]
         hist = c.get("/api/admin/blasts/history").json()["blasts"]
         assert hist[0]["message"].startswith("Doors") and hist[0]["channel"] == "both"
 

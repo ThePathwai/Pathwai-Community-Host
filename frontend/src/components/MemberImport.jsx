@@ -2,7 +2,7 @@ import React, { useRef, useState } from "react";
 import { FileUp, Download } from "lucide-react";
 import { toast } from "sonner";
 import { api, errMsg } from "../lib/api";
-import { Button, Card, Chip, Textarea } from "./ui";
+import { Button, Card, Chip, Input, Textarea } from "./ui";
 import ScrollLock from "./ScrollLock";
 
 // Admin -> Members -> "Import from CSV". Three steps: pick a file, preview exactly what will happen
@@ -35,6 +35,7 @@ export default function MemberImport({ onDone }) {
   const [open, setOpen] = useState(false);
   const [text, setText] = useState("");
   const [fileName, setFileName] = useState("");
+  const [url, setUrl] = useState("");  // or a public link to a sheet instead of a file
   const [preview, setPreview] = useState(null);
   const [result, setResult] = useState(null);
   const [busy, setBusy] = useState(false);
@@ -42,7 +43,7 @@ export default function MemberImport({ onDone }) {
   const [ok, setOk] = useState(false);
   const fileRef = useRef(null);
 
-  const reset = () => { setText(""); setFileName(""); setPreview(null); setResult(null); setInvite(false); setOk(false); setBusy(false); };
+  const reset = () => { setText(""); setFileName(""); setUrl(""); setPreview(null); setResult(null); setInvite(false); setOk(false); setBusy(false); };
   const close = () => { setOpen(false); reset(); };
 
   const pickFile = async (e) => {
@@ -54,14 +55,14 @@ export default function MemberImport({ onDone }) {
 
   const check = async () => {
     setBusy(true);
-    try { const { data } = await api.post("/admin/members/import", { csv: text, dry_run: true }); setPreview(data); }
+    try { const { data } = await api.post("/admin/members/import", { csv: text, url: text ? "" : url, dry_run: true }); setPreview(data); }
     catch (e) { toast.error(errMsg(e)); } finally { setBusy(false); }
   };
 
   const run = async () => {
     setBusy(true);
     try {
-      const { data } = await api.post("/admin/members/import", { csv: text, dry_run: false, send_invites: invite, confirm_permission: ok });
+      const { data } = await api.post("/admin/members/import", { csv: text, url: text ? "" : url, dry_run: false, send_invites: invite, confirm_permission: ok });
       setResult(data); toast.success(`${data.created} member${data.created === 1 ? "" : "s"} added`); onDone?.();
     } catch (e) { toast.error(errMsg(e)); } finally { setBusy(false); }
   };
@@ -74,7 +75,7 @@ export default function MemberImport({ onDone }) {
       <Card className="flex flex-wrap items-center justify-between gap-4" data-testid="member-import-card">
         <div>
           <p className="font-medium">Add many members at once</p>
-          <p className="text-sm text-muted">Upload a CSV and Pathwai creates a profile for each person, even if some details are missing.</p>
+          <p className="text-sm text-muted">Upload a CSV, or paste a link to a Google Sheet, and Pathwai creates a profile for each person, even if some details are missing.</p>
         </div>
         <Button variant="ghost" onClick={() => setOpen(true)} data-testid="member-import-open"><FileUp className="h-4 w-4" /> Import from CSV</Button>
       </Card>
@@ -101,8 +102,13 @@ export default function MemberImport({ onDone }) {
                   <summary className="cursor-pointer text-muted">Or paste rows from a spreadsheet</summary>
                   <Textarea rows={6} className="mt-2 font-mono text-xs" placeholder={"name,email\nAda Okafor,ada@example.com"} value={text} onChange={(e) => { setText(e.target.value); setFileName(""); }} data-testid="member-import-text" />
                 </details>
+                <details className="text-sm" open={!!url}>
+                  <summary className="cursor-pointer text-muted">Or paste a link to a Google Sheet</summary>
+                  <Input className="mt-2" placeholder="https://docs.google.com/spreadsheets/d/…" value={url} onChange={(e) => setUrl(e.target.value)} data-testid="member-import-url" />
+                  <p className="mt-1 text-xs text-muted">Share the sheet as “anyone with the link can view” (or publish it to the web). Airtable users: download the view as a CSV and upload that.</p>
+                </details>
                 <p className="text-xs text-muted">Columns it understands: name (or first and last name), email, phone, birthday (like 1990-04-23; age is worked out from it), title, company, location, bio, tagline, linkedin, instagram, website, skills, interests, goals. Other columns are ignored. Up to 1,000 people per file.</p>
-                <div className="flex justify-end"><Button onClick={check} loading={busy} disabled={!text.trim()} data-testid="member-import-preview">Preview</Button></div>
+                <div className="flex justify-end"><Button onClick={check} loading={busy} disabled={!text.trim() && !url.trim()} data-testid="member-import-preview">Preview</Button></div>
               </div>)}
 
             {step === 2 && (

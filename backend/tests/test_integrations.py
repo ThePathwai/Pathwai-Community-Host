@@ -23,34 +23,21 @@ def test_admin_only_and_masking(c):
     login(c, "demo@yourcommunity.app")
     assert c.get("/api/admin/integrations").status_code == 403
     login(c, "admin@yourcommunity.app")
-    r = c.put("/api/admin/integrations/airtable", json={"credentials": {"api_key": "demo"}, "settings": {"base_id": "appDEMO1234", "table": "Members", "push_enabled": True}})
+    r = c.put("/api/admin/integrations/stripe", json={"credentials": {"api_key": "demo", "webhook_secret": "whsec_x"}, "settings": {"currency": "cad"}})
     assert r.status_code == 200
     j = r.json()
-    assert j["demo"] and "demo" not in json.dumps(j["masked"]) or j["masked"]["api_key"].startswith("•")
+    assert j["demo"] and j["masked"]["api_key"].startswith("•")
     assert "api_key" not in j["settings"]
-    stored = server.db.integrations  # secrets are encrypted at rest
-    import asyncio
-    doc = asyncio.get_event_loop().run_until_complete(stored.find_one({"provider": "airtable"})) if False else None
 
 
-def test_airtable_demo_flow(c):
+def test_only_real_connections_are_offered(c):
+    """Texts, email, members and events are built in, so nothing to connect for them (or for Airtable and Luma)."""
     login(c, "admin@yourcommunity.app")
-    assert c.post("/api/admin/integrations/airtable/test").json()["ok"]
-    res = c.post("/api/admin/integrations/airtable/sync").json()["result"]
-    assert res["created"] == 3 and res["skipped"] == 0
-    assert c.post("/api/admin/integrations/airtable/sync").json()["result"]["updated"] == 3
-    assert any(u["email"] == "amara@voltgrid.example" for u in c.get("/api/admin/users").json())
-    assert not any("password_hash" in u for u in c.get("/api/admin/users").json())
-
-
-def test_luma_demo_flow(c):
-    login(c, "admin@yourcommunity.app")
-    c.put("/api/admin/integrations/luma", json={"credentials": {"api_key": "demo"}})
-    res = c.post("/api/admin/integrations/luma/sync").json()["result"]
-    assert res["events_created"] == 2 and res["guests_matched"] == 1
-    login(c, "demo@yourcommunity.app")
-    ev = [e for e in c.get("/api/events?upcoming=true").json() if (e.get("external_id") or "").startswith("evt-demo")]
-    assert len(ev) == 2 and any(e["my_rsvp"] == "yes" for e in ev) and ev[0]["url"].startswith("https://lu.ma")
+    names = {i["provider"] for i in c.get("/api/admin/integrations").json()["integrations"]}
+    assert {"stripe", "instagram", "tiktok", "disco", "google_forms"} <= names
+    assert not names & {"airtable", "luma", "twilio", "sendgrid"}
+    for gone in ("airtable", "luma", "twilio", "sendgrid"):
+        assert c.put(f"/api/admin/integrations/{gone}", json={"credentials": {"api_key": "demo"}}).status_code == 404
 
 
 def test_stripe_demo_and_webhook(c):
@@ -83,7 +70,7 @@ def test_paid_event_ticket_and_disconnect(c):
     assert c.get(f"/api/events/{ev['id']}").json()["my_rsvp"] == "yes"
     login(c, "admin@yourcommunity.app")
     assert c.delete("/api/admin/integrations/stripe").status_code == 200
-    assert c.get("/api/admin/integrations").json()["integrations"][2]["status"] == "disconnected"
+    assert next(i for i in c.get("/api/admin/integrations").json()["integrations"] if i["provider"] == "stripe")["status"] == "disconnected"
 
 
 def test_brand_config_validation(c):

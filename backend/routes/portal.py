@@ -17,7 +17,6 @@ from directory import revoke_sessions_for_email
 from database import db
 from ._common import HIDDEN_STATUSES, MEMBER_TYPES, audit, audit_platform, clean, member_type, now_iso
 from .notifications import notify
-from .integrations import push_member
 
 router = APIRouter(tags=["portal"])
 
@@ -147,7 +146,6 @@ async def patch_profile(body: ProfilePatch, me: dict = Depends(get_current_user)
     patch["updated_at"] = now_iso()
     await db.users.update_one({"id": me["id"]}, {"$set": patch})
     await audit(me["id"], "profile.updated", "user", me["id"], {"fields": [k for k in patch if k != "updated_at"]})
-    await push_member(me["id"])
     u = clean(await db.users.find_one({"id": me["id"]}))
     return {"user": u, "completion": completion(u, await db.community_config.find_one({"_key": "singleton"}))}
 
@@ -327,7 +325,7 @@ class ReviewIn(BaseModel):
 @router.get("/member-requests/kinds")
 async def request_kinds():
     return {"kinds": [{"kind": k, "label": v["label"], "fields": v["fields"]} for k, v in REQUEST_KINDS.items()],
-            "providers": ["Airtable", "Google Form", "Jotform", "Typeform", "Custom link"]}
+            "providers": ["Google Form", "Jotform", "Typeform", "Custom link"]}
 
 
 @router.get("/me/requests")
@@ -383,7 +381,6 @@ async def _mark_submitted(r: Dict[str, Any], response: Dict[str, Any], actor: di
     async for a in db.users.find({"role": "admin"}):
         await notify(a["id"], "request_submitted", f"{who} responded: {r.get('title')}", "Ready for review", link="/admin", meta={"request_id": r["id"]})
     await audit(actor["id"], "member_request.submitted", "member_request", r["id"], {"fields": list(applied), "via": via})
-    await push_member(r["user_id"], {"Last request": r.get("title"), **{k: v for k, v in response.items() if isinstance(k, str) and k != "external_payload"}})
     return [k for k in applied if k != "updated_at"]
 
 
@@ -426,7 +423,7 @@ async def external_complete(rid: str, me: dict = Depends(get_current_user)):
 
 @router.post("/webhooks/requests/{token}")
 async def webhook_complete(token: str, payload: Dict[str, Any] = {}):
-    """External form tools (Airtable/Typeform/Zapier...) call this with the request's secret token."""
+    """External form tools (Typeform/Zapier...) call this with the request's secret token."""
     r = await db.member_requests.find_one({"webhook_token": token})
     if not r:
         raise HTTPException(status_code=404, detail="Unknown request")

@@ -28,13 +28,14 @@ import uuid
 from typing import Any, Dict, List, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Request
-from pydantic import BaseModel, Field
+from pydantic import BaseModel
 
 import emailer
 from auth import create_reset_token, rate_limit, require_role
 from database import COMMUNITY_SLUGS, current_community, db, dbfor, hub_db
 from birthday import BirthdayError, age_from, clean_birthday
 from directory import record_membership
+from safe_fetch import FetchError, fetch_text
 from ._common import audit, now_iso, return_base_url
 
 logger = logging.getLogger(__name__)
@@ -192,7 +193,8 @@ def build_profile(row: Dict[str, Any]):
 
 
 class ImportIn(BaseModel):
-    csv: str = Field(min_length=1)
+    csv: str = ""
+    url: str = ""  # a public link to a CSV (a Google Sheet shared for viewing, or published to the web) instead of a file
     dry_run: bool = True
     send_invites: bool = False
     # The admin confirms these people agreed to be added and to Pathwai's Terms (we can't tick that for them).
@@ -236,7 +238,15 @@ async def import_members(body: ImportIn, request: Request, me: dict = Depends(re
     await rate_limit("member_import", me["id"], 30, 3600, "That's a lot of imports for now. Try again in a little while.")
     if not body.dry_run and not body.confirm_permission:
         raise HTTPException(status_code=400, detail="Please confirm you have these people's permission to add them.")
-    rows, used, ignored = parse_csv(body.csv)
+    text = body.csv
+    if not text.strip():
+        if not body.url.strip():
+            raise HTTPException(status_code=400, detail="Choose a file or paste a link.")
+        try:
+            text = await fetch_text(body.url)
+        except FetchError as exc:
+            raise HTTPException(status_code=400, detail=str(exc))
+    rows, used, ignored = parse_csv(text)
     if not rows:
         raise HTTPException(status_code=400, detail="I couldn't find any people in that file (only a header row).")
 

@@ -38,7 +38,7 @@ export const TERMS = {
     ]],
     ["If you run a community", [
       "Community admins are responsible for their community: for how they use members' information, for the accuracy of their events and prices, and for obeying laws that apply to them, including Canada's Anti-Spam Legislation (CASL) and privacy laws when they send emails or text messages. Only message people who have agreed to receive messages, and honour opt-outs (for example a STOP reply to a text).",
-      "If you connect third-party tools (Stripe, Twilio, SendGrid, Airtable, Luma or others), you remain responsible for your accounts with them and for their terms.",
+      "If you connect third-party tools (such as Stripe for payments, or Instagram and TikTok for your reports), you remain responsible for your accounts with them and for their terms. If you send texts or email through Pathwai, you are responsible for what you send and for having permission to send it.",
     ]],
     ["Payments", [
       "Membership dues and event tickets are paid to the community through our payment partner (Stripe). We do not see or store full card numbers. Prices, taxes and refund rules are set by the community, so contact the community about refunds.",
@@ -83,11 +83,11 @@ export const PRIVACY = {
     ]],
     ["Who can see what", [
       "People in the communities you belong to, and other Pathwai members, may see the profile details you make visible. Your email and phone number follow your visibility setting for each community. You can edit your profile and photos, and change what is shown, in your account at any time.",
-      "Community admins can see your application answers and the profile details you share with their community, can message you, and (if they connect messaging tools) may email or text you if you've opted in. They are responsible for how they use that information; please read a community's own rules before you join.",
+      "Community admins can see your application answers and the profile details you share with their community, can message you, and may email or text you through Pathwai if you've opted in. Replying STOP to a text turns texts off. They are responsible for how they use that information; please read a community's own rules before you join.",
       "Messages are visible to the people in the conversation, and to us only when needed to investigate abuse, a report you make, or a legal requirement.",
     ]],
     ["Service providers", [
-      "We use trusted providers to run Pathwai: cloud hosting and database services, email delivery (SendGrid), sign-in (Google, Apple) and payments (Stripe). Community admins may also connect their own tools, such as Twilio for text messages, SendGrid for email, Airtable or Luma, which then receive the member information needed for that purpose. These providers may only use your information to provide their service to us or to the community.",
+      "We use trusted providers to run Pathwai: cloud hosting and database services, email delivery (SendGrid), text messaging (Twilio), sign-in (Google, Apple) and payments (Stripe). Community admins may also connect tools such as Stripe, Instagram or TikTok, which then receive the information needed for that purpose. These providers may only use your information to provide their service to us or to the community.",
       "We may also disclose information if the law requires it, to protect people's safety or our rights, or in connection with a business transfer (with the same protections).",
     ]],
     ["Where it is stored", [

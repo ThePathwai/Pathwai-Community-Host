@@ -1,7 +1,7 @@
 # Launching Pathwai
 
 This is the checklist for putting Pathwai on the internet so real people can sign up, and for connecting
-the integrations (Stripe, Twilio, SendGrid, Airtable, Luma, Google sign-in) to real accounts.
+Pathwai's own text and email sending (Twilio, SendGrid), Stripe and Google sign-in to real accounts.
 
 **What you end up with:** one Railway project containing three things — the Pathwai service (API + web app
 together, from the `Dockerfile` in the repo root), a MongoDB database, and a Volume for uploaded photos.
@@ -56,11 +56,11 @@ Service → **Variables**. Generate secrets with `openssl rand -hex 32` (or any 
 | `MONGO_URL` | `${{MongoDB.MONGO_URL}}` | Railway "reference" to the database you added. For Atlas paste its connection string. |
 | `DB_NAME` | `pathwai` | |
 | `JWT_SECRET` | *random, 32+ chars* | **Required.** Signs login sessions. Changing it logs everyone out. |
-| `INTEGRATIONS_SECRET` | *a different random string* | **Required.** Encrypts the Stripe/Twilio/SendGrid/Airtable/Luma keys your admins save. **Changing or losing it makes every saved key unreadable** — store it in your password manager. |
+| `INTEGRATIONS_SECRET` | *a different random string* | **Required.** Encrypts the Stripe, Instagram and TikTok keys your admins save. **Changing or losing it makes every saved key unreadable** — store it in your password manager. |
 | `PLATFORM_ADMIN_EMAILS` | `you@yourdomain.com` | Comma-separated. These accounts can enter and edit *every* community. Sign up with this email first (step 7). |
 | `FRONTEND_URL` | `https://<your-domain>` | Used in password-reset emails and as the Stripe return address. No trailing slash. |
 | `CORS_ORIGINS` | `https://<your-domain>` | Same value. The server refuses to start with `*`. |
-| `PUBLIC_API_URL` | `https://<your-domain>` | Same value. Used to show the correct webhook URLs to admins and to verify Twilio's signature behind Railway's proxy. |
+| `PUBLIC_API_URL` | `https://<your-domain>` | Same value. Used to show the correct webhook URLs to admins and to verify Twilio's signature behind Railway's proxy (it must be your real public address). |
 | `UPLOADS_DIR` | `/data/uploads` | Must be inside the volume from step 2. |
 | `SENDGRID_API_KEY` | *(step 5)* | Without it, password-reset emails are only written to the log. **Required for real signups.** |
 | `MAIL_FROM_EMAIL` | an address you verified in SendGrid | e.g. `no-reply@yourdomain.com` |
@@ -84,22 +84,52 @@ Service → **Settings → Networking**:
   `CORS_ORIGINS` and `PUBLIC_API_URL`, then redeploy. This is enough to launch and test.
 * **Your own domain:** *Custom Domain* → add `app.yourdomain.com` (or the bare domain), create the CNAME record
   Railway shows at your DNS provider, wait for the green tick, then change the three variables to the new
-  address. Do this before you share the link widely: Stripe/Twilio webhook URLs and Google sign-in origins
+  address. Do this before you share the link widely: Stripe and Twilio webhook URLs and Google sign-in origins
   contain the domain, so changing it later means re-entering them.
 
-## 5. Email — SendGrid (you)
+## 5. Email and texts — Pathwai's own SendGrid and Twilio (you)
 
-Password resets, and everything an admin sends as an "email blast", go through SendGrid.
+Communities do not bring their own accounts. Pathwai runs **one SendGrid and one Twilio account**, and every community
+sends through them. An admin writes a message, picks the people, and it goes out under the community's name
+(email "from" name = the community, replies go to the admin who sent it; texts start with the community's name).
+Nothing to connect, nothing to paste.
+
+### Email — SendGrid
+Password resets, welcome links and every email blast go through it.
 
 1. <https://sendgrid.com> → create an account.
-2. **Settings → Sender Authentication**: either *Authenticate your domain* (best — add the DNS records it shows) or
+2. **Settings → Sender Authentication**: *Authenticate your domain* (best, add the DNS records it shows) or
    *Single Sender Verification* for one address (quick start; click the email it sends you).
 3. **Settings → API Keys → Create** with "Mail Send" permission (full access is not needed). Copy it once.
 4. Set `SENDGRID_API_KEY` and `MAIL_FROM_EMAIL` (must be the verified sender/domain — otherwise SendGrid answers
-   403 "does not match a verified Sender Identity" and resets silently fail; the error is in the Railway logs).
-5. Test: *Forgot password* with your own address.
+   403 "does not match a verified Sender Identity" and sends silently fail; the error is in the Railway logs).
+5. Test: *Forgot password* with your own address, then send yourself an email blast from Messages → Blasts.
 
-Each community can also connect **its own** SendGrid account in Admin → Integrations for member blasts (below).
+Every blast email carries a footer explaining how to turn emails off. Email blasts are free to communities.
+
+### Texts — Twilio
+1. <https://console.twilio.com> → copy **Account SID** and **Auth token**.
+2. Create a **Messaging Service** (Messaging → Services) and add a sending number to it (or just buy a number).
+3. Set `TWILIO_ACCOUNT_SID`, `TWILIO_AUTH_TOKEN` and `TWILIO_MESSAGING_SERVICE_SID` (or `TWILIO_FROM_NUMBER` if you
+   skipped the service).
+4. In Twilio, on the Messaging Service (or the number) → "A message comes in" → **Webhook, HTTP POST** →
+   `https://<your-domain>/api/webhooks/twilio` (one URL for every community). This is what makes a member's `STOP`
+   reply switch their texts off: the phone goes on a list shared by all communities, because the number is shared.
+5. **Carrier registration:** Canadian and US carriers block unregistered business texting. US numbers need A2P 10DLC
+   registration, toll-free numbers need verification (Twilio's console walks you through both; allow a few days).
+   Canada: you need express consent (CASL). Pathwai's opt-in toggle (Settings → Notifications) and the "Reply STOP"
+   line cover the mechanics; keep your own record of consent.
+6. Members only receive texts if they turned on SMS in Settings → Notifications and gave a phone number.
+
+**Credits.** Texts cost money, so each community has a balance of text credits (1 credit = one text segment to one
+person; about 160 characters is one segment, an emoji drops it to 70). Every community starts with `SMS_STARTING_CREDITS`
+(default 50). Failed texts are refunded. To top a community up, sign in as a platform admin
+(`PLATFORM_ADMIN_EMAILS`), enter the community, open Messages → Blasts, tick Text message and use *Add credits*.
+Self-serve purchase of credits is not built yet.
+
+**Until the variables are set** a real deployment simply says "text messaging isn't switched on yet" and offers email and
+in-app messages. It never pretends to send. (The demo environment simulates sends; `MESSAGING_SIMULATE=true` does the
+same anywhere.)
 
 ## 6. Google sign-in (you, optional but recommended)
 
@@ -133,11 +163,20 @@ skip it for launch.
 
 Everything someone does to join a community needs an admin's approval — that is enforced by the server.
 
-## 8. Integrations — connecting real accounts
+## 8. Connections and importing data
 
-Admins do this per community under **Admin → Integrations**. Each tile has *Save*, *Test connection* and (where
-relevant) *Sync now*. Always press **Test connection** first; the message tells you what's wrong in plain words.
+Members, events, tickets, perks, texts and email are **built in**, so there is nothing to connect for them. Admins
+bring existing data in under **Admin → Import your data** (events from a spreadsheet, a calendar file or a link;
+guest lists; members from a CSV or a Google Sheet link) and connect only what has to stay outside Pathwai, under
+**Admin → Connections**: Stripe (payments), Instagram and TikTok (read-only numbers for reports), Disco (preview) and
+form links. Each tile has *Save*, *Test connection* and (where relevant) *Sync now*. Always press **Test connection**
+first; the message tells you what's wrong in plain words.
 (Typing `demo` as the key still switches a tile into a simulated sandbox — fine for rehearsing, never for real use.)
+
+**Import links.** Pathwai reads a link an admin pastes (a Google Sheet shared as "anyone with the link can view", a sheet
+published to the web, or a calendar feed such as Google Calendar's secret iCal address or a Luma calendar's .ics link).
+It only fetches public https addresses and refuses anything that points inside your network. Airtable shared views
+can't be read by other apps: an Airtable user opens the view, chooses *Download CSV* and uploads the file.
 
 ### Stripe — membership dues and paid event tickets
 1. Use **test mode** first: <https://dashboard.stripe.com/test/apikeys> → copy the *Secret key* (`sk_test_…`).
@@ -153,35 +192,6 @@ relevant) *Sync now*. Always press **Test connection** first; the message tells 
    endpoints and signing secrets).
 
 *One Stripe account can serve several communities* — add one webhook endpoint per community (each has its own `?community=`).
-
-### Twilio — text-message blasts
-1. <https://console.twilio.com> → copy **Account SID** and **Auth token**; buy/verify a sending number.
-2. Pathwai → Twilio: paste both, enter the number (`+1416…`) or a Messaging Service SID. Save → *Test connection*.
-3. In Twilio, open the number → *Messaging* → "A message comes in" → **Webhook, HTTP POST** → paste the **Webhook
-   endpoint** URL shown on the Pathwai tile. This is what makes a member's `STOP` reply switch their texts off.
-4. Members only receive texts if they turned on SMS in Settings → Notifications and gave a phone number.
-5. **Carrier registration:** US numbers must complete A2P 10DLC registration, and toll-free numbers need
-   verification, or carriers block the messages. Canadian numbers: you need express consent (CASL) — Pathwai's opt-in
-   toggle and the "Reply STOP" line cover the mechanics, but keep your own record of consent.
-   Twilio's console walks you through registration; allow a few days.
-
-### SendGrid — community email blasts
-Same SendGrid account as step 5 (or the community's own). In Pathwai → SendGrid: paste an API key (Mail Send), set
-**From email** to a *verified* sender/domain, optionally From name. Save → *Test connection*. Every blast
-email carries a footer explaining how to turn emails off.
-
-### Airtable — member import and write-back
-1. <https://airtable.com/create/tokens> → create a **Personal access token** with scopes `data.records:read` and
-   `data.records:write`, granted on the one base you want to use.
-2. Pathwai → Airtable: token, **Base ID** (starts `app…`, in the base's URL), **Table name**. Save → *Test connection*.
-3. Columns are matched by name: `Name`, `Email`, `Company`, `Title`, `Stage`, `Industry`, `Bio`. *Sync now* imports
-   people (new people are created, existing ones only get *empty* fields filled — nothing a member typed is overwritten).
-4. Tick *Write changes back to Airtable* to push member profile edits and request answers back to the matching row.
-
-### Luma — events
-1. A Luma **Plus** calendar is required for API access. In Luma: calendar → **Settings → Developer → API keys**.
-2. Pathwai → Luma: paste the key. Save → *Test connection* → *Sync now*. Upcoming events are imported into Events and
-   guests whose Luma email matches a member are marked as going.
 
 ### Typeform / Google Forms / Jotform
 Link-only: an admin pastes a form link into a member request. No keys.
@@ -248,9 +258,11 @@ and must never be set on the instance real people use.
 |---|---|
 | Service crashes on start, log says *Unsafe production configuration* | A required variable is missing/weak — the message lists which. |
 | You can sign in but are logged out on refresh | `FRONTEND_URL`/domain mismatch, or two-service setup on `*.up.railway.app` (see 11). |
-| Password-reset email never arrives | `SENDGRID_API_KEY` unset, or `MAIL_FROM_EMAIL` not a verified sender. Check logs for `SendGrid send … failed`. |
+| Password-reset or blast email never arrives | `SENDGRID_API_KEY` unset, or `MAIL_FROM_EMAIL` not a verified sender. Check logs for `SendGrid send … failed`. |
 | Photos disappear after a deploy | No Volume, or `UPLOADS_DIR` isn't inside it. |
 | Stripe tile says "Invalid signature" in the webhook log | Wrong signing secret, or the webhook was added for a different community/mode (test vs live). |
-| STOP replies don't turn texts off | Twilio webhook URL missing/typo, or `PUBLIC_API_URL` isn't your real public address. |
+| STOP replies don't turn texts off | The Twilio webhook (`/api/webhooks/twilio`) is missing or mistyped on the Messaging Service, or `PUBLIC_API_URL` isn't your real public address. |
+| "Text messaging isn't switched on yet" | `TWILIO_ACCOUNT_SID`, `TWILIO_AUTH_TOKEN` or the Messaging Service SID / from number isn't set on Railway. |
+| A community can't send a text: not enough credits | Add credits (platform admin, Messages → Blasts → Add credits). |
 | Google button missing | `GOOGLE_CLIENT_ID` unset, or the page origin isn't in the OAuth client's *Authorized JavaScript origins*. |
 | Saved integration keys stopped working | `INTEGRATIONS_SECRET` was changed. Restore the old value, or re-enter the keys. |

@@ -1,5 +1,7 @@
-"""External software integrations: Airtable (members), Luma (events + guests), Stripe (memberships, tickets),
-plus link-based form tools. Credentials are encrypted at rest and never returned to the browser.
+"""Connected tools: Stripe (membership dues, event tickets), Instagram and TikTok (read-only analytics for reports),
+Disco (preview), plus link-based form tools. Everything else Pathwai does itself: members, events, texts and email
+are built in (see routes/blasts.py and messaging.py), and data from other tools comes in through "Import your data"
+(routes/data_import.py). Credentials are encrypted at rest and never returned to the browser.
 
 Demo mode: use an API key that starts with "demo" and every provider answers from built-in sample data, so the
 whole flow (test -> sync -> results in the portal) can be tried without touching a real account."""
@@ -16,8 +18,6 @@ import uuid
 from datetime import datetime, timedelta, timezone
 from typing import Any, Dict, List, Optional
 
-from urllib.parse import quote
-
 import httpx
 from cryptography.fernet import Fernet, InvalidToken
 from fastapi import APIRouter, Depends, HTTPException, Request
@@ -25,7 +25,6 @@ from pydantic import BaseModel
 
 from auth import JWT_SECRET, get_current_user, require_role
 from database import current_community, db
-from directory import reindex_email
 from ._common import public_base_url, return_base_url, audit, clean, now_iso
 from .notifications import notify
 
@@ -56,28 +55,6 @@ def mask(v: str) -> str:
 
 # --------------------------------------------------------------------------- registry
 PROVIDERS: Dict[str, Dict[str, Any]] = {
-    "airtable": {
-        "label": "Airtable", "kind": "api",
-        "description": "Import your member list from an Airtable base and push profile updates and request responses back.",
-        "capabilities": ["Import members", "Write profile changes back", "Track request responses"],
-        "credentials": [{"key": "api_key", "label": "Personal access token", "placeholder": "pat…  (or 'demo' to try it)"}],
-        "settings": [
-            {"key": "base_id", "label": "Base ID", "placeholder": "appXXXXXXXXXXXXXX"},
-            {"key": "table", "label": "Table name", "placeholder": "Members"},
-            {"key": "push_enabled", "label": "Write changes back to Airtable", "type": "bool"},
-        ],
-        "defaults": {"table": "Members", "push_enabled": False, "field_map": {"name": "Name", "email": "Email", "company": "Company", "title": "Title", "stage": "Stage", "industry": "Industry", "bio": "Bio"}},
-        "docs": "https://airtable.com/create/tokens",
-    },
-    "luma": {
-        "label": "Luma", "kind": "api",
-        "description": "Sync your Luma calendar into Events and mark approved guests as going.",
-        "capabilities": ["Import events", "Sync approved guests as RSVPs", "Register-on-Luma links"],
-        "credentials": [{"key": "api_key", "label": "Luma API key", "placeholder": "Luma Plus API key  (or 'demo')"}],
-        "settings": [{"key": "default_category", "label": "Event type for imported events", "placeholder": "Meetup"}],
-        "defaults": {"default_category": "Meetup"},
-        "docs": "https://docs.lu.ma/reference/getting-started-with-your-api",
-    },
     "disco": {
         "label": "Disco", "kind": "api", "preview": True,
         "description": "Preview: show the Disco programs your members are in, and how far along they are, inside your community. Try it with the key \"demo\". Live connections are switched on per Academy once its Disco API access (Enterprise plan) is confirmed.",
@@ -109,7 +86,7 @@ PROVIDERS: Dict[str, Dict[str, Any]] = {
     },
     "stripe": {
         "label": "Stripe", "kind": "api",
-        "description": "Charge membership dues and sell event tickets with Stripe Checkout; payments update member status automatically.",
+        "description": "Charge membership dues and sell event tickets with Stripe Checkout. Members pay on Stripe's own secure page, so card details never touch Pathwai, and payments update member status automatically.",
         "capabilities": ["Membership plans (Checkout)", "Paid event tickets", "Webhook-driven billing status", "Customer sync"],
         "credentials": [{"key": "api_key", "label": "Secret or restricted key", "placeholder": "sk_live_… / rk_… (or 'demo')"},
                         {"key": "webhook_secret", "label": "Webhook signing secret", "placeholder": "whsec_…"}],
@@ -117,27 +94,6 @@ PROVIDERS: Dict[str, Dict[str, Any]] = {
                      {"key": "plans", "label": "Membership plans", "type": "plans"}],
         "defaults": {"currency": "cad", "plans": []},
         "docs": "https://docs.stripe.com/keys",
-    },
-    "twilio": {
-        "label": "Twilio", "kind": "api",
-        "description": "Send text-message blasts to members who opted in: announcements, event reminders and last-minute changes.",
-        "capabilities": ["SMS blasts", "Audience by event or role", "Delivery report", "STOP opt-out sync"],
-        "credentials": [{"key": "account_sid", "label": "Account SID", "placeholder": "AC…  (or 'demo' to try it)"},
-                        {"key": "auth_token", "label": "Auth token", "placeholder": "Twilio auth token"}],
-        "settings": [{"key": "from_number", "label": "Sending number", "placeholder": "+14165550100"},
-                     {"key": "messaging_service_sid", "label": "Messaging Service SID (optional)", "placeholder": "MG…"}],
-        "defaults": {"from_number": "", "messaging_service_sid": ""},
-        "docs": "https://console.twilio.com/",
-    },
-    "sendgrid": {
-        "label": "SendGrid", "kind": "api",
-        "description": "Send email blasts to members: announcements, event reminders and updates.",
-        "capabilities": ["Email blasts", "Audience by event or role", "Delivery report"],
-        "credentials": [{"key": "api_key", "label": "API key", "placeholder": "SG.…  (or 'demo' to try it)"}],
-        "settings": [{"key": "from_email", "label": "From email", "placeholder": "hello@yourcommunity.com"},
-                     {"key": "from_name", "label": "From name", "placeholder": "Your community"}],
-        "defaults": {"from_email": "", "from_name": ""},
-        "docs": "https://app.sendgrid.com/settings/api_keys",
     },
     "typeform": {"label": "Typeform", "kind": "link", "description": "Send members to Typeform surveys from Requests; completion is tracked by confirm-or-webhook.", "capabilities": ["External form requests"], "credentials": [], "settings": [], "defaults": {}},
     "google_forms": {"label": "Google Forms", "kind": "link", "description": "Send members to Google Forms from Requests.", "capabilities": ["External form requests"], "credentials": [], "settings": [], "defaults": {}},
@@ -184,222 +140,6 @@ async def _http(method: str, url: str, *, headers=None, params=None, data=None, 
             msg = r.text[:160]
         raise IntegrationError(f"{what} returned an error: {msg}")
     return r.json()
-
-
-# --------------------------------------------------------------------------- demo data
-DEMO_AIRTABLE = [
-    {"id": "recDemo1", "fields": {"Name": "Amara Johnson", "Email": "amara@voltgrid.example", "Company": "VoltGrid", "Title": "Founder", "Stage": "Seed", "Industry": "CleanTech", "Bio": "Grid-scale battery software."}},
-    {"id": "recDemo2", "fields": {"Name": "Kwame Mensah", "Email": "kwame@fieldnote.example", "Company": "FieldNote", "Title": "CEO", "Stage": "Pre-seed", "Industry": "AgTech", "Bio": "Voice notes for farm crews."}},
-    {"id": "recDemo3", "fields": {"Name": "Lena Park", "Email": "lena@caremesh.example", "Company": "CareMesh", "Title": "COO", "Stage": "Series A", "Industry": "HealthTech", "Bio": "Care coordination for clinics."}},
-]
-
-
-def _demo_luma() -> List[Dict[str, Any]]:
-    t = datetime.now(timezone.utc)
-    return [
-        {"api_id": "evt-demo-1", "event": {"api_id": "evt-demo-1", "name": "Demo Day Prep Clinic", "description": "Pitch feedback in small groups.", "start_at": (t + timedelta(days=6)).isoformat(), "end_at": (t + timedelta(days=6, hours=2)).isoformat(), "url": "https://lu.ma/demo-day-prep", "geo_address_json": {"full_address": "MaRS, Toronto"}, "cover_url": None}, "guests": ["demo@yourcommunity.app"]},
-        {"api_id": "evt-demo-2", "event": {"api_id": "evt-demo-2", "name": "Founders Coffee — Virtual", "description": "Casual weekly check-in.", "start_at": (t + timedelta(days=9)).isoformat(), "end_at": (t + timedelta(days=9, hours=1)).isoformat(), "url": "https://lu.ma/founders-coffee", "meeting_url": "https://zoom.example/j/123", "cover_url": None}, "guests": []},
-    ]
-
-
-# --------------------------------------------------------------------------- Airtable
-def _at_quote(v: str) -> str:
-    """Escape a value for use inside a single-quoted Airtable formula string (an email like o'brien@x.com
-    would otherwise break -- or inject into -- the filterByFormula expression)."""
-    return str(v).replace("\\", "\\\\").replace("'", "\\'")
-
-
-def _airtable_headers(c):
-    return {"Authorization": f"Bearer {c['api_key']}"}
-
-
-def _at_url(s):
-    for k in ("base_id", "table"):
-        if not SAFE_SEGMENT.match(str(s.get(k) or "")):
-            raise IntegrationError("Enter a valid Airtable base ID and table name first.")
-    return f"https://api.airtable.com/v0/{s['base_id']}/{quote(s['table'], safe='')}"
-
-
-async def airtable_fetch(c, s) -> List[Dict[str, Any]]:
-    if _is_demo(c):
-        return DEMO_AIRTABLE
-    out, offset = [], None
-    for _ in range(20):
-        params = {"pageSize": 100, **({"offset": offset} if offset else {})}
-        j = await _http("GET", _at_url(s), headers=_airtable_headers(c), params=params, what="Airtable")
-        out += j.get("records", [])
-        offset = j.get("offset")
-        if not offset:
-            break
-    return out
-
-
-async def airtable_test(c, s) -> str:
-    if _is_demo(c):
-        return "Demo mode: connected to sample data (3 members)."
-    j = await _http("GET", _at_url(s), headers=_airtable_headers(c), params={"maxRecords": 1}, what="Airtable")
-    return f"Connected. Table '{s['table']}' is readable ({len(j.get('records', []))} sample record)."
-
-
-async def airtable_sync(c, s) -> Dict[str, Any]:
-    fm = {**PROVIDERS["airtable"]["defaults"]["field_map"], **(s.get("field_map") or {})}
-    created = updated = skipped = 0
-    for rec in await airtable_fetch(c, s):
-        f = rec.get("fields", {})
-        email = str(f.get(fm["email"]) or "").strip().lower()
-        if not email or "@" not in email:
-            skipped += 1
-            continue
-        vals = {k: f.get(fm[k]) for k in ("name", "company", "title", "stage", "industry", "bio") if f.get(fm.get(k, "")) not in (None, "")}
-        existing = await db.users.find_one({"email": email})
-        if existing:
-            # never overwrite what the member entered themselves
-            fill = {k: v for k, v in vals.items() if not existing.get(k)}
-            await db.users.update_one({"id": existing["id"]}, {"$set": {**fill, "airtable_record_id": rec["id"]}})
-            updated += 1
-        else:
-            await db.users.insert_one({"id": str(uuid.uuid4()), "email": email, "name": vals.pop("name", email.split("@")[0]), "role": "founder", "member_type": "founder",
-                                       "password_hash": "!imported", "imported_from": "airtable", "airtable_record_id": rec["id"], "is_imported": True,
-                                       "created_at": now_iso(), "updated_at": now_iso(), **vals})
-            await reindex_email(email)
-            created += 1
-    return {"created": created, "updated": updated, "skipped": skipped}
-
-
-async def push_member(user_id: str, extra: Optional[Dict[str, Any]] = None) -> None:
-    """Best-effort write-back of a member's profile/request response to Airtable (only when enabled)."""
-    d = await _doc("airtable")
-    s = {**PROVIDERS["airtable"]["defaults"], **(d.get("settings") or {})}
-    if not (d.get("enabled") and s.get("push_enabled")):
-        return
-    try:
-        c = await _creds("airtable")
-        u = await db.users.find_one({"id": user_id})
-        if not u or not u.get("email"):
-            return
-        fm = {**PROVIDERS["airtable"]["defaults"]["field_map"], **(s.get("field_map") or {})}
-        fields = {fm[k]: u.get(k) for k in ("name", "company", "title", "stage", "industry", "bio") if u.get(k)}
-        for k, v in (extra or {}).items():
-            fields[str(k)[:60]] = v if isinstance(v, (str, int, float)) else json.dumps(v)
-        if _is_demo(c):
-            await _log("airtable", "info", f"[demo] would update Airtable record for {u['email']}: {', '.join(fields)}")
-            return
-        url = _at_url(s)
-        found = await _http("GET", url, headers=_airtable_headers(c), params={"filterByFormula": f"LOWER({{{fm['email']}}})='{_at_quote(u['email'].lower())}'", "maxRecords": 1}, what="Airtable")
-        if found.get("records"):
-            await _http("PATCH", f"{url}/{found['records'][0]['id']}", headers=_airtable_headers(c), json_body={"fields": fields, "typecast": True}, what="Airtable")
-        else:
-            await _http("POST", url, headers=_airtable_headers(c), json_body={"fields": {**fields, fm["email"]: u["email"]}, "typecast": True}, what="Airtable")
-        await _log("airtable", "info", f"Pushed update for {u['email']}")
-    except IntegrationError as exc:
-        await _log("airtable", "error", f"Push failed: {exc}")
-
-
-# --------------------------------------------------------------------------- Luma
-# Luma's current API lives at public-api.luma.com (calendars/events/list, events/guests/list; flat
-# entries, cursor pagination). The older api.lu.ma/public/v1 surface is kept as a fallback for keys/
-# accounts still on it: we try the current one first and only fall back if it answers "not found".
-LUMA = "https://public-api.luma.com/v1"
-LUMA_LEGACY = "https://api.lu.ma/public/v1"
-
-
-def _luma_headers(c):
-    return {"x-luma-api-key": c["api_key"], "accept": "application/json"}
-
-
-async def _luma_pages(url: str, h, params: Dict[str, Any], max_pages: int = 10) -> List[Dict[str, Any]]:
-    out: List[Dict[str, Any]] = []
-    cursor = None
-    for _ in range(max_pages):
-        j = await _http("GET", url, headers=h, params={**params, **({"pagination_cursor": cursor} if cursor else {})}, what="Luma")
-        out += j.get("entries", [])
-        if not j.get("has_more") or not j.get("next_cursor"):
-            break
-        cursor = j["next_cursor"]
-    return out
-
-
-async def _luma_events(c, limit: int = 50, after: Optional[str] = None, max_pages: int = 4):
-    """Returns (events, mode) where mode is "current" or "legacy" -- guest lookups must use the same API."""
-    h = _luma_headers(c)
-    params: Dict[str, Any] = {"pagination_limit": limit, **({"after": after} if after else {})}
-    try:
-        return await _luma_pages(f"{LUMA}/calendars/events/list", h, params, max_pages=max_pages), "current"
-    except IntegrationError as first:
-        if "couldn't find that resource" not in str(first):
-            raise
-        try:
-            return await _luma_pages(f"{LUMA_LEGACY}/calendar/list-events", h, params, max_pages=max_pages), "legacy"
-        except IntegrationError:
-            raise first
-
-
-async def _luma_guest_emails(c, event_id: str, mode: str) -> List[str]:
-    h = _luma_headers(c)
-    if mode == "current":
-        rows = await _luma_pages(f"{LUMA}/events/guests/list", h, {"event_id": event_id, "approval_status": "approved", "pagination_limit": 200})
-    else:
-        rows = await _luma_pages(f"{LUMA_LEGACY}/event/get-guests", h, {"event_api_id": event_id, "pagination_limit": 200})
-    out = []
-    for x in rows:
-        g = x.get("guest", x)
-        if (g.get("approval_status") or "approved") != "approved":
-            continue
-        email = (g.get("email") or g.get("user_email") or "").strip().lower()
-        if email:
-            out.append(email)
-    return out
-
-
-async def luma_fetch(c) -> List[Dict[str, Any]]:
-    if _is_demo(c):
-        return _demo_luma()
-    entries, mode = await _luma_events(c, 50, after=datetime.now(timezone.utc).isoformat())
-    out = []
-    for entry in entries:
-        ev = entry.get("event", entry)  # current API: flat; legacy API: {"api_id", "event": {...}}
-        eid = ev.get("id") or ev.get("api_id") or entry.get("api_id")
-        if not eid:
-            continue
-        ev = {**ev, "api_id": eid}
-        try:
-            guests = await _luma_guest_emails(c, eid, mode)
-        except IntegrationError:
-            guests = []  # an unreadable guest list shouldn't block importing the event itself
-        out.append({"api_id": eid, "event": ev, "guests": guests})
-    return out
-
-
-async def luma_test(c, s) -> str:
-    if _is_demo(c):
-        return "Demo mode: connected to a sample calendar (2 upcoming events)."
-    entries, _mode = await _luma_events(c, 1, max_pages=1)
-    return f"Connected. Calendar is readable ({len(entries)} sample event)."
-
-
-async def luma_sync(c, s) -> Dict[str, Any]:
-    created = updated = rsvps = 0
-    for item in await luma_fetch(c):
-        ev = item["event"]
-        loc = (ev.get("geo_address_json") or {}).get("full_address") or ("Virtual" if ev.get("meeting_url") or ev.get("zoom_meeting_url") else "")
-        fields = {"title": ev.get("name"), "description": ev.get("description") or ev.get("description_md") or "", "starts_at": ev.get("start_at"),
-                  "ends_at": ev.get("end_at"), "location": loc, "virtual_url": ev.get("meeting_url") or ev.get("zoom_meeting_url"),
-                  "url": ev.get("url"), "cover_url": ev.get("cover_url"), "category": s.get("default_category") or "Meetup", "source": "luma",
-                  "external_id": item["api_id"], "status": "approved", "host": "Community team"}
-        existing = await db.events.find_one({"external_id": item["api_id"]})
-        if existing:
-            await db.events.update_one({"id": existing["id"]}, {"$set": fields})
-            eid = existing["id"]; updated += 1
-        else:
-            eid = str(uuid.uuid4())
-            await db.events.insert_one({"id": eid, **fields, "attendee_ids": [], "rsvps": {}, "tags": [], "created_at": now_iso()})
-            created += 1
-        for email in item["guests"]:
-            u = await db.users.find_one({"email": email})
-            if u:
-                await db.events.update_one({"id": eid}, {"$set": {f"rsvps.{u['id']}": "yes"}, "$addToSet": {"attendee_ids": u["id"]}})
-                rsvps += 1
-    return {"events_created": created, "events_updated": updated, "guests_matched": rsvps}
 
 
 # --------------------------------------------------------------------------- Disco (preview)
@@ -703,34 +443,11 @@ async def ticket_checkout(event_id: str, request: Request, body: TicketCheckoutI
 
 
 # --------------------------------------------------------------------------- admin API
-async def twilio_test(c, s) -> str:
-    if _is_demo(c):
-        return "Demo mode: connected to a sample Twilio account. Texts are simulated, nothing is sent."
-    if not (s.get("from_number") or s.get("messaging_service_sid")):
-        raise IntegrationError("Add a sending number or a Messaging Service SID.")
-    j = await _http("GET", f"https://api.twilio.com/2010-04-01/Accounts/{quote(c.get('account_sid', ''), safe='')}.json", headers=_twh(c), what="Twilio")
-    return f"Connected to Twilio account {j.get('friendly_name') or j.get('sid', '')}"
+TESTS = {"disco": disco_test, "instagram": instagram_test, "tiktok": tiktok_test, "stripe": stripe_test}
+SYNCS = {"disco": disco_sync, "instagram": instagram_sync, "tiktok": tiktok_sync, "stripe": stripe_sync}
 
 
-def _twh(c):
-    tok = base64.b64encode(f"{c.get('account_sid', '')}:{c.get('auth_token', '')}".encode()).decode()
-    return {"Authorization": f"Basic {tok}"}
-
-
-async def sendgrid_test(c, s) -> str:
-    if _is_demo(c):
-        return "Demo mode: connected to a sample SendGrid account. Emails are simulated, nothing is sent."
-    if not s.get("from_email"):
-        raise IntegrationError("Add a from email address.")
-    j = await _http("GET", "https://api.sendgrid.com/v3/user/account", headers={"Authorization": f"Bearer {c['api_key']}"}, what="SendGrid")
-    return f"Connected to SendGrid ({j.get('type', 'account')})"
-
-
-TESTS = {"airtable": airtable_test, "luma": luma_test, "disco": disco_test, "instagram": instagram_test, "tiktok": tiktok_test, "stripe": stripe_test, "twilio": twilio_test, "sendgrid": sendgrid_test}
-SYNCS = {"airtable": airtable_sync, "luma": luma_sync, "disco": disco_sync, "instagram": instagram_sync, "tiktok": tiktok_sync, "stripe": stripe_sync}
-
-
-WEBHOOKS = {"stripe": "/api/webhooks/stripe", "twilio": "/api/webhooks/twilio"}  # sendgrid has no inbound webhook yet
+WEBHOOKS = {"stripe": "/api/webhooks/stripe"}  # texts and email are built in (routes/blasts.py), so no webhook is set up here
 
 
 def _public(provider: str, d: Dict[str, Any], base: str = "") -> Dict[str, Any]:
@@ -772,10 +489,6 @@ async def save_integration(provider: str, body: IntegrationIn, request: Request,
     for k, v in body.settings.items():
         if k in {f["key"] for f in meta["settings"]}:
             settings[k] = v
-    if provider == "airtable":
-        for k in ("base_id", "table"):
-            if settings.get(k) and not SAFE_SEGMENT.match(str(settings[k])):
-                raise HTTPException(status_code=400, detail=f"That {k.replace('_', ' ')} doesn't look right.")
     if provider == "stripe":
         plans = []
         for p in settings.get("plans") or []:

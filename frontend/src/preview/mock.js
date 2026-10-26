@@ -10,6 +10,8 @@ import { buildClubPto, CLUBPTO_SLUG } from "./clubpto";
 import { buildC3Film, C3_SLUG } from "./c3film";
 import { buildHumber, HUMBER_SLUG, humberLearning, humberLearningFor } from "./humber";
 import { classesHandler, newClassesState } from "./classes";
+import { eventsImport, guestsImport } from "./importMock";
+import { segments, smsBody } from "../lib/messaging";
 import { teamsHandler } from "./teams";
 
 const S = { role: null, email: null, community: null, books: {}, extra: {} };
@@ -189,9 +191,11 @@ const integ = () => {
     const seed = Object.values(bk.logins).find((l) => l["/admin/integrations"]);
     bk.integrations = clone((seed && seed["/admin/integrations"].integrations) || []);
     if (slugOf() === HUMBER_SLUG) {   // Humber runs on Disco: show the Disco connector first, alongside a few common ones
-      const base = fixtures.communities.playr.logins["admin@yourcommunity.app"]["/admin/integrations"].integrations.filter((x) => ["airtable", "luma", "sendgrid"].includes(x.provider));
+      const base = fixtures.communities.playr.logins["admin@yourcommunity.app"]["/admin/integrations"].integrations.filter((x) => ["stripe", "google_forms"].includes(x.provider));
       bk.integrations = clone([DISCO, ...base]);
     }
+    // Texts and email are built in, and Airtable/Luma data comes in through "Import your data": none of them are connections any more.
+    bk.integrations = bk.integrations.filter((x) => !["airtable", "luma", "twilio", "sendgrid"].includes(x.provider));
   }
   // every demo shows what the reports look like with Instagram and TikTok connected (sample numbers)
   for (const [prov, tpl] of [["instagram", INSTAGRAM], ["tiktok", TIKTOK]]) if (!bk.integrations.some((x) => x.provider === prov)) bk.integrations.push(clone(tpl));
@@ -206,9 +210,10 @@ const INSTAGRAM = { provider: "instagram", label: "Instagram", kind: "api", prev
 const TIKTOK = { provider: "tiktok", label: "TikTok", kind: "api", preview: false, description: "Bring your TikTok account into Pathwai: followers, video views, likes and your best recent videos. It sits beside Instagram in your reports, with the two added together for your overall social reach. Try it with the client key \"demo\".",
   capabilities: ["Followers, likes and videos", "Views, likes and shares for the last 30 days", "Best recent videos", "Combined with Instagram into one social reach"], credential_fields: [{ key: "client_key", label: "Client key", placeholder: "From your TikTok developer app  (or 'demo' to try it)" }, { key: "client_secret", label: "Client secret", placeholder: "From your TikTok developer app" }, { key: "refresh_token", label: "Refresh token", placeholder: "From authorizing your account with user.info.stat and video.list" }],
   setting_fields: [], docs: "https://developers.tiktok.com/doc/tiktok-api-v2-get-user-info/", enabled: true, status: "demo", demo: true, masked: { client_key: "demo" }, settings: {}, last_sync_at: null, last_result: null, last_error: null, log: [], webhook_path: null, webhook_url: null };
+const credits = () => Math.max(0, 50 - (S.extra.smsUsed || 0));
 const stripeOn = () => integ().find((p) => p.provider === "stripe")?.enabled;
 const PLANS = [{ key: "member", label: "Community member", amount_cents: 4900, interval: "month" }, { key: "founder", label: "Founder plan", amount_cents: 12900, interval: "month" }];
-const SYNC = { airtable: { imported: 12, updated: 4, skipped: 1 }, luma: { events_imported: 5, rsvps_synced: 18 }, stripe: { plans: 2, payments: 3 }, disco: { programs: 4, enrollments: 24, unmatched_members: 0 }, instagram: { followers: 4812, reach_30d: 15240, posts_read: 5 }, tiktok: { followers: 6340, views_30d: 41800, videos_read: 5 } };
+const SYNC = { stripe: { plans: 2, payments: 3 }, disco: { programs: 4, enrollments: 24, unmatched_members: 0 }, instagram: { followers: 4812, reach_30d: 15240, posts_read: 5 }, tiktok: { followers: 6340, views_30d: 41800, videos_read: 5 } };
 function integWrite(method, path, body, config) {
   const m = path.match(/^\/admin\/integrations\/(\w+)(?:\/(test|sync))?$/);
   if (!m) return null;
@@ -1331,7 +1336,7 @@ function write(method, path, body, config) {
   if (path === "/admin/google-forms/setup" || path === "/admin/google-forms/reset") { const u = "https://pathwai.example/api/webhooks/google-forms/demo-secret?community=" + slugOf(); return ok(config, { webhook_url: u, script: "function onFormSubmit(e) {\n  UrlFetchApp.fetch(\"" + u + "\", { method: \"post\" });\n}\n" }); }
   if (path === "/admin/members/import") {
     // Demo only: a rough read of the pasted/uploaded text (name,email per line) so the screen can be tried.
-    const lines = String(body.csv || "").split(/\r?\n/).filter((l) => l.trim());
+    const lines = String(body.csv || (body.url ? "name,email\nPriya Nair,priya.nair@example.com\nLuis Ortega,luis.ortega@example.com\nMei Tan,mei.tan@example.com" : "")).split(/\r?\n/).filter((l) => l.trim());
     const rows = lines.slice(1).map((l, i) => { const [name, email] = l.split(/[,;\t]/).map((x) => (x || "").trim()); return { line: i + 2, name: name || "Unnamed member", email: email || "", notes: email ? [] : ["no email: they can't sign in until you add one"], status: body.dry_run ? "will_create" : "created" }; });
     return ok(config, { dry_run: !!body.dry_run, total: rows.length, created: rows.length, skipped: 0, without_email: rows.filter((r) => !r.email).length, already_have_login: 0, with_notes: 0, columns_used: ["name", "email"], columns_ignored: [], emailed: 0, email_configured: false, link_days: 7, rows: body.dry_run ? rows : rows.map((r) => (r.email ? { ...r, link: "https://example.com/reset-password?token=demo" } : r)) });
   }
@@ -1678,8 +1683,9 @@ function write(method, path, body, config) {
     rv.byUser[ck[1]][S.email] = "yes";
     return ok(config, { url: null, demo: true, message: "Demo mode: ticket purchase simulated — you're registered." });
   }
-  if (path === "/admin/blasts/audience") {
-    const tw = integ().find((x) => x.provider === "twilio"), sg = integ().find((x) => x.provider === "sendgrid");
+  if (path === "/admin/messaging" || path === "/admin/blasts/audience") {
+    const status = { sms_available: true, email_available: true, simulated: true, sms_credits: credits(), sms_used: S.extra.smsUsed || 0, can_grant: false };
+    if (path === "/admin/messaging") return ok(config, status);
     const allUsers = mergedList(view()["/users"] || [], "users", false);
     const smsUsers = allUsers.filter((u) => sum(u.id) % 3 !== 0);
     const emailUsers = allUsers.filter((u) => sum(u.id) % 5 !== 0);
@@ -1689,31 +1695,55 @@ function write(method, path, body, config) {
     return ok(config, {
       sms_count: smsCount, email_count: emailCount, total_members: total,
       sms_no_phone: 0, sms_not_opted_in: body.type === "all" ? total - smsUsers.length : 0, email_not_opted_in: body.type === "all" ? total - emailUsers.length : 0,
-      twilio_connected: !!tw?.enabled, sendgrid_connected: !!sg?.enabled, sms_demo: !!tw?.demo, email_demo: !!sg?.demo,
+      ...status,
     });
   }
+  if (path === "/admin/messaging/credits") return fail(config, 403, "Only the Pathwai team can add text credits.");
   if (path === "/admin/blasts/send") {
-    const tw = integ().find((x) => x.provider === "twilio"), sg = integ().find((x) => x.provider === "sendgrid");
     const wantSms = body.channel === "sms" || body.channel === "both", wantEmail = body.channel === "email" || body.channel === "both";
     const wantInternal = !!body.internal;
     if (!wantSms && !wantEmail && !wantInternal) return fail(config, 400, "Choose at least one way to send this: text, email or Pathwai Internal.");
-    if (wantSms && !tw?.enabled) return fail(config, 400, "Connect Twilio first (Admin → Integrations) to send texts.");
-    if (wantEmail && !sg?.enabled) return fail(config, 400, "Connect SendGrid first (Admin → Integrations) to send email.");
     const allUsers = mergedList(view()["/users"] || [], "users", false);
     const smsUsers = allUsers.filter((u) => sum(u.id) % 3 !== 0);
     const emailUsers = allUsers.filter((u) => sum(u.id) % 5 !== 0);
     const n = (list) => body.audience.type === "admins" ? 1 : body.audience.type === "event" ? Math.min(list.length, 8) : list.length;
-    // Pathwai Internal reaches everyone in the audience (no opt-in gate, no integration needed) --
+    // Pathwai Internal reaches everyone in the audience (no opt-in gate) --
     // same "notify every member" shape as the real backend's notify() fan-out, just simulated here.
     const internalCount = body.audience.type === "admins" ? 1 : body.audience.type === "event" ? Math.min(allUsers.length, 8) : allUsers.length;
+    const smsN = wantSms ? n(smsUsers) : 0;
+    const cost = smsN * segments(smsBody(S.data?.public?.["/community/config"]?.community_name, body.message));
+    if (wantSms && cost > credits()) return fail(config, 400, `This text needs ${cost.toLocaleString()} credits and you have ${credits().toLocaleString()}. Shorten it, narrow the audience or ask for more credits.`);
+    S.extra.smsUsed = (S.extra.smsUsed || 0) + cost;
     const b = {
       id: "blast-" + Date.now(), message: body.message.trim(), subject: body.subject || null, channel: body.channel, audience: body.audience,
       internal: wantInternal, internal_sent: wantInternal ? internalCount : 0,
-      sms_sent: wantSms ? n(smsUsers) : 0, sms_failed: 0, email_sent: wantEmail ? n(emailUsers) : 0, email_failed: 0,
-      demo: true, at: new Date().toISOString(),
+      sms_sent: smsN, sms_failed: 0, email_sent: wantEmail ? n(emailUsers) : 0, email_failed: 0, sms_credits_used: cost,
+      demo: wantSms || wantEmail, at: new Date().toISOString(),
     };
     (S.extra.blasts = S.extra.blasts || []).unshift(b);
-    return ok(config, b);
+    return ok(config, { ...b, sms_credits_left: credits() });
+  }
+  if (path === "/admin/import/events") {
+    try {
+      const existing = mergedList(view()["/events"] || [], "events", false);
+      const { result, docs } = eventsImport(body, existing);
+      if (!body.dry_run) docs.forEach((d) => sharedContent("events").created.unshift({ ...d, published_at: new Date().toISOString(), is_past: false, attendee_count: 0, my_rsvp: null, attendees: [], attendee_ids: [], rsvps: {}, maybe_count: 0, is_attending: false, attended: false, is_saved: false, save_count: 0, related_resources: [], agenda: [], cover_url: null }));
+      return ok(config, result);
+    } catch (e) { return fail(config, 400, e.message); }
+  }
+  if (path === "/admin/import/guests") {
+    try {
+      const existing = mergedList(view()["/events"] || [], "events", false);
+      const ev = existing.find((e) => e.id === body.event_id);
+      if (!ev) return fail(config, 404, "Event not found");
+      const members = mergedList(view()["/users"] || [], "users", false);
+      const { result, add } = guestsImport(body, ev, members, new Set(ev.attendee_ids || []));
+      if (!body.dry_run && add.length) {
+        const rv = sharedRsvp(); rv.byUser[ev.id] = rv.byUser[ev.id] || {}; rv.delta[ev.id] = rv.delta[ev.id] || 0;
+        add.forEach((m) => { rv.byUser[ev.id][m.email] = "yes"; rv.delta[ev.id] += 1; });
+      }
+      return ok(config, result);
+    } catch (e) { return fail(config, 400, e.message); }
   }
   if (path === "/community/config" && method === "patch") {
     // Policy: every community requires admin approval, full stop -- mirrors backend/routes/

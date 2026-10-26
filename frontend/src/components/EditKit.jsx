@@ -114,7 +114,7 @@ export const CONTENT_FIELDS = {
     { key: "starts_at", label: "Starts", type: "datetime-local" }, { key: "location", label: "Location" },
     { key: "virtual_url", label: "Virtual link" }, { key: "host", label: "Host" }, { key: "category", label: "Type" },
     { key: "ticket_tiers", label: "Pricing", type: "tiers" }, { key: "capacity", label: "Capacity (only used if there are no ticket tiers)", type: "number" },
-    { key: "url", label: "External registration link (e.g. Luma)" }, { key: "tags", label: "Tags", type: "tags" },
+    { key: "url", label: "External registration link (optional)" }, { key: "tags", label: "Tags", type: "tags" },
     { key: "prep", label: "What to prepare", type: "textarea", rows: 2 },
   ],
   resources: [
@@ -204,7 +204,7 @@ export function EditBar() {
         </button>
         {editing && <>
           <button className={cx(item, drawer && "bg-ink/10 text-ink")} onClick={() => setDrawer(!drawer)} data-testid="edit-branding"><Palette className="h-3.5 w-3.5" />Branding &amp; menu</button>
-          <Link className={item} to="/admin" onClick={() => { try { sessionStorage.setItem("pathwai.admintab", "integrations"); } catch { /* ignore */ } }} data-testid="edit-integrations"><Plug className="h-3.5 w-3.5" />Integrations</Link>
+          <Link className={item} to="/admin" onClick={() => { try { sessionStorage.setItem("pathwai.admintab", "integrations"); } catch { /* ignore */ } }} data-testid="edit-integrations"><Plug className="h-3.5 w-3.5" />Connections</Link>
           <span className="hidden shrink-0 text-muted sm:inline">Click any text or item to edit it</span>
         </>}
         <Link className={cx(item, "ml-auto")} to="/admin" data-testid="edit-admin-tools">Admin tools →</Link>

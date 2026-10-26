@@ -1,13 +1,10 @@
-"""Platform-level transactional email — password resets today, welcome mail later.
+"""Platform-level transactional email: password resets, set-your-password links, welcome mail.
 
-This is separate from the per-community Twilio/SendGrid integrations in routes/integrations.py
-and routes/blasts.py, which a community *admin* connects for their own member broadcasts. This
-module is Pathwai's own mail, sent regardless of what any single community has configured.
+Community email blasts use the same SendGrid account but go through messaging.py (which adds the community's name,
+reply-to and per-community accounting). This module is Pathwai's own mail, sent regardless of any community.
 
 Set SENDGRID_API_KEY (plus optionally MAIL_FROM_EMAIL / MAIL_FROM_NAME) to send for real.
-Without a key, the email is logged instead of sent — same "demo simulates sends" pattern the
-per-community blasts already use — so the reset flow stays testable end to end before a real
-provider is wired up.
+Without a key, the email is logged instead of sent, so the reset flow stays testable end to end.
 """
 from __future__ import annotations
 

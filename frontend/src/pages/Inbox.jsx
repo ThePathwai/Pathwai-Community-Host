@@ -144,11 +144,11 @@ export default function Inbox() {
   return (
     <div>
       <PageHeader k="inbox" title="Messages"
-        subtitle={tab === "blasts" ? "Reach your members by text, email, or both." : "Your conversations with other members, all in one place."}
+        subtitle={tab === "blasts" ? "Reach your members by text, email or in the app." : "Your conversations with other members, all in one place."}
         actions={tab === "inbox" ? <Button onClick={() => setComposeOpen(true)} data-testid="compose-open"><PenSquare className="h-4 w-4" />New message</Button> : undefined} />
       {user.role === "admin" && <Tabs tabs={[{ value: "inbox", label: "Inbox" }, { value: "blasts", label: "Blasts" }]} value={tab} onChange={setTab} />}
       {tab === "blasts" ? (
-        <BlastComposer goIntegrations={() => { try { sessionStorage.setItem("pathwai.admintab", "integrations"); } catch { /* noop */ } nav("/admin"); }} />
+        <BlastComposer />
       ) : (
       <>
       <div className={cx("mb-3 flex-wrap items-end gap-2 lg:flex", threadId ? "hidden lg:flex" : "flex")}>

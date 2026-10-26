@@ -97,8 +97,8 @@ function Circle() {
 }
 
 const PROMISES = [
-  ["One toolset, not six", "Members, events and RSVPs, perks, news, applications, messages and project teams, all in your own branded space. It replaces the spreadsheet, the group chat, the event page, the form tool and the mailing list, so nothing has to be copied from one place to another.",
-    "One directory · events and turnout · perks · news · applications · teams"],
+  ["One toolset, not six", "Members, events and tickets, perks, news, applications, messages, text and email blasts, and project teams, all in your own branded space. It replaces the spreadsheet, the group chat, the event page, the ticketing tool and the mailing list. Anything already in a spreadsheet or a calendar comes in with an upload or a link, so nothing is typed twice and there are no other apps to log in to.",
+    "One directory · events and tickets · texts and email · perks · news · applications · teams"],
   ["Decisions backed by data", "Every figure is counted from your own records and set against the period before it: active members, introductions made, event turnout, perk use. You see whether the community is growing or slipping, and who is going quiet while there is still time to bring them back.",
     "Up or down vs last period · weekly momentum · a going-quiet list with a one-tap nudge"],
   ["Proof ready when anyone asks", "If a partner, sponsor, investor or your board wants to know what the community did, the answer is one click away. Share a PDF, or a live link that stays current, and bring your Instagram and TikTok reach in alongside, shown separately and added together.",
@@ -115,7 +115,7 @@ const MEMBER_GETS = [
 ];
 
 const STEPS = [
-  ["Set up your community in an afternoon", "Your name, colours and logo. Import your members or invite them. Decide who gets in and what they see."],
+  ["Set up your community in an afternoon", "Your name, colours and logo. Import your members, events and guest lists from a spreadsheet or a link, or invite people. Decide who gets in and what they see."],
   ["Members join and are looked after", "Each member builds a profile and pitch card, finds perks, offers and asks in one place, and is introduced to the right people with a reason."],
   ["You see what is working", "The Impact view sets every number against the period before it, shows weekly momentum and lists who is going quiet, with a one-tap nudge."],
   ["Send the proof when someone asks", "Pick sponsor, investor or board, choose the period, and download the PDF or share a live link. No spreadsheet-wrangling the night before."],

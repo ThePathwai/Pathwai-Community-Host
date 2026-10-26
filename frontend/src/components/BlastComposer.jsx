@@ -2,6 +2,8 @@ import React, { useCallback, useEffect, useState } from "react";
 import { MessageSquare } from "lucide-react";
 import { toast } from "sonner";
 import { api, errMsg, fmtDate, timeAgo } from "../lib/api";
+import { useAuth } from "../lib/auth";
+import { segments, smsBody } from "../lib/messaging";
 import { Button, Card, Chip, Field, Input, Select, Spinner, Textarea } from "./ui";
 
 const AUD = [{ value: "all", label: "All members" }, { value: "event", label: "Guests of an event" }, { value: "admins", label: "Admins only" }];
@@ -15,15 +17,17 @@ const channelLabel = (b) => {
   return base || "Pathwai Internal";
 };
 
-export default function BlastComposer({ goIntegrations }) {
+export default function BlastComposer() {
+  const { config } = useAuth();
   const [msg, setMsg] = useState("");
   const [subject, setSubject] = useState("");
-  const [sms, setSms] = useState(true);
-  const [email, setEmail] = useState(false);
+  // Email and in-app are free, so they are the starting point; text costs credits, so it is opt-in.
+  const [sms, setSms] = useState(false);
+  const [email, setEmail] = useState(true);
   // A third, independent send option: an in-app notification to everyone in the audience. No
-  // integration to connect, no SMS/email opt-in gate -- it can be sent alone or stacked with either
+  // setup, no SMS/email opt-in gate -- it can be sent alone or stacked with either
   // or both of the others (see routes/blasts.py's send_blast).
-  const [internal, setInternal] = useState(false);
+  const [internal, setInternal] = useState(true);
   const [type, setType] = useState("all");
   const [events, setEvents] = useState([]);
   const [eventId, setEventId] = useState("");
@@ -43,10 +47,11 @@ export default function BlastComposer({ goIntegrations }) {
   useEffect(() => { api.get("/events", { params: { upcoming: true } }).then((r) => { setEvents(r.data); if (r.data[0]) setEventId(r.data[0].id); }).catch(() => {}); }, []);
   const loadHist = useCallback(() => api.get("/admin/blasts/history", { params: { audience_type: fAudience || undefined, since: fFrom || undefined, until: fTo || undefined } }).then((r) => setHist(r.data.blasts)), [fAudience, fFrom, fTo]);
   useEffect(() => { loadHist(); }, [loadHist]);
-  useEffect(() => {
+  const loadAud = useCallback(() => {
     if (type === "event" && !eventId) { setAud(null); return; }
     api.post("/admin/blasts/audience", { type, event_id: type === "event" ? eventId : null }).then((r) => setAud(r.data)).catch(() => setAud(null));
   }, [type, eventId]);
+  useEffect(() => { loadAud(); }, [loadAud]);
   useEffect(() => { setConfirm(false); }, [msg, subject, sms, email, internal, type, eventId]);
 
   const send = async () => {
@@ -59,35 +64,37 @@ export default function BlastComposer({ goIntegrations }) {
       if (internal) parts.push(`${data.internal_sent} in-app notification${data.internal_sent === 1 ? "" : "s"}`);
       const failed = (data.sms_failed || 0) + (data.email_failed || 0);
       toast.success(`${data.demo ? "Demo: " : ""}${parts.join(", ")} sent${failed ? `, ${failed} failed` : ""}`);
-      setMsg(""); setSubject(""); setConfirm(false); loadHist();
+      setMsg(""); setSubject(""); setConfirm(false); loadHist(); loadAud();
     } catch (e) { toast.error(errMsg(e)); } finally { setBusy(false); }
   };
 
-  const segs = Math.max(1, Math.ceil((msg.length + 22) / 153));
+  const perText = segments(smsBody(config?.community_name, msg));
+  const cost = sms ? perText * (aud?.sms_count || 0) : 0;
+  const credits = aud?.sms_credits ?? 0;
+  const enough = !sms || cost <= credits;
   const count = internal && !sms && !email ? aud?.total_members
     : channel === "email" ? aud?.email_count
     : channel === "sms" ? aud?.sms_count
     : Math.max(aud?.sms_count || 0, aud?.email_count || 0);
-  const ready = (!sms || aud?.twilio_connected) && (!email || aud?.sendgrid_connected);
-  const needsSetup = aud && !ready;
+  const ready = (!sms || aud?.sms_available) && (!email || aud?.email_available) && enough;
+  const [grant, setGrant] = useState("");
+  const addCredits = async () => {
+    try { await api.post("/admin/messaging/credits", { credits: parseInt(grant, 10) }); toast.success("Credits added"); setGrant(""); loadAud(); } catch (e) { toast.error(errMsg(e)); }
+  };
   const active = fAudience || fFrom || fTo;
   const clearFilters = () => { setFAudience(""); setFFrom(""); setFTo(""); };
   return (
     <div className="grid gap-5 lg:grid-cols-[3fr_2fr]" data-testid="blast-page">
       <div className="space-y-4">
-        {needsSetup && (
-          <Card><p className="font-semibold">Connect {!aud.twilio_connected && sms ? "Twilio" : ""}{!aud.twilio_connected && sms && !aud.sendgrid_connected && email ? " and " : ""}{!aud.sendgrid_connected && email ? "SendGrid" : ""} to send this blast</p>
-            <p className="mt-1 text-sm text-muted">Add credentials under Admin → Integrations. Type <code>demo</code> as the key to try it with sample data.</p>
-            <Button className="mt-3" onClick={goIntegrations} data-testid="blast-connect">Open integrations</Button></Card>)}
         <Card>
-          <h3 className="mb-4 flex items-center gap-2 text-lg"><MessageSquare className="h-5 w-5" />New blast{(sms && aud?.sms_demo) || (email && aud?.email_demo) ? <Chip>Demo mode</Chip> : null}</h3>
+          <h3 className="mb-4 flex items-center gap-2 text-lg"><MessageSquare className="h-5 w-5" />New blast{aud?.simulated && (sms || email) ? <Chip>Demo: nothing is really sent</Chip> : null}</h3>
           <div className="space-y-4">
             <Field label="Send by">
               <div className="flex flex-wrap gap-4 text-sm">
-                <label className="flex items-center gap-2"><input type="checkbox" className="accent-accent" checked={sms} onChange={(e) => setSms(e.target.checked)} data-testid="blast-channel-sms" />Text message</label>
-                <label className="flex items-center gap-2"><input type="checkbox" className="accent-accent" checked={email} onChange={(e) => setEmail(e.target.checked)} data-testid="blast-channel-email" />Email</label>
+                <label className={"flex items-center gap-2 " + (aud && !aud.sms_available ? "opacity-60" : "")}><input type="checkbox" className="accent-accent" checked={sms && (aud?.sms_available ?? true)} disabled={!!aud && !aud.sms_available} onChange={(e) => setSms(e.target.checked)} data-testid="blast-channel-sms" />Text message <span className="text-xs text-muted">(uses credits)</span></label>
+                <label className={"flex items-center gap-2 " + (aud && !aud.email_available ? "opacity-60" : "")}><input type="checkbox" className="accent-accent" checked={email && (aud?.email_available ?? true)} disabled={!!aud && !aud.email_available} onChange={(e) => setEmail(e.target.checked)} data-testid="blast-channel-email" />Email</label>
                 {/* In-app only -- reaches everyone in the audience straight through their Pathwai
-                    notifications, with no Twilio/SendGrid connection and no opt-in to check. */}
+                    notifications, with no opt-in to check. */}
                 <label className="flex items-center gap-2"><input type="checkbox" className="accent-accent" checked={internal} onChange={(e) => setInternal(e.target.checked)} data-testid="blast-channel-internal" />Pathwai Internal</label>
               </div>
             </Field>
@@ -96,7 +103,11 @@ export default function BlastComposer({ goIntegrations }) {
               {type === "event" && <Field label="Event"><Select value={eventId} onChange={(e) => setEventId(e.target.value)} options={events.map((e) => ({ value: e.id, label: `${e.title} · ${fmtDate(e.starts_at)}` }))} /></Field>}
             </div>
             {email && <Field label="Email subject" hint="Defaults to the first line of your message if left blank."><Input value={subject} onChange={(e) => setSubject(e.target.value)} placeholder="Doors open at 7 tonight" data-testid="blast-subject" /></Field>}
-            <Field label="Message" hint={sms ? `${msg.length} characters · about ${segs} text segment${segs > 1 ? "s" : ""} each. "Reply STOP to opt out." is added automatically.` : `${msg.length} characters`}>
+            {aud && (!aud.sms_available || !aud.email_available) && (
+              <p className="rounded-lg border border-line bg-ink/5 p-3 text-sm text-muted" data-testid="blast-unavailable">
+                {!aud.sms_available && !aud.email_available ? "Text and email sending are being switched on for Pathwai. You can send in the app now." : !aud.sms_available ? "Text messaging is being switched on for Pathwai. Email and in-app messages work now." : "Email sending is being switched on for Pathwai. Texts and in-app messages work now."}
+              </p>)}
+            <Field label="Message" hint={sms ? `${msg.length} characters · your community's name goes first and "Reply STOP to opt out." is added, so each text is ${perText} segment${perText === 1 ? "" : "s"}.` : `${msg.length} characters`}>
               <Textarea rows={5} maxLength={sms ? 420 : 1600} value={msg} onChange={(e) => setMsg(e.target.value)} placeholder="Doors open at 7pm tonight. Bring your ticket and a friend." data-testid="blast-message" />
             </Field>
             {aud && (sms || email || internal) && (
@@ -104,6 +115,16 @@ export default function BlastComposer({ goIntegrations }) {
                 {sms && <p>Text: <span className="font-semibold">{aud.sms_count}</span> {aud.sms_count === 1 ? "person" : "people"}{aud.sms_not_opted_in > 0 || aud.sms_no_phone > 0 ? ` · skipped ${aud.sms_not_opted_in} not opted in${aud.sms_no_phone ? `, ${aud.sms_no_phone} no phone` : ""}` : ""}</p>}
                 {email && <p>Email: <span className="font-semibold">{aud.email_count}</span> {aud.email_count === 1 ? "person" : "people"}{aud.email_not_opted_in > 0 ? ` · skipped ${aud.email_not_opted_in} unsubscribed` : ""}</p>}
                 {internal && <p>Pathwai Internal: <span className="font-semibold">{aud.total_members}</span> {aud.total_members === 1 ? "person" : "people"}</p>}
+                {sms && aud.sms_available && (
+                  <p className={enough ? "" : "font-semibold text-red-500"} data-testid="blast-credits">
+                    This text uses <span className="font-semibold">{cost.toLocaleString()}</span> credit{cost === 1 ? "" : "s"} ({aud.sms_count} × {perText}). You have <span className="font-semibold">{credits.toLocaleString()}</span>.{!enough && " Shorten it, send to fewer people, or ask for more credits."}
+                  </p>)}
+              </div>)}
+            {aud?.can_grant && sms && (
+              <div className="flex flex-wrap items-center gap-2 text-sm" data-testid="blast-grant">
+                <span className="text-muted">Pathwai team:</span>
+                <Input type="number" min="1" className="!w-28" placeholder="Credits" value={grant} onChange={(e) => setGrant(e.target.value)} aria-label="Credits to add" />
+                <Button variant="ghost" onClick={addCredits} disabled={!(parseInt(grant, 10) > 0)}>Add credits</Button>
               </div>)}
             {!confirm ? <Button onClick={() => setConfirm(true)} disabled={!msg.trim() || !ready || !aud || !(sms || email || internal) || !count} data-testid="blast-review">Review and send</Button> : (
               <div className="rounded-lg border border-accent/50 p-4" data-testid="blast-confirm">

@@ -58,7 +58,7 @@ function Provider({ p, reload }) {
             <Field key={f.key} label={f.label}><Input placeholder={f.placeholder} value={settings[f.key] ?? ""} data-testid={`set-${p.provider}-${f.key}`} onChange={(e) => setSettings({ ...settings, [f.key]: e.target.value })} /></Field>))}</div>
           {p.setting_fields.filter((f) => f.type === "bool").map((f) => <label key={f.key} className="flex items-center gap-2 text-sm"><input type="checkbox" className="accent-accent" checked={!!settings[f.key]} onChange={(e) => setSettings({ ...settings, [f.key]: e.target.checked })} />{f.label}</label>)}
           {p.setting_fields.some((f) => f.type === "plans") && <Field label="Membership plans"><PlanEditor plans={settings.plans} onChange={(plans) => setSettings({ ...settings, plans })} /></Field>}
-          {p.webhook_path && <Field label="Webhook endpoint" hint={p.provider === "twilio" ? "Paste this into your Twilio number (or Messaging Service) → \"A message comes in\" → Webhook (HTTP POST). It lets STOP replies switch a member's texts off." : "Add this in Stripe → Developers → Webhooks. Events: checkout.session.completed, invoice.paid, invoice.payment_failed, customer.subscription.updated/deleted."}><Input readOnly data-testid={`webhook-url-${p.provider}`} value={p.webhook_url || `${process.env.REACT_APP_BACKEND_URL || window.location.origin}${p.webhook_path}`} onFocus={(e) => e.target.select()} /></Field>}
+          {p.webhook_path && <Field label="Webhook endpoint" hint="Add this in Stripe → Developers → Webhooks. Events: checkout.session.completed, invoice.paid, invoice.payment_failed, customer.subscription.updated/deleted."><Input readOnly data-testid={`webhook-url-${p.provider}`} value={p.webhook_url || `${process.env.REACT_APP_BACKEND_URL || window.location.origin}${p.webhook_path}`} onFocus={(e) => e.target.select()} /></Field>}
           <div className="flex flex-wrap items-center gap-2">
             <Button onClick={save} loading={busy === "save"} data-testid={`save-${p.provider}`}>Save</Button>
             <Button variant="ghost" onClick={() => run("test", () => api.post(`/admin/integrations/${p.provider}/test`), (d) => d.message)} loading={busy === "test"} data-testid={`test-${p.provider}`}>Test connection</Button>
@@ -73,10 +73,19 @@ function Provider({ p, reload }) {
   );
 }
 
-export default function Integrations() {
+export default function Integrations({ go }) {
   const [items, setItems] = useState(null);
   const load = useCallback(() => api.get("/admin/integrations").then((r) => setItems(r.data.integrations)), []);
   useEffect(() => { load(); }, [load]);
   if (!items) return <Spinner />;
-  return <div className="space-y-4"><p className="text-sm text-muted">Connect the tools your community already uses. Members keep working in Pathwai; data flows both ways.</p>{items.map((p) => <Provider key={p.provider} p={p} reload={load} />)}</div>;
+  return (
+    <div className="space-y-4">
+      <Card data-testid="built-in-card">
+        <h3 className="text-lg">Already built in</h3>
+        <p className="mt-1 text-sm text-muted">Members, events, tickets, perks, introductions, texts and email all run inside Pathwai, so there is nothing to connect for them. Send texts and email from Inbox → Blasts. Moving over from a spreadsheet, a guest-list export or a calendar? <button type="button" className="underline" onClick={() => go?.("import")} data-testid="goto-import">Import your data</button>.</p>
+      </Card>
+      <p className="text-sm text-muted">Connect only what has to stay outside Pathwai: where you take payments, and the social accounts whose numbers you want in your reports.</p>
+      {items.map((p) => <Provider key={p.provider} p={p} reload={load} />)}
+    </div>
+  );
 }
