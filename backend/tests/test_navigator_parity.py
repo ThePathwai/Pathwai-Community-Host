@@ -67,7 +67,7 @@ def test_python_and_javascript_rules_agree():
 
     def shape(r):
         rows = lambda xs: [(x["id"], x["fit"], x["score"], x["status"], x["reasons"], x["cautions"]) for x in xs]
-        return {"matches": rows(r["matches"]), "more": rows(r["more"]), "later": rows(r["later"]), "skipped": r["skipped"], "path": r["path"], "summary": r["summary"], "profile": r["profile"]}
+        return {"matches": rows(r["matches"]), "more": rows(r["more"]), "later": rows(r["later"]), "skipped": r["skipped"], "path": r["path"], "summary": r["summary"], "profile": r["profile"], "trajectory": r["trajectory"]}
 
     today = date.fromisoformat(TODAY)
     assert len(js) == len(cs) > 100
@@ -84,3 +84,44 @@ def test_the_demo_catalog_copy_matches_the_real_one():
     real = (ROOT / "backend" / "data" / "programs_ca.json").read_text(encoding="utf-8")
     demo = (ROOT / "frontend" / "src" / "preview" / "programs_ca.json").read_text(encoding="utf-8")
     assert json.loads(real) == json.loads(demo), "copy backend/data/programs_ca.json to frontend/src/preview/programs_ca.json"
+
+
+def _stage_names(t):
+    return [c["stage"] for c in t["stages"]]
+
+
+def test_trajectory_has_every_stage_and_marks_where_you_are():
+    programs = nav.load_catalog()["programs"]
+    for stage in nav.STAGES:
+        t = nav.trajectory(programs, {"stage": stage, "province": "ON"}, date.fromisoformat(TODAY))
+        assert _stage_names(t) == nav.STAGES
+        idx = nav.STAGES.index(stage)
+        assert [c["state"] for c in t["stages"]] == ["past"] * idx + ["current"] + ["future"] * (len(nav.STAGES) - idx - 1)
+        assert t["index"] == idx and t["story"]
+
+
+def test_trajectory_shows_a_program_in_one_column_only():
+    programs = nav.load_catalog()["programs"]
+    t = nav.trajectory(programs, {"stage": "launched", "province": "ON", "audiences": ["black"], "age": 34}, date.fromisoformat(TODAY))
+    ids = [r["id"] for c in t["stages"] for r in c["programs"]]
+    assert len(ids) == len(set(ids)) and len(ids) >= 8
+
+
+def test_trajectory_respects_hard_rules_all_the_way_along():
+    programs = nav.load_catalog()["programs"]
+    t = nav.trajectory(programs, {"stage": "idea", "province": "BC", "age": 52}, date.fromisoformat(TODAY))
+    ids = {r["id"] for c in t["stages"] for r in c["programs"]}
+    assert "besp" not in ids and "dmz-bip" not in ids          # group-specific, and this founder is not in the group
+    assert "futurpreneur-core" not in ids                       # age limit
+    assert "alberta-catalyzer" not in ids                       # Alberta only
+
+
+def test_catalog_is_populated_with_every_kind_of_program():
+    programs = nav.load_catalog()["programs"]
+    assert len(programs) >= 55
+    kinds = {p["type"] for p in programs}
+    assert {"grant", "loan", "incubator", "accelerator", "investor", "resource", "tax_credit"} <= kinds
+    assert len({p["id"] for p in programs}) == len(programs)
+    for p in programs:
+        assert p["type"] in nav.TYPES and p["verified"] in ("official", "third_party", "unconfirmed")
+        assert p["apply_url"].startswith("https://") and p["source_url"].startswith("https://")

@@ -7,7 +7,8 @@ import { groupOf } from "../lib/communityGroup";
 import { TYPE_LABEL } from "../lib/navigator";
 import { deadlineInfo, leadReason, tint, typeMeta } from "../lib/programStyle";
 import { Ring, Status } from "../components/NavBits";
-import { DeadlineChip, PathTimeline, ProgramDrawer, TypeTile } from "../components/ProgramCards";
+import { DeadlineChip, ProgramDrawer, TypeTile } from "../components/ProgramCards";
+import Trajectory from "../components/Trajectory";
 import { useShell } from "../components/AccountShell";
 import { Spinner, cx } from "../components/ui";
 
@@ -160,8 +161,10 @@ export default function Home({ items, onEnter }) {
 
         <aside className="min-w-0 space-y-4">
           <section className="rounded-3xl border border-line bg-surface p-5" data-testid="home-path">
-            <h2 className="mb-4 text-lg" style={{ textTransform: "none", letterSpacing: "-0.01em", fontWeight: 700 }}>Your path</h2>
-            <PathTimeline vertical path={d.path || []} onPick={(id) => { const m = [...d.top, ...soonAll].find((x) => x.id === id); m ? setOpen(m) : nav("/navigator"); }} />
+            <h2 className="text-lg" style={{ textTransform: "none", letterSpacing: "-0.01em", fontWeight: 700 }}>Your trajectory</h2>
+            <p className="mb-4 mt-1 text-xs text-muted">Where you came from, where you are, what opens up next.</p>
+            <Trajectory compact data={d.trajectory} onPick={(r) => setOpen(r)} />
+            <Link to="/navigator" className="mt-4 inline-flex items-center gap-1 text-sm font-semibold hover:underline">See the full route<ArrowRight className="h-4 w-4" aria-hidden /></Link>
           </section>
 
           <div className="grid grid-cols-2 gap-3">

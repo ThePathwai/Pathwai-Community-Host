@@ -1,6 +1,6 @@
 {
   "version": "2026-10-27",
-  "notes": "A hand-checked starting catalog. Each entry says where it was confirmed (verified: official / third_party / unconfirmed) and when. Program owners change details without notice, so every card links to the official page. Deadlines are shown only when the source published one.",
+  "notes": "A hand-checked catalog. Each entry says where it was confirmed (verified: official / third_party / unconfirmed) and when. Program owners change details without notice, so every card links to the official page. Deadlines are shown only when the source published one.",
   "programs": [
     {
       "id": "irap",
@@ -1006,6 +1006,1759 @@
       "restricted_to": [
         "newcomer"
       ]
+    },
+    {
+      "id": "cdl-prime",
+      "name": "Creative Destruction Lab (Prime)",
+      "org": "Creative Destruction Lab",
+      "level": "academic",
+      "type": "accelerator",
+      "summary": "A nine-month program where founders set objectives and meet experienced entrepreneurs, operators and investors every eight weeks.",
+      "amount": "Mentorship and investor access; equity and fees not published on the page",
+      "stages": [
+        "idea",
+        "prototype",
+        "launched"
+      ],
+      "audiences": [],
+      "needs": [
+        "mentorship",
+        "network",
+        "funding"
+      ],
+      "sectors": [
+        "tech",
+        "hardware",
+        "health",
+        "cleantech"
+      ],
+      "provinces": [
+        "any"
+      ],
+      "requires": {},
+      "requirements": [
+        "Ventures applying differentiated technology to an industry problem",
+        "Prime runs in Calgary and Halifax; other CDL streams cover AI, health, quantum, climate and more"
+      ],
+      "deadline": {
+        "kind": "none_published",
+        "date": null,
+        "note": "Page says applications are open for the 2026/27 program year; no deadline listed"
+      },
+      "status": "open",
+      "phase": "learn",
+      "apply_url": "https://creativedestructionlab.com/streams/prime/",
+      "source_url": "https://creativedestructionlab.com/streams/prime/",
+      "verified": "official",
+      "last_checked": "2026-10-27",
+      "restricted_to": []
+    },
+    {
+      "id": "dmz-incubator",
+      "name": "DMZ Incubator",
+      "org": "DMZ at Toronto Metropolitan University",
+      "level": "academic",
+      "type": "incubator",
+      "summary": "An 18-month incubator built around customers, capital, coaching and community, with founders based at the Toronto hub.",
+      "amount": "Coaching, capital introductions and customer access; cost not listed",
+      "stages": [
+        "prototype",
+        "launched"
+      ],
+      "audiences": [],
+      "needs": [
+        "mentorship",
+        "network",
+        "customers",
+        "funding"
+      ],
+      "sectors": [
+        "tech"
+      ],
+      "provinces": [
+        "any"
+      ],
+      "requires": {},
+      "requirements": [
+        "A full-time founder and a tech lead",
+        "A working MVP with market traction",
+        "Canadian founders first; remote founders can apply"
+      ],
+      "deadline": {
+        "kind": "none_published",
+        "date": null,
+        "note": "The page still shows the Spring 2025 cohort (deadline Feb 25); check for the next intake"
+      },
+      "status": "check",
+      "phase": "learn",
+      "apply_url": "https://dmz.torontomu.ca/apply",
+      "source_url": "https://dmz.torontomu.ca/apply",
+      "verified": "official",
+      "last_checked": "2026-10-27",
+      "restricted_to": []
+    },
+    {
+      "id": "mars-incubator",
+      "name": "MaRS Incubator (life sciences)",
+      "org": "MaRS Discovery District",
+      "level": "nonprofit",
+      "type": "incubator",
+      "summary": "Private labs and offices for early-stage life sciences ventures, inside a downtown Toronto biotech community.",
+      "amount": "Lab and office space, 1-year minimum lease; pricing by enquiry",
+      "stages": [
+        "prototype",
+        "launched",
+        "revenue"
+      ],
+      "audiences": [],
+      "needs": [
+        "space",
+        "network"
+      ],
+      "sectors": [
+        "health"
+      ],
+      "provinces": [
+        "ON"
+      ],
+      "requires": {},
+      "requirements": [
+        "Early-stage life sciences or biotech venture",
+        "Private labs 150-400 sq ft offices; leasing inquiry required"
+      ],
+      "deadline": {
+        "kind": "none_published",
+        "date": null,
+        "note": "Start with the leasing inquiry form"
+      },
+      "status": "check",
+      "phase": "learn",
+      "apply_url": "https://hubs.marsdd.com/workspaces/incubator/",
+      "source_url": "https://hubs.marsdd.com/workspaces/incubator/",
+      "verified": "official",
+      "last_checked": "2026-10-27",
+      "restricted_to": []
+    },
+    {
+      "id": "alberta-catalyzer",
+      "name": "Alberta Catalyzer",
+      "org": "Platform Calgary",
+      "level": "nonprofit",
+      "type": "incubator",
+      "summary": "A free, short program for tech-enabled startups getting launched in Calgary.",
+      "amount": "Free; 4 to 8 weeks",
+      "stages": [
+        "idea",
+        "prototype"
+      ],
+      "audiences": [],
+      "needs": [
+        "mentorship",
+        "network",
+        "customers"
+      ],
+      "sectors": [
+        "tech"
+      ],
+      "provinces": [
+        "AB"
+      ],
+      "requires": {},
+      "requirements": [
+        "Tech-enabled startup in Alberta"
+      ],
+      "deadline": {
+        "kind": "none_published",
+        "date": null,
+        "note": "Intake dates not listed; see the programs page"
+      },
+      "status": "check",
+      "phase": "learn",
+      "apply_url": "https://www.platformcalgary.com/programs",
+      "source_url": "https://www.platformcalgary.com/programs",
+      "verified": "official",
+      "last_checked": "2026-10-27",
+      "restricted_to": []
+    },
+    {
+      "id": "platform-incubator",
+      "name": "Platform Incubator",
+      "org": "Platform Calgary",
+      "level": "nonprofit",
+      "type": "incubator",
+      "summary": "A 12-month program for high-potential tech founders with two to four hours of structured support every two weeks.",
+      "amount": "Free; 12 months",
+      "stages": [
+        "launched",
+        "revenue"
+      ],
+      "audiences": [],
+      "needs": [
+        "mentorship",
+        "network",
+        "customers"
+      ],
+      "sectors": [
+        "tech"
+      ],
+      "provinces": [
+        "AB"
+      ],
+      "requires": {},
+      "requirements": [
+        "High-potential founders at a Calgary-area tech company"
+      ],
+      "deadline": {
+        "kind": "none_published",
+        "date": null,
+        "note": "Intake dates not listed; see the programs page"
+      },
+      "status": "check",
+      "phase": "learn",
+      "apply_url": "https://www.platformcalgary.com/programs",
+      "source_url": "https://www.platformcalgary.com/programs",
+      "verified": "official",
+      "last_checked": "2026-10-27",
+      "restricted_to": []
+    },
+    {
+      "id": "next-ai",
+      "name": "NEXT AI",
+      "org": "NEXT Canada",
+      "level": "private",
+      "type": "accelerator",
+      "summary": "A program for AI-based ventures and technology commercialization, run in Toronto and, with HEC Montreal, in Montreal.",
+      "amount": "Provides capital; amount not published on the page",
+      "stages": [
+        "idea",
+        "prototype"
+      ],
+      "audiences": [],
+      "needs": [
+        "funding",
+        "mentorship",
+        "network"
+      ],
+      "sectors": [
+        "tech"
+      ],
+      "provinces": [
+        "ON",
+        "QC"
+      ],
+      "requires": {},
+      "requirements": [
+        "AI-based venture or technology commercialization",
+        "Idea stage or early team"
+      ],
+      "deadline": {
+        "kind": "annual",
+        "date": null,
+        "note": "Window listed as October 15 to December 9; confirm the year on the site"
+      },
+      "status": "check",
+      "phase": "learn",
+      "apply_url": "https://www.nextcanada.com/next-ai/",
+      "source_url": "https://www.nextcanada.com/programs-overview/",
+      "verified": "official",
+      "last_checked": "2026-10-27",
+      "restricted_to": []
+    },
+    {
+      "id": "next-36",
+      "name": "NEXT 36",
+      "org": "NEXT Canada",
+      "level": "private",
+      "type": "accelerator",
+      "summary": "An eight-month program taking 36 entrepreneurial undergraduates and recent graduates from idea to launch.",
+      "amount": "Funding details not published on the page",
+      "stages": [
+        "idea",
+        "prototype"
+      ],
+      "audiences": [
+        "student",
+        "youth"
+      ],
+      "needs": [
+        "mentorship",
+        "network",
+        "funding"
+      ],
+      "sectors": [
+        "any"
+      ],
+      "provinces": [
+        "any"
+      ],
+      "requires": {},
+      "requirements": [
+        "Undergraduate or recent graduate in Canada"
+      ],
+      "deadline": {
+        "kind": "closed",
+        "date": null,
+        "note": "Applications are closed for the 2027 cohort"
+      },
+      "status": "closed",
+      "phase": "learn",
+      "apply_url": "https://www.nextcanada.com/next-36/",
+      "source_url": "https://www.nextcanada.com/programs-overview/",
+      "verified": "official",
+      "last_checked": "2026-10-27",
+      "restricted_to": []
+    },
+    {
+      "id": "next-founders",
+      "name": "NEXT Founders",
+      "org": "NEXT Canada",
+      "level": "private",
+      "type": "accelerator",
+      "summary": "Education and community for seed and growth-stage founders who are scaling a business.",
+      "amount": "A la carte education; funding not published",
+      "stages": [
+        "launched",
+        "revenue",
+        "growth"
+      ],
+      "audiences": [],
+      "needs": [
+        "training",
+        "network",
+        "mentorship"
+      ],
+      "sectors": [
+        "any"
+      ],
+      "provinces": [
+        "any"
+      ],
+      "requires": {},
+      "requirements": [
+        "Seed or growth-stage founder"
+      ],
+      "deadline": {
+        "kind": "annual",
+        "date": null,
+        "note": "Applications open January 12, 2027"
+      },
+      "status": "check",
+      "phase": "scale",
+      "apply_url": "https://www.nextcanada.com/next-founders/",
+      "source_url": "https://www.nextcanada.com/programs-overview/",
+      "verified": "official",
+      "last_checked": "2026-10-27",
+      "restricted_to": []
+    },
+    {
+      "id": "launch-academy",
+      "name": "Launch Academy",
+      "org": "Launch Academy",
+      "level": "private",
+      "type": "incubator",
+      "summary": "A Vancouver tech incubator and founder community with an alumni network. Program details are on its own site.",
+      "amount": "Not confirmed",
+      "stages": [
+        "prototype",
+        "launched",
+        "revenue"
+      ],
+      "audiences": [],
+      "needs": [
+        "space",
+        "network",
+        "mentorship"
+      ],
+      "sectors": [
+        "tech"
+      ],
+      "provinces": [
+        "BC"
+      ],
+      "requires": {},
+      "requirements": [],
+      "deadline": {
+        "kind": "none_published",
+        "date": null,
+        "note": "Check the programs page for current cohorts and costs"
+      },
+      "status": "check",
+      "phase": "learn",
+      "apply_url": "https://www.launchacademy.ca/",
+      "source_url": "https://www.launchacademy.ca/",
+      "verified": "unconfirmed",
+      "last_checked": "2026-10-27",
+      "restricted_to": []
+    },
+    {
+      "id": "tbdc-business-inc",
+      "name": "Business Inc.",
+      "org": "Toronto Business Development Centre",
+      "level": "nonprofit",
+      "type": "mentorship",
+      "summary": "A program for Torontonians turning a business idea into a real business, with peer support and expert advisors.",
+      "amount": "Cost and timing not listed",
+      "stages": [
+        "idea",
+        "prototype"
+      ],
+      "audiences": [],
+      "needs": [
+        "mentorship",
+        "training",
+        "network"
+      ],
+      "sectors": [
+        "any"
+      ],
+      "provinces": [
+        "ON"
+      ],
+      "requires": {},
+      "requirements": [
+        "Based in Toronto"
+      ],
+      "deadline": {
+        "kind": "none_published",
+        "date": null,
+        "note": "See the program page for the next intake"
+      },
+      "status": "check",
+      "phase": "learn",
+      "apply_url": "https://tbdc.com/business-inc/",
+      "source_url": "https://tbdc.com/programs/",
+      "verified": "official",
+      "last_checked": "2026-10-27",
+      "restricted_to": []
+    },
+    {
+      "id": "liftoff-black",
+      "name": "LiftOff Black Entrepreneurship Program",
+      "org": "Velocity (University of Waterloo)",
+      "level": "academic",
+      "type": "incubator",
+      "summary": "A Black-led accelerator and incubator for Black entrepreneurs in Waterloo region, with coaching, mentorship, workspace and a route to funding.",
+      "amount": "Free; about 12 months",
+      "stages": [
+        "idea",
+        "prototype",
+        "launched"
+      ],
+      "audiences": [
+        "black"
+      ],
+      "needs": [
+        "mentorship",
+        "space",
+        "network"
+      ],
+      "sectors": [
+        "any"
+      ],
+      "provinces": [
+        "ON"
+      ],
+      "requires": {},
+      "requirements": [],
+      "deadline": {
+        "kind": "none_published",
+        "date": null,
+        "note": "Intake dates not published; check Velocity"
+      },
+      "status": "check",
+      "phase": "learn",
+      "apply_url": "https://uwaterloo.ca/news/magazine/liftoff-takes-flight-support-black-entrepreneurs-waterloo",
+      "source_url": "https://www.startupcan.ca/28-resources-to-support-black-entrepreneurs-in-canada/",
+      "verified": "third_party",
+      "last_checked": "2026-10-27",
+      "restricted_to": [
+        "black"
+      ]
+    },
+    {
+      "id": "black-entrepreneurship-alliance",
+      "name": "Black Entrepreneurship Alliance accelerator",
+      "org": "Black Entrepreneurship Alliance",
+      "level": "nonprofit",
+      "type": "accelerator",
+      "summary": "An accelerator that works on founder mental health, funding literacy and investment readiness.",
+      "amount": "Not confirmed",
+      "stages": [
+        "prototype",
+        "launched",
+        "revenue"
+      ],
+      "audiences": [
+        "black"
+      ],
+      "needs": [
+        "mentorship",
+        "training",
+        "funding"
+      ],
+      "sectors": [
+        "any"
+      ],
+      "provinces": [
+        "any"
+      ],
+      "requires": {},
+      "requirements": [],
+      "deadline": {
+        "kind": "none_published",
+        "date": null,
+        "note": "Listed in Startup Canada's directory; check the alliance's own site for intake"
+      },
+      "status": "check",
+      "phase": "learn",
+      "apply_url": "https://www.startupcan.ca/28-resources-to-support-black-entrepreneurs-in-canada/",
+      "source_url": "https://www.startupcan.ca/28-resources-to-support-black-entrepreneurs-in-canada/",
+      "verified": "third_party",
+      "last_checked": "2026-10-27",
+      "restricted_to": [
+        "black"
+      ]
+    },
+    {
+      "id": "isc",
+      "name": "Innovative Solutions Canada",
+      "org": "Innovation, Science and Economic Development Canada",
+      "level": "federal",
+      "type": "grant",
+      "summary": "Federal challenges and testing calls that fund small Canadian businesses to prototype or test an innovation, with government as a first customer.",
+      "amount": "Set call by call; see each open opportunity",
+      "stages": [
+        "prototype",
+        "launched",
+        "revenue"
+      ],
+      "audiences": [],
+      "needs": [
+        "funding",
+        "customers",
+        "rd"
+      ],
+      "sectors": [
+        "any"
+      ],
+      "provinces": [
+        "any"
+      ],
+      "requires": {
+        "incorporated": true
+      },
+      "requirements": [
+        "Eligible Canadian small business",
+        "Two streams: Challenge (build a prototype) and Testing (test in real settings)"
+      ],
+      "deadline": {
+        "kind": "none_published",
+        "date": null,
+        "note": "Each call has its own closing date; see the open opportunities list"
+      },
+      "status": "check",
+      "phase": "fund",
+      "apply_url": "https://ised-isde.canada.ca/site/innovative-solutions-canada/",
+      "source_url": "https://ised-isde.canada.ca/site/innovative-solutions-canada/",
+      "verified": "official",
+      "last_checked": "2026-10-27",
+      "restricted_to": []
+    },
+    {
+      "id": "ready-4-market",
+      "name": "Ready 4 Market (R4M)",
+      "org": "Ontario Centre of Innovation",
+      "level": "provincial",
+      "type": "investor",
+      "summary": "A pre-seed co-investment fund for IP-driven Ontario startups, alongside private investors.",
+      "amount": "Up to $250,000 per investment; rounds of $500,000 to $2 million",
+      "stages": [
+        "prototype",
+        "launched"
+      ],
+      "audiences": [],
+      "needs": [
+        "funding",
+        "rd"
+      ],
+      "sectors": [
+        "tech",
+        "health",
+        "cleantech",
+        "hardware"
+      ],
+      "provinces": [
+        "ON"
+      ],
+      "requires": {
+        "incorporated": true
+      },
+      "requirements": [
+        "IP tied to an Ontario university, college, research hospital or campus incubator",
+        "Incorporated five years or less, operating mainly in Ontario",
+        "Under $1 million raised from third parties",
+        "Market of at least $100 million",
+        "Needs private co-investment"
+      ],
+      "deadline": {
+        "kind": "none_published",
+        "date": null,
+        "note": "No deadline listed; use the Get Started form"
+      },
+      "status": "check",
+      "phase": "fund",
+      "apply_url": "https://www.oc-innovation.ca/programs/ready-4-market/",
+      "source_url": "https://www.oc-innovation.ca/programs/ready-4-market/",
+      "verified": "official",
+      "last_checked": "2026-10-27",
+      "restricted_to": []
+    },
+    {
+      "id": "scale-ai-projects",
+      "name": "Scale AI project funding",
+      "org": "Scale AI (Global Innovation Cluster)",
+      "level": "national",
+      "type": "grant",
+      "summary": "Non-repayable funding for AI projects in supply chains and operations, run as partnerships between companies and AI providers.",
+      "amount": "Reimburses up to 40% of eligible costs; projects run 12 to 18 months",
+      "stages": [
+        "launched",
+        "revenue",
+        "growth"
+      ],
+      "audiences": [],
+      "needs": [
+        "funding",
+        "rd"
+      ],
+      "sectors": [
+        "tech"
+      ],
+      "provinces": [
+        "any"
+      ],
+      "requires": {
+        "incorporated": true,
+        "max_employees": 499
+      },
+      "requirements": [
+        "A project with more than one participant, including at least one SME under 500 employees",
+        "Focused on AI adoption or commercialization",
+        "Non-members can apply but must join if selected"
+      ],
+      "deadline": {
+        "kind": "rolling",
+        "date": null,
+        "note": "Join an info webinar first; selection takes about a month after a complete proposal"
+      },
+      "status": "check",
+      "phase": "fund",
+      "apply_url": "https://www.scaleai.ca/projects/",
+      "source_url": "https://www.scaleai.ca/projects/",
+      "verified": "official",
+      "last_checked": "2026-10-27",
+      "restricted_to": []
+    },
+    {
+      "id": "global-innovation-clusters",
+      "name": "Global Innovation Clusters",
+      "org": "Government of Canada",
+      "level": "federal",
+      "type": "grant",
+      "summary": "Five industry-led clusters (digital, protein, advanced manufacturing, AI-powered supply chains, ocean) that co-fund collaborative projects.",
+      "amount": "Set by each cluster",
+      "stages": [
+        "prototype",
+        "launched",
+        "revenue",
+        "growth"
+      ],
+      "audiences": [],
+      "needs": [
+        "rd",
+        "funding",
+        "network"
+      ],
+      "sectors": [
+        "any"
+      ],
+      "provinces": [
+        "any"
+      ],
+      "requires": {},
+      "requirements": [
+        "Project partners across industry and research",
+        "More than half of project partners are SMEs"
+      ],
+      "deadline": {
+        "kind": "none_published",
+        "date": null,
+        "note": "Each cluster has its own process; some charge membership fees"
+      },
+      "status": "check",
+      "phase": "fund",
+      "apply_url": "https://ised-isde.canada.ca/site/global-innovation-clusters/en/global-innovation-clusters",
+      "source_url": "https://ised-isde.canada.ca/site/global-innovation-clusters/en/global-innovation-clusters",
+      "verified": "official",
+      "last_checked": "2026-10-27",
+      "restricted_to": []
+    },
+    {
+      "id": "swpp",
+      "name": "Student Work Placement Program",
+      "org": "Employment and Social Development Canada",
+      "level": "federal",
+      "type": "grant",
+      "summary": "A wage subsidy when you hire a post-secondary student for a work placement, applied for through an approved partner organization.",
+      "amount": "Up to $5,000 per student opportunity",
+      "stages": [
+        "launched",
+        "revenue",
+        "growth"
+      ],
+      "audiences": [],
+      "needs": [
+        "talent",
+        "funding"
+      ],
+      "sectors": [
+        "any"
+      ],
+      "provinces": [
+        "any"
+      ],
+      "requires": {},
+      "requirements": [
+        "Employer hiring a post-secondary student for a placement"
+      ],
+      "deadline": {
+        "kind": "rolling",
+        "date": null,
+        "note": "Employers can apply year-round through one of 18 partner organizations"
+      },
+      "status": "rolling",
+      "phase": "fund",
+      "apply_url": "https://www.canada.ca/en/employment-social-development/services/student-work-placements-wage-subsidies.html",
+      "source_url": "https://www.canada.ca/en/employment-social-development/services/student-work-placements-wage-subsidies.html",
+      "verified": "official",
+      "last_checked": "2026-10-27",
+      "restricted_to": []
+    },
+    {
+      "id": "canada-summer-jobs",
+      "name": "Canada Summer Jobs",
+      "org": "Employment and Social Development Canada",
+      "level": "federal",
+      "type": "grant",
+      "summary": "Wage subsidies for employers with 50 or fewer full-time staff who hire young people (15 to 30) for summer work.",
+      "amount": "Wage subsidy; amount set by the program rules",
+      "stages": [
+        "launched",
+        "revenue",
+        "growth"
+      ],
+      "audiences": [],
+      "needs": [
+        "talent",
+        "funding"
+      ],
+      "sectors": [
+        "any"
+      ],
+      "provinces": [
+        "any"
+      ],
+      "requires": {
+        "max_employees": 50
+      },
+      "requirements": [
+        "Employers with 50 or fewer full-time employees",
+        "Youth must be 15 to 30 and eligible to work in Canada"
+      ],
+      "deadline": {
+        "kind": "closed",
+        "date": null,
+        "note": "The 2026 hiring window ran April 20 to July 20, 2026; the next window has not been published"
+      },
+      "status": "closed",
+      "phase": "fund",
+      "apply_url": "https://www.canada.ca/en/employment-social-development/services/funding/canada-summer-jobs/applicant-guide.html",
+      "source_url": "https://www.canada.ca/en/employment-social-development/news/2026/04/canada-summer-jobs-2026.html",
+      "verified": "official",
+      "last_checked": "2026-10-27",
+      "restricted_to": []
+    },
+    {
+      "id": "besp",
+      "name": "Black Entrepreneur Startup Program",
+      "org": "Futurpreneur",
+      "level": "national",
+      "type": "loan",
+      "summary": "Equity-free startup loans with up to two years of free mentoring for Black founders aged 18 to 39.",
+      "amount": "Up to $75,000, including up to $50,000 from BDC",
+      "stages": [
+        "idea",
+        "prototype",
+        "launched"
+      ],
+      "audiences": [
+        "black",
+        "youth"
+      ],
+      "needs": [
+        "funding",
+        "mentorship"
+      ],
+      "sectors": [
+        "any"
+      ],
+      "provinces": [
+        "any"
+      ],
+      "requires": {
+        "age_min": 18,
+        "age_max": 39
+      },
+      "requirements": [
+        "Age 18 to 39, living in Canada",
+        "Canadian citizen or permanent resident",
+        "Self-identify as Black",
+        "Business not yet operating, or running full-time 24 months or less"
+      ],
+      "deadline": {
+        "kind": "rolling",
+        "date": null,
+        "note": "No closing date; Futurpreneur replies in 5 to 10 business days"
+      },
+      "status": "rolling",
+      "phase": "fund",
+      "apply_url": "https://futurpreneur.ca/en/besp/",
+      "source_url": "https://futurpreneur.ca/en/besp/",
+      "verified": "official",
+      "last_checked": "2026-10-27",
+      "restricted_to": [
+        "black"
+      ]
+    },
+    {
+      "id": "bdc-indigenous-loan",
+      "name": "Indigenous Entrepreneur Loan",
+      "org": "BDC",
+      "level": "federal",
+      "type": "loan",
+      "summary": "A BDC loan to grow or scale an Indigenous-owned business, with preferred rates and no processing or annual administration fees.",
+      "amount": "Up to $350,000",
+      "stages": [
+        "launched",
+        "revenue",
+        "growth"
+      ],
+      "audiences": [
+        "indigenous"
+      ],
+      "needs": [
+        "funding",
+        "mentorship"
+      ],
+      "sectors": [
+        "any"
+      ],
+      "provinces": [
+        "any"
+      ],
+      "requires": {},
+      "requirements": [],
+      "deadline": {
+        "kind": "rolling",
+        "date": null,
+        "note": "Apply any time; contact BDC for requirements"
+      },
+      "status": "rolling",
+      "phase": "fund",
+      "apply_url": "https://bdc.ca/en/i-am/indigenous-entrepreneur",
+      "source_url": "https://bdc.ca/en/i-am/indigenous-entrepreneur",
+      "verified": "official",
+      "last_checked": "2026-10-27",
+      "restricted_to": [
+        "indigenous"
+      ]
+    },
+    {
+      "id": "wes-loan-fund",
+      "name": "Women Entrepreneurship Loan Fund",
+      "org": "Innovation, Science and Economic Development Canada",
+      "level": "federal",
+      "type": "loan",
+      "summary": "Loans to help women-owned businesses start up, scale up and reach international markets, part of the Women Entrepreneurship Strategy.",
+      "amount": "Up to $50,000",
+      "stages": [
+        "idea",
+        "prototype",
+        "launched",
+        "revenue",
+        "growth"
+      ],
+      "audiences": [
+        "women"
+      ],
+      "needs": [
+        "funding"
+      ],
+      "sectors": [
+        "any"
+      ],
+      "provinces": [
+        "any"
+      ],
+      "requires": {},
+      "requirements": [],
+      "deadline": {
+        "kind": "none_published",
+        "date": null,
+        "note": "Detailed criteria are on the program page"
+      },
+      "status": "check",
+      "phase": "fund",
+      "apply_url": "https://ised-isde.canada.ca/site/ised/en/programs-and-initiatives/women-entrepreneurship-strategy",
+      "source_url": "https://ised-isde.canada.ca/site/ised/en/programs-and-initiatives/women-entrepreneurship-strategy",
+      "verified": "official",
+      "last_checked": "2026-10-27",
+      "restricted_to": []
+    },
+    {
+      "id": "scotiabank-black-led",
+      "name": "Black-Led Business Financing Program",
+      "org": "Scotiabank",
+      "level": "private",
+      "type": "loan",
+      "summary": "Financing for Black-led businesses for capital investments or working capital, including term loans.",
+      "amount": "Term loans up to $250,000",
+      "stages": [
+        "launched",
+        "revenue",
+        "growth"
+      ],
+      "audiences": [
+        "black"
+      ],
+      "needs": [
+        "funding"
+      ],
+      "sectors": [
+        "any"
+      ],
+      "provinces": [
+        "any"
+      ],
+      "requires": {},
+      "requirements": [],
+      "deadline": {
+        "kind": "none_published",
+        "date": null,
+        "note": "Confirm terms with Scotiabank"
+      },
+      "status": "check",
+      "phase": "fund",
+      "apply_url": "https://www.startupcan.ca/28-resources-to-support-black-entrepreneurs-in-canada/",
+      "source_url": "https://www.startupcan.ca/28-resources-to-support-black-entrepreneurs-in-canada/",
+      "verified": "third_party",
+      "last_checked": "2026-10-27",
+      "restricted_to": [
+        "black"
+      ]
+    },
+    {
+      "id": "rbc-black-entrepreneur",
+      "name": "RBC Black Entrepreneur Program",
+      "org": "RBC",
+      "level": "private",
+      "type": "loan",
+      "summary": "Loans, business advice, introductions and digital planning tools for Black entrepreneurs.",
+      "amount": "Not confirmed",
+      "stages": [
+        "launched",
+        "revenue",
+        "growth"
+      ],
+      "audiences": [
+        "black"
+      ],
+      "needs": [
+        "funding",
+        "mentorship",
+        "network"
+      ],
+      "sectors": [
+        "any"
+      ],
+      "provinces": [
+        "any"
+      ],
+      "requires": {},
+      "requirements": [],
+      "deadline": {
+        "kind": "none_published",
+        "date": null,
+        "note": "Confirm terms with RBC"
+      },
+      "status": "check",
+      "phase": "fund",
+      "apply_url": "https://www.startupcan.ca/28-resources-to-support-black-entrepreneurs-in-canada/",
+      "source_url": "https://www.startupcan.ca/28-resources-to-support-black-entrepreneurs-in-canada/",
+      "verified": "third_party",
+      "last_checked": "2026-10-27",
+      "restricted_to": [
+        "black"
+      ]
+    },
+    {
+      "id": "td-black-credit",
+      "name": "Black Entrepreneur Credit Access Program",
+      "org": "TD",
+      "level": "private",
+      "type": "loan",
+      "summary": "Enhanced credit access with a holistic application review and business banking advice for Black entrepreneurs.",
+      "amount": "Not confirmed",
+      "stages": [
+        "launched",
+        "revenue",
+        "growth"
+      ],
+      "audiences": [
+        "black"
+      ],
+      "needs": [
+        "funding",
+        "mentorship"
+      ],
+      "sectors": [
+        "any"
+      ],
+      "provinces": [
+        "any"
+      ],
+      "requires": {},
+      "requirements": [],
+      "deadline": {
+        "kind": "none_published",
+        "date": null,
+        "note": "Confirm terms with TD"
+      },
+      "status": "check",
+      "phase": "fund",
+      "apply_url": "https://www.startupcan.ca/28-resources-to-support-black-entrepreneurs-in-canada/",
+      "source_url": "https://www.startupcan.ca/28-resources-to-support-black-entrepreneurs-in-canada/",
+      "verified": "third_party",
+      "last_checked": "2026-10-27",
+      "restricted_to": [
+        "black"
+      ]
+    },
+    {
+      "id": "bbi-atlantic",
+      "name": "Black Business Initiative",
+      "org": "Black Business Initiative",
+      "level": "nonprofit",
+      "type": "grant",
+      "summary": "Atlantic Canada training, grants and consulting for Black businesses, including the Barrier Breakers youth program.",
+      "amount": "Varies by program",
+      "stages": [
+        "idea",
+        "prototype",
+        "launched",
+        "revenue",
+        "growth"
+      ],
+      "audiences": [
+        "black"
+      ],
+      "needs": [
+        "funding",
+        "training",
+        "mentorship"
+      ],
+      "sectors": [
+        "any"
+      ],
+      "provinces": [
+        "NS",
+        "NB",
+        "PE",
+        "NL"
+      ],
+      "requires": {},
+      "requirements": [],
+      "deadline": {
+        "kind": "none_published",
+        "date": null,
+        "note": "Check the initiative's own site"
+      },
+      "status": "check",
+      "phase": "fund",
+      "apply_url": "https://www.startupcan.ca/28-resources-to-support-black-entrepreneurs-in-canada/",
+      "source_url": "https://www.startupcan.ca/28-resources-to-support-black-entrepreneurs-in-canada/",
+      "verified": "third_party",
+      "last_checked": "2026-10-27",
+      "restricted_to": [
+        "black"
+      ]
+    },
+    {
+      "id": "panache-ventures",
+      "name": "Panache Ventures",
+      "org": "Panache Ventures",
+      "level": "private",
+      "type": "investor",
+      "summary": "A Canadian pre-seed fund that writes first institutional cheques, with offices in Montreal, Toronto, Calgary and Vancouver.",
+      "amount": "First cheques up to $1.5 million (Fund II, $100 million)",
+      "stages": [
+        "prototype",
+        "launched"
+      ],
+      "audiences": [],
+      "needs": [
+        "funding",
+        "network"
+      ],
+      "sectors": [
+        "tech"
+      ],
+      "provinces": [
+        "any"
+      ],
+      "requires": {},
+      "requirements": [],
+      "deadline": {
+        "kind": "rolling",
+        "date": null,
+        "note": "Send your deck through the pitch form; they say every submission is reviewed"
+      },
+      "status": "rolling",
+      "phase": "fund",
+      "apply_url": "https://www.panache.vc/pitch-us",
+      "source_url": "https://www.panache.vc/",
+      "verified": "official",
+      "last_checked": "2026-10-27",
+      "restricted_to": []
+    },
+    {
+      "id": "bkr-capital",
+      "name": "BKR Capital",
+      "org": "BKR Capital",
+      "level": "private",
+      "type": "investor",
+      "summary": "A Toronto venture fund investing in Black-led technology startups at pre-seed and seed, now also Series A.",
+      "amount": "Initial cheques of $250,000 to $1.5 million",
+      "stages": [
+        "prototype",
+        "launched",
+        "revenue"
+      ],
+      "audiences": [
+        "black"
+      ],
+      "needs": [
+        "funding",
+        "network"
+      ],
+      "sectors": [
+        "tech"
+      ],
+      "provinces": [
+        "any"
+      ],
+      "requires": {},
+      "requirements": [
+        "Black-led technology startup in Canada"
+      ],
+      "deadline": {
+        "kind": "none_published",
+        "date": null,
+        "note": "Check BKR's own site for how to reach the team"
+      },
+      "status": "check",
+      "phase": "fund",
+      "apply_url": "https://betakit.com/bkr-capital-secures-initial-20-million-for-second-black-innovation-fund/",
+      "source_url": "https://betakit.com/bkr-capital-secures-initial-20-million-for-second-black-innovation-fund/",
+      "verified": "third_party",
+      "last_checked": "2026-10-27",
+      "restricted_to": [
+        "black"
+      ]
+    },
+    {
+      "id": "real-ventures",
+      "name": "Real Ventures",
+      "org": "Real Ventures",
+      "level": "private",
+      "type": "investor",
+      "summary": "A Canadian early-stage venture firm that backs technology founders from day one.",
+      "amount": "Cheque size not published",
+      "stages": [
+        "prototype",
+        "launched"
+      ],
+      "audiences": [],
+      "needs": [
+        "funding",
+        "network"
+      ],
+      "sectors": [
+        "tech"
+      ],
+      "provinces": [
+        "any"
+      ],
+      "requires": {},
+      "requirements": [],
+      "deadline": {
+        "kind": "none_published",
+        "date": null,
+        "note": "No pitch process listed; use the contact page"
+      },
+      "status": "check",
+      "phase": "fund",
+      "apply_url": "https://realventures.com/contact/",
+      "source_url": "https://realventures.com/",
+      "verified": "official",
+      "last_checked": "2026-10-27",
+      "restricted_to": []
+    },
+    {
+      "id": "garage-capital",
+      "name": "Garage Capital",
+      "org": "Garage Capital",
+      "level": "private",
+      "type": "investor",
+      "summary": "A Waterloo-based firm that invests in Canadian and Y Combinator founders at the earliest stages.",
+      "amount": "Cheque size not published",
+      "stages": [
+        "idea",
+        "prototype",
+        "launched"
+      ],
+      "audiences": [],
+      "needs": [
+        "funding",
+        "network"
+      ],
+      "sectors": [
+        "tech"
+      ],
+      "provinces": [
+        "any"
+      ],
+      "requires": {},
+      "requirements": [],
+      "deadline": {
+        "kind": "none_published",
+        "date": null,
+        "note": "No pitch process listed on the site"
+      },
+      "status": "check",
+      "phase": "fund",
+      "apply_url": "https://www.garage.vc/",
+      "source_url": "https://www.garage.vc/",
+      "verified": "official",
+      "last_checked": "2026-10-27",
+      "restricted_to": []
+    },
+    {
+      "id": "inovia-capital",
+      "name": "Inovia Capital",
+      "org": "Inovia Capital",
+      "level": "private",
+      "type": "investor",
+      "summary": "A Canadian venture firm that invests across early and growth stages and runs a portfolio of Canadian tech companies.",
+      "amount": "Cheque size not published",
+      "stages": [
+        "launched",
+        "revenue",
+        "growth"
+      ],
+      "audiences": [],
+      "needs": [
+        "funding",
+        "network"
+      ],
+      "sectors": [
+        "tech"
+      ],
+      "provinces": [
+        "any"
+      ],
+      "requires": {},
+      "requirements": [],
+      "deadline": {
+        "kind": "none_published",
+        "date": null,
+        "note": "Check Inovia's site for how to submit"
+      },
+      "status": "check",
+      "phase": "scale",
+      "apply_url": "https://www.inovia.vc/",
+      "source_url": "https://www.inovia.vc/",
+      "verified": "unconfirmed",
+      "last_checked": "2026-10-27",
+      "restricted_to": []
+    },
+    {
+      "id": "georgian",
+      "name": "Georgian Growth Fund",
+      "org": "Georgian",
+      "level": "private",
+      "type": "investor",
+      "summary": "A Toronto growth investor for software companies: typically Series B to D with $6 to $50 million in recurring revenue.",
+      "amount": "Checks of $25 to $50 million",
+      "stages": [
+        "growth"
+      ],
+      "audiences": [],
+      "needs": [
+        "funding",
+        "network"
+      ],
+      "sectors": [
+        "tech"
+      ],
+      "provinces": [
+        "any"
+      ],
+      "requires": {},
+      "requirements": [
+        "$6 to $50 million in annual recurring revenue",
+        "Software company at Series B to D"
+      ],
+      "deadline": {
+        "kind": "none_published",
+        "date": null,
+        "note": "The page is written for fund investors; no application process is listed"
+      },
+      "status": "check",
+      "phase": "scale",
+      "apply_url": "https://georgian.io/for-investors",
+      "source_url": "https://georgian.io/for-investors",
+      "verified": "official",
+      "last_checked": "2026-10-27",
+      "restricted_to": []
+    },
+    {
+      "id": "golden-triangle-angels",
+      "name": "Golden Triangle Angel Network",
+      "org": "Golden Triangle Angel Network",
+      "level": "private",
+      "type": "investor",
+      "summary": "A Waterloo-region angel group where founders can apply to pitch to member investors.",
+      "amount": "Not confirmed",
+      "stages": [
+        "prototype",
+        "launched",
+        "revenue"
+      ],
+      "audiences": [],
+      "needs": [
+        "funding",
+        "network"
+      ],
+      "sectors": [
+        "tech"
+      ],
+      "provinces": [
+        "ON"
+      ],
+      "requires": {},
+      "requirements": [],
+      "deadline": {
+        "kind": "none_published",
+        "date": null,
+        "note": "Applications go through the Gust page; confirm they are accepting"
+      },
+      "status": "check",
+      "phase": "fund",
+      "apply_url": "https://gust.com/organizations/golden-triangle-angelnet/apply",
+      "source_url": "https://gust.com/organizations/golden-triangle-angelnet",
+      "verified": "unconfirmed",
+      "last_checked": "2026-10-27",
+      "restricted_to": []
+    },
+    {
+      "id": "naco-angels",
+      "name": "NACO (angel groups directory)",
+      "org": "National Angel Capital Organization",
+      "level": "nonprofit",
+      "type": "resource",
+      "summary": "The national association for Canadian angel groups. Use it to find angel networks near you and learn how angel rounds work.",
+      "amount": "Not a funder",
+      "stages": [
+        "prototype",
+        "launched",
+        "revenue"
+      ],
+      "audiences": [],
+      "needs": [
+        "funding",
+        "network"
+      ],
+      "sectors": [
+        "any"
+      ],
+      "provinces": [
+        "any"
+      ],
+      "requires": {},
+      "requirements": [],
+      "deadline": {
+        "kind": "none_published",
+        "date": null,
+        "note": "Confirm the member directory on NACO's own site"
+      },
+      "status": "check",
+      "phase": "fund",
+      "apply_url": "https://www.naco.ca",
+      "source_url": "https://www.globenewswire.com/news-release/2022/09/28/2524148/0/en/NACO-in-collaboration-with-leading-academics-investors-and-entrepreneurs-releases-2022-Report-on-Angel-Investing-in-Canada.html",
+      "verified": "unconfirmed",
+      "last_checked": "2026-10-27",
+      "restricted_to": []
+    },
+    {
+      "id": "business-benefits-finder",
+      "name": "Business Benefits Finder",
+      "org": "Government of Canada",
+      "level": "federal",
+      "type": "resource",
+      "summary": "Answer a few questions and get a personalised list of federal, provincial and local programs for your business.",
+      "amount": "Free tool",
+      "stages": [
+        "idea",
+        "prototype",
+        "launched",
+        "revenue",
+        "growth"
+      ],
+      "audiences": [],
+      "needs": [
+        "funding",
+        "tax",
+        "training"
+      ],
+      "sectors": [
+        "any"
+      ],
+      "provinces": [
+        "any"
+      ],
+      "requires": {},
+      "requirements": [],
+      "deadline": {
+        "kind": "none_published",
+        "date": null,
+        "note": "Always available"
+      },
+      "status": "open",
+      "phase": "learn",
+      "apply_url": "https://www.canada.ca/en/services/business/start/support-financing.html",
+      "source_url": "https://www.canada.ca/en/services/business/start/support-financing.html",
+      "verified": "official",
+      "last_checked": "2026-10-27",
+      "restricted_to": []
+    },
+    {
+      "id": "regional-development-agencies",
+      "name": "Regional development agencies",
+      "org": "Government of Canada",
+      "level": "federal",
+      "type": "resource",
+      "summary": "Each region has a federal agency that funds and advises local businesses: PacifiCan, PrairiesCan, FedDev Ontario, FedNor, CED Quebec, ACOA and CanNor.",
+      "amount": "Varies by agency",
+      "stages": [
+        "idea",
+        "prototype",
+        "launched",
+        "revenue",
+        "growth"
+      ],
+      "audiences": [],
+      "needs": [
+        "funding",
+        "mentorship",
+        "network"
+      ],
+      "sectors": [
+        "any"
+      ],
+      "provinces": [
+        "any"
+      ],
+      "requires": {},
+      "requirements": [],
+      "deadline": {
+        "kind": "none_published",
+        "date": null,
+        "note": "Find your region's agency and ask about open programs"
+      },
+      "status": "check",
+      "phase": "learn",
+      "apply_url": "https://www.canada.ca/en/services/business/start/support-financing.html",
+      "source_url": "https://www.canada.ca/en/services/business/start/support-financing.html",
+      "verified": "official",
+      "last_checked": "2026-10-27",
+      "restricted_to": []
+    },
+    {
+      "id": "community-futures",
+      "name": "Community Futures",
+      "org": "Community Futures networks",
+      "level": "national",
+      "type": "resource",
+      "summary": "Local non-profit business centres that support small businesses outside big cities. Called SADC/CAE in Quebec and CBDCs in Atlantic Canada.",
+      "amount": "Varies by centre",
+      "stages": [
+        "idea",
+        "prototype",
+        "launched",
+        "revenue"
+      ],
+      "audiences": [
+        "rural"
+      ],
+      "needs": [
+        "funding",
+        "mentorship",
+        "training"
+      ],
+      "sectors": [
+        "any"
+      ],
+      "provinces": [
+        "any"
+      ],
+      "requires": {},
+      "requirements": [],
+      "deadline": {
+        "kind": "none_published",
+        "date": null,
+        "note": "Contact your local centre"
+      },
+      "status": "check",
+      "phase": "learn",
+      "apply_url": "https://www.canada.ca/en/services/business/start/support-financing.html",
+      "source_url": "https://www.canada.ca/en/services/business/start/support-financing.html",
+      "verified": "official",
+      "last_checked": "2026-10-27",
+      "restricted_to": []
+    },
+    {
+      "id": "innovation-canada-ags",
+      "name": "Accelerated Growth Service",
+      "org": "Innovation, Science and Economic Development Canada",
+      "level": "federal",
+      "type": "resource",
+      "summary": "A dedicated innovation advisor who helps growing companies pitch to government, navigate programs and strengthen applications.",
+      "amount": "Free advisory",
+      "stages": [
+        "growth"
+      ],
+      "audiences": [],
+      "needs": [
+        "funding",
+        "network",
+        "export"
+      ],
+      "sectors": [
+        "any"
+      ],
+      "provinces": [
+        "any"
+      ],
+      "requires": {
+        "incorporated": true
+      },
+      "requirements": [
+        "Incorporated in Canada",
+        "Focused on expansion, typically around $5 million in revenue with strong recent growth"
+      ],
+      "deadline": {
+        "kind": "none_published",
+        "date": null,
+        "note": "Check the service page for how to be considered"
+      },
+      "status": "check",
+      "phase": "scale",
+      "apply_url": "https://ised-isde.canada.ca/site/accelerated-growth-service/en",
+      "source_url": "https://ised-isde.canada.ca/site/accelerated-growth-service/en",
+      "verified": "official",
+      "last_checked": "2026-10-27",
+      "restricted_to": []
+    },
+    {
+      "id": "ip-village",
+      "name": "IP Village",
+      "org": "Canadian Intellectual Property Office",
+      "level": "federal",
+      "type": "resource",
+      "summary": "Free guides, courses and advisors on protecting your ideas, plus pointers to ElevateIP, CanExport and low-cost IP clinics.",
+      "amount": "Free",
+      "stages": [
+        "idea",
+        "prototype",
+        "launched",
+        "revenue",
+        "growth"
+      ],
+      "audiences": [],
+      "needs": [
+        "ip",
+        "training"
+      ],
+      "sectors": [
+        "any"
+      ],
+      "provinces": [
+        "any"
+      ],
+      "requires": {},
+      "requirements": [],
+      "deadline": {
+        "kind": "none_published",
+        "date": null,
+        "note": "Always available"
+      },
+      "status": "open",
+      "phase": "learn",
+      "apply_url": "https://ised-isde.canada.ca/site/canadian-intellectual-property-office/en/ip-village-ip-resources-your-business",
+      "source_url": "https://ised-isde.canada.ca/site/canadian-intellectual-property-office/en/ip-village-ip-resources-your-business",
+      "verified": "official",
+      "last_checked": "2026-10-27",
+      "restricted_to": []
+    },
+    {
+      "id": "elevateip",
+      "name": "ElevateIP",
+      "org": "Innovation, Science and Economic Development Canada",
+      "level": "federal",
+      "type": "resource",
+      "summary": "IP workshops, strategy help and support with protection costs, delivered to startups through accelerators and incubators.",
+      "amount": "Delivered through partner organizations; amounts not published",
+      "stages": [
+        "idea",
+        "prototype",
+        "launched"
+      ],
+      "audiences": [],
+      "needs": [
+        "ip",
+        "training",
+        "mentorship"
+      ],
+      "sectors": [
+        "any"
+      ],
+      "provinces": [
+        "any"
+      ],
+      "requires": {},
+      "requirements": [
+        "Accessed through partner organizations, including Communitech, New Ventures BC and Springboard Atlantic"
+      ],
+      "deadline": {
+        "kind": "none_published",
+        "date": null,
+        "note": "Join a partner accelerator such as Communitech to access it"
+      },
+      "status": "check",
+      "phase": "learn",
+      "apply_url": "https://ised-isde.canada.ca/site/ised/en/programs-and-initiatives/elevateip",
+      "source_url": "https://ised-isde.canada.ca/site/ised/en/programs-and-initiatives/elevateip",
+      "verified": "official",
+      "last_checked": "2026-10-27",
+      "restricted_to": []
+    },
+    {
+      "id": "tcs-diversity-export",
+      "name": "Diverse exporters support",
+      "org": "Trade Commissioner Service",
+      "level": "federal",
+      "type": "resource",
+      "summary": "Export help for businesses led by women, Indigenous people, 2SLGBTQI+ people, visible minorities and youth, including trade missions and supplier diversity certification.",
+      "amount": "Advisory; CanExport funding is separate",
+      "stages": [
+        "revenue",
+        "growth"
+      ],
+      "audiences": [
+        "women",
+        "indigenous",
+        "youth"
+      ],
+      "needs": [
+        "export",
+        "network",
+        "customers"
+      ],
+      "sectors": [
+        "any"
+      ],
+      "provinces": [
+        "any"
+      ],
+      "requires": {},
+      "requirements": [],
+      "deadline": {
+        "kind": "none_published",
+        "date": null,
+        "note": "Contact your regional Trade Commissioner office"
+      },
+      "status": "check",
+      "phase": "scale",
+      "apply_url": "https://www.tradecommissioner.gc.ca/businesswomen-femmesdaffaires/aboutus-aproposdenous.aspx?lang=eng",
+      "source_url": "https://www.tradecommissioner.gc.ca/businesswomen-femmesdaffaires/aboutus-aproposdenous.aspx?lang=eng",
+      "verified": "official",
+      "last_checked": "2026-10-27",
+      "restricted_to": []
+    },
+    {
+      "id": "startup-canada-black-guide",
+      "name": "Resources for Black entrepreneurs",
+      "org": "Startup Canada",
+      "level": "nonprofit",
+      "type": "resource",
+      "summary": "A directory of 28 programs, funds and networks for Black entrepreneurs, grouped by stage.",
+      "amount": "Free directory",
+      "stages": [
+        "idea",
+        "prototype",
+        "launched",
+        "revenue",
+        "growth"
+      ],
+      "audiences": [
+        "black"
+      ],
+      "needs": [
+        "network",
+        "funding",
+        "mentorship"
+      ],
+      "sectors": [
+        "any"
+      ],
+      "provinces": [
+        "any"
+      ],
+      "requires": {},
+      "requirements": [],
+      "deadline": {
+        "kind": "none_published",
+        "date": null,
+        "note": "Always available"
+      },
+      "status": "open",
+      "phase": "learn",
+      "apply_url": "https://www.startupcan.ca/28-resources-to-support-black-entrepreneurs-in-canada/",
+      "source_url": "https://www.startupcan.ca/28-resources-to-support-black-entrepreneurs-in-canada/",
+      "verified": "official",
+      "last_checked": "2026-10-27",
+      "restricted_to": []
     }
   ]
 }

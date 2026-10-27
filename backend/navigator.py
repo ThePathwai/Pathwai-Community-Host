@@ -27,6 +27,7 @@ STAGE_HINT = {
     "revenue": "Steady revenue",
     "growth": "Scaling a proven product",
 }
+STAGE_NOW = {"idea": "at the idea stage", "prototype": "at the prototype stage", "launched": "just launched", "revenue": "earning revenue", "growth": "growing"}
 NEEDS = ["funding", "mentorship", "space", "customers", "export", "rd", "ip", "talent", "network", "tax", "training", "visa"]
 NEED_LABEL = {
     "funding": "funding", "mentorship": "mentors", "space": "a workspace", "customers": "first customers", "export": "export help",
@@ -36,10 +37,10 @@ AUDIENCES = ["women", "black", "indigenous", "newcomer", "youth", "student", "ru
 AUDIENCE_LABEL = {"women": "women", "black": "Black", "indigenous": "Indigenous", "newcomer": "newcomer", "youth": "young", "student": "student", "rural": "rural"}
 SECTORS = ["tech", "hardware", "health", "cleantech", "mobility", "creative", "retail", "food", "services", "social"]
 PROVINCES = ["ON", "BC", "AB", "SK", "MB", "QC", "NB", "NS", "PE", "NL", "YT", "NT", "NU"]
-TYPES = ["grant", "loan", "tax_credit", "accelerator", "incubator", "mentorship", "competition", "investor", "immigration", "research_partnership"]
+TYPES = ["grant", "loan", "tax_credit", "accelerator", "incubator", "mentorship", "competition", "investor", "immigration", "research_partnership", "resource"]
 TYPE_LABEL = {
     "grant": "Grant", "loan": "Loan", "tax_credit": "Tax credit", "accelerator": "Accelerator", "incubator": "Incubator", "mentorship": "Mentorship",
-    "competition": "Competition", "investor": "Investor", "immigration": "Immigration", "research_partnership": "Research partner",
+    "competition": "Competition", "investor": "Investor", "immigration": "Immigration", "research_partnership": "Research partner", "resource": "Resource",
 }
 STATUSES = ["open", "rolling", "check", "closed", "paused"]
 STATUS_LABEL = {"open": "Open", "rolling": "Rolling", "check": "Check the site", "closed": "Closed", "paused": "Paused"}
@@ -337,9 +338,88 @@ def suggest(programs: List[Dict[str, Any]], raw_profile: Optional[Dict[str, Any]
         "later": later[:5],
         "skipped": skipped,
         "path": path,
+        "trajectory": trajectory(programs, profile, today),
         "summary": summary_text(profile, ranked, later),
         "as_of": today.isoformat(),
     }
+
+
+def trajectory(programs: List[Dict[str, Any]], raw_profile: Optional[Dict[str, Any]], today: Optional[date] = None, per_stage: int = 3) -> Dict[str, Any]:
+    """Where the founder came from, where they are and where they are going: the five stages, each with the programs that serve it.
+
+    Programs are re-scored as if the founder were at each stage, so the same hard rules (province, age, group, sector) apply
+    all the way along. Behind you favours programs that end at that stage, ahead favours programs that first open there,
+    and a program is shown in one column only."""
+    today = today or date.today()
+    profile = normalize_profile(raw_profile)
+    cur = STAGES.index(profile["stage"])
+    state_of = lambda i: "past" if i < cur else "current" if i == cur else "future"
+    order = [cur] + list(range(cur + 1, len(STAGES))) + list(range(cur - 1, -1, -1))
+    used: set = set()
+    cols: Dict[int, Dict[str, Any]] = {}
+    for i in order:
+        stage = STAGES[i]
+        state = state_of(i)
+        at = {**profile, "stage": stage}
+        rows = []
+        for p in programs:
+            st_list = [x for x in (p.get("stages") or STAGES) if x in STAGES] or list(STAGES)
+            if stage not in st_list:
+                continue
+            ev = evaluate(p, at, today)
+            if ev["fit"] == "skip":
+                continue
+            status = effective_status(p, today)
+            first, last = min(STAGES.index(x) for x in st_list), max(STAGES.index(x) for x in st_list)
+            live = 0 if status in ("open", "rolling") else 1 if status == "check" else 2
+            if state == "past":
+                lead = 0 if last == i else 1
+            elif state == "future":
+                lead = 0 if first == i else 1
+            else:
+                lead = 0
+            res = 1 if p.get("type") == "resource" else 0
+            if state == "current":
+                live = 0  # the column you are in follows the same order as your matches: best fit first
+            rows.append((lead, res, live, -ev["score"], p["name"], p, ev, status, first, last))
+        rows.sort(key=lambda r: r[:5])
+        pool = [r for r in rows if r[5]["id"] not in used and not (r[7] in ("closed", "paused") and state != "past")]
+        picked = []
+        # Mix the column: at most two of one kind first, then fill any gaps from what is left.
+        for cap in (2, per_stage):
+            for r in pool:
+                if len(picked) >= per_stage:
+                    break
+                if r in picked or sum(1 for x in picked if x[5].get("type") == r[5].get("type")) >= cap:
+                    continue
+                picked.append(r)
+        picked.sort(key=lambda r: r[:5])
+        out = []
+        for lead, _res, live, _s, _n, p, ev, status, first, last in picked:
+            used.add(p["id"])
+            if state == "future":
+                note = (f"Opens up at the {STAGE_LABEL[stage]} stage." if first == i else "Gets easier to land as you grow.")
+                if ev["cautions"]:
+                    note += " " + ev["cautions"][0]
+            elif state == "past":
+                note = "Built for this stage; you have likely used or outgrown it." if last == i else p.get("summary", "")
+            else:
+                note = _why({**_brief(p), "reasons": ev["reasons"]})
+            out.append({**_brief(p), "status": status, "fit": ev["fit"], "score": ev["score"], "note": note})
+        cols[i] = {"stage": stage, "label": STAGE_LABEL[stage], "hint": STAGE_HINT[stage], "state": state, "available": len(rows), "programs": out}
+    stages = [cols[i] for i in range(len(STAGES))]
+    nxt = stages[cur + 1] if cur + 1 < len(stages) else None
+    prev = stages[cur - 1] if cur > 0 else None
+    story = ""
+    if cur > 0:
+        story += f"You've come through {_join([c['label'] for c in stages[:cur]])}. "
+    story += f"Right now you're {STAGE_NOW[profile['stage']]}. "
+    if nxt:
+        names = [r["name"] for r in nxt["programs"][:2]]
+        story += f"Next up is {nxt['label']}" + (f", where {_join(names)} come into reach." if len(names) > 1 else f", where {names[0]} comes into reach." if names else ".")
+    else:
+        story += "You're at the top of the ladder, so the focus now is scaling and export."
+    return {"current": profile["stage"], "index": cur, "stages": stages, "story": story}
 
 
 def summary_text(profile: Dict[str, Any], ranked: List[Dict[str, Any]], later: List[Dict[str, Any]]) -> str:

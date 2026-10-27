@@ -14,8 +14,8 @@ export const AUDIENCES = ["women", "black", "indigenous", "newcomer", "youth", "
 export const AUDIENCE_LABEL = { women: "women", black: "Black", indigenous: "Indigenous", newcomer: "newcomer", youth: "young", student: "student", rural: "rural" };
 export const SECTORS = ["tech", "hardware", "health", "cleantech", "mobility", "creative", "retail", "food", "services", "social"];
 export const PROVINCES = ["ON", "BC", "AB", "SK", "MB", "QC", "NB", "NS", "PE", "NL", "YT", "NT", "NU"];
-export const TYPES = ["grant", "loan", "tax_credit", "accelerator", "incubator", "mentorship", "competition", "investor", "immigration", "research_partnership"];
-export const TYPE_LABEL = { grant: "Grant", loan: "Loan", tax_credit: "Tax credit", accelerator: "Accelerator", incubator: "Incubator", mentorship: "Mentorship", competition: "Competition", investor: "Investor", immigration: "Immigration", research_partnership: "Research partner" };
+export const TYPES = ["grant", "loan", "tax_credit", "accelerator", "incubator", "mentorship", "competition", "investor", "immigration", "research_partnership", "resource"];
+export const TYPE_LABEL = { grant: "Grant", loan: "Loan", tax_credit: "Tax credit", accelerator: "Accelerator", incubator: "Incubator", mentorship: "Mentorship", competition: "Competition", investor: "Investor", immigration: "Immigration", research_partnership: "Research partner", resource: "Resource" };
 export const STATUSES = ["open", "rolling", "check", "closed", "paused"];
 export const STATUS_LABEL = { open: "Open", rolling: "Rolling", check: "Check the site", closed: "Closed", paused: "Paused" };
 const STATUS_POINTS = { open: 10, rolling: 8, check: 0, closed: -25, paused: -35 };
@@ -192,7 +192,75 @@ export function suggest(programs, rawProfile, today = todayIso(), limit = 8) {
     const pick = ranked.find((r) => r.phase === phase && r.status !== "closed" && r.status !== "paused") || ranked.find((r) => r.phase === phase);
     if (pick) path.push({ phase, label: PHASE_LABEL[phase], program_id: pick.id, name: pick.name, why: why(pick) });
   }
-  return { profile, matches: ranked.slice(0, limit), more: ranked.slice(limit, limit + 8), later: buckets.later.slice(0, 5), skipped, path, summary: summaryText(profile, ranked, buckets.later), as_of: today };
+  return { profile, matches: ranked.slice(0, limit), more: ranked.slice(limit, limit + 8), later: buckets.later.slice(0, 5), skipped, path, trajectory: trajectory(programs, profile, today), summary: summaryText(profile, ranked, buckets.later), as_of: today };
+}
+
+export const STAGE_NOW = { idea: "at the idea stage", prototype: "at the prototype stage", launched: "just launched", revenue: "earning revenue", growth: "growing" };
+
+// Where the founder came from, where they are and where they are going: the five stages, each with the programs that serve it.
+// Mirrors backend/navigator.py trajectory(); tests/test_navigator_guide_parity-style checks keep the two in step.
+export function trajectory(programs, rawProfile, today = todayIso(), perStage = 3) {
+  const profile = normalizeProfile(rawProfile);
+  const cur = STAGES.indexOf(profile.stage);
+  const stateOf = (i) => (i < cur ? "past" : i === cur ? "current" : "future");
+  const order = [cur];
+  for (let i = cur + 1; i < STAGES.length; i += 1) order.push(i);
+  for (let i = cur - 1; i >= 0; i -= 1) order.push(i);
+  const used = new Set();
+  const cols = {};
+  for (const i of order) {
+    const stage = STAGES[i];
+    const state = stateOf(i);
+    const at = { ...profile, stage };
+    const rows = [];
+    for (const p of programs) {
+      const stList = (p.stages || STAGES).filter((x) => STAGES.includes(x));
+      const sl = stList.length ? stList : STAGES;
+      if (!sl.includes(stage)) continue;
+      const ev = evaluate(p, at, today);
+      if (ev.fit === "skip") continue;
+      const status = effectiveStatus(p, today);
+      const idx = sl.map((x) => STAGES.indexOf(x));
+      const first = Math.min(...idx); const last = Math.max(...idx);
+      let live = status === "open" || status === "rolling" ? 0 : status === "check" ? 1 : 2;
+      if (state === "current") live = 0; // the column you are in follows the same order as your matches: best fit first
+      const lead = state === "past" ? (last === i ? 0 : 1) : state === "future" ? (first === i ? 0 : 1) : 0;
+      const res = p.type === "resource" ? 1 : 0;
+      rows.push({ key: [lead, res, live, -ev.score, p.name], p, ev, status, first, last });
+    }
+    rows.sort((a, b) => { for (let k = 0; k < 5; k += 1) { if (a.key[k] < b.key[k]) return -1; if (a.key[k] > b.key[k]) return 1; } return 0; });
+    const pool = rows.filter((r) => !used.has(r.p.id) && !((r.status === "closed" || r.status === "paused") && state !== "past"));
+    let picked = [];
+    for (const cap of [2, perStage]) {
+      for (const r of pool) {
+        if (picked.length >= perStage) break;
+        if (picked.includes(r) || picked.filter((x) => x.p.type === r.p.type).length >= cap) continue;
+        picked.push(r);
+      }
+    }
+    picked = rows.filter((r) => picked.includes(r));
+    const out = picked.map((r) => {
+      used.add(r.p.id);
+      let note;
+      if (state === "future") {
+        note = r.first === i ? `Opens up at the ${STAGE_LABEL[stage]} stage.` : "Gets easier to land as you grow.";
+        if (r.ev.cautions.length) note += " " + r.ev.cautions[0];
+      } else if (state === "past") note = r.last === i ? "Built for this stage; you have likely used or outgrown it." : (r.p.summary || "");
+      else note = why({ ...brief(r.p), reasons: r.ev.reasons });
+      return { ...brief(r.p), status: r.status, fit: r.ev.fit, score: r.ev.score, note };
+    });
+    cols[i] = { stage, label: STAGE_LABEL[stage], hint: STAGE_HINT[stage], state, available: rows.length, programs: out };
+  }
+  const stages = STAGES.map((_, i) => cols[i]);
+  const nxt = cur + 1 < stages.length ? stages[cur + 1] : null;
+  let story = "";
+  if (cur > 0) story += `You've come through ${joinList(stages.slice(0, cur).map((c) => c.label))}. `;
+  story += `Right now you're ${STAGE_NOW[profile.stage]}. `;
+  if (nxt) {
+    const names = nxt.programs.slice(0, 2).map((r) => r.name);
+    story += `Next up is ${nxt.label}` + (names.length > 1 ? `, where ${joinList(names)} come into reach.` : names.length ? `, where ${names[0]} comes into reach.` : ".");
+  } else story += "You're at the top of the ladder, so the focus now is scaling and export.";
+  return { current: profile.stage, index: cur, stages, story };
 }
 
 export function evaluateCommunity(com, profile) {

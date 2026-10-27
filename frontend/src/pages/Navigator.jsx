@@ -7,7 +7,8 @@ import { Wordmark, PoweredBy, Spinner, cx } from "../components/ui";
 import { NEED_LABEL, TYPE_LABEL } from "../lib/navigator";
 import { startDemo } from "../lib/demo";
 import { tint, typeMeta } from "../lib/programStyle";
-import { FitMeter, PathTimeline, ProgramCard, ProgramDrawer, TypeTile } from "../components/ProgramCards";
+import { FitMeter, ProgramCard, ProgramDrawer, TypeTile } from "../components/ProgramCards";
+import Trajectory from "../components/Trajectory";
 import AccountShell from "../components/AccountShell";
 import GuideChat from "../components/GuideChat";
 
@@ -110,7 +111,7 @@ function Results({ res, meta, loading, generic, onOpen }) {
   const [type, setType] = useState("");
   const [showAll, setShowAll] = useState(false);
   if (!res) return <Spinner />;
-  const { matches, more, later, communities, path, skipped } = res;
+  const { matches, more, later, communities, trajectory, skipped } = res;
   const all = [...matches, ...more];
   const counts = all.reduce((o, p) => ({ ...o, [p.type]: (o[p.type] || 0) + 1 }), {});
   const shown = type ? all.filter((p) => p.type === type) : all;
@@ -118,20 +119,20 @@ function Results({ res, meta, loading, generic, onOpen }) {
   const visible = showAll || type ? shown : shown.slice(0, LIMIT);
   const best = visible.filter((p) => p.fit === "strong");
   const worth = visible.filter((p) => p.fit !== "strong");
-  const find = (id) => all.find((p) => p.id === id);
   const grid = "grid grid-cols-[minmax(0,1fr)] gap-3 md:grid-cols-[repeat(2,minmax(0,1fr))] 2xl:grid-cols-[repeat(3,minmax(0,1fr))]";
   return (
     <div className={cx("space-y-10 transition-opacity", loading && "opacity-60")} aria-busy={loading} data-testid="nav-results">
       {generic && <p className="rounded-xl bg-ink/[.05] p-3 text-sm text-muted">These are examples for an early-stage founder in Ontario. Add your startup to your profile to see yours.</p>}
 
-      {path.length > 0 && (
+      {trajectory?.stages?.length > 0 && (
         <section className="rounded-3xl border border-line bg-surface p-5 sm:p-6">
           <div className="mb-5 flex items-start gap-3" data-testid="nav-mentor">
             <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full" style={{ background: "var(--accent)", color: "var(--on-accent)" }}><Compass className="h-4 w-4" aria-hidden /></span>
             <p className="min-w-0 pt-1 text-[15px] leading-snug text-ink/90">{res.narrative || res.summary}</p>
           </div>
-          <p className="eyebrow mb-4">Your path</p>
-          <PathTimeline path={path} onPick={(id) => { const p = find(id); if (p) onOpen(p); }} />
+          <p className="eyebrow">Your trajectory</p>
+          <p className="mb-5 mt-1 text-sm text-muted">{trajectory.story}</p>
+          <Trajectory data={trajectory} onPick={onOpen} />
         </section>
       )}
 
