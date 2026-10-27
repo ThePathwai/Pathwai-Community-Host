@@ -266,3 +266,16 @@ and must never be set on the instance real people use.
 | A community can't send a text: not enough credits | Add credits (platform admin, Messages → Blasts → Add credits). |
 | Google button missing | `GOOGLE_CLIENT_ID` unset, or the page origin isn't in the OAuth client's *Authorized JavaScript origins*. |
 | Saved integration keys stopped working | `INTEGRATIONS_SECRET` was changed. Restore the old value, or re-enter the keys. |
+
+## 9. Navigator (program directory and mentor)
+
+Public at `/navigator` (no login). It reads `backend/data/programs_ca.json`, a hand-checked catalog of Canadian programs, plus whatever
+community admins list under **Admin → Programs** (stored per community; a community only appears once its admin switches it on).
+Nothing to configure: the matching rules are plain code (`backend/navigator.py`), so answers never depend on a model. If
+`ENABLE_AI_CHAT=true` and `EMERGENT_LLM_KEY` are set, the one-paragraph summary is reworded by the model from the matched facts only;
+without them the plain summary is used.
+
+Keeping it honest: every catalog entry has `verified` (official / third_party / unconfirmed) and `last_checked`. Program details change
+without notice, so re-check entries before relying on them and update the date. After editing the catalog, copy it to
+`frontend/src/preview/programs_ca.json` (the in-browser demo reads that copy; a test fails if they differ). The matching rules also exist in
+`frontend/src/lib/navigator.js` for the demo; `tests/test_navigator_parity.py` fails if the two disagree.

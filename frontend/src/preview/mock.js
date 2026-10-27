@@ -13,6 +13,7 @@ import { classesHandler, newClassesState } from "./classes";
 import { eventsImport, guestsImport } from "./importMock";
 import { segments, smsBody } from "../lib/messaging";
 import { teamsHandler } from "./teams";
+import { navigatorCall, cleanStartup, DEMO_STARTUP } from "./navigatorMock";
 
 const S = { role: null, email: null, community: null, books: {}, extra: {} };
 const book = () => { const k = S.community || "playr"; return (S.books[k] = S.books[k] || JSON.parse(JSON.stringify(fixtures.communities[k]))); };
@@ -617,7 +618,10 @@ function computePeople(limit = 8) {
     }));
 }
 
+const seedDemoStartup = (email) => { const m = (S.extra.acctProfile = S.extra.acctProfile || {}); if (email === "demo@yourcommunity.app" && !("startup" in (m[email] || {}))) m[email] = { ...(m[email] || {}), startup: DEMO_STARTUP }; };
+const navCtx = (config) => ({ account: S.role ? ((S.extra.acctProfile || {})[S.email] || {}) : null, config, ok, fail, slug: slugOf(), signedIn: !!S.role, isAdmin: !!S.role && isAdminHere(), store: (S.extra.nav = S.extra.nav || {}), communityInfo: communityPublicInfo });
 function get(path, p, config) {
+  if (path.startsWith("/navigator")) return navigatorCall("get", path, {}, p, navCtx(config));
   if (path.startsWith("/classes")) return classesCall("get", path, {}, p, config);
   if (path.startsWith("/teams")) return teamsCall("get", path, {}, config);
   if (/^\/(admin\/(impact|report-types|reports\/|report-shares|deck-selection|partnership-offer|quiet|instagram|tiktok)|public\/report\/)/.test(path) || path === "/community/reliability") return impactCall("get", path, {}, config);
@@ -1021,6 +1025,7 @@ function get(path, p, config) {
 }
 
 function write(method, path, body, config) {
+  if (path.startsWith("/navigator")) return navigatorCall(method, path, body, config.params || {}, navCtx(config));
   if (path.startsWith("/classes")) return classesCall(method, path, body, config.params || {}, config);
   if (path.startsWith("/teams")) return teamsCall(method, path, body, config);
   if (/^\/admin\/(report-shares|deck-selection|partnership-offer|quiet)/.test(path)) return impactCall(method, path, body, config);
@@ -1032,7 +1037,7 @@ function write(method, path, body, config) {
     const override = (S.extra.pwOverrides || {})[body.email];
     const expectedPw = override !== undefined ? override : acct.pw;
     if (body.password !== expectedPw) return fail(config, 401, "Invalid email or password");
-    S.role = acct.role; S.email = body.email;
+    S.role = acct.role; S.email = body.email; seedDemoStartup(body.email);
     const first = ["playr", "grace", "the-village", "club-pto"].find((k) => memStatus(S.email, k) === "approved");
     S.community = first || null;
     return ok(config, { ok: true, user: S.community ? view()["/auth/me"] : null, account: { id: "acct-" + S.email, name: acct.name, email: S.email } });
@@ -1070,7 +1075,7 @@ function write(method, path, body, config) {
     }
     const email = "demo@yourcommunity.app";
     const acct = ACCOUNTS[email];
-    S.role = acct.role; S.email = email;
+    S.role = acct.role; S.email = email; seedDemoStartup(email);
     const first = ["playr", "grace", "the-village", "club-pto"].find((k) => memStatus(email, k) === "approved");
     S.community = first || null;
     // Same share-link join as /hub/signup's join_slug -- carries a community's "I'm here to join
@@ -1180,6 +1185,7 @@ function write(method, path, body, config) {
       const b = /^(\d{4})-(\d{2})-(\d{2})/.exec(body.birthday || ""); const t = new Date();
       prof.age = b ? t.getFullYear() - +b[1] - ((t.getMonth() + 1 < +b[2] || (t.getMonth() + 1 === +b[2] && t.getDate() < +b[3])) ? 1 : 0) : null;
     }
+    if ("startup" in body) prof.startup = cleanStartup(body.startup); // mirrors routes/hub.py: clamped to the Navigator's vocabulary, {} clears it
     if (prof.photos) prof.photos = prof.photos.filter(Boolean).slice(0, 9); // mirrors routes/hub.py's MAX_PROFILE_PHOTOS
     (S.extra.acctProfile = S.extra.acctProfile || {})[S.email] = prof;
     return ok(config, { ok: true, account: { id: "acct-" + S.email, name: (ACCOUNTS[S.email] || (S.extra.accounts || {})[S.email] || {}).name, email: S.email, ...prof } });

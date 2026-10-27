@@ -7,6 +7,7 @@ import { inDemoTab, leaveDemo } from "../lib/demo";
 import { AvatarUpload, Button, Card, Field, Input, MembershipStatusCard, Select, TagInput, Textarea, TermsConsent, Wordmark, cx } from "../components/ui";
 import { HowItWorks } from "../components/IntroTour";
 import { SUGGEST, ageFromBirthday, oldestISO, todayISO } from "../lib/profile";
+import StartupFields, { startupToApi } from "../components/StartupFields";
 import SocialAuthButtons from "../components/SocialAuthButtons";
 
 const INTENTS = [
@@ -40,7 +41,7 @@ function IntentPicker({ onPick }) {
 // same standard questions (occupation, bio, skills, interests) fresh for each community.
 function BuildProfileStep({ account, onDone, joinInfo }) {
   const [f, setF] = useState({
-    name: account?.name || "", birthday: "", title: "", company: "", location: "", bio: "", skill_set: [], interests_hobbies: [], goals: [], support_needs: [],
+    name: account?.name || "", birthday: "", title: "", company: "", location: "", bio: "", skill_set: [], interests_hobbies: [], goals: [], support_needs: [], startup: null,
     contact: { phone: "", linkedin: "", instagram: "", website: "" },
   });
   const [photo, setPhoto] = useState(account?.avatar_url || "");
@@ -55,7 +56,7 @@ function BuildProfileStep({ account, onDone, joinInfo }) {
     if (yrs === null || yrs > 120) return setErr("Check the year of your birthday.");
     if (yrs < 13) return setErr("You need to be at least 13 to use Pathwai.");
     setBusy(true); setErr("");
-    try { await api.patch("/hub/profile", { ...f, avatar_url: photo || null }); onDone(); }
+    try { await api.patch("/hub/profile", { ...f, startup: startupToApi(f.startup), avatar_url: photo || null }); onDone(); }
     catch (ex) { setErr(errMsg(ex)); } finally { setBusy(false); }
   };
   return (
@@ -73,6 +74,7 @@ function BuildProfileStep({ account, onDone, joinInfo }) {
           <Field label="Employer or school"><Input data-testid="profile-company" value={f.company} onChange={set("company")} maxLength={120} /></Field>
           <Field label="Neighbourhood or city"><Input data-testid="profile-location" value={f.location} onChange={set("location")} maxLength={120} /></Field>
           <Field label="About you"><Textarea data-testid="profile-bio" rows={3} value={f.bio} onChange={set("bio")} maxLength={1000} /></Field>
+          <StartupFields value={f.startup} onChange={(v) => setF({ ...f, startup: v })} testPrefix="profile-startup" />
           <Field label="Skills"><TagInput value={f.skill_set} suggestions={SUGGEST.skill_set} onChange={(v) => setF({ ...f, skill_set: v })} /></Field>
           <Field label="Interests"><TagInput value={f.interests_hobbies} suggestions={SUGGEST.interests_hobbies} onChange={(v) => setF({ ...f, interests_hobbies: v })} /></Field>
           <Field label="Goals"><TagInput value={f.goals} suggestions={SUGGEST.goals} onChange={(v) => setF({ ...f, goals: v })} /></Field>

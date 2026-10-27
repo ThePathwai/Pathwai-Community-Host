@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import { Link, NavLink, useLocation, useNavigate } from "react-router-dom";
-import { ShieldCheck, Bell, Bookmark, Calendar, CheckSquare, ChevronDown, Dumbbell, GraduationCap, Gift, Info, Home as HomeIcon, Layers, LifeBuoy, LogOut, Megaphone, MessageSquare, Moon, Settings, Sparkles, Sun, User, UserPlus, Users, UsersRound } from "lucide-react";
+import { Compass, ShieldCheck, Bell, Bookmark, Calendar, CheckSquare, ChevronDown, Dumbbell, GraduationCap, Gift, Info, Home as HomeIcon, Layers, LifeBuoy, LogOut, Megaphone, MessageSquare, Moon, Settings, Sparkles, Sun, User, UserPlus, Users, UsersRound } from "lucide-react";
 import { applyBrand, effectiveMode, setModePref } from "../lib/theme";
 import { AI_CHAT_ENABLED } from "../lib/features";
 import { useAuth } from "../lib/auth";
@@ -154,7 +154,8 @@ export default function Layout({ children }) {
                   <Link className="flex items-center gap-2 rounded-lg px-3 py-2 text-sm hover:bg-ink/5" to="/settings" data-testid="user-menu-settings"><Settings className="h-4 w-4" />Settings</Link>
                   <Link className="flex items-center gap-2 rounded-lg px-3 py-2 text-sm hover:bg-ink/5" to="/applications">My applications</Link>
                   <Link className="flex items-center gap-2 rounded-lg px-3 py-2 text-sm hover:bg-ink/5" to="/organizations">Event series &amp; partners</Link>
-                  <Link className="flex items-center gap-2 rounded-lg px-3 py-2 text-sm hover:bg-ink/5" to="/discover">Find a program</Link>
+                  <Link className="flex items-center gap-2 rounded-lg px-3 py-2 text-sm hover:bg-ink/5" to="/navigator" data-testid="user-menu-navigator"><Compass className="h-4 w-4" />Navigator</Link>
+                  <Link className="flex items-center gap-2 rounded-lg px-3 py-2 text-sm hover:bg-ink/5" to="/discover">Find a community</Link>
                   {user.role === "admin" && <Link className="flex items-center gap-2 rounded-lg px-3 py-2 text-sm hover:bg-ink/5" to="/admin" data-testid="user-menu-admin">Admin{adminAttn > 0 && <span className="ml-auto rounded-md bg-red-600 px-1.5 text-[10px] text-white">{adminAttn} new</span>}</Link>}
                   <button className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-sm hover:bg-ink/5" data-testid="user-menu-logout" onClick={async () => { nav("/login", { replace: true }); await logout(); }}><LogOut className="h-4 w-4" />Sign out</button>
                 </div>

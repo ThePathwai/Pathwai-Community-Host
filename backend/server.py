@@ -134,6 +134,7 @@ from routes.admin_edit import router as admin_edit_router  # noqa: E402
 from routes.integrations import router as integrations_router  # noqa: E402
 from routes.blasts import router as blasts_router  # noqa: E402
 from routes.data_import import router as data_import_router  # noqa: E402
+from routes.navigator import router as navigator_router  # noqa: E402
 from routes.oauth import router as oauth_router  # noqa: E402
 from routes._common import TERMS_REQUIRED_MSG, terms_stamp, public_view, member_type as _member_type  # noqa: E402
 from seed_portal import seed_portal_demo  # noqa: E402
@@ -1676,6 +1677,7 @@ api_router.include_router(admin_edit_router)
 api_router.include_router(integrations_router)
 api_router.include_router(blasts_router)
 api_router.include_router(data_import_router)
+api_router.include_router(navigator_router)
 api_router.include_router(oauth_router)
 api_router.include_router(hub_router)
 api_router.include_router(account_router)

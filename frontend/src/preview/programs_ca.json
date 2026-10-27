@@ -1,0 +1,1011 @@
+{
+  "version": "2026-10-27",
+  "notes": "A hand-checked starting catalog. Each entry says where it was confirmed (verified: official / third_party / unconfirmed) and when. Program owners change details without notice, so every card links to the official page. Deadlines are shown only when the source published one.",
+  "programs": [
+    {
+      "id": "irap",
+      "name": "NRC IRAP",
+      "org": "National Research Council of Canada",
+      "level": "federal",
+      "type": "grant",
+      "summary": "Funding and an advisor for Canadian SMEs building technology products or services.",
+      "amount": "Covers part of eligible R&D costs, set project by project (recent calls: up to 80% of eligible staff salaries, 50% of contractor fees)",
+      "stages": [
+        "prototype",
+        "launched",
+        "revenue",
+        "growth"
+      ],
+      "audiences": [],
+      "needs": [
+        "funding",
+        "rd",
+        "mentorship"
+      ],
+      "sectors": [
+        "any"
+      ],
+      "provinces": [
+        "any"
+      ],
+      "requires": {
+        "incorporated": true,
+        "max_employees": 500
+      },
+      "requirements": [
+        "Incorporated, for-profit SME in Canada",
+        "500 or fewer employees",
+        "Innovative, technology-driven product or service",
+        "Talk to an Industrial Technology Advisor first"
+      ],
+      "deadline": {
+        "kind": "none_published",
+        "date": null,
+        "note": "Not listed in the source; contact the NRC for current intake"
+      },
+      "status": "check",
+      "phase": "fund",
+      "apply_url": "https://nrc.canada.ca",
+      "source_url": "https://www.avinova.ca/en/blog/nrc-irap-program-guide",
+      "verified": "third_party",
+      "last_checked": "2026-10-27",
+      "restricted_to": []
+    },
+    {
+      "id": "sred",
+      "name": "SR&ED tax incentive",
+      "org": "Canada Revenue Agency",
+      "level": "federal",
+      "type": "tax_credit",
+      "summary": "Refundable tax credit on qualifying research and development spending.",
+      "amount": "35% refundable credit for Canadian-controlled private corporations on spending up to the expenditure limit ($4.5M; a rise to $6M is proposed), 15% above it",
+      "stages": [
+        "prototype",
+        "launched",
+        "revenue",
+        "growth"
+      ],
+      "audiences": [],
+      "needs": [
+        "funding",
+        "rd",
+        "tax"
+      ],
+      "sectors": [
+        "any"
+      ],
+      "provinces": [
+        "any"
+      ],
+      "requires": {
+        "incorporated": true
+      },
+      "requirements": [
+        "Incorporated and paying Canadian corporate tax",
+        "Work that seeks technological advancement and resolves uncertainty",
+        "Claim filed with your corporate tax return"
+      ],
+      "deadline": {
+        "kind": "annual",
+        "date": null,
+        "note": "Claimed each year with the corporate tax return"
+      },
+      "status": "rolling",
+      "phase": "fund",
+      "apply_url": "https://www.canada.ca/en/revenue-agency/services/scientific-research-experimental-development-tax-incentive-program.html",
+      "source_url": "https://leyton.com/ca/en/insights/articles/federal-budget-2025-sred-program-expansion/",
+      "verified": "third_party",
+      "last_checked": "2026-10-27",
+      "restricted_to": []
+    },
+    {
+      "id": "oitc",
+      "name": "Ontario Innovation Tax Credit",
+      "org": "Government of Ontario",
+      "level": "provincial",
+      "type": "tax_credit",
+      "summary": "Refundable Ontario credit on SR&ED spending done in Ontario.",
+      "amount": "8% of qualifying Ontario SR&ED spending, on up to $3M (maximum credit $240,000)",
+      "stages": [
+        "prototype",
+        "launched",
+        "revenue",
+        "growth"
+      ],
+      "audiences": [],
+      "needs": [
+        "funding",
+        "rd",
+        "tax"
+      ],
+      "sectors": [
+        "any"
+      ],
+      "provinces": [
+        "ON"
+      ],
+      "requires": {
+        "incorporated": true
+      },
+      "requirements": [
+        "Permanent establishment in Ontario",
+        "SR&ED carried out in Ontario",
+        "Eligible for the federal SR&ED credit and T661 filed",
+        "Limit shrinks once prior-year taxable income passes $500,000"
+      ],
+      "deadline": {
+        "kind": "annual",
+        "date": null,
+        "note": "File Schedule 566 with your T2 return"
+      },
+      "status": "rolling",
+      "phase": "fund",
+      "apply_url": "https://ontario.ca/page/ontario-innovation-tax-credit",
+      "source_url": "https://ontario.ca/page/ontario-innovation-tax-credit",
+      "verified": "official",
+      "last_checked": "2026-10-27",
+      "restricted_to": []
+    },
+    {
+      "id": "canexport-smes",
+      "name": "CanExport SMEs",
+      "org": "Trade Commissioner Service",
+      "level": "federal",
+      "type": "grant",
+      "summary": "Matching funds for export marketing, trade shows, market research and IP in new markets.",
+      "amount": "$10,000 to $50,000 per project, up to 50% of eligible costs (project value $20,000 to $100,000)",
+      "stages": [
+        "revenue",
+        "growth"
+      ],
+      "audiences": [],
+      "needs": [
+        "funding",
+        "export",
+        "customers"
+      ],
+      "sectors": [
+        "any"
+      ],
+      "provinces": [
+        "any"
+      ],
+      "requires": {
+        "incorporated": true,
+        "min_employees": 3,
+        "max_employees": 500
+      },
+      "requirements": [
+        "3 to 500 full-time employees",
+        "$300,000 to $100M annual revenue in Canada",
+        "Incorporated, LLP or co-operative with a CRA business number",
+        "Matching share paid in cash"
+      ],
+      "deadline": {
+        "kind": "none_published",
+        "date": null,
+        "note": "2026-27 guide does not list dates; check the program page for the current intake"
+      },
+      "status": "check",
+      "phase": "scale",
+      "apply_url": "https://www.tradecommissioner.gc.ca/en/our-solutions/funding-financing-international-business/canexport-smes.html",
+      "source_url": "https://www.tradecommissioner.gc.ca/en/our-solutions/funding-financing-international-business/canexport-smes/applicants-guide-2026-27.html",
+      "verified": "official",
+      "last_checked": "2026-10-27",
+      "restricted_to": []
+    },
+    {
+      "id": "csbfp",
+      "name": "Canada Small Business Financing Program",
+      "org": "Innovation, Science and Economic Development Canada",
+      "level": "federal",
+      "type": "loan",
+      "summary": "Government-backed loans from banks and credit unions for equipment, leaseholds and property.",
+      "amount": "Up to $1.15M in total (up to $1M term loans, $150,000 lines of credit)",
+      "stages": [
+        "launched",
+        "revenue",
+        "growth"
+      ],
+      "audiences": [],
+      "needs": [
+        "funding"
+      ],
+      "sectors": [
+        "any"
+      ],
+      "provinces": [
+        "any"
+      ],
+      "requires": {},
+      "requirements": [
+        "Gross annual revenue of $10M or less",
+        "Start-ups and existing businesses qualify, farming excluded",
+        "You apply at your own bank or credit union, which decides",
+        "2% registration fee"
+      ],
+      "deadline": {
+        "kind": "rolling",
+        "date": null,
+        "note": "Apply to a participating lender any time"
+      },
+      "status": "rolling",
+      "phase": "fund",
+      "apply_url": "https://ised-isde.canada.ca/site/canada-small-business-financing-program/en",
+      "source_url": "https://ised-isde.canada.ca/site/canada-small-business-financing-program/en/frequently-asked-questions-small-businesses",
+      "verified": "official",
+      "last_checked": "2026-10-27",
+      "restricted_to": []
+    },
+    {
+      "id": "futurpreneur-core",
+      "name": "Futurpreneur startup loan and mentor",
+      "org": "Futurpreneur",
+      "level": "national",
+      "type": "loan",
+      "summary": "A startup loan plus up to two years of one-on-one mentoring for founders aged 18 to 39.",
+      "amount": "Up to $75,000 combined with BDC, per Futurpreneur's announcement",
+      "stages": [
+        "idea",
+        "prototype",
+        "launched"
+      ],
+      "audiences": [
+        "youth"
+      ],
+      "needs": [
+        "funding",
+        "mentorship"
+      ],
+      "sectors": [
+        "any"
+      ],
+      "provinces": [
+        "any"
+      ],
+      "requires": {
+        "age_min": 18,
+        "age_max": 39
+      },
+      "requirements": [
+        "Aged 18 to 39 when you apply",
+        "Business plan and 24-month cash flow",
+        "Pre-startup or startup stage",
+        "You must take the loan to be matched with a mentor"
+      ],
+      "deadline": {
+        "kind": "rolling",
+        "date": null,
+        "note": "Apply any time; the team replies within about 5 to 10 business days"
+      },
+      "status": "rolling",
+      "phase": "fund",
+      "apply_url": "https://futurpreneur.ca",
+      "source_url": "https://arc-dev.theglobeandmail.com/investing/markets/stocks/RY-T/pressreleases/28504642/a-boost-for-new-business-futurpreneur-raises-loan-amounts-for-young-entrepreneurs-up-to-75000",
+      "verified": "third_party",
+      "last_checked": "2026-10-27",
+      "restricted_to": []
+    },
+    {
+      "id": "futurpreneur-newcomer",
+      "name": "Futurpreneur startup program for newcomers",
+      "org": "Futurpreneur",
+      "level": "national",
+      "type": "loan",
+      "summary": "A smaller startup loan and mentor for young newcomers with little Canadian credit history.",
+      "amount": "Up to $25,000 ($12,500 from Futurpreneur and $12,500 from BDC)",
+      "stages": [
+        "idea",
+        "prototype",
+        "launched"
+      ],
+      "audiences": [
+        "newcomer",
+        "youth"
+      ],
+      "needs": [
+        "funding",
+        "mentorship"
+      ],
+      "sectors": [
+        "any"
+      ],
+      "provinces": [
+        "any"
+      ],
+      "requires": {
+        "age_min": 18,
+        "age_max": 39
+      },
+      "requirements": [
+        "Aged 18 to 39",
+        "In Canada fewer than 60 months",
+        "Citizen or permanent resident",
+        "Limited or no Canadian credit history",
+        "Two character references"
+      ],
+      "deadline": {
+        "kind": "rolling",
+        "date": null,
+        "note": "Apply any time"
+      },
+      "status": "rolling",
+      "phase": "fund",
+      "apply_url": "https://futurpreneur.ca/offering/newcomer/",
+      "source_url": "https://futurpreneur.ca/offering/newcomer/",
+      "verified": "official",
+      "last_checked": "2026-10-27",
+      "restricted_to": [
+        "newcomer"
+      ]
+    },
+    {
+      "id": "belf",
+      "name": "Black Entrepreneurship Loan Fund",
+      "org": "Federation of African Canadian Economics (FACE)",
+      "level": "national",
+      "type": "loan",
+      "summary": "Loans for Black-owned businesses at any stage, delivered through the Black Entrepreneurship Program.",
+      "amount": "$10,000 to $250,000",
+      "stages": [
+        "launched",
+        "revenue",
+        "growth"
+      ],
+      "audiences": [
+        "black"
+      ],
+      "needs": [
+        "funding"
+      ],
+      "sectors": [
+        "any"
+      ],
+      "provinces": [
+        "any"
+      ],
+      "requires": {},
+      "requirements": [
+        "At least 51% Black ownership",
+        "Sole proprietorship or for-profit business",
+        "Business plan, financial statements and 2 to 3 year projections",
+        "Not open to non-profits"
+      ],
+      "deadline": {
+        "kind": "rolling",
+        "date": null,
+        "note": "Open continuously, no set deadline"
+      },
+      "status": "rolling",
+      "phase": "fund",
+      "apply_url": "https://facecoalition.com/en/loans",
+      "source_url": "https://hellodarwin.com/business-aid/programs/black-entrepreneurship-program-black-entrepreneurship-loan-fund",
+      "verified": "third_party",
+      "last_checked": "2026-10-27",
+      "restricted_to": [
+        "black"
+      ]
+    },
+    {
+      "id": "dmz-bip",
+      "name": "DMZ Black Innovation Programs",
+      "org": "DMZ at Toronto Metropolitan University",
+      "level": "private",
+      "type": "accelerator",
+      "summary": "Programs for Black founders, starting with a 10-week Validator for testing an idea and demand.",
+      "amount": "Not stated on the page",
+      "stages": [
+        "idea",
+        "prototype",
+        "launched"
+      ],
+      "audiences": [
+        "black"
+      ],
+      "needs": [
+        "mentorship",
+        "network",
+        "customers"
+      ],
+      "sectors": [
+        "tech"
+      ],
+      "provinces": [
+        "ON"
+      ],
+      "requires": {},
+      "requirements": [
+        "Black-founded",
+        "Based in the Greater Toronto Area",
+        "Idea validation stage for the Validator"
+      ],
+      "deadline": {
+        "kind": "none_published",
+        "date": null,
+        "note": "A listing shows 'Nov 20' without saying what it is; confirm on the page"
+      },
+      "status": "check",
+      "phase": "learn",
+      "apply_url": "https://dmz.torontomu.ca/bip/",
+      "source_url": "https://dmz.torontomu.ca/bip/",
+      "verified": "official",
+      "last_checked": "2026-10-27",
+      "restricted_to": [
+        "black"
+      ]
+    },
+    {
+      "id": "indigenous-growth-fund",
+      "name": "Indigenous Growth Fund (via Indigenous Financial Institutions)",
+      "org": "NACCA",
+      "level": "national",
+      "type": "loan",
+      "summary": "Capital that Indigenous Financial Institutions lend on to First Nations, Inuit and Metis entrepreneurs.",
+      "amount": "Set by each Indigenous Financial Institution",
+      "stages": [
+        "idea",
+        "prototype",
+        "launched",
+        "revenue",
+        "growth"
+      ],
+      "audiences": [
+        "indigenous"
+      ],
+      "needs": [
+        "funding",
+        "mentorship"
+      ],
+      "sectors": [
+        "any"
+      ],
+      "provinces": [
+        "any"
+      ],
+      "requires": {},
+      "requirements": [
+        "First Nations, Inuit or Metis business owner",
+        "Apply through your regional Indigenous Financial Institution, not to the fund directly"
+      ],
+      "deadline": {
+        "kind": "rolling",
+        "date": null,
+        "note": "Depends on the lender you apply to"
+      },
+      "status": "rolling",
+      "phase": "fund",
+      "apply_url": "https://nacca.ca/about-nacca/projects/the-indigenous-growth-fund",
+      "source_url": "https://nacca.ca/about-nacca/projects/the-indigenous-growth-fund",
+      "verified": "official",
+      "last_checked": "2026-10-27",
+      "restricted_to": [
+        "indigenous"
+      ]
+    },
+    {
+      "id": "wef",
+      "name": "Women Entrepreneurship Fund",
+      "org": "Innovation, Science and Economic Development Canada",
+      "level": "federal",
+      "type": "grant",
+      "summary": "Non-repayable contributions for women-owned and women-led businesses.",
+      "amount": "$10,000 to $100,000",
+      "stages": [
+        "revenue",
+        "growth"
+      ],
+      "audiences": [
+        "women"
+      ],
+      "needs": [
+        "funding"
+      ],
+      "sectors": [
+        "any"
+      ],
+      "provinces": [
+        "any"
+      ],
+      "requires": {
+        "max_employees": 500
+      },
+      "requirements": [
+        "Women-owned and/or women-led",
+        "Fewer than 500 employees",
+        "At least 2 years in operation",
+        "Two years of financial statements"
+      ],
+      "deadline": {
+        "kind": "closed",
+        "date": null,
+        "note": "Not accepting requests now; the page offers a notice when it reopens"
+      },
+      "status": "closed",
+      "phase": "fund",
+      "apply_url": "https://ised-isde.canada.ca",
+      "source_url": "https://hellodarwin.com/business-aid/programs/ised-women-entrepreneurship-fund",
+      "verified": "third_party",
+      "last_checked": "2026-10-27",
+      "restricted_to": [
+        "women"
+      ]
+    },
+    {
+      "id": "communitech-fierce-founders",
+      "name": "Communitech Fierce Founders",
+      "org": "Communitech",
+      "level": "private",
+      "type": "accelerator",
+      "summary": "Cash and coaching for women-identifying and underrepresented tech founders in Waterloo Region.",
+      "amount": "Uplift: $10,000 cash. Intensive: up to $50,000 on milestones with matching required",
+      "stages": [
+        "prototype",
+        "launched",
+        "revenue"
+      ],
+      "audiences": [
+        "women"
+      ],
+      "needs": [
+        "funding",
+        "mentorship",
+        "network"
+      ],
+      "sectors": [
+        "tech"
+      ],
+      "provinces": [
+        "ON"
+      ],
+      "requires": {},
+      "requirements": [
+        "Women-identifying or underrepresented founder leadership",
+        "Connection to the Waterloo Region tech ecosystem",
+        "MVP or early traction"
+      ],
+      "deadline": {
+        "kind": "none_published",
+        "date": null,
+        "note": "Rolling cycles; the source lists no dates and is inconsistent on current status"
+      },
+      "status": "check",
+      "phase": "learn",
+      "apply_url": "https://www.communitech.ca/programs/fierce-founders/",
+      "source_url": "https://grantcompass.ca/grants/communitech-fierce-founders-and-startup-programs.html",
+      "verified": "third_party",
+      "last_checked": "2026-10-27",
+      "restricted_to": [
+        "women",
+        "black",
+        "indigenous",
+        "newcomer"
+      ]
+    },
+    {
+      "id": "venturelab-hci",
+      "name": "ventureLAB Hardware Catalyst Initiative",
+      "org": "ventureLAB",
+      "level": "private",
+      "type": "incubator",
+      "summary": "Up to 24 months of no-equity support, labs and tools for hardware and silicon companies.",
+      "amount": "No cash; labs, design tools and advisors at no cost, no equity",
+      "stages": [
+        "prototype",
+        "launched",
+        "revenue"
+      ],
+      "audiences": [],
+      "needs": [
+        "rd",
+        "mentorship",
+        "space",
+        "ip"
+      ],
+      "sectors": [
+        "hardware"
+      ],
+      "provinces": [
+        "ON"
+      ],
+      "requires": {
+        "incorporated": true,
+        "max_employees": 99
+      },
+      "requirements": [
+        "Canadian-incorporated hardware or silicon company",
+        "Founded within 5 years, under $5M revenue",
+        "99 or fewer employees, team of two or more",
+        "Southern Ontario presence"
+      ],
+      "deadline": {
+        "kind": "closed",
+        "date": null,
+        "note": "Applications are closed; the page describes a review, panel and a 2-month bootcamp"
+      },
+      "status": "closed",
+      "phase": "learn",
+      "apply_url": "https://www.venturelab.ca/programs/hardware-catalyst-initiative",
+      "source_url": "https://www.venturelab.ca/programs/hardware-catalyst-initiative",
+      "verified": "official",
+      "last_checked": "2026-10-27",
+      "restricted_to": []
+    },
+    {
+      "id": "velocity",
+      "name": "Velocity Incubator (University of Waterloo)",
+      "org": "Velocity",
+      "level": "academic",
+      "type": "incubator",
+      "summary": "Pre-seed incubator with labs, equipment and experienced founders for full-time tech founders.",
+      "amount": "Not stated",
+      "stages": [
+        "idea",
+        "prototype"
+      ],
+      "audiences": [],
+      "needs": [
+        "space",
+        "mentorship",
+        "network",
+        "rd"
+      ],
+      "sectors": [
+        "tech",
+        "hardware"
+      ],
+      "provinces": [
+        "ON"
+      ],
+      "requires": {},
+      "requirements": [
+        "Founders willing to work on the company full-time",
+        "A credible path to solving a very large problem",
+        "Open to the public, not only students"
+      ],
+      "deadline": {
+        "kind": "rolling",
+        "date": null,
+        "note": "Rolling applications, accepted any time"
+      },
+      "status": "rolling",
+      "phase": "learn",
+      "apply_url": "https://velocityincubator.com/apply",
+      "source_url": "https://uwaterloo.ca/entrepreneurship/profiles/velocity-incubator",
+      "verified": "official",
+      "last_checked": "2026-10-27",
+      "restricted_to": []
+    },
+    {
+      "id": "ovin-rd",
+      "name": "OVIN R&D Partnership Fund",
+      "org": "Ontario Centre of Innovation",
+      "level": "provincial",
+      "type": "grant",
+      "summary": "Co-funding for Ontario companies developing and testing vehicle and mobility technology.",
+      "amount": "Stream 1 up to $100,000 over 12 months; Stream 2 up to $1M over 24 months; every OVIN dollar matched at least 2:1",
+      "stages": [
+        "prototype",
+        "launched",
+        "revenue"
+      ],
+      "audiences": [],
+      "needs": [
+        "funding",
+        "rd"
+      ],
+      "sectors": [
+        "mobility",
+        "hardware",
+        "cleantech"
+      ],
+      "provinces": [
+        "ON"
+      ],
+      "requires": {
+        "incorporated": true,
+        "max_employees": 499
+      },
+      "requirements": [
+        "Incorporated, operating in Ontario, fewer than 500 employees",
+        "Working product at readiness level 3 to 9",
+        "Automotive or mobility technology",
+        "Full proposals by invitation after an expression of interest"
+      ],
+      "deadline": {
+        "kind": "fixed",
+        "date": "2026-11-04",
+        "note": "Expression of interest, per a third-party summary; confirm on ovinhub.ca"
+      },
+      "status": "open",
+      "phase": "fund",
+      "apply_url": "https://www.oc-innovation.ca/programs/",
+      "source_url": "https://grantcompass.ca/grants/ontario-vehicle-innovation-network",
+      "verified": "third_party",
+      "last_checked": "2026-10-27",
+      "restricted_to": []
+    },
+    {
+      "id": "mitacs-accelerate",
+      "name": "Mitacs Accelerate",
+      "org": "Mitacs",
+      "level": "national",
+      "type": "research_partnership",
+      "summary": "Put a graduate student or postdoc on your R&D problem with a university supervisor, mostly paid by Mitacs.",
+      "amount": "$15,000 per 4 to 6 month internship; the company pays from $7,500",
+      "stages": [
+        "prototype",
+        "launched",
+        "revenue",
+        "growth"
+      ],
+      "audiences": [],
+      "needs": [
+        "rd",
+        "talent",
+        "funding"
+      ],
+      "sectors": [
+        "any"
+      ],
+      "provinces": [
+        "any"
+      ],
+      "requires": {
+        "incorporated": true
+      },
+      "requirements": [
+        "A company, hospital or other partner organization in Canada",
+        "A faculty supervisor at a Canadian institution",
+        "Partner contribution paid before funds are released",
+        "About 6 to 8 weeks of peer review"
+      ],
+      "deadline": {
+        "kind": "none_published",
+        "date": null,
+        "note": "Not listed on the page; ask a Mitacs advisor"
+      },
+      "status": "check",
+      "phase": "scale",
+      "apply_url": "https://www.mitacs.ca/en/programs/accelerate",
+      "source_url": "https://www.mitacs.ca:443/en/programs/accelerate",
+      "verified": "official",
+      "last_checked": "2026-10-27",
+      "restricted_to": []
+    },
+    {
+      "id": "summer-company",
+      "name": "Summer Company",
+      "org": "Government of Ontario",
+      "level": "provincial",
+      "type": "grant",
+      "summary": "Up to $3,000 and coaching for students running their own business over the summer.",
+      "amount": "Up to $3,000 in two payments",
+      "stages": [
+        "idea",
+        "prototype"
+      ],
+      "audiences": [
+        "youth",
+        "student"
+      ],
+      "needs": [
+        "funding",
+        "mentorship",
+        "training"
+      ],
+      "sectors": [
+        "any"
+      ],
+      "provinces": [
+        "ON"
+      ],
+      "requires": {
+        "age_min": 15,
+        "age_max": 29,
+        "student": true
+      },
+      "requirements": [
+        "Aged 15 to 29 and returning to school in the fall",
+        "Ontario resident, citizen or permanent resident",
+        "Brand-new business, sole proprietor or majority owner",
+        "Apply through your local Small Business Advisory Centre"
+      ],
+      "deadline": {
+        "kind": "annual",
+        "date": null,
+        "note": "Runs each spring to Labour Day; no date on the guidelines page, apply early"
+      },
+      "status": "check",
+      "phase": "fund",
+      "apply_url": "https://www.ontario.ca/summercompany",
+      "source_url": "https://www.ontario.ca/page/summer-company-program-guidelines",
+      "verified": "official",
+      "last_checked": "2026-10-27",
+      "restricted_to": []
+    },
+    {
+      "id": "starter-company-plus",
+      "name": "Starter Company Plus (Toronto)",
+      "org": "City of Toronto Small Business Enterprise Centre",
+      "level": "municipal",
+      "type": "grant",
+      "summary": "A $5,000 micro-grant with business training and three months of mentoring for Toronto founders.",
+      "amount": "$5,000 plus up to 15 hours of training",
+      "stages": [
+        "launched",
+        "revenue"
+      ],
+      "audiences": [],
+      "needs": [
+        "funding",
+        "mentorship",
+        "training"
+      ],
+      "sectors": [
+        "any"
+      ],
+      "provinces": [
+        "ON"
+      ],
+      "requires": {
+        "age_min": 18
+      },
+      "requirements": [
+        "18 or older, citizen or permanent resident, Toronto resident",
+        "Business operating 6 months to 5 years with a business bank account",
+        "At least 35 hours a week on the business",
+        "You invest 25% of the grant yourself"
+      ],
+      "deadline": {
+        "kind": "closed",
+        "date": null,
+        "note": "Applications closed for now; other Ontario cities run their own rounds"
+      },
+      "status": "closed",
+      "phase": "fund",
+      "apply_url": "https://www.toronto.ca/business-economy/business-operation-growth/business-incentives/starter-company-plus-grant/",
+      "source_url": "https://www.toronto.ca/business-economy/business-operation-growth/business-incentives/starter-company-plus-grant/",
+      "verified": "official",
+      "last_checked": "2026-10-27",
+      "restricted_to": []
+    },
+    {
+      "id": "bmo-launch-me",
+      "name": "BMO Launch Me",
+      "org": "Longo Centre for Entrepreneurship, Humber Polytechnic",
+      "level": "academic",
+      "type": "competition",
+      "summary": "Workshops and a pitch competition for Humber students and alumni.",
+      "amount": "Not confirmed",
+      "stages": [
+        "idea",
+        "prototype",
+        "launched"
+      ],
+      "audiences": [
+        "student"
+      ],
+      "needs": [
+        "funding",
+        "mentorship",
+        "training"
+      ],
+      "sectors": [
+        "any"
+      ],
+      "provinces": [
+        "ON"
+      ],
+      "requires": {},
+      "requirements": [
+        "Humber students and alumni (per Humber news pages)"
+      ],
+      "deadline": {
+        "kind": "none_published",
+        "date": null,
+        "note": "The program page was offline when checked; confirm dates with the Longo Centre"
+      },
+      "status": "check",
+      "phase": "learn",
+      "apply_url": "https://humber.ca/cfe/programs/bmo-launch-me-program",
+      "source_url": "https://business.humber.ca/deans-news/bmo-launch-me-competition-opens-for-students-and-alumni.html",
+      "verified": "unconfirmed",
+      "last_checked": "2026-10-27",
+      "restricted_to": [
+        "student"
+      ]
+    },
+    {
+      "id": "bdc-capital",
+      "name": "BDC Capital venture funds",
+      "org": "BDC Capital",
+      "level": "federal",
+      "type": "investor",
+      "summary": "Venture investment in Canadian tech and innovation companies, through funds with different stage and sector focus.",
+      "amount": "Varies by fund",
+      "stages": [
+        "launched",
+        "revenue",
+        "growth"
+      ],
+      "audiences": [],
+      "needs": [
+        "funding",
+        "network"
+      ],
+      "sectors": [
+        "tech",
+        "health",
+        "cleantech"
+      ],
+      "provinces": [
+        "any"
+      ],
+      "requires": {
+        "incorporated": true
+      },
+      "requirements": [
+        "Canadian company",
+        "Fit with a specific fund's stage and sector",
+        "Submit the online intake form; you are contacted only if there is a fit"
+      ],
+      "deadline": {
+        "kind": "rolling",
+        "date": null,
+        "note": "Intake open continuously"
+      },
+      "status": "rolling",
+      "phase": "scale",
+      "apply_url": "https://www.bdc.ca",
+      "source_url": "https://hellodarwin.com/business-aid/programs/bdc-capital-venture-capital",
+      "verified": "third_party",
+      "last_checked": "2026-10-27",
+      "restricted_to": []
+    },
+    {
+      "id": "startup-visa",
+      "name": "Start-up Visa",
+      "org": "Immigration, Refugees and Citizenship Canada",
+      "level": "federal",
+      "type": "immigration",
+      "summary": "A route to permanent residence for founders backed by a designated Canadian organization.",
+      "amount": "Not a funding program",
+      "stages": [
+        "idea",
+        "prototype",
+        "launched"
+      ],
+      "audiences": [
+        "newcomer"
+      ],
+      "needs": [
+        "visa"
+      ],
+      "sectors": [
+        "any"
+      ],
+      "provinces": [
+        "any"
+      ],
+      "requires": {},
+      "requirements": [
+        "Support from a designated organization",
+        "Innovative business able to create Canadian jobs"
+      ],
+      "deadline": {
+        "kind": "closed",
+        "date": null,
+        "note": "Paused: IRCC stopped accepting new applications on June 30, 2026"
+      },
+      "status": "paused",
+      "phase": "learn",
+      "apply_url": "https://www.canada.ca/en/immigration-refugees-citizenship/services/immigrate-canada/start-visa/about.html",
+      "source_url": "https://www.canada.ca/en/immigration-refugees-citizenship/services/immigrate-canada/start-visa/about.html",
+      "verified": "official",
+      "last_checked": "2026-10-27",
+      "restricted_to": [
+        "newcomer"
+      ]
+    }
+  ]
+}

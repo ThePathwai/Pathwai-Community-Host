@@ -113,6 +113,7 @@ export default function Login() {
     <div className="grid min-h-[100dvh] grid-cols-[minmax(0,1fr)] lg:grid-cols-2">
       <div className="pointer-events-none fixed inset-x-0 top-0 z-30 hidden justify-end gap-2 px-4 py-4 lg:flex lg:px-8">
         <Link to="/install" className="btn-ghost pointer-events-auto border border-line bg-paper/70 backdrop-blur" data-testid="login-install">Get the app</Link>
+        <Link to="/navigator" className="btn-ghost pointer-events-auto border border-line bg-paper/70 backdrop-blur" data-testid="login-navigator">Find programs</Link>
         <Link to="/about" className="btn-ghost pointer-events-auto border border-line bg-paper/70 backdrop-blur" data-testid="login-about">About Pathwai <span aria-hidden>→</span></Link>
       </div>
       <div className="relative hidden overflow-hidden lg:block" style={{ background: "#08080B" }}>
@@ -136,6 +137,7 @@ export default function Login() {
           <span className="min-w-0 text-xl"><Wordmark name={joinInfo?.name || "Pathwai"} brand={joinInfo?.brand || {}} /></span>
           <div className="flex shrink-0 items-center gap-1.5">
             <Link to="/install" className="btn-ghost border border-line !px-3 !py-1.5 text-xs" data-testid="login-install-mobile">Get the app</Link>
+            <Link to="/navigator" className="btn-ghost border border-line !px-3 !py-1.5 text-xs" data-testid="login-navigator-mobile">Programs</Link>
             <Link to="/about" className="btn-ghost border border-line !px-3 !py-1.5 text-xs" data-testid="login-about-mobile">About</Link>
           </div>
         </div>

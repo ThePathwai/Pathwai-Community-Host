@@ -83,6 +83,9 @@ export function AuthProvider({ children }) {
   const applySession = (data) => {
     seen.current = { account: data.account || data.user, user: data.user || null };
     setAccount(data.account || data.user); setUser(data.user || null);
+    // Sign-in answers with just id, name and email. Fetch the whole account (profile, startup details) right behind it, so the
+    // profile editor never opens half empty and then saves blanks over what is already stored.
+    api.get("/hub/me").then((r) => { const a = r.data.account; if (a) { seen.current.account = a; setAccount(a); } }).catch(() => {});
     return data;
   };
   const login = async (email, password) => {

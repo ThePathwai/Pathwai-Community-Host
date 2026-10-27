@@ -23,6 +23,7 @@ from database import COMMUNITY_SLUGS, current_community, db, dbfor, demo_mode, h
 from directory import find_all_for_email, find_by_id, list_all_people, person_by_email, reindex_email
 from .community_config import DEFAULT_CONFIG, THEME_PRESETS
 from .messages import _preview, _thread_out
+from navigator import clean_startup as _clean_startup
 from birthday import BirthdayError, age_from, clean_birthday
 from ._common import TERMS_REQUIRED_MSG, audit, audit_platform, terms_stamp
 
@@ -229,6 +230,10 @@ class AccountProfileIn(BaseModel):
     # rather than just a bio. Capped hard in hub_update_profile, not just here, since model validation
     # on length doesn't catch someone PATCHing with 50 photos one at a time via repeated calls.
     photos: Optional[List[str]] = None
+    # The startup side of the profile: what they are building, how far along, and what they need next.
+    # Kept on the account (not per community) because it travels with the person -- it is what the
+    # Navigator (routes/navigator.py) reads to pre-fill itself, so the advice starts from who they are.
+    startup: Optional[Dict[str, Any]] = None
 
 
 @router.post("/hub/signup", status_code=201)
@@ -281,6 +286,9 @@ async def hub_update_profile(body: AccountProfileIn, acc: dict = Depends(require
         values["age"] = age_from(values["birthday"])  # a cleared birthday clears the age too
     if "photos" in values:
         values["photos"] = [p for p in values["photos"] if p][:MAX_PROFILE_PHOTOS]
+    if "startup" in values:
+        # {} (or nothing meaningful) clears it: "Remove" in the profile form sends exactly that.
+        values["startup"] = _clean_startup(values["startup"], age=values.get("age", acc.get("age"))) if values["startup"] else {}
     values["profile_completed"] = True
     values["updated_at"] = _now()
     await hub_db().accounts.update_one({"id": acc["id"]}, {"$set": values})

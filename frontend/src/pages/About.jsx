@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
-import { ArrowDown, ArrowRight, BarChart3, CalendarDays, Check, ClipboardCheck, CreditCard, FileSpreadsheet, Gift, GraduationCap, Handshake, Heart, Instagram, Link2, Mail, Megaphone, Minus, Newspaper, Plus, Rocket, Send, Smartphone, Table2, Ticket, TrendingUp, UserPlus, Users, X, Building2, Eye, MessageCircle } from "lucide-react";
+import { ArrowDown, ArrowRight, Compass, Search, BarChart3, CalendarDays, Check, ClipboardCheck, CreditCard, FileSpreadsheet, Gift, GraduationCap, Handshake, Heart, Instagram, Link2, Mail, Megaphone, Minus, Newspaper, Plus, Rocket, Send, Smartphone, Table2, Ticket, TrendingUp, UserPlus, Users, X, Building2, Eye, MessageCircle } from "lucide-react";
 import { Wordmark, PoweredBy, cx } from "../components/ui";
 import { TikTokIcon } from "../components/SocialIcons";
 import ReportView from "../components/ReportView";
@@ -26,6 +26,9 @@ const BUILT_IN = [
   [ClipboardCheck, "Applications", "Approve who gets in"],
   [Newspaper, "News", "Updates in one feed"],
 ];
+
+// The Navigator: founders find their next step, and the communities that can help.
+const NAVIGATOR = [[Search, "Pick your stage", "Idea to growing"], [Compass, "Get a path", "With the reason for each"], [Users, "Find your people", "Communities that fit"]];
 
 const IMPORT_STEPS = [[FileSpreadsheet, "Upload a CSV", "or paste a link"], [Eye, "Preview", "see it before it saves"], [Check, "Done", "no retyping"]];
 const IMPORT_FROM = ["Google Sheets", "Excel / CSV", "Apple, Google, Outlook calendars", "Airtable (CSV)", "Luma (calendar link)"];
@@ -228,6 +231,21 @@ export default function About() {
             {BUILT_IN.map(([Icon, t, d]) => <Tile key={t} Icon={Icon} title={t} text={d} />)}
           </div>
           <p className="mt-5 text-sm text-muted">No other apps to log in to. Nothing to connect, nothing to type twice.</p>
+        </Section>
+
+        <Section id="navigator" eyebrow="Navigator" title="Founders find their next step. Then they find you.">
+          <div className="flex flex-col items-stretch gap-3 sm:flex-row sm:items-center" data-testid="about-navigator">
+            {NAVIGATOR.map(([Icon, t, d], i) => (
+              <React.Fragment key={t}>
+                <Tile Icon={Icon} title={t} text={d} className="flex-1" />
+                {i < NAVIGATOR.length - 1 && <ArrowRight className="mx-auto h-5 w-5 flex-none rotate-90 text-muted sm:rotate-0" aria-hidden />}
+              </React.Fragment>
+            ))}
+          </div>
+          <div className="mt-5 flex flex-wrap items-center gap-3">
+            <Link to="/navigator" className="btn-primary" data-testid="about-navigator-open">Try the Navigator</Link>
+            <span className="text-sm text-muted">Your community lists its programs once. Founders see them next to the national ones.</span>
+          </div>
         </Section>
 
         <Section id="import" eyebrow="Switching" title="Bring your data in a minute.">

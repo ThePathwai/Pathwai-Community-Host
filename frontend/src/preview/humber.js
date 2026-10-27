@@ -426,3 +426,28 @@ export function buildHumber(fixtures, deps) {
     },
   });
 }
+
+// What Humber lists in the Navigator: its profile (who it serves and what it gives founders) and the programs it runs.
+// Made up for the demo, like everything else in this community. Dates are relative to today.
+export function humberNavigator() {
+  const day = (d) => iso(at(d, 12)).slice(0, 10);
+  const P = (id, name, type, summary, stages, needs, extra = {}) => ({
+    id, name, org: "Humber Innovation Network", type, summary, amount: "Free", stages, audiences: ["student"], needs, sectors: ["any"], requirements: [], status: "open", apply_url: "",
+    deadline: { kind: "rolling", date: null, note: "" }, created_at: iso(at(-30, 9)), updated_at: iso(at(-3, 9)), ...extra,
+  });
+  return {
+    profile: {
+      public: true, blurb: "Where Humber founders meet capital, mentors and customers.", stages: ["idea", "prototype", "launched"], provides: ["mentorship", "network", "funding", "customers", "training"],
+      audiences: ["student", "youth"], sectors: ["tech", "health", "services"], city: "Toronto", provinces: ["ON"],
+    },
+    programs: [
+      P("hm-p1", "Pitch Day", "competition", "Five minutes to pitch, then judges' questions, with investors in the room.", ["idea", "prototype", "launched"], ["funding", "network", "customers"],
+        { requirements: ["Humber student or alum", "A one-page pitch", "Five-minute slot, deck optional"], deadline: { kind: "fixed", date: day(21), note: "Apply by the date shown" } }),
+      P("hm-p2", "Founder Office Hours", "mentorship", "Weekly one-on-one time with a founder who has built it before.", ["idea", "prototype", "launched", "revenue"], ["mentorship", "network"],
+        { requirements: ["Book a 30-minute slot"], deadline: { kind: "rolling", date: null, note: "Book any week" } }),
+      P("hm-p3", "Pitch Practice Lab", "accelerator", "Rehearse your pitch with coaches and get feedback before the real thing.", ["idea", "prototype"], ["training", "mentorship"],
+        { requirements: ["Bring your deck and a printed one-liner"], deadline: { kind: "rolling", date: null, note: "Runs every other week" } }),
+    ],
+    member_needs: [{ key: "funding", label: "funding", members: 14 }, { key: "mentorship", label: "mentors", members: 11 }, { key: "customers", label: "first customers", members: 9 }, { key: "network", label: "a network", members: 7 }],
+  };
+}

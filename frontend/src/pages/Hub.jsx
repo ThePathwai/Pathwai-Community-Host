@@ -10,6 +10,7 @@ import { Avatar, AvatarUpload, Button, Field, Input, Modal, PhotoGallery, Powere
 import HubPeople from "../components/HubPeople";
 import ScrollLock from "../components/ScrollLock";
 import { PlatformAccounts } from "../components/AccountTools";
+import StartupFields, { startupToApi, startupToForm } from "../components/StartupFields";
 
 const RADIUS = { sharp: "2px", soft: "0.75rem", round: "1.25rem" };
 
@@ -135,6 +136,7 @@ function AccountProfileForm({ f, setF, photo, setPhoto }) {
       <Field label="Employer or school"><Input value={f.company} onChange={set("company")} maxLength={120} /></Field>
       <Field label="Neighbourhood or city"><Input value={f.location} onChange={set("location")} maxLength={120} /></Field>
       <Field label="About you"><Textarea rows={3} value={f.bio} onChange={set("bio")} maxLength={1000} /></Field>
+      <StartupFields value={f.startup} onChange={(v) => setF({ ...f, startup: v })} testPrefix="account-startup" />
       <PhotoGallery value={f.photos} onChange={(v) => setF({ ...f, photos: v })} />
       <Field label="Skills"><TagInput value={f.skill_set} suggestions={SUGGEST.skill_set} onChange={(v) => setF({ ...f, skill_set: v })} /></Field>
       <Field label="Interests"><TagInput value={f.interests_hobbies} suggestions={SUGGEST.interests_hobbies} onChange={(v) => setF({ ...f, interests_hobbies: v })} /></Field>
@@ -154,7 +156,7 @@ function AccountProfileForm({ f, setF, photo, setPhoto }) {
 }
 
 const BLANK_PROFILE = { name: "", birthday: "", title: "", company: "", location: "", bio: "", skill_set: [], interests_hobbies: [], goals: [], support_needs: [],
-  photos: [], contact: { phone: "", linkedin: "", instagram: "", website: "" } };
+  photos: [], startup: null, contact: { phone: "", linkedin: "", instagram: "", website: "" } };
 
 // The "Messages centre" from the Hub page: one merged inbox across every community you've joined
 // (GET /hub/messages already does the merging/sorting server-side -- see routes/hub.py), filterable
@@ -281,7 +283,7 @@ export default function Hub() {
   const openProfileEditor = () => {
     setPf({ name: account.name || "", birthday: account.birthday || "", title: account.title || "", company: account.company || "", location: account.location || "", bio: account.bio || "",
             skill_set: account.skill_set || [], interests_hobbies: account.interests_hobbies || [], goals: account.goals || [], support_needs: account.support_needs || [],
-            photos: account.photos || [], contact: { phone: "", linkedin: "", instagram: "", website: "", ...(account.contact || {}) } });
+            photos: account.photos || [], startup: startupToForm(account.startup), contact: { phone: "", linkedin: "", instagram: "", website: "", ...(account.contact || {}) } });
     setPPhoto(account.avatar_url || "");
     setEditingProfile(true);
   };
@@ -291,7 +293,7 @@ export default function Hub() {
     if (pf.birthday && (yrs === null || yrs > 120)) return toast.error("Check the year of your birthday.");
     if (pf.birthday && yrs < 13) return toast.error("You need to be at least 13 to use Pathwai.");
     setPBusy(true); // only after validation passes, so a validation message can't leave the button stuck on "loading"
-    try { await api.patch("/hub/profile", { ...pf, avatar_url: pPhoto || null }); await refresh(); toast.success("Profile saved"); setEditingProfile(false); }
+    try { await api.patch("/hub/profile", { ...pf, startup: startupToApi(pf.startup), avatar_url: pPhoto || null }); await refresh(); toast.success("Profile saved"); setEditingProfile(false); }
     catch (e) { toast.error(errMsg(e)); } finally { setPBusy(false); }
   };
 
@@ -366,6 +368,7 @@ export default function Hub() {
                 <div role="menu" className="absolute right-0 top-12 z-50 w-60 overflow-hidden rounded-xl border border-line bg-surface shadow-xl" data-testid="hub-menu-panel">
                   <div className="border-b border-line px-4 py-3"><p className="truncate text-sm font-medium">{account.name}</p><p className="truncate text-xs text-muted">{account.email}</p></div>
                   <button role="menuitem" className="block w-full px-4 py-2.5 text-left text-sm hover:bg-ink/5" onClick={() => { setMenuOpen(false); openProfileEditor(); }} data-testid="hub-edit-profile">Edit your Pathwai profile</button>
+                  <Link role="menuitem" to="/navigator" className="block px-4 py-2.5 text-sm hover:bg-ink/5" data-testid="hub-navigator">Navigator: find programs</Link>
                   <Link role="menuitem" to="/about" className="block px-4 py-2.5 text-sm hover:bg-ink/5" data-testid="hub-about">About Pathwai</Link>
                   <button role="menuitem" className="block w-full border-t border-line px-4 py-2.5 text-left text-sm hover:bg-ink/5" data-testid="hub-logout" onClick={async () => { await logout(); nav("/login", { replace: true }); }}>Sign out</button>
                 </div>

@@ -44,6 +44,7 @@ import Install from "./pages/Install";
 import Teams from "./pages/Teams";
 import TeamDetail from "./pages/TeamDetail";
 import PublicReport from "./pages/PublicReport";
+import Navigator from "./pages/Navigator";
 
 function Protected({ children, admin }) {
   const { user, account, loading } = useAuth();
@@ -53,6 +54,13 @@ function Protected({ children, admin }) {
   if (!user) return <Navigate to="/hub" replace />;
   if (admin && user.role !== "admin") return <Navigate to="/" replace />;
   return children;
+}
+
+// The Navigator is public: signed-out visitors get it on its own page, members get it inside their community's layout.
+function NavigatorRoute() {
+  const { user, loading } = useAuth();
+  if (loading) return <Spinner />;
+  return user ? <Layout><Navigator embedded /></Layout> : <Navigator />;
 }
 
 const P = ({ children, admin }) => <Protected admin={admin}><Layout>{children}</Layout></Protected>;
@@ -76,6 +84,7 @@ export default function App() {
         <Route path="/forgot-password" element={<ForgotPassword />} />
         <Route path="/about" element={<About />} />
         <Route path="/demo/:short" element={<DemoLanding />} />
+        <Route path="/navigator" element={<NavigatorRoute />} />
         <Route path="/humber" element={<Navigate to="/demo/humber" replace />} />
         <Route path="/install" element={<Install />} />
         <Route path="/r/:slug/:token" element={<PublicReport />} />
