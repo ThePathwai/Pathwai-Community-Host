@@ -46,7 +46,7 @@ export default function Login() {
   const inDemo = isDemo();
   // Two tabs: sign in (the default) and try the demo. /login?tab=demo opens the demo tab directly.
   const [tab, setTab] = useState(params.get("tab") === "demo" ? "demo" : "signin");
-  const [demoTab, setDemoTab] = useState("communities");
+  const [demoTab, setDemoTab] = useState("founder");
 
   useEffect(() => { api.get("/auth/demo-accounts").then((r) => setDemo(r.data)).catch(() => {}); }, []);
   // /login?demo=member|admin|host (what the "Try the demo" buttons open) signs straight in to the in-browser demo.
@@ -57,7 +57,7 @@ export default function Login() {
   useEffect(() => { if (demoOver) leaveDemo("/login" + window.location.search); }, [demoOver]);
   useEffect(() => {
     if (!autoDemo || autoDone.current || !demo.accounts.length) return;
-    const a = autoDemo === "host" ? { email: "host@thevillage.example" } : demo.accounts.find((x) => x.demo_role === autoDemo);
+    const a = autoDemo === "host" ? { email: "host@thevillage.example" } : autoDemo === "founder" ? { email: "founder@yourcommunity.app" } : demo.accounts.find((x) => x.demo_role === autoDemo);
     if (a) { autoDone.current = true; go(a.email, demo.password); }
   }, [autoDemo, demo]); // eslint-disable-line
 
@@ -104,8 +104,9 @@ export default function Login() {
     nav("/hub", { replace: true });
   };
 
+  const founderAcct = { demo_role: "founder", email: "founder@yourcommunity.app", label: "Founder, no community yet", description: "Fife Ashley-Dejo has not joined any community. One profile drives the programs, the communities suggested and the guide." };
   const hostAcct = { demo_role: "host", email: "host@thevillage.example", label: "Community host demo", description: "Sign in as the host of The Village, a private dinner club, and review who has asked to join." };
-  const demoItems = [...(inDemo ? [] : [["communities", "Examples"], ["admin", "Admin"], ["member", "Member"]]), ...(demo.accounts.length ? [["accounts", "Accounts"]] : [])];
+  const demoItems = [...(inDemo ? [] : [["founder", "Founder"], ["communities", "Examples"], ["admin", "Admin"], ["member", "Member"]]), ...(demo.accounts.length ? [["accounts", "Accounts"]] : [])];
   const demoShown = demoItems.some(([k]) => k === demoTab) ? demoTab : demoItems[0]?.[0];
   const showDemoTab = !inDemo || demo.accounts.length > 0;
 
@@ -179,6 +180,15 @@ export default function Login() {
             </div>
             <Seg value={demoShown} onChange={setDemoTab} testPrefix="demo-tab" items={demoItems} />
 
+            {demoShown === "founder" && (
+              <div className="rounded-xl border-2 border-ink/40 bg-surface p-4" data-testid="demo-founder-card">
+                <p className="eyebrow">Start here</p>
+                <p className="mt-1 text-lg font-semibold leading-tight">A founder with no community yet</p>
+                <p className="mt-1 text-sm text-muted">Fife Ashley-Dejo has one profile and has joined nothing. That profile alone picks the programs, suggests communities and powers the guide.</p>
+                <button type="button" data-testid="demo-link-founder" onClick={() => startDemo("founder")} className="btn-primary mt-3 w-full">Open the founder demo</button>
+              </div>
+            )}
+
             {demoShown === "admin" && (
               <div className="rounded-xl border border-ink/40 bg-surface p-4" data-testid="demo-admin-card">
                 <p className="font-medium">See it as the person running a community</p>
@@ -225,7 +235,7 @@ export default function Login() {
 
             {demoShown === "accounts" && demo.accounts.length > 0 && (
               <div className="space-y-2">
-                {[...demo.accounts, hostAcct].map((a) => (
+                {[founderAcct, ...demo.accounts, hostAcct].map((a) => (
                   <button key={a.demo_role} data-testid={`demo-login-${a.demo_role}`} onClick={() => go(a.email, demo.password)}
                     className="w-full rounded-xl border border-line bg-surface p-3 text-left hover:bg-ink/5">
                     <p className="text-sm font-medium">{a.label}</p><p className="text-xs text-muted">{a.description}</p>

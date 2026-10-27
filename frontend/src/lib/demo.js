@@ -12,7 +12,7 @@ export const isDemo = () => process.env.REACT_APP_PREVIEW === "true" || get() ==
 
 // A link like /login?demo=admin starts the demo too (so it can be shared, e.g. from a website button).
 export const demoFromUrl = () => {
-  try { const d = new URLSearchParams(window.location.search).get("demo"); return ["member", "admin", "host"].includes(d) ? d : null; } catch { return null; }
+  try { const d = new URLSearchParams(window.location.search).get("demo"); return ["member", "admin", "host", "founder"].includes(d) ? d : null; } catch { return null; }
 };
 
 // Called once before the app starts. Returns true when this page load is a demo.

@@ -20,11 +20,13 @@ const book = () => { const k = S.community || "playr"; return (S.books[k] = S.bo
 const slugOf = () => S.community || "playr";
 // The active community's recorded data. `member` and `admin` both point at the signed-in person's view, so shared helpers keep working.
 Object.defineProperty(S, "data", { get() { const b = book(); const v = (S.email && b.logins[S.email]) || {}; return { public: b.public, member: v, admin: v }; } });
-const ACCOUNTS = { "demo@yourcommunity.app": { name: "Fife Ashley-Dejo", role: "member" }, "admin@yourcommunity.app": { name: "Fife Ashley-Dejo", role: "admin" }, "host@thevillage.example": { name: "Camille Laurent", role: "host" } };
+const ACCOUNTS = { "demo@yourcommunity.app": { name: "Fife Ashley-Dejo", role: "member" }, "admin@yourcommunity.app": { name: "Fife Ashley-Dejo", role: "admin" }, "host@thevillage.example": { name: "Camille Laurent", role: "host" },
+  // A founder who has not joined any community: only the account-level profile exists. Shows the Hub, /me, Navigator and the guide with nothing else around them.
+  "founder@yourcommunity.app": { name: "Fife Ashley-Dejo", role: "member" } };
 // A role is per-community, not global: admin@ is the actual admin of playr/the-village/club-pto/unity
 // and of grace (the C3 Film Team demo, see c3film.js); demo@ is a plain member everywhere except Toronto Tech
 // Collective, where it's the founding admin — the "vice versa" half. See ADMIN_OF below.
-const BASE = { "demo@yourcommunity.app": { playr: "approved", grace: "approved", "the-village": "approved", "club-pto": "approved", "toronto-tech-collective": "approved", unity: "approved", [YVETTA_SLUG]: "approved", [HYROX_SLUG]: "approved", [HUMBER_SLUG]: "approved" }, "admin@yourcommunity.app": { playr: "approved", grace: "approved", "the-village": "approved", "club-pto": "approved", unity: "approved", [YVETTA_SLUG]: "approved", [HYROX_SLUG]: "approved", [HUMBER_SLUG]: "approved" }, "host@thevillage.example": { "the-village": "approved" } };
+const BASE = { "demo@yourcommunity.app": { playr: "approved", grace: "approved", "the-village": "approved", "club-pto": "approved", "toronto-tech-collective": "approved", unity: "approved", [YVETTA_SLUG]: "approved", [HYROX_SLUG]: "approved", [HUMBER_SLUG]: "approved" }, "admin@yourcommunity.app": { playr: "approved", grace: "approved", "the-village": "approved", "club-pto": "approved", unity: "approved", [YVETTA_SLUG]: "approved", [HYROX_SLUG]: "approved", [HUMBER_SLUG]: "approved" }, "host@thevillage.example": { "the-village": "approved" }, "founder@yourcommunity.app": {} };
 const ADMIN_OF = { "admin@yourcommunity.app": ["playr", "grace", "the-village", "club-pto", "unity", YVETTA_SLUG, HYROX_SLUG, HUMBER_SLUG], "demo@yourcommunity.app": ["toronto-tech-collective"], "host@thevillage.example": ["the-village"] };
 const memStatus = (email, slug) => (S.extra.join || {})[email + "|" + slug] || (BASE[email] || {})[slug] || "none";
 const isAdminHere = () => (ADMIN_OF[S.email] || []).includes(slugOf());
@@ -618,7 +620,7 @@ function computePeople(limit = 8) {
     }));
 }
 
-const seedDemoStartup = (email) => { const m = (S.extra.acctProfile = S.extra.acctProfile || {}); if (email === "demo@yourcommunity.app" && !("startup" in (m[email] || {}))) m[email] = { title: "Co-founder", company: "Bright Court", location: "Toronto, ON", age: 31, bio: "Building booking and league tools for community sports groups. Previously ran club nights and leagues across the GTA.", skill_set: ["Community building", "Product", "Partnerships"], interests_hobbies: ["Padel", "Running", "Live music"], goals: ["Launch in a second city", "Find a marketplace mentor"], support_needs: ["Seed funding intros", "Pilot partners"], ...(m[email] || {}), startup: DEMO_STARTUP }; };
+const seedDemoStartup = (email) => { const m = (S.extra.acctProfile = S.extra.acctProfile || {}); if ((email === "demo@yourcommunity.app" || email === "founder@yourcommunity.app") && !("startup" in (m[email] || {}))) m[email] = { title: "Co-founder", company: "Bright Court", location: "Toronto, ON", age: 31, bio: "Building booking and league tools for community sports groups. Previously ran club nights and leagues across the GTA.", skill_set: ["Community building", "Product", "Partnerships"], interests_hobbies: ["Padel", "Running", "Live music"], goals: ["Launch in a second city", "Find a marketplace mentor"], support_needs: ["Seed funding intros", "Pilot partners"], ...(m[email] || {}), startup: DEMO_STARTUP }; };
 const navCtx = (config) => ({ account: S.role ? (((S.extra.acctProfile = S.extra.acctProfile || {})[S.email] = S.extra.acctProfile[S.email] || {})) : null, config, ok, fail, slug: slugOf(), signedIn: !!S.role, isAdmin: !!S.role && isAdminHere(), store: (S.extra.nav = S.extra.nav || {}), communityInfo: communityPublicInfo });
 function get(path, p, config) {
   if (path.startsWith("/navigator")) return navigatorCall("get", path, {}, p, navCtx(config));
