@@ -1,12 +1,13 @@
-import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import {
-  ArrowRight, BadgeCheck, Building2, Check, ChevronDown, Compass, ExternalLink, Flag, Lightbulb, MapPin, Rocket, Search, Sparkles, TrendingUp, TriangleAlert, Users, Wrench,
+  ArrowRight, BadgeCheck, Check, ChevronDown, Compass, ExternalLink, Flag, Rocket, Search, TriangleAlert,
 } from "lucide-react";
 import { api } from "../lib/api";
 import { useAuth } from "../lib/auth";
 import { Wordmark, PoweredBy, Spinner, Tabs, cx } from "../components/ui";
-import { NEED_LABEL, TYPE_LABEL, needsFromText, daysUntil, todayIso } from "../lib/navigator";
+import { NEED_LABEL, TYPE_LABEL, daysUntil, todayIso } from "../lib/navigator";
+import { startDemo } from "../lib/demo";
 import { Status } from "../components/NavBits";
 import GuideChat from "../components/GuideChat";
 
@@ -14,13 +15,9 @@ import GuideChat from "../components/GuideChat";
 // reason for each one. Everything on the cards comes from the program's own requirements (see backend/navigator.py).
 // Built to be glanced at: big stage tiles, chips, one line per reason. Community programs sit in the same list.
 
-const STAGE_ICONS = { idea: Lightbulb, prototype: Wrench, launched: Rocket, revenue: TrendingUp, growth: Building2 };
-const STORE = "pw_nav_profile";
 const DEFAULT = { stage: "idea", needs: ["funding", "mentorship"], audiences: [], sectors: [], province: "ON", city: "", age: "", incorporated: "unsure", employees: "", goal: "" };
 const VERIFIED = { official: "Official page", third_party: "Third-party source", unconfirmed: "Not confirmed" };
 
-const load = () => { try { return { ...DEFAULT, ...JSON.parse(window.sessionStorage.getItem(STORE) || "{}") }; } catch { return DEFAULT; } };
-const save = (p) => { try { window.sessionStorage.setItem(STORE, JSON.stringify(p)); } catch { /* storage blocked: fine */ } };
 // account profile -> the form's shape (the form uses strings for age/employees and yes/no/unsure for incorporated)
 const fromAccount = (p) => ({ ...DEFAULT, ...p, age: p.age ? String(p.age) : "", employees: p.employees == null ? "" : String(p.employees), city: p.city || "",
   incorporated: p.incorporated === true ? "yes" : p.incorporated === false ? "no" : "unsure", needs: p.needs || [], audiences: p.audiences || [], sectors: p.sectors || [] });
@@ -136,70 +133,22 @@ function CommunityCard({ c }) {
   );
 }
 
-// Signed-out visitors answer a few quick things here. Signed-in people never see this: their answers live in their profile.
-function QuickAnswers({ meta, profile, set, toggle }) {
-  const found = useMemo(() => needsFromText(profile.goal).filter((n) => !profile.needs.includes(n)), [profile.goal, profile.needs]);
+// Signed out: there is no profile to read yet, so there is nothing to fill in here. The page says so and points at the two ways in.
+function SignedOutGate() {
   return (
-    <section className="space-y-5 rounded-2xl border border-line bg-surface p-4 sm:p-5" aria-label="About you" data-testid="nav-form">
-      <div>
-        <p className="eyebrow">Where are you?</p>
-        <div className="mt-3 grid grid-cols-1 gap-2">
-          {meta.stages.map((s) => {
-            const Icon = STAGE_ICONS[s.key] || Compass;
-            const on = profile.stage === s.key;
-            return (
-              <button key={s.key} type="button" onClick={() => set({ stage: s.key })} aria-pressed={on} data-testid={`stage-${s.key}`}
-                className={cx("flex items-center gap-3 rounded-xl border p-3 text-left transition", on ? "border-transparent" : "border-line hover:border-ink/30")}
-                style={on ? { background: "var(--accent)", color: "var(--on-accent)" } : undefined}>
-                <Icon className="h-5 w-5 shrink-0" aria-hidden />
-                <span className="min-w-0"><span className="block text-sm font-semibold capitalize">{s.label}</span>{on && <span className="block text-xs opacity-80">{s.hint}</span>}</span>
-              </button>
-            );
-          })}
-        </div>
+    <section className="rounded-2xl border-2 border-ink/30 bg-surface p-5 sm:p-8" aria-label="Your profile" data-testid="nav-gate">
+      <span className="flex h-12 w-12 items-center justify-center rounded-full" style={{ background: "var(--accent)", color: "var(--on-accent)" }}><Rocket className="h-6 w-6" aria-hidden /></span>
+      <h2 className="mt-4 text-2xl leading-tight sm:text-3xl" style={{ textWrap: "balance" }}>Your profile picks the programs</h2>
+      <p className="mt-2 max-w-xl text-base text-muted">Tell Pathwai about your startup once, in your profile. This page, the communities suggested to you and the guide all follow it and update when it changes. There is no form to fill in here.</p>
+      <div className="mt-5 flex flex-col gap-2 sm:flex-row">
+        <Link to="/signup?for=founder" className="btn-primary !py-2.5 text-sm" data-testid="nav-gate-signup">Create your profile<ArrowRight className="h-4 w-4" /></Link>
+        <Link to="/login?next=navigator" className="btn-ghost border border-line !py-2.5 text-sm" data-testid="nav-gate-signin">Sign in</Link>
       </div>
-
-      <div>
-        <p className="eyebrow">What do you need?</p>
-        <div className="mt-3 flex flex-wrap gap-2">{meta.needs.map((n) => <Toggle key={n.key} on={profile.needs.includes(n.key)} onClick={() => toggle("needs", n.key)} testId={`need-${n.key}`}>{n.label}</Toggle>)}</div>
+      <div className="mt-6 rounded-xl bg-ink/[.05] p-4">
+        <p className="text-sm font-semibold">See it first</p>
+        <p className="mt-1 text-sm text-muted">Fife Ashley-Dejo is a founder who has not joined any community. Open the practice account to see how one profile drives everything.</p>
+        <button type="button" onClick={() => startDemo("founder")} className="btn-ghost mt-3 border border-line !py-2 text-sm" data-testid="nav-gate-demo">Open Fife's profile (demo)<ArrowRight className="h-4 w-4" /></button>
       </div>
-
-      <label className="block"><span className="label">Province</span>
-        <select className="input" value={profile.province} onChange={(e) => set({ province: e.target.value })} data-testid="nav-province">{meta.provinces.map((p) => <option key={p}>{p}</option>)}</select></label>
-
-      <details className="group rounded-xl border border-line" data-testid="nav-more">
-        <summary className="flex cursor-pointer items-center justify-between gap-2 p-3 text-sm font-semibold">Sharper matches (optional)<ChevronDown className="h-4 w-4 transition group-open:rotate-180" aria-hidden /></summary>
-        <div className="space-y-5 border-t border-line p-3">
-          <div>
-            <p className="eyebrow">I am…</p>
-            <div className="mt-3 flex flex-wrap gap-2">{meta.audiences.map((a) => <Toggle key={a.key} on={profile.audiences.includes(a.key)} onClick={() => toggle("audiences", a.key)} testId={`aud-${a.key}`}>{a.label}</Toggle>)}</div>
-            <p className="mt-2 text-xs text-muted">Some programs are only for one group, and we only show those when you pick it.</p>
-          </div>
-          <div>
-            <p className="eyebrow">What you build</p>
-            <div className="mt-3 flex flex-wrap gap-2">{meta.sectors.map((s) => <Toggle key={s} on={profile.sectors.includes(s)} onClick={() => toggle("sectors", s)} testId={`sec-${s}`}>{s}</Toggle>)}</div>
-          </div>
-          <div className="grid grid-cols-2 gap-3">
-            <label className="block"><span className="label">City</span><input className="input" value={profile.city} onChange={(e) => set({ city: e.target.value })} placeholder="Toronto" maxLength={80} data-testid="nav-city" /></label>
-            <label className="block"><span className="label">Your age</span><input className="input" inputMode="numeric" value={profile.age} onChange={(e) => set({ age: e.target.value.replace(/\D/g, "").slice(0, 3) })} placeholder="Optional" data-testid="nav-age" /></label>
-            <label className="block"><span className="label">Employees</span><input className="input" inputMode="numeric" value={profile.employees} onChange={(e) => set({ employees: e.target.value.replace(/\D/g, "").slice(0, 5) })} placeholder="Optional" data-testid="nav-employees" /></label>
-          </div>
-          <div>
-            <p className="eyebrow">Incorporated?</p>
-            <div className="mt-3 flex gap-2">{[["yes", "Yes"], ["no", "Not yet"], ["unsure", "Not sure"]].map(([k, l]) => <Toggle key={k} on={profile.incorporated === k} onClick={() => set({ incorporated: k })} testId={`inc-${k}`}>{l}</Toggle>)}</div>
-          </div>
-          <label className="block"><span className="label">Anything else? (one line)</span>
-            <textarea className="input" rows={2} maxLength={300} value={profile.goal} onChange={(e) => set({ goal: e.target.value })} placeholder="I need a grant to build a prototype and a mentor in health tech" data-testid="nav-goal" />
-            {found.length > 0 && (
-              <button type="button" className="mt-2 inline-flex items-center gap-1.5 text-sm font-medium" style={{ color: "var(--accent)" }} onClick={() => set({ needs: [...profile.needs, ...found] })} data-testid="nav-pick-needs">
-                <Sparkles className="h-4 w-4" />Add {found.map((n) => NEED_LABEL[n]).join(", ")} to my needs
-              </button>
-            )}
-          </label>
-        </div>
-      </details>
-
-      <p className="text-sm text-muted">Want this kept? <Link to="/signup" className="font-medium underline" data-testid="nav-signup">Make a free account</Link> and it becomes your profile: one place that drives your programs, communities and the guide.</p>
     </section>
   );
 }
@@ -214,7 +163,7 @@ function ProfileStrip({ mine, meta, account, editTo }) {
       <div className="flex items-start gap-3">
         <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full" style={{ background: "var(--accent)", color: "var(--on-accent)" }}><Rocket className="h-5 w-5" aria-hidden /></span>
         <div className="min-w-0 flex-1">
-          <p className="eyebrow">{has ? "Matched to your profile" : "Your profile"}</p>
+          <p className="eyebrow">{account?.name ? `${account.name}'s profile` : "Your profile"}</p>
           <p className="mt-0.5 truncate text-lg font-semibold leading-snug">{has ? (mine.name || account?.name) : "Add your startup"}</p>
           <p className="text-sm text-muted">{has ? (mine.one_liner || "These results follow whatever is in your profile.") : "Tell us where you are once. Programs, communities and the guide all use it."}</p>
         </div>
@@ -334,8 +283,7 @@ export default function Navigator({ embedded }) {
   const [meta, setMeta] = useState(null);
   const [mine, setMine] = useState(null);   // the signed-in person's saved startup profile ({} when they have none yet); null while loading
   const [tab, setTab] = useState("path");
-  const [formOpen, setFormOpen] = useState(false);
-  const [profile, setProfile] = useState(load);
+  const [profile, setProfile] = useState(DEFAULT);
   const [res, setRes] = useState(null);
   const [loading, setLoading] = useState(false);
   const [err, setErr] = useState("");
@@ -358,12 +306,10 @@ export default function Navigator({ embedded }) {
   const seenOnce = useRef(false);
   useEffect(() => { if (account && res && !seenOnce.current) { seenOnce.current = true; api.post("/navigator/seen").catch(() => {}); } }, [account, res]);
 
-  const set = useCallback((patch) => { setProfile((p) => { const n = { ...p, ...patch }; save(n); return n; }); }, []);
-  const toggle = useCallback((key, v) => { setProfile((p) => { const cur = p[key] || []; const n = { ...p, [key]: cur.includes(v) ? cur.filter((x) => x !== v) : [...cur, v] }; save(n); return n; }); }, []);
   const apiProfile = { ...profile, age: profile.age ? Number(profile.age) : null, employees: profile.employees === "" ? null : Number(profile.employees) };
 
   useEffect(() => {
-    if (!meta || !ready) return undefined;
+    if (!meta || !ready || !account) return undefined;
     const my = ++seq.current;
     setLoading(true);
     const t = setTimeout(() => {
@@ -373,7 +319,7 @@ export default function Navigator({ embedded }) {
         .finally(() => { if (seq.current === my) setLoading(false); });
     }, 300);
     return () => clearTimeout(t);
-  }, [profile, meta, ready]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [profile, meta, ready, account?.id]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const editTo = "/me?edit=startup";
 
@@ -382,7 +328,7 @@ export default function Navigator({ embedded }) {
       <div className="mb-6">
         <p className="eyebrow">Navigator</p>
         <h1 className="mt-2 text-3xl sm:text-5xl" style={{ textWrap: "balance" }}>Programs that fit you</h1>
-        <p className="mt-2 max-w-2xl text-base text-muted sm:text-lg">{account ? "Canadian grants, accelerators and mentors, matched to your profile." : "Say where you are. Get the Canadian programs that fit, and why."}</p>
+        <p className="mt-2 max-w-2xl text-base text-muted sm:text-lg">Canadian grants, accelerators and mentors, matched to your profile.</p>
         <p className="mt-2 text-sm text-muted">{meta ? `${meta.count} programs, hand-checked. Communities add their own.` : "Loading"}</p>
       </div>
 
@@ -390,27 +336,13 @@ export default function Navigator({ embedded }) {
 
       {err && <p className="mb-4 rounded-xl border border-red-500/40 p-3 text-sm text-red-500" role="alert">{err}</p>}
       {!meta ? <Spinner /> : tab === "all" ? <Directory meta={meta} /> : tab === "ask" ? (
-        <div className="mx-auto w-full max-w-3xl"><GuideChat className="h-[min(72dvh,680px)]" signedIn={!!account} hasProfile={!!mine?.stage} startupName={mine?.name} formProfile={apiProfile} /></div>
+        <div className="mx-auto w-full max-w-3xl"><GuideChat className="h-[min(72dvh,680px)]" signedIn={!!account} hasProfile={!!mine?.stage} startupName={mine?.name} formProfile={account ? apiProfile : undefined} /></div>
       ) : account ? (
         <div className="space-y-6">
           {mine === null ? <Spinner /> : <ProfileStrip mine={mine} meta={meta} account={account} editTo={editTo} />}
           {ready && <Results res={res} meta={meta} loading={loading} generic={generic} />}
         </div>
-      ) : (
-        <div className="grid grid-cols-[minmax(0,1fr)] gap-6 lg:grid-cols-[360px_minmax(0,1fr)]">
-          <div className="min-w-0 lg:sticky lg:top-24 lg:self-start lg:max-h-[calc(100dvh-7rem)] lg:overflow-y-auto">
-            {/* On a phone the form folds into one line so the answer is the first thing you see. */}
-            <button type="button" onClick={() => setFormOpen(!formOpen)} aria-expanded={formOpen} data-testid="nav-form-toggle"
-              className="flex w-full items-center gap-3 rounded-2xl border border-line bg-surface p-4 text-left lg:hidden">
-              <span className="min-w-0 flex-1"><span className="block text-xs font-semibold uppercase text-muted" style={{ letterSpacing: "0.1em" }}>About you</span>
-                <span className="block truncate text-sm font-semibold capitalize">{meta.stages.find((x) => x.key === profile.stage)?.label}{profile.needs.length ? ` · ${profile.needs.slice(0, 3).map((n) => NEED_LABEL[n]).join(", ")}` : ""}</span></span>
-              <span className="text-sm font-medium" style={{ color: "var(--accent)" }}>{formOpen ? "Done" : "Change"}</span>
-            </button>
-            <div className={cx(formOpen ? "mt-3 block" : "hidden", "lg:mt-0 lg:block")}><QuickAnswers meta={meta} profile={profile} set={set} toggle={toggle} /></div>
-          </div>
-          <div className="min-w-0"><Results res={res} meta={meta} loading={loading} /></div>
-        </div>
-      )}
+      ) : <SignedOutGate />}
     </div>
   );
 

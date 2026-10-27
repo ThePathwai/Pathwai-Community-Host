@@ -7,10 +7,11 @@ import { inDemoTab, leaveDemo } from "../lib/demo";
 import { AvatarUpload, Button, Card, Field, Input, MembershipStatusCard, Select, TagInput, Textarea, TermsConsent, Wordmark, cx } from "../components/ui";
 import { HowItWorks } from "../components/IntroTour";
 import { SUGGEST, ageFromBirthday, oldestISO, todayISO } from "../lib/profile";
-import StartupFields, { startupToApi } from "../components/StartupFields";
+import StartupFields, { BLANK_STARTUP, startupToApi } from "../components/StartupFields";
 import SocialAuthButtons from "../components/SocialAuthButtons";
 
 const INTENTS = [
+  { key: "founder", title: "I'm building a startup", body: "Make your profile once. Get Canadian programs, mentors and communities matched to it, and keep them up to date." },
   { key: "member", title: "I'm joining a community", body: "Browse communities on Pathwai and request to join the ones that fit you." },
   { key: "admin", title: "I'm starting a new community", body: "Set up your own space — a church, a club, a wellness brand — with your own members, events and look." },
 ];
@@ -39,9 +40,9 @@ function IntentPicker({ onPick }) {
 // Asked once, right after account creation — before landing in the hub or in the new community's
 // setup wizard — so every "request to join" from here on starts pre-filled instead of asking the
 // same standard questions (occupation, bio, skills, interests) fresh for each community.
-function BuildProfileStep({ account, onDone, joinInfo }) {
+function BuildProfileStep({ account, onDone, joinInfo, founder }) {
   const [f, setF] = useState({
-    name: account?.name || "", birthday: "", title: "", company: "", location: "", bio: "", skill_set: [], interests_hobbies: [], goals: [], support_needs: [], startup: null,
+    name: account?.name || "", birthday: "", title: "", company: "", location: "", bio: "", skill_set: [], interests_hobbies: [], goals: [], support_needs: [], startup: founder ? { ...BLANK_STARTUP } : null,
     contact: { phone: "", linkedin: "", instagram: "", website: "" },
   });
   const [photo, setPhoto] = useState(account?.avatar_url || "");
@@ -62,7 +63,7 @@ function BuildProfileStep({ account, onDone, joinInfo }) {
   return (
     <div className="mx-auto flex min-h-screen max-w-lg flex-col justify-center px-4 py-10">
       <span className="mb-6 text-2xl"><Wordmark name={joinInfo?.name || "Pathwai"} brand={joinInfo?.brand || {}} /></span>
-      <h1 className="mb-1 text-2xl font-bold sm:text-3xl">Build your Pathwai profile</h1>
+      <h1 className="mb-1 text-2xl font-bold sm:text-3xl">{founder ? "Tell us about you and your startup" : "Build your Pathwai profile"}</h1>
       <p className="mb-6 text-sm text-muted">A few standard questions, asked once. From here on, every community you apply to starts with this instead of asking again — you can still adjust it per community afterward.</p>
       <Card>
         <div className="space-y-4">
@@ -119,7 +120,7 @@ export default function Signup() {
   const nav = useNavigate();
   const [params] = useSearchParams();
   const joinSlug = params.get("join") || null;
-  const [intent, setIntent] = useState(joinSlug ? "member" : null); // null | "member" | "admin"
+  const [intent, setIntent] = useState(joinSlug ? "member" : params.get("for") === "founder" ? "founder" : null); // null | "member" | "admin"
   const [f, setF] = useState({ name: "", email: "", password: "" });
   const [community, setCommunity] = useState({ name: "", category: "other" });
   const [categories, setCategories] = useState([]);
@@ -166,6 +167,8 @@ export default function Signup() {
       } else if (joinResult?.status === "pending") {
         setShowProfile(false);
         setShowPending(true);
+      } else if (intent === "founder") {
+        nav("/navigator", { replace: true }); // the point of this sign-up: programs matched to the profile just made
       } else {
         nav("/hub", { replace: true });
       }
@@ -189,19 +192,19 @@ export default function Signup() {
   const onSocialSignedIn = (data) => { applySession(data); setJoinResult(data?.joined || null); setShowProfile(true); };
 
   if (showPending) return <PendingStep communityName={joinInfo?.name} onContinue={() => nav("/hub", { replace: true })} />;
-  if (showProfile) return <BuildProfileStep account={account} onDone={afterProfile} joinInfo={joinInfo} />;
+  if (showProfile) return <BuildProfileStep account={account} onDone={afterProfile} joinInfo={joinInfo} founder={intent === "founder"} />;
   if (!intent) return <IntentPicker onPick={setIntent} />;
 
   return (
     <div className="mx-auto flex min-h-screen max-w-md flex-col justify-center px-4 py-10">
       <span className="mb-6 text-2xl"><Wordmark name={joinInfo?.name || "Pathwai"} brand={joinInfo?.brand || {}} /></span>
       {!joinSlug && <button className="mb-3 w-fit text-xs font-medium text-muted underline" onClick={() => setIntent(null)} data-testid="intent-back">← Back</button>}
-      <h1 className="mb-1 text-2xl font-bold sm:text-3xl">{intent === "admin" ? "Set up your community" : "Create your Pathwai account"}</h1>
+      <h1 className="mb-1 text-2xl font-bold sm:text-3xl">{intent === "admin" ? "Set up your community" : intent === "founder" ? "Create your founder profile" : "Create your Pathwai account"}</h1>
       <p className="mb-6 text-sm text-muted">
         {joinInfo
           // Every community requires admin approval now -- no community can auto-approve a join request.
           ? <>You're creating your Pathwai account to join <strong>{joinInfo.name}</strong> — an admin will need to approve you.</>
-          : intent === "admin" ? "First your account, then a couple of quick choices for your community — you can change any of it later." : "One login for every community. After this you can browse communities and ask to join the ones that fit you."}
+          : intent === "admin" ? "First your account, then a couple of quick choices for your community — you can change any of it later." : intent === "founder" ? "First your account. Next, a short profile about you and your startup. Then your programs." : "One login for every community. After this you can browse communities and ask to join the ones that fit you."}
       </p>
       <Card>
         <SocialAuthButtons onSignedIn={onSocialSignedIn} disabled={busy} joinSlug={joinSlug} acceptedTerms={agreed} />

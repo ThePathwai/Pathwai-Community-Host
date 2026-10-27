@@ -1,3 +1,4 @@
+import { GROUPS, groupOf } from "../lib/communityGroup";
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { Link, Navigate, useNavigate, useSearchParams } from "react-router-dom";
 import { Mail, Users } from "lucide-react";
@@ -209,6 +210,8 @@ export default function Hub() {
   const [pPhoto, setPPhoto] = useState("");
   const [pBusy, setPBusy] = useState(false);
   const [viewing, setViewing] = useState(null); // community whose detail view is open
+  const [space, setSpaceState] = useState(() => { try { return window.localStorage.getItem("pw_hub_space") === "leisure" ? "leisure" : "innovation"; } catch { return "innovation"; } }); // which of the two kinds of community is on screen
+  const setSpace = (k) => { setSpaceState(k); setTab(null); setLimit(12); try { window.localStorage.setItem("pw_hub_space", k); } catch { /* storage blocked: fine */ } };
   const [country, setCountry] = useState("all"); // "Discover communities" filters — client-side, over the already-loaded list
   const [interest, setInterest] = useState("all");
   const [inboxOpen, setInboxOpen] = useState(false);
@@ -259,8 +262,11 @@ export default function Hub() {
     catch (e) { toast.error(errMsg(e)); } finally { setPBusy(false); }
   };
 
-  const mine = (items || []).filter((c) => ["approved", "pending"].includes(c.my.status));
-  const discover = (items || []).filter((c) => !["approved", "pending"].includes(c.my.status));
+  // Innovation and leisure communities are kept apart: everything below only sees the space that is switched on.
+  const spaceItems = (items || []).filter((c) => groupOf(c) === space);
+  const mine = spaceItems.filter((c) => ["approved", "pending"].includes(c.my.status));
+  const discover = spaceItems.filter((c) => !["approved", "pending"].includes(c.my.status));
+  const spaceCount = (k) => (items || []).filter((c) => groupOf(c) === k && ["approved", "pending"].includes(c.my.status)).length;
   // At a handful of communities these filters are unnecessary; at hundreds they're how someone
   // actually finds theirs, so they're built in from the start. Countries/interests are derived from
   // whatever's on screen rather than a separate call — Discover communities already loads every
@@ -349,7 +355,17 @@ export default function Hub() {
 
       {!items ? <Spinner /> : (
         <>
-          <NextSteps version={nsVersion} profileLink onEditProfile={(add) => nav(add ? "/me?edit=startup" : "/me?edit=1")} onAsk={() => setGuideOpen(true)} />
+          <div className="mt-5 grid grid-cols-2 gap-2" role="tablist" aria-label="Kind of community" data-testid="hub-spaces">
+            {GROUPS.map((g) => (
+              <button key={g.key} role="tab" aria-selected={space === g.key} onClick={() => setSpace(g.key)} data-testid={`hub-space-${g.key}`}
+                className={cx("rounded-2xl border p-3 text-left transition sm:p-4", space === g.key ? "border-transparent" : "border-line hover:border-ink/30")}
+                style={space === g.key ? { background: "var(--accent)", color: "var(--on-accent)" } : undefined}>
+                <span className="block text-sm font-semibold leading-snug sm:text-base">{g.label}</span>
+                <span className={cx("mt-0.5 block text-xs", space === g.key ? "opacity-80" : "text-muted")}>{spaceCount(g.key)} joined<span className="hidden sm:inline"> · {g.hint}</span></span>
+              </button>
+            ))}
+          </div>
+          {space === "innovation" && <NextSteps version={nsVersion} profileLink onEditProfile={(add) => nav(add ? "/me?edit=startup" : "/me?edit=1")} onAsk={() => setGuideOpen(true)} />}
           <div className="mt-6 flex gap-1 overflow-x-auto border-b border-line" role="tablist" aria-label="Communities">
             {[["mine", "My communities", mine.length], ["discover", "Discover", discover.length], ...(isPlatformAdmin ? [["admin", "Platform admin", null]] : [])].map(([k, label, n]) => (
               <button key={k} role="tab" aria-selected={view === k} onClick={() => setTab(k)} data-testid={`hub-tab-${k}`}
@@ -363,7 +379,7 @@ export default function Hub() {
             <div className="mt-6" data-testid="hub-mine">
               {mine.length === 0 ? (
                 <div className="rounded-xl border border-dashed border-line p-8 text-center">
-                  <p className="text-sm text-muted">You haven't joined a community yet.</p>
+                  <p className="text-sm text-muted">{space === "innovation" ? "You haven't joined an innovation or business community yet." : "You haven't joined a leisure or lifestyle community yet."}</p>
                   <Button className="mt-4" onClick={() => setTab("discover")} data-testid="hub-browse">Browse communities</Button>
                 </div>
               ) : (

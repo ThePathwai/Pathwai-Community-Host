@@ -24,6 +24,7 @@ from directory import find_all_for_email, find_by_id, list_all_people, person_by
 from .community_config import DEFAULT_CONFIG, THEME_PRESETS
 from .messages import _preview, _thread_out
 from navigator import clean_startup as _clean_startup
+from community_group import community_group
 from birthday import BirthdayError, age_from, clean_birthday
 from ._common import TERMS_REQUIRED_MSG, audit, audit_platform, terms_stamp
 
@@ -146,7 +147,7 @@ async def _summary(slug: str) -> Dict[str, Any]:
     brand = cfg.get("brand") or {}
     now = _now()
     return {
-        "slug": slug, "name": cfg.get("community_name") or slug, "tagline": cfg.get("tagline"), "kind": cfg.get("community_kind") or "Community",
+        "slug": slug, "name": cfg.get("community_name") or slug, "tagline": cfg.get("tagline"), "kind": cfg.get("community_kind") or "Community", "group": community_group(cfg),
         "about": cfg.get("about") or cfg.get("tagline"), "about_url": cfg.get("about_url") or "", "about_cta": cfg.get("about_cta") or "", "cover": cfg.get("hub_cover"), "apply_questions": cfg.get("apply_questions") or [],
         # Always true -- see _apply_to_community's "Policy" comment. Not read from cfg: a stale
         # community_config doc from before this policy existed could still say False.

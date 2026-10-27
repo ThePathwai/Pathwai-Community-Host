@@ -84,7 +84,7 @@ export default function Login() {
       }
       // A demo link can name a community to open straight into (/login?demo=member&c=yvettabetta-pilates).
       if (isDemo() && params.get("c")) { try { await enter(params.get("c")); nav("/", { replace: true }); return; } catch { /* not a member there: fall through to the Hub */ } }
-      nav(loc.state?.from && loc.state.from !== "/login" ? "/hub" : "/hub", { replace: true });
+      nav(params.get("next") === "navigator" ? "/navigator" : "/hub", { replace: true });
     } catch (ex) { setStatus(ex?.response?.status === 403 && /membership request/i.test(errMsg(ex)) ? (/not approved/i.test(errMsg(ex)) ? "rejected" : "pending") : ""); setErr(errMsg(ex)); if (ex?.response?.status !== 403) toast.error(errMsg(ex)); } finally { setBusy(false); }
   };
 
@@ -101,7 +101,7 @@ export default function Login() {
       return;
     }
     if (data.new_account) toast.success("You're in. Apply to a community to get started.");
-    nav("/hub", { replace: true });
+    nav(params.get("next") === "navigator" ? "/navigator" : "/hub", { replace: true });
   };
 
   const founderAcct = { demo_role: "founder", email: "founder@yourcommunity.app", label: "Founder, no community yet", description: "Fife Ashley-Dejo has not joined any community. One profile drives the programs, the communities suggested and the guide." };
@@ -213,6 +213,7 @@ export default function Login() {
 
             {demoShown === "communities" && (
               <div className="space-y-2">
+                <p className="eyebrow">Innovation &amp; business</p>
                 {DEMO_COMMUNITIES.filter((c) => c.featured).map((c) => (
                   <div key={c.slug} className="rounded-xl border-2 bg-surface p-4" style={{ borderColor: c.accent }} data-testid={`demo-featured-${c.slug}`}>
                     <p className="eyebrow">Featured demo</p>
@@ -224,6 +225,7 @@ export default function Login() {
                     </div>
                     <Link to={`/demo/${c.short}`} className="mt-2 block text-center text-xs text-muted underline" data-testid={`demo-${c.slug}-page`}>Open its demo page (to share a link)</Link>
                   </div>))}
+                <p className="eyebrow pt-2">Leisure &amp; lifestyle</p>
                 {DEMO_COMMUNITIES.filter((c) => !c.featured).map((c) => (
                   <div key={c.slug} className="flex items-center gap-2 rounded-xl border border-line bg-surface p-2.5" data-testid={`demo-community-${c.slug}`}>
                     <div className="min-w-0 flex-1"><p className="truncate text-sm font-medium">{c.name}</p><p className="truncate text-[11px] text-muted" title={c.blurb}>{c.blurb}</p></div>
