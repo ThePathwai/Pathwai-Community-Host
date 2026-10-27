@@ -10,6 +10,7 @@ import { AccountProfileForm, formFromAccount, profileBody, profileProblem } from
 import GuideChat from "../components/GuideChat";
 import NextSteps from "../components/NextSteps";
 import PitchCard from "../components/PitchCard";
+import AccountShell from "../components/AccountShell";
 import { ContactCard, List } from "./MemberProfile";
 
 // "Your profile": the one profile on your Pathwai account (outside any community), laid out exactly like a member's card inside a
@@ -74,7 +75,7 @@ export default function MyProfile({ embedded }) {
         <div ref={formRef}><AccountProfileForm f={pf} setF={setPf} photo={photo} setPhoto={setPhoto} /></div>
       </Card>
       {/* Inside a community the phone's bottom tab bar is showing, so the bar rides above it. */}
-      <div className={`sticky z-10 -mx-1 mt-3 flex justify-end gap-2 border-t border-line bg-[rgb(var(--c-bg))] px-1 py-3 ${embedded ? "bottom-[calc(3.75rem+env(safe-area-inset-bottom))] md:bottom-0" : "bottom-0"}`}>
+      <div className={`sticky z-10 -mx-1 mt-3 flex justify-end gap-2 border-t border-line bg-[rgb(var(--c-bg))] px-1 py-3 ${embedded ? "bottom-[calc(3.75rem+env(safe-area-inset-bottom))] md:bottom-0" : "bottom-[calc(3.75rem+env(safe-area-inset-bottom))] lg:bottom-0"}`}>
         <Button variant="ghost" onClick={() => setEditing(false)} data-testid="my-profile-cancel">Cancel</Button>
         <Button onClick={save} loading={busy} data-testid="my-profile-save">Save profile</Button>
       </div>
@@ -146,17 +147,5 @@ export default function MyProfile({ embedded }) {
   );
 
   if (embedded) return <div className="py-2">{body}</div>;
-  return (
-    <div className="min-h-[100dvh] px-4 py-5 sm:py-8" data-testid="my-profile-page">
-      <header className="mx-auto mb-8 flex w-full max-w-5xl items-center justify-between gap-3">
-        <Link to="/hub" className="text-xl"><Wordmark name="Pathwai" brand={{}} /></Link>
-        <div className="flex items-center gap-2">
-          <Link to="/navigator" className="btn-ghost !py-2 text-sm"><Compass className="h-4 w-4" />Navigator</Link>
-          <Link to="/hub" className="btn-ghost !py-2 text-sm" data-testid="my-profile-back">Back to Hub</Link>
-        </div>
-      </header>
-      {body}
-      <PoweredBy className="mt-10 pb-2 text-center" />
-    </div>
-  );
+  return <AccountShell active="profile"><div data-testid="my-profile-page">{body}</div></AccountShell>;
 }

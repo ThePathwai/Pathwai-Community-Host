@@ -131,3 +131,16 @@ html { -webkit-text-size-adjust: 100%; }
   .no-print { display: none !important; }
   * { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
 }
+
+/* ---- Account area (components/AccountShell.jsx, ProgramCards.jsx, pages/Home.jsx) ---- */
+@keyframes pw-in-up { from { opacity: 0; transform: translateY(32px); } to { opacity: 1; transform: none; } }
+@keyframes pw-fade { from { opacity: 0; } to { opacity: 1; } }
+.pw-in-up { animation: pw-in-up .32s var(--ease-out) both; }
+.pw-drawer { animation: pw-in-up .32s var(--ease-out) both; }
+@media (min-width: 640px) { .pw-drawer { animation: pw-in-right .32s var(--ease-out) both; } }
+.pw-fade { animation: pw-fade .2s ease both; }
+.pw-rail { scrollbar-width: none; -webkit-overflow-scrolling: touch; scroll-snap-type: x proximity; }
+.pw-rail::-webkit-scrollbar { display: none; }
+.pw-rail > * { scroll-snap-align: start; }
+.pw-surface { background: linear-gradient(180deg, rgb(var(--c-surface)) 0%, rgb(var(--c-surface) / 0.7) 100%); }
+@media (prefers-reduced-motion: reduce) { .pw-in-up, .pw-fade, .pw-drawer { animation: none !important; } }

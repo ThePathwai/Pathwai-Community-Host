@@ -1,18 +1,16 @@
 import { GROUPS, groupOf } from "../lib/communityGroup";
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { Link, Navigate, useNavigate, useSearchParams } from "react-router-dom";
-import { Mail, Users } from "lucide-react";
 import { toast } from "sonner";
 import { api, errMsg, timeAgo } from "../lib/api";
 import { useAuth } from "../lib/auth";
-import crowd from "../assets/crowd.jpg";
-import { Avatar, Button, Field, Input, Modal, PoweredBy, Select, Spinner, Textarea, Wordmark, cx } from "../components/ui";
+import { Avatar, Button, Field, Input, Modal, Select, Spinner, Textarea, cx } from "../components/ui";
 import HubPeople from "../components/HubPeople";
 import ScrollLock from "../components/ScrollLock";
 import { PlatformAccounts } from "../components/AccountTools";
 import { AccountProfileForm, BLANK_PROFILE, formFromAccount, profileBody, profileProblem } from "../components/AccountProfileForm";
-import NextSteps from "../components/NextSteps";
-import GuideChat from "../components/GuideChat";
+import AccountShell from "../components/AccountShell";
+import Home from "./Home";
 
 const RADIUS = { sharp: "2px", soft: "0.75rem", round: "1.25rem" };
 
@@ -193,7 +191,7 @@ function HubInbox({ open, onClose, loading, data, communities, onOpenThread }) {
 }
 
 export default function Hub() {
-  const { account, loading, enter, logout, showHubTheme, refresh } = useAuth();
+  const { account, loading, enter, refresh } = useAuth();
   const nav = useNavigate();
   const [params, setParams] = useSearchParams();
   const [items, setItems] = useState(null);
@@ -203,15 +201,14 @@ export default function Hub() {
   const [starting, setStarting] = useState(false); // "start your own community" modal
   const [categories, setCategories] = useState([]);
   const [nc, setNc] = useState({ name: "", category: "other" });
-  const [guideOpen, setGuideOpen] = useState(false);
-  const [nsVersion, setNsVersion] = useState(0); // bumped after a profile save so "Your next steps" reloads at once
   const [editingProfile, setEditingProfile] = useState(false); // account-level "standard profile" modal
   const [pf, setPf] = useState(BLANK_PROFILE);
   const [pPhoto, setPPhoto] = useState("");
   const [pBusy, setPBusy] = useState(false);
   const [viewing, setViewing] = useState(null); // community whose detail view is open
-  const [space, setSpaceState] = useState(() => { try { return window.localStorage.getItem("pw_hub_space") === "leisure" ? "leisure" : "innovation"; } catch { return "innovation"; } }); // which of the two kinds of community is on screen
-  const setSpace = (k) => { setSpaceState(k); setTab(null); setLimit(12); try { window.localStorage.setItem("pw_hub_space", k); } catch { /* storage blocked: fine */ } };
+  const vw = ["innovation", "leisure"].includes(params.get("v")) ? params.get("v") : "home"; // which page of the account area: Home, or one of the two kinds of community
+  const space = vw === "leisure" ? "leisure" : "innovation";
+  const setSpace = (k) => { setTab(null); setLimit(12); setParams({ v: k }, { replace: true }); };
   const [country, setCountry] = useState("all"); // "Discover communities" filters — client-side, over the already-loaded list
   const [interest, setInterest] = useState("all");
   const [inboxOpen, setInboxOpen] = useState(false);
@@ -224,7 +221,6 @@ export default function Hub() {
   const [query, setQuery] = useState("");
   const [limit, setLimit] = useState(12);
   const [showFilters, setShowFilters] = useState(false);
-  const [menuOpen, setMenuOpen] = useState(false);
 
   // A community member card's "View on People" link (MemberProfile.jsx) can't open this panel
   // directly -- it's mounted here, on a different route -- so it hands off through a ?person=
@@ -237,13 +233,20 @@ export default function Hub() {
     setPeopleOpen(true);
     setParams((p) => { p.delete("person"); return p; }, { replace: true });
   }, [params, setParams]);
+  // The sidebar's Messages and People entries land here with ?open=inbox|people.
+  useEffect(() => {
+    const o = params.get("open");
+    if (!o) return;
+    if (o === "people") setPeopleOpen(true);
+    if (o === "inbox") { setInboxOpen(true); loadInbox(); }
+    setParams((p) => { p.delete("open"); return p; }, { replace: true });
+  }, [params, setParams]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const load = useCallback(() => api.get("/hub/communities").then((r) => setItems(r.data.communities)).catch((e) => toast.error(errMsg(e))), []);
   const loadInbox = useCallback(() => {
     setInboxLoading(true);
     return api.get("/hub/messages").then((r) => setInboxData(r.data)).catch(() => setInboxData({ threads: [], unread: 0 })).finally(() => setInboxLoading(false));
   }, []);
-  useEffect(() => { showHubTheme(); }, [showHubTheme]);
   useEffect(() => { if (account) { load(); loadInbox(); } }, [account, load, loadInbox]);
   useEffect(() => { if (starting && !categories.length) api.get("/hub/community-categories").then((r) => setCategories(r.data.categories)).catch(() => {}); }, [starting, categories.length]);
   if (loading) return <Spinner />;
@@ -258,7 +261,7 @@ export default function Hub() {
     const problem = profileProblem(pf);
     if (problem) return toast.error(problem);
     setPBusy(true); // only after validation passes, so a validation message can't leave the button stuck on "loading"
-    try { await api.patch("/hub/profile", profileBody(pf, pPhoto)); await refresh(); toast.success("Profile saved"); setNsVersion((v) => v + 1); setEditingProfile(false); }
+    try { await api.patch("/hub/profile", profileBody(pf, pPhoto)); await refresh(); toast.success("Profile saved"); setEditingProfile(false); }
     catch (e) { toast.error(errMsg(e)); } finally { setPBusy(false); }
   };
 
@@ -314,58 +317,32 @@ export default function Hub() {
     } catch (e) { toast.error(errMsg(e)); setBusy(false); }
   };
 
+  const g = GROUPS.find((x) => x.key === space);
   return (
-    <div className="relative min-h-screen" data-testid="hub">
-      <div className="pointer-events-none absolute inset-x-0 top-0 h-[18rem] overflow-hidden"><img src={crowd} alt="" className="h-full w-full object-cover opacity-25" /><div className="absolute inset-0" style={{ background: "linear-gradient(180deg, rgba(8,8,11,.2), rgb(var(--c-bg)))" }} /></div>
-    <div className="relative mx-auto max-w-6xl px-4 py-6 lg:px-8">
-      <header className="mb-8 flex items-center justify-between">
-        <span className="text-3xl"><Wordmark name="Pathwai" brand={{}} /></span>
-        <div className="flex items-center gap-4">
-          <button onClick={() => setPeopleOpen(true)} data-testid="hub-open-people" title="People" aria-label="People" className="text-ink/80 hover:text-ink">
-            <Users className="h-5 w-5" />
-          </button>
-          <button onClick={() => { setInboxOpen(true); loadInbox(); }} data-testid="hub-open-inbox" title="Messages" aria-label="Messages" className="relative text-ink/80 hover:text-ink">
-            <Mail className="h-5 w-5" />
-            {inboxData?.unread > 0 && <span className="absolute -right-1.5 -top-1.5 flex h-4 min-w-[1rem] items-center justify-center rounded-full bg-red-600 px-1 text-[9px] font-bold text-white" data-testid="hub-inbox-badge">{inboxData.unread}</span>}
-          </button>
-          <div className="relative">
-            <button onClick={() => setMenuOpen((o) => !o)} data-testid="hub-menu" aria-haspopup="menu" aria-expanded={menuOpen} title="Account"><Avatar src={account.avatar_url} name={account.name} size={36} /></button>
-            {menuOpen && (
-              <>
-                <div className="fixed inset-0 z-40" onClick={() => setMenuOpen(false)} aria-hidden />
-                <div role="menu" className="absolute right-0 top-12 z-50 w-60 overflow-hidden rounded-xl border border-line bg-surface shadow-xl" data-testid="hub-menu-panel">
-                  <div className="border-b border-line px-4 py-3"><p className="truncate text-sm font-medium">{account.name}</p><p className="truncate text-xs text-muted">{account.email}</p></div>
-                  <button role="menuitem" className="block w-full px-4 py-2.5 text-left text-sm hover:bg-ink/5" onClick={() => { setMenuOpen(false); nav("/me"); }} data-testid="hub-edit-profile">Your profile</button>
-                  <Link role="menuitem" to="/navigator" className="block px-4 py-2.5 text-sm hover:bg-ink/5" data-testid="hub-navigator">Navigator: find programs</Link>
-                  <Link role="menuitem" to="/about" className="block px-4 py-2.5 text-sm hover:bg-ink/5" data-testid="hub-about">About Pathwai</Link>
-                  <button role="menuitem" className="block w-full border-t border-line px-4 py-2.5 text-left text-sm hover:bg-ink/5" data-testid="hub-logout" onClick={async () => { await logout(); nav("/login", { replace: true }); }}>Sign out</button>
-                </div>
-              </>)}
-          </div>
-        </div>
-      </header>
-
+    <AccountShell active={vw === "home" ? "home" : space}>
+    <div className="mx-auto max-w-6xl" data-testid="hub">
+      {vw === "home" ? (items ? <Home items={items} onEnter={doEnter} /> : <Spinner />) : (
+        <>
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold sm:text-3xl lg:text-4xl">Communities</h1>
-          <p className="mt-2 max-w-xl text-sm text-muted">One Pathwai login. Each community keeps its own members, events and look.</p>
+          <p className="eyebrow">Communities</p>
+          <h1 className="mt-2 text-3xl sm:text-4xl" style={{ textTransform: "none", letterSpacing: "-0.03em", fontWeight: 800 }}>{g.label}</h1>
+          <p className="mt-2 max-w-xl text-sm text-muted">{g.hint}. Each community keeps its own members, events and look.</p>
         </div>
         <Button variant="ghost" className="border border-dashed border-line" onClick={() => setStarting(true)} data-testid="hub-start-community">+ Start your own</Button>
       </div>
 
       {!items ? <Spinner /> : (
         <>
-          <div className="mt-5 grid grid-cols-2 gap-2" role="tablist" aria-label="Kind of community" data-testid="hub-spaces">
-            {GROUPS.map((g) => (
-              <button key={g.key} role="tab" aria-selected={space === g.key} onClick={() => setSpace(g.key)} data-testid={`hub-space-${g.key}`}
-                className={cx("rounded-2xl border p-3 text-left transition sm:p-4", space === g.key ? "border-transparent" : "border-line hover:border-ink/30")}
-                style={space === g.key ? { background: "var(--accent)", color: "var(--on-accent)" } : undefined}>
-                <span className="block text-sm font-semibold leading-snug sm:text-base">{g.label}</span>
-                <span className={cx("mt-0.5 block text-xs", space === g.key ? "opacity-80" : "text-muted")}>{spaceCount(g.key)} joined<span className="hidden sm:inline"> · {g.hint}</span></span>
+          <div className="mt-5 inline-flex w-full rounded-full border border-line p-1 sm:w-auto" role="tablist" aria-label="Kind of community" data-testid="hub-spaces">
+            {GROUPS.map((x) => (
+              <button key={x.key} role="tab" aria-selected={space === x.key} onClick={() => setSpace(x.key)} data-testid={`hub-space-${x.key}`}
+                className={cx("flex-1 rounded-full px-5 py-1.5 text-sm font-medium transition sm:flex-none", space === x.key ? "" : "text-muted hover:text-ink")}
+                style={space === x.key ? { background: "var(--accent)", color: "var(--on-accent)" } : undefined}>
+                {x.short}<span className={cx("ml-2 text-xs tabular-nums", space === x.key ? "opacity-70" : "text-muted")}>{spaceCount(x.key)}</span>
               </button>
             ))}
           </div>
-          {space === "innovation" && <NextSteps version={nsVersion} profileLink onEditProfile={(add) => nav(add ? "/me?edit=startup" : "/me?edit=1")} onAsk={() => setGuideOpen(true)} />}
           <div className="mt-6 flex gap-1 overflow-x-auto border-b border-line" role="tablist" aria-label="Communities">
             {[["mine", "My communities", mine.length], ["discover", "Discover", discover.length], ...(isPlatformAdmin ? [["admin", "Platform admin", null]] : [])].map(([k, label, n]) => (
               <button key={k} role="tab" aria-selected={view === k} onClick={() => setTab(k)} data-testid={`hub-tab-${k}`}
@@ -416,6 +393,7 @@ export default function Hub() {
 
           {view === "admin" && isPlatformAdmin && <div className="mt-6"><PlatformAccounts /></div>}
         </>)}
+        </>)}
 
       <HubInbox open={inboxOpen} onClose={() => setInboxOpen(false)} loading={inboxLoading} data={inboxData} communities={items} onOpenThread={openThread} />
 
@@ -443,9 +421,6 @@ export default function Hub() {
           </div>)}
       </Modal>
 
-      <Modal open={guideOpen} onClose={() => setGuideOpen(false)} title="Ask the guide">
-        <GuideChat className="h-[65dvh]" signedIn hasProfile={!!account.startup?.stage} startupName={account.startup?.name} />
-      </Modal>
       <Modal open={editingProfile} onClose={() => setEditingProfile(false)} title="Your Pathwai profile">
         <div className="space-y-4">
           <p className="text-sm text-muted">This is the standard profile every new community application starts from. Editing it here doesn't change what you've already shared inside communities you've joined.</p>
@@ -462,8 +437,7 @@ export default function Hub() {
           <Button onClick={submitCreate} loading={busy} data-testid="create-community-submit">Create community</Button>
         </div>
       </Modal>
-      <PoweredBy className="mt-16 flex justify-center" />
     </div>
-    </div>
+    </AccountShell>
   );
 }

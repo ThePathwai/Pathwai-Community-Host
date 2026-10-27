@@ -36,13 +36,14 @@ function Communities({ list }) {
   return <ul className="mt-3 flex flex-wrap gap-2">{list.map((c) => <li key={c.slug}><Link to={`/c/${c.slug}`} className="chip !px-3 !py-1.5 !text-sm"><Users className="mr-1.5 h-3.5 w-3.5" aria-hidden />{c.name}</Link></li>)}</ul>;
 }
 
-export default function GuideChat({ signedIn, hasProfile, formProfile, startupName, className }) {
+export default function GuideChat({ signedIn, hasProfile, formProfile, startupName, className, initialMessage }) {
   const [msgs, setMsgs] = useState(null);
   const [text, setText] = useState("");
   const [busy, setBusy] = useState(false);
   const [focus, setFocus] = useState(null);
   const end = useRef(null);
   const box = useRef(null);
+  const sentInitial = useRef(false);
 
   useEffect(() => {
     setMsgs([{ role: "bot", text: hasProfile
@@ -65,6 +66,9 @@ export default function GuideChat({ signedIn, hasProfile, formProfile, startupNa
       setMsgs((m) => [...m, { role: "bot", text: errMsg(e, "I couldn't answer that just now. Please try again.") }]);
     } finally { setBusy(false); }
   };
+
+  // Opened with a question already typed (from the Home bar, or a program's "Ask" button): ask it once, right away.
+  useEffect(() => { if (msgs && initialMessage && !sentInitial.current) { sentInitial.current = true; send(initialMessage); } }, [msgs]); // eslint-disable-line react-hooks/exhaustive-deps
 
   if (!msgs) return null;
   const last = msgs[msgs.length - 1];

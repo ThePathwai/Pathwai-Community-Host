@@ -40,7 +40,7 @@ export default function NextSteps({ version, onEditProfile, onAsk, profileLink }
 
       {soon.length > 0 && (
         <div className="mt-4 flex flex-wrap gap-2" data-testid="next-steps-soon">
-          {soon.map((m) => <span key={m.id} className="inline-flex items-center gap-1.5 rounded-full bg-amber-500/15 px-3 py-1 text-sm font-medium text-amber-700 dark:text-amber-400"><Clock className="h-3.5 w-3.5" aria-hidden />{m.name} · {m.days_left} day{m.days_left === 1 ? "" : "s"}</span>)}
+          {soon.slice(0, 3).map((m) => <span key={m.id} className="inline-flex items-center gap-1.5 rounded-full bg-amber-500/15 px-3 py-1 text-sm font-medium text-amber-700 dark:text-amber-400"><Clock className="h-3.5 w-3.5" aria-hidden />{m.name} · {m.days_left} day{m.days_left === 1 ? "" : "s"}</span>)}
         </div>
       )}
 
