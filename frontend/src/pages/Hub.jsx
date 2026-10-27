@@ -4,13 +4,12 @@ import { Mail, Users } from "lucide-react";
 import { toast } from "sonner";
 import { api, errMsg, timeAgo } from "../lib/api";
 import { useAuth } from "../lib/auth";
-import { SUGGEST, ageFromBirthday, oldestISO, todayISO } from "../lib/profile";
 import crowd from "../assets/crowd.jpg";
-import { Avatar, AvatarUpload, Button, Field, Input, Modal, PhotoGallery, PoweredBy, Select, Spinner, TagInput, Textarea, Wordmark, cx } from "../components/ui";
+import { Avatar, Button, Field, Input, Modal, PoweredBy, Select, Spinner, Textarea, Wordmark, cx } from "../components/ui";
 import HubPeople from "../components/HubPeople";
 import ScrollLock from "../components/ScrollLock";
 import { PlatformAccounts } from "../components/AccountTools";
-import StartupFields, { BLANK_STARTUP, startupToApi, startupToForm } from "../components/StartupFields";
+import { AccountProfileForm, BLANK_PROFILE, formFromAccount, profileBody, profileProblem } from "../components/AccountProfileForm";
 import NextSteps from "../components/NextSteps";
 import GuideChat from "../components/GuideChat";
 
@@ -122,43 +121,6 @@ function CommunityDetailModal({ c, onClose, onEnter, onApply }) {
     </div>
   );
 }
-
-// The standard profile saved once on the account (not per community — see BuildProfileStep in
-// Signup.jsx) — reused here so it can be revisited any time from the hub, not just right after signup.
-function AccountProfileForm({ f, setF, photo, setPhoto }) {
-  const set = (k) => (e) => setF({ ...f, [k]: e.target.value });
-  const setContact = (k) => (e) => setF({ ...f, contact: { ...f.contact, [k]: e.target.value } });
-  return (
-    <div className="space-y-4">
-      <AvatarUpload photo={photo} onChange={setPhoto} name={f.name} testId="account-profile-photo-upload" />
-      <Field label="Name"><Input data-testid="account-profile-name" value={f.name} onChange={set("name")} required minLength={2} maxLength={120} /></Field>
-      <Field label="Birthday"><Input data-testid="account-profile-birthday" type="date" min={oldestISO()} max={todayISO()} value={f.birthday} onChange={set("birthday")} /></Field>
-      <p className="-mt-2 text-xs text-muted">{ageFromBirthday(f.birthday) !== null ? `You're ${ageFromBirthday(f.birthday)}. ` : ""}Your age is worked out from this and updates on its own. Other members see your age, never your birthday.</p>
-      <Field label="What do you do?"><Input value={f.title} onChange={set("title")} placeholder="e.g. Physiotherapist, teacher, chef" maxLength={120} /></Field>
-      <Field label="Employer or school"><Input value={f.company} onChange={set("company")} maxLength={120} /></Field>
-      <Field label="Neighbourhood or city"><Input value={f.location} onChange={set("location")} maxLength={120} /></Field>
-      <Field label="About you"><Textarea rows={3} value={f.bio} onChange={set("bio")} maxLength={1000} /></Field>
-      <StartupFields value={f.startup} onChange={(v) => setF({ ...f, startup: v })} testPrefix="account-startup" />
-      <PhotoGallery value={f.photos} onChange={(v) => setF({ ...f, photos: v })} />
-      <Field label="Skills"><TagInput value={f.skill_set} suggestions={SUGGEST.skill_set} onChange={(v) => setF({ ...f, skill_set: v })} /></Field>
-      <Field label="Interests"><TagInput value={f.interests_hobbies} suggestions={SUGGEST.interests_hobbies} onChange={(v) => setF({ ...f, interests_hobbies: v })} /></Field>
-      <Field label="Goals"><TagInput value={f.goals} suggestions={SUGGEST.goals} onChange={(v) => setF({ ...f, goals: v })} /></Field>
-      <Field label="Support needed"><TagInput value={f.support_needs} suggestions={SUGGEST.support_needs} onChange={(v) => setF({ ...f, support_needs: v })} /></Field>
-      <div>
-        <p className="label">Contact info <span className="font-normal normal-case text-muted">(optional — shown to members you're connected with)</span></p>
-        <div className="mt-2 grid gap-3 sm:grid-cols-2">
-          <Input placeholder="Phone" value={f.contact.phone} onChange={setContact("phone")} />
-          <Input type="url" placeholder="LinkedIn" value={f.contact.linkedin} onChange={setContact("linkedin")} />
-          <Input placeholder="Instagram (@you)" value={f.contact.instagram} onChange={setContact("instagram")} />
-          <Input type="url" placeholder="Website" value={f.contact.website} onChange={setContact("website")} />
-        </div>
-      </div>
-    </div>
-  );
-}
-
-const BLANK_PROFILE = { name: "", birthday: "", title: "", company: "", location: "", bio: "", skill_set: [], interests_hobbies: [], goals: [], support_needs: [],
-  photos: [], startup: null, contact: { phone: "", linkedin: "", instagram: "", website: "" } };
 
 // The "Messages centre" from the Hub page: one merged inbox across every community you've joined
 // (GET /hub/messages already does the merging/sorting server-side -- see routes/hub.py), filterable
@@ -285,19 +247,15 @@ export default function Hub() {
   if (!account) return <Navigate to="/login" replace />;
 
   const openProfileEditor = (addStartup) => {
-    setPf({ name: account.name || "", birthday: account.birthday || "", title: account.title || "", company: account.company || "", location: account.location || "", bio: account.bio || "",
-            skill_set: account.skill_set || [], interests_hobbies: account.interests_hobbies || [], goals: account.goals || [], support_needs: account.support_needs || [],
-            photos: account.photos || [], startup: startupToForm(account.startup) || (addStartup === true ? { ...BLANK_STARTUP } : null), contact: { phone: "", linkedin: "", instagram: "", website: "", ...(account.contact || {}) } });
+    setPf(formFromAccount(account, addStartup));
     setPPhoto(account.avatar_url || "");
     setEditingProfile(true);
   };
   const saveProfile = async () => {
-    if (pf.name.trim().length < 2) return toast.error("Enter your name.");
-    const yrs = ageFromBirthday(pf.birthday);
-    if (pf.birthday && (yrs === null || yrs > 120)) return toast.error("Check the year of your birthday.");
-    if (pf.birthday && yrs < 13) return toast.error("You need to be at least 13 to use Pathwai.");
+    const problem = profileProblem(pf);
+    if (problem) return toast.error(problem);
     setPBusy(true); // only after validation passes, so a validation message can't leave the button stuck on "loading"
-    try { await api.patch("/hub/profile", { ...pf, startup: startupToApi(pf.startup), avatar_url: pPhoto || null }); await refresh(); toast.success("Profile saved"); setNsVersion((v) => v + 1); setEditingProfile(false); }
+    try { await api.patch("/hub/profile", profileBody(pf, pPhoto)); await refresh(); toast.success("Profile saved"); setNsVersion((v) => v + 1); setEditingProfile(false); }
     catch (e) { toast.error(errMsg(e)); } finally { setPBusy(false); }
   };
 
@@ -371,7 +329,7 @@ export default function Hub() {
                 <div className="fixed inset-0 z-40" onClick={() => setMenuOpen(false)} aria-hidden />
                 <div role="menu" className="absolute right-0 top-12 z-50 w-60 overflow-hidden rounded-xl border border-line bg-surface shadow-xl" data-testid="hub-menu-panel">
                   <div className="border-b border-line px-4 py-3"><p className="truncate text-sm font-medium">{account.name}</p><p className="truncate text-xs text-muted">{account.email}</p></div>
-                  <button role="menuitem" className="block w-full px-4 py-2.5 text-left text-sm hover:bg-ink/5" onClick={() => { setMenuOpen(false); openProfileEditor(); }} data-testid="hub-edit-profile">Edit your Pathwai profile</button>
+                  <button role="menuitem" className="block w-full px-4 py-2.5 text-left text-sm hover:bg-ink/5" onClick={() => { setMenuOpen(false); nav("/me"); }} data-testid="hub-edit-profile">Your profile</button>
                   <Link role="menuitem" to="/navigator" className="block px-4 py-2.5 text-sm hover:bg-ink/5" data-testid="hub-navigator">Navigator: find programs</Link>
                   <Link role="menuitem" to="/about" className="block px-4 py-2.5 text-sm hover:bg-ink/5" data-testid="hub-about">About Pathwai</Link>
                   <button role="menuitem" className="block w-full border-t border-line px-4 py-2.5 text-left text-sm hover:bg-ink/5" data-testid="hub-logout" onClick={async () => { await logout(); nav("/login", { replace: true }); }}>Sign out</button>
@@ -391,7 +349,7 @@ export default function Hub() {
 
       {!items ? <Spinner /> : (
         <>
-          <NextSteps version={nsVersion} onEditProfile={(add) => openProfileEditor(add)} onAsk={() => setGuideOpen(true)} />
+          <NextSteps version={nsVersion} profileLink onEditProfile={(add) => nav(add ? "/me?edit=startup" : "/me?edit=1")} onAsk={() => setGuideOpen(true)} />
           <div className="mt-6 flex gap-1 overflow-x-auto border-b border-line" role="tablist" aria-label="Communities">
             {[["mine", "My communities", mine.length], ["discover", "Discover", discover.length], ...(isPlatformAdmin ? [["admin", "Platform admin", null]] : [])].map(([k, label, n]) => (
               <button key={k} role="tab" aria-selected={view === k} onClick={() => setTab(k)} data-testid={`hub-tab-${k}`}

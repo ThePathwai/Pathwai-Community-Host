@@ -618,7 +618,7 @@ function computePeople(limit = 8) {
     }));
 }
 
-const seedDemoStartup = (email) => { const m = (S.extra.acctProfile = S.extra.acctProfile || {}); if (email === "demo@yourcommunity.app" && !("startup" in (m[email] || {}))) m[email] = { ...(m[email] || {}), startup: DEMO_STARTUP }; };
+const seedDemoStartup = (email) => { const m = (S.extra.acctProfile = S.extra.acctProfile || {}); if (email === "demo@yourcommunity.app" && !("startup" in (m[email] || {}))) m[email] = { title: "Co-founder", company: "Bright Court", location: "Toronto, ON", age: 31, bio: "Building booking and league tools for community sports groups. Previously ran club nights and leagues across the GTA.", skill_set: ["Community building", "Product", "Partnerships"], interests_hobbies: ["Padel", "Running", "Live music"], goals: ["Launch in a second city", "Find a marketplace mentor"], support_needs: ["Seed funding intros", "Pilot partners"], ...(m[email] || {}), startup: DEMO_STARTUP }; };
 const navCtx = (config) => ({ account: S.role ? (((S.extra.acctProfile = S.extra.acctProfile || {})[S.email] = S.extra.acctProfile[S.email] || {})) : null, config, ok, fail, slug: slugOf(), signedIn: !!S.role, isAdmin: !!S.role && isAdminHere(), store: (S.extra.nav = S.extra.nav || {}), communityInfo: communityPublicInfo });
 function get(path, p, config) {
   if (path.startsWith("/navigator")) return navigatorCall("get", path, {}, p, navCtx(config));

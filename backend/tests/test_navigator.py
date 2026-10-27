@@ -255,3 +255,19 @@ def test_account_startup_profile_round_trips_and_prefills_the_navigator():
         # saving other fields later does not wipe it
         c.patch("/api/hub/profile", json={"bio": "hi"})
         assert c.get("/api/navigator/me").json()["startup"]["name"] == "Lumen"
+
+
+def test_startup_pitch_and_documents_are_cleaned():
+    s = nav.clean_startup({"stage": "idea", "pitch": {"problem": "  a   b ", "ask": "x" * 900, "nope": "y", "market": ""},
+                           "documents": [{"title": "Deck", "url": "https://x.example/d"}, {"title": "bad", "url": "javascript:alert(1)"}, {"url": "http://ok.example"}] + [{"url": "https://e.example"}] * 9})
+    assert s["pitch"] == {"problem": "a b", "ask": "x" * 600}
+    assert s["documents"][0] == {"title": "Deck", "url": "https://x.example/d"} and len(s["documents"]) == 6
+    assert all(d["url"].startswith("http") for d in s["documents"])
+    assert nav.clean_startup({})["pitch"] == {} and nav.clean_startup({})["documents"] == []
+
+
+def test_joining_a_community_carries_the_startup_name_across_but_not_the_private_parts():
+    import routes.hub as hub
+    card = hub._startup_card(nav.clean_startup({"name": "Lumen", "one_liner": "Solar", "stage": "prototype", "sectors": ["cleantech"], "needs": ["funding"], "goal": "secret"}))
+    assert card == {"startup_name": "Lumen", "startup_one_liner": "Solar", "startup_stage": "mvp", "startup_sector": "cleantech"}
+    assert hub._startup_card({}) == {}

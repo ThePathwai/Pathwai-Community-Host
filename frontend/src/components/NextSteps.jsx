@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import { ArrowRight, Clock, MessageCircle, Rocket, Sparkles, Users } from "lucide-react";
+import { ArrowRight, Clock, MessageCircle, Rocket, Sparkles, User, Users } from "lucide-react";
 import { api } from "../lib/api";
 import { Button } from "./ui";
 import { Ring, Status } from "./NavBits";
@@ -9,7 +9,7 @@ import { Ring, Status } from "./NavBits";
 // programs every community currently lists, so it changes the moment either changes (GET /navigator/home, worked out fresh each time).
 // `version` is bumped by the Hub after a profile save so this reloads straight away.
 
-export default function NextSteps({ version, onEditProfile, onAsk }) {
+export default function NextSteps({ version, onEditProfile, onAsk, profileLink }) {
   const [d, setD] = useState(null);
   useEffect(() => { api.get("/navigator/home").then((r) => setD(r.data)).catch(() => setD({ has_profile: false, completeness: { percent: 0, missing: [] } })); }, [version]);
   if (!d) return null;
@@ -61,6 +61,7 @@ export default function NextSteps({ version, onEditProfile, onAsk }) {
       <div className="mt-5 flex flex-wrap items-center gap-2">
         <Button onClick={onAsk} data-testid="next-steps-ask"><MessageCircle className="h-4 w-4" />Ask the guide</Button>
         <Link to="/navigator" className="btn-ghost !py-2 text-sm" data-testid="next-steps-open">All programs <ArrowRight className="h-4 w-4" /></Link>
+        {profileLink && <Link to="/me" className="btn-ghost !py-2 text-sm" data-testid="next-steps-profile"><User className="h-4 w-4" />Your profile</Link>}
         {comp.missing.length > 0 && <button type="button" onClick={() => onEditProfile(false)} className="inline-flex items-center gap-1.5 text-sm text-muted hover:text-ink" data-testid="next-steps-improve"><Sparkles className="h-4 w-4" aria-hidden />Add {comp.missing[0].label} for sharper matches</button>}
       </div>
     </section>

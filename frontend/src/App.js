@@ -45,6 +45,7 @@ import Teams from "./pages/Teams";
 import TeamDetail from "./pages/TeamDetail";
 import PublicReport from "./pages/PublicReport";
 import Navigator from "./pages/Navigator";
+import MyProfile from "./pages/MyProfile";
 
 function Protected({ children, admin }) {
   const { user, account, loading } = useAuth();
@@ -61,6 +62,14 @@ function NavigatorRoute() {
   const { user, loading } = useAuth();
   if (loading) return <Spinner />;
   return user ? <Layout><Navigator embedded /></Layout> : <Navigator />;
+}
+
+// "Your profile" is the account's own profile, so it works with or without a community open: inside the community's layout when
+// there is one, on its own page otherwise (same pattern as the Navigator).
+function MyProfileRoute() {
+  const { user, loading } = useAuth();
+  if (loading) return <Spinner />;
+  return user ? <Layout><MyProfile embedded /></Layout> : <MyProfile />;
 }
 
 const P = ({ children, admin }) => <Protected admin={admin}><Layout>{children}</Layout></Protected>;
@@ -85,6 +94,7 @@ export default function App() {
         <Route path="/about" element={<About />} />
         <Route path="/demo/:short" element={<DemoLanding />} />
         <Route path="/navigator" element={<NavigatorRoute />} />
+        <Route path="/me" element={<MyProfileRoute />} />
         <Route path="/humber" element={<Navigate to="/demo/humber" replace />} />
         <Route path="/install" element={<Install />} />
         <Route path="/r/:slug/:token" element={<PublicReport />} />

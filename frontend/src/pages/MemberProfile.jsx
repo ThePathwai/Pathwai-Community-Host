@@ -12,11 +12,11 @@ import { WhyReasons, reasonsOf } from "../components/WhyMatch";
 import PitchCard from "../components/PitchCard";
 import { ProfileLearning } from "../components/Learning";
 
-const List = ({ title, items, accent }) => items?.length ? (
+export const List = ({ title, items, accent }) => items?.length ? (
   <Card style={accent ? { borderColor: "var(--accent)" } : undefined}><h3 className="label" style={accent ? { color: "var(--accent)" } : undefined}>{title}</h3><div className="flex flex-wrap gap-1.5">{items.map((x) => { const t = typeof x === "string" ? x : x.name || x.label; return <Chip key={t} accent={accent}>{t}</Chip>; })}</div></Card>
 ) : null;
 
-function ContactCard({ u, self }) {
+export function ContactCard({ u, self }) {
   const c = u.contact || {};
   const digits = c.phone && c.phone.replace(/[^+\d]/g, "");
   const rows = [

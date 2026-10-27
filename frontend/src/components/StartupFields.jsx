@@ -1,5 +1,5 @@
-import React from "react";
-import { Rocket } from "lucide-react";
+import React, { useState } from "react";
+import { Plus, Rocket, X } from "lucide-react";
 import { Field, Input, Select, Textarea, cx } from "./ui";
 import { AUDIENCES, AUDIENCE_LABEL, NEEDS, NEED_LABEL, PROVINCES, SECTORS, STAGES, STAGE_HINT, STAGE_LABEL } from "../lib/navigator";
 
@@ -8,11 +8,11 @@ import { AUDIENCES, AUDIENCE_LABEL, NEEDS, NEED_LABEL, PROVINCES, SECTORS, STAGE
 // Same words and options as the Navigator itself (lib/navigator.js), so the two can never disagree.
 // Backend: clean_startup() in navigator.py, saved through PATCH /hub/profile as `startup`.
 
-export const BLANK_STARTUP = { name: "", one_liner: "", stage: "idea", sectors: [], needs: ["funding", "mentorship"], audiences: [], incorporated: "unsure", employees: "", province: "ON", goal: "" };
+export const BLANK_STARTUP = { name: "", one_liner: "", stage: "idea", sectors: [], needs: ["funding", "mentorship"], audiences: [], incorporated: "unsure", employees: "", province: "ON", goal: "", pitch: {}, documents: [] };
 
 // stored (true/false/null) <-> form ("yes"/"no"/"unsure")
 export const startupToForm = (s) => (s && Object.keys(s).length ? {
-  ...BLANK_STARTUP, ...s, employees: s.employees == null ? "" : String(s.employees),
+  ...BLANK_STARTUP, ...s, pitch: s.pitch || {}, documents: s.documents || [], employees: s.employees == null ? "" : String(s.employees),
   incorporated: s.incorporated === true ? "yes" : s.incorporated === false ? "no" : "unsure",
 } : null);
 export const startupToApi = (f) => (!f ? {} : {
@@ -25,6 +25,35 @@ function Chip({ on, onClick, children, testId }) {
     <button type="button" onClick={onClick} aria-pressed={on} data-testid={testId}
       className={cx("rounded-full border px-3 py-1 text-sm transition", on ? "border-transparent font-semibold" : "border-line text-muted hover:text-ink")}
       style={on ? { background: "var(--accent)", color: "var(--on-accent)" } : undefined}>{children}</button>
+  );
+}
+
+const PITCH = [["problem", "The problem", "Who has it, and what it costs them"], ["solution", "Your answer", "What you built and why it works"], ["traction", "Traction", "Customers, revenue, pilots, waitlist"],
+  ["market", "The market", "How big, and who you sell to first"], ["ask", "The ask", "What you need right now, in one line"]];
+
+// Optional: the five pitch "slides" and links to a deck. They show up on your profile page exactly the way a founder's card shows in a community.
+function PitchFields({ value, set, testPrefix }) {
+  const [open, setOpen] = useState(Object.keys(value.pitch || {}).length > 0 || (value.documents || []).length > 0);
+  if (!open) return <button type="button" onClick={() => setOpen(true)} className="text-sm font-medium" style={{ color: "var(--accent)" }} data-testid={`${testPrefix}-pitch-open`}>+ Add your pitch and deck (optional)</button>;
+  const pitch = value.pitch || {}; const docs = value.documents || [];
+  const setDoc = (i, patch) => set({ documents: docs.map((d, j) => (j === i ? { ...d, ...patch } : d)) });
+  return (
+    <div className="space-y-3 rounded-xl border border-line p-3" data-testid={`${testPrefix}-pitch`}>
+      <p className="label">Your pitch</p>
+      {PITCH.map(([k, label, hint]) => <Field key={k} label={label}><Textarea rows={2} value={pitch[k] || ""} onChange={(e) => set({ pitch: { ...pitch, [k]: e.target.value } })} maxLength={600} placeholder={hint} data-testid={`${testPrefix}-pitch-${k}`} /></Field>)}
+      <div>
+        <p className="label">Deck and documents <span className="font-normal normal-case text-muted">(links)</span></p>
+        <div className="mt-2 space-y-2">
+          {docs.map((d, i) => (
+            <div key={i} className="flex items-center gap-2">
+              <Input className="!w-2/5" value={d.title} onChange={(e) => setDoc(i, { title: e.target.value })} placeholder="Pitch deck" maxLength={80} />
+              <Input type="url" value={d.url} onChange={(e) => setDoc(i, { url: e.target.value })} placeholder="https://" maxLength={300} data-testid={`${testPrefix}-doc-url-${i}`} />
+              <button type="button" onClick={() => set({ documents: docs.filter((_, j) => j !== i) })} aria-label="Remove link" className="shrink-0 text-muted hover:text-ink"><X className="h-4 w-4" /></button>
+            </div>))}
+          {docs.length < 6 && <button type="button" onClick={() => set({ documents: [...docs, { title: "", url: "" }] })} className="inline-flex items-center gap-1 text-sm text-muted hover:text-ink" data-testid={`${testPrefix}-doc-add`}><Plus className="h-4 w-4" />Add a link</button>}
+        </div>
+      </div>
+    </div>
   );
 }
 
@@ -76,6 +105,7 @@ export default function StartupFields({ value, onChange, testPrefix = "su" }) {
         <Field label="Province"><Select value={value.province} onChange={(e) => set({ province: e.target.value })} options={PROVINCES.map((p) => ({ value: p, label: p }))} data-testid={`${testPrefix}-province`} /></Field>
         <Field label="Employees"><Input inputMode="numeric" value={value.employees} onChange={(e) => set({ employees: e.target.value.replace(/\D/g, "").slice(0, 5) })} placeholder="Optional" /></Field>
       </div>
+      <PitchFields value={value} set={set} testPrefix={testPrefix} />
       <Field label="What are you trying to do next?"><Textarea rows={2} value={value.goal} onChange={(e) => set({ goal: e.target.value })} maxLength={500} placeholder="Land our first three pilot buildings and fund the install crew" data-testid={`${testPrefix}-goal`} /></Field>
     </div>
   );

@@ -107,6 +107,27 @@ def normalize_profile(raw: Optional[Dict[str, Any]]) -> Dict[str, Any]:
     }
 
 
+PITCH_KEYS = ["problem", "solution", "traction", "market", "ask"]
+
+
+def _clean_pitch(raw: Any) -> Dict[str, str]:
+    """The five pitch "slides" shown on the profile (same as a community member card). Blank ones are dropped."""
+    raw = raw if isinstance(raw, dict) else {}
+    out = {k: " ".join(str(raw.get(k) or "").split())[:600] for k in PITCH_KEYS}
+    return {k: v for k, v in out.items() if v}
+
+
+def _clean_documents(raw: Any) -> List[Dict[str, str]]:
+    """Links to a deck or one-pager: web addresses only (never a file), at most six."""
+    out: List[Dict[str, str]] = []
+    for d in raw if isinstance(raw, list) else []:
+        d = d if isinstance(d, dict) else {}
+        url = str(d.get("url") or "").strip()[:300]
+        if url.lower().startswith(("http://", "https://")):
+            out.append({"title": str(d.get("title") or "").strip()[:80], "url": url})
+    return out[:6]
+
+
 def clean_startup(raw: Optional[Dict[str, Any]], age: Optional[int] = None) -> Dict[str, Any]:
     """The startup part of an account profile, as stored on the account. Same vocabulary as the Navigator form
     (so the two can never drift apart), plus the two free-text lines a founder is known by. Age and city are not
@@ -120,6 +141,8 @@ def clean_startup(raw: Optional[Dict[str, Any]], age: Optional[int] = None) -> D
         "incorporated": p["incorporated"], "employees": p["employees"], "student": bool(raw.get("student")),
         "needs": p["needs"], "goal": p["goal"], "province": p["province"],
         "seeking": bool(raw.get("seeking", True)),
+        "pitch": _clean_pitch(raw.get("pitch")),
+        "documents": _clean_documents(raw.get("documents")),
     }
 
 

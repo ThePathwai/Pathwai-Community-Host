@@ -48,11 +48,16 @@ export function cleanStartup(raw) {
   const p = nav.normalizeProfile({ ...raw, age: null });
   return { name: String(raw.name || "").trim().slice(0, 80), one_liner: String(raw.one_liner || "").trim().slice(0, 200), stage: p.stage, sectors: p.sectors,
     audiences: (raw.audiences || []).filter((a, i, l) => nav.AUDIENCES.includes(a) && l.indexOf(a) === i), incorporated: p.incorporated, employees: p.employees,
-    student: !!raw.student, needs: p.needs, goal: p.goal, province: p.province, seeking: raw.seeking !== false };
+    student: !!raw.student, needs: p.needs, goal: p.goal, province: p.province, seeking: raw.seeking !== false,
+    pitch: Object.fromEntries(["problem", "solution", "traction", "market", "ask"].map((k) => [k, String((raw.pitch || {})[k] || "").replace(/\s+/g, " ").trim().slice(0, 600)]).filter(([, v]) => v)),
+    documents: (Array.isArray(raw.documents) ? raw.documents : []).map((d) => ({ title: String((d && d.title) || "").trim().slice(0, 80), url: String((d && d.url) || "").trim().slice(0, 300) })).filter((d) => /^https?:\/\//i.test(d.url)).slice(0, 6) };
 }
 // Demo only: a ready-made startup on the demo member account so the prefill shows without any typing.
 export const DEMO_STARTUP = cleanStartup({ name: "Bright Court", one_liner: "Booking and league tools for community sports", stage: "launched", sectors: ["tech"],
-  needs: ["funding", "customers", "mentorship"], incorporated: true, employees: 2, province: "ON", goal: "Fund our second city and find a mentor who has scaled a marketplace" });
+  needs: ["funding", "customers", "mentorship"], incorporated: true, employees: 2, province: "ON", goal: "Fund our second city and find a mentor who has scaled a marketplace",
+  pitch: { problem: "Community sports groups run on group chats and spreadsheets. Organizers burn out and players drift away.", solution: "One place to book courts, run ladders and message the group, set up in ten minutes.",
+    traction: "14 groups, 900 players, 38% of groups rebooking weekly.", market: "Recreational leagues and club nights across Canadian cities.", ask: "A $25k grant and one mentor who has scaled a two-sided marketplace." },
+  documents: [{ title: "Pitch deck · 10 slides", url: "https://example.com/bright-court-deck" }] });
 
 const pick = (arr, allowed) => arr.filter((x, i) => allowed.includes(x) && arr.indexOf(x) === i);
 

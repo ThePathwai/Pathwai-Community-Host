@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import { Link, NavLink, useLocation, useNavigate } from "react-router-dom";
-import { Compass, ShieldCheck, Bell, Bookmark, Calendar, CheckSquare, ChevronDown, Dumbbell, GraduationCap, Gift, Info, Home as HomeIcon, Layers, LifeBuoy, LogOut, Megaphone, MessageSquare, Moon, Settings, Sparkles, Sun, User, UserPlus, Users, UsersRound } from "lucide-react";
+import { Compass, Rocket, ShieldCheck, Bell, Bookmark, Calendar, CheckSquare, ChevronDown, Dumbbell, GraduationCap, Gift, Info, Home as HomeIcon, Layers, LifeBuoy, LogOut, Megaphone, MessageSquare, Moon, Settings, Sparkles, Sun, User, UserPlus, Users, UsersRound } from "lucide-react";
 import { applyBrand, effectiveMode, setModePref } from "../lib/theme";
 import { AI_CHAT_ENABLED } from "../lib/features";
 import { useAuth } from "../lib/auth";
@@ -148,7 +148,8 @@ export default function Layout({ children }) {
                     );
                   })}
                   <Link className="flex items-center gap-2 rounded-lg px-3 py-2 text-sm hover:bg-ink/5" to="/hub" data-testid="user-menu-communities"><Layers className="h-4 w-4" />Switch community</Link>
-                  <Link className="flex items-center gap-2 rounded-lg px-3 py-2 text-sm hover:bg-ink/5" to="/profile" data-testid="user-menu-profile"><User className="h-4 w-4" />My profile</Link>
+                  <Link className="flex items-center gap-2 rounded-lg px-3 py-2 text-sm hover:bg-ink/5" to="/profile" data-testid="user-menu-profile"><User className="h-4 w-4" />My community card</Link>
+                  <Link className="flex items-center gap-2 rounded-lg px-3 py-2 text-sm hover:bg-ink/5" to="/me" data-testid="user-menu-account-profile"><Rocket className="h-4 w-4" />My Pathwai profile</Link>
                   <Link className="flex items-center gap-2 rounded-lg px-3 py-2 text-sm hover:bg-ink/5" to="/saved" data-testid="user-menu-saved"><Bookmark className="h-4 w-4" />Saved</Link>
                   <Link className="flex items-center gap-2 rounded-lg px-3 py-2 text-sm hover:bg-ink/5" to="/about" data-testid="user-menu-about"><Info className="h-4 w-4" />About Pathwai</Link>
                   <Link className="flex items-center gap-2 rounded-lg px-3 py-2 text-sm hover:bg-ink/5" to="/settings" data-testid="user-menu-settings"><Settings className="h-4 w-4" />Settings</Link>

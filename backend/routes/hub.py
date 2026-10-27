@@ -745,6 +745,19 @@ class ApplyIn(BaseModel):
     answers: Optional[Dict[str, str]] = None
 
 
+_STARTUP_STAGE = {"idea": "idea", "prototype": "mvp", "launched": "mvp", "revenue": "early_revenue", "growth": "growth"}
+
+
+def _startup_card(st: Optional[Dict[str, Any]]) -> Dict[str, Any]:
+    """What the account's startup profile hands to a community member card on joining (name, one line, stage, sector).
+    The private parts (what you need, your goal, whether you are incorporated) stay on the account."""
+    st = st or {}
+    if not (st.get("name") or st.get("one_liner")):
+        return {}
+    return {"startup_name": st.get("name") or "", "startup_one_liner": st.get("one_liner") or "",
+            "startup_stage": _STARTUP_STAGE.get(st.get("stage") or "", ""), "startup_sector": (st.get("sectors") or [""])[0]}
+
+
 async def _apply_to_community(slug: str, acc: Dict[str, Any], title: str = "", message: str = "", answers: Optional[Dict[str, str]] = None) -> Dict[str, Any]:
     """Core of /hub/communities/{slug}/apply, factored out so a signup that already names its
     target community (SignupIn.join_slug -- the external share-link flow below) can join it in the
@@ -777,6 +790,7 @@ async def _apply_to_community(slug: str, acc: Dict[str, Any], title: str = "", m
         "support_needs": list(src.get("support_needs") or []), "needs_seeking": [], "custom_fields": {}, "contact": contact, "contact_visibility": "members",
         "hidden_from_directory": bool(needs), "join_reason": reason, "signup_source": "hub", "created_at": now, "updated_at": now,
         "membership_status": "pending" if needs else "approved",
+        **_startup_card(src.get("startup")),
     }
     await d.users.insert_one(doc)
     await reindex_email(acc["email"])
