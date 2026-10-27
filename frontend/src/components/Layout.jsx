@@ -88,8 +88,18 @@ export default function Layout({ children }) {
   // unreachable from a phone. Surfacing the same overflow list in the account menu keeps every
   // section reachable everywhere, matching what the desktop top nav already shows in full.
   // An admin's tab bar gives the fifth slot to Admin (their main toolkit), so the last section moves into the account menu.
-  const tabItems = isAdmin ? items.slice(0, 3) : items.slice(0, 4);
-  const overflowNav = items.slice(tabItems.length);
+  // Messages always gets a tab on a phone (it takes the spot Connections/Intros would have had, and Connections moves into the menu).
+  const tabOrder = (() => {
+    const inbox = items.find((n) => n.key === "inbox");
+    if (!inbox) return items;
+    const rest = items.filter((n) => n.key !== "inbox");
+    const mi = rest.findIndex((n) => n.key === "matches");
+    if (mi >= 0) { const m = rest[mi]; rest.splice(mi, 1); rest.splice(Math.min(mi, rest.length), 0, inbox); return [...rest, m]; }
+    rest.splice(Math.min(1, rest.length), 0, inbox);
+    return rest;
+  })();
+  const tabItems = isAdmin ? tabOrder.slice(0, 3) : tabOrder.slice(0, 4);
+  const overflowNav = tabOrder.slice(tabItems.length);
 
   return (
     <div className="min-h-screen">
