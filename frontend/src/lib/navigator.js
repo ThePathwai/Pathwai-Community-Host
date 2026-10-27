@@ -75,6 +75,7 @@ const daysUntil = (iso, today) => {
   const t = /^(\d{4})-(\d{2})-(\d{2})/.exec(today);
   return Math.round((a - Date.UTC(+t[1], +t[2] - 1, +t[3])) / MS_DAY);
 };
+export { daysUntil, why, joinList, brief };
 export const todayIso = () => new Date().toISOString().slice(0, 10);
 
 export function effectiveStatus(p, today) {

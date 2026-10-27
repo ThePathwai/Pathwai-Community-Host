@@ -3,6 +3,7 @@
 import catalog from "./programs_ca.json";
 import * as nav from "../lib/navigator";
 import { humberNavigator } from "./humber";
+import * as guide from "../lib/navigatorGuide";
 
 const BLANK_PROFILE = { public: false, blurb: "", stages: [], provides: [], audiences: [], sectors: [], city: "", provinces: [] };
 const SEEDED = { "humber-innovation-network": humberNavigator };
@@ -73,6 +74,19 @@ export function navigatorCall(method, path, body, params, ctx) {
     const st = (a && a.startup) || {};
     const profile = Object.keys(st).length ? { ...st, age: a.age || null, city: String(a.location || "").split(",")[0].trim() } : {};
     return ok(config, { signed_in: !!a, profile, startup: st });
+  }
+  if (path === "/navigator/home") return ok(config, guide.homeFeed(allPrograms(ctx), optedIn(ctx), ctx.account, today));
+  if (path === "/navigator/seen" && method === "post") {
+    if (!ctx.account) return fail(config, 401, "Not authenticated");
+    ctx.account.nav_seen = guide.homeFeed(allPrograms(ctx), optedIn(ctx), ctx.account, today).live_ids || [];
+    return ok(config, { ok: true, count: ctx.account.nav_seen.length });
+  }
+  if (path === "/navigator/chat" && method === "post") {
+    const a = ctx.account;
+    const st = (a && a.startup) || {};
+    const raw = st.stage ? guide.navigatorProfile(a) : (body.profile || {});
+    const out = guide.answer(String(body.message || "").slice(0, 500), allPrograms(ctx), optedIn(ctx), raw, today, body.focus || null, st, a);
+    return ok(config, { ...out, by: "rules", signed_in: !!a, has_profile: !!st.stage });
   }
   if (path === "/navigator/suggest" && method === "post") {
     const raw = body.profile || {};

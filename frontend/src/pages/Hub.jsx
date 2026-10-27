@@ -10,7 +10,9 @@ import { Avatar, AvatarUpload, Button, Field, Input, Modal, PhotoGallery, Powere
 import HubPeople from "../components/HubPeople";
 import ScrollLock from "../components/ScrollLock";
 import { PlatformAccounts } from "../components/AccountTools";
-import StartupFields, { startupToApi, startupToForm } from "../components/StartupFields";
+import StartupFields, { BLANK_STARTUP, startupToApi, startupToForm } from "../components/StartupFields";
+import NextSteps from "../components/NextSteps";
+import GuideChat from "../components/GuideChat";
 
 const RADIUS = { sharp: "2px", soft: "0.75rem", round: "1.25rem" };
 
@@ -238,6 +240,8 @@ export default function Hub() {
   const [starting, setStarting] = useState(false); // "start your own community" modal
   const [categories, setCategories] = useState([]);
   const [nc, setNc] = useState({ name: "", category: "other" });
+  const [guideOpen, setGuideOpen] = useState(false);
+  const [nsVersion, setNsVersion] = useState(0); // bumped after a profile save so "Your next steps" reloads at once
   const [editingProfile, setEditingProfile] = useState(false); // account-level "standard profile" modal
   const [pf, setPf] = useState(BLANK_PROFILE);
   const [pPhoto, setPPhoto] = useState("");
@@ -280,10 +284,10 @@ export default function Hub() {
   if (loading) return <Spinner />;
   if (!account) return <Navigate to="/login" replace />;
 
-  const openProfileEditor = () => {
+  const openProfileEditor = (addStartup) => {
     setPf({ name: account.name || "", birthday: account.birthday || "", title: account.title || "", company: account.company || "", location: account.location || "", bio: account.bio || "",
             skill_set: account.skill_set || [], interests_hobbies: account.interests_hobbies || [], goals: account.goals || [], support_needs: account.support_needs || [],
-            photos: account.photos || [], startup: startupToForm(account.startup), contact: { phone: "", linkedin: "", instagram: "", website: "", ...(account.contact || {}) } });
+            photos: account.photos || [], startup: startupToForm(account.startup) || (addStartup === true ? { ...BLANK_STARTUP } : null), contact: { phone: "", linkedin: "", instagram: "", website: "", ...(account.contact || {}) } });
     setPPhoto(account.avatar_url || "");
     setEditingProfile(true);
   };
@@ -293,7 +297,7 @@ export default function Hub() {
     if (pf.birthday && (yrs === null || yrs > 120)) return toast.error("Check the year of your birthday.");
     if (pf.birthday && yrs < 13) return toast.error("You need to be at least 13 to use Pathwai.");
     setPBusy(true); // only after validation passes, so a validation message can't leave the button stuck on "loading"
-    try { await api.patch("/hub/profile", { ...pf, startup: startupToApi(pf.startup), avatar_url: pPhoto || null }); await refresh(); toast.success("Profile saved"); setEditingProfile(false); }
+    try { await api.patch("/hub/profile", { ...pf, startup: startupToApi(pf.startup), avatar_url: pPhoto || null }); await refresh(); toast.success("Profile saved"); setNsVersion((v) => v + 1); setEditingProfile(false); }
     catch (e) { toast.error(errMsg(e)); } finally { setPBusy(false); }
   };
 
@@ -387,6 +391,7 @@ export default function Hub() {
 
       {!items ? <Spinner /> : (
         <>
+          <NextSteps version={nsVersion} onEditProfile={(add) => openProfileEditor(add)} onAsk={() => setGuideOpen(true)} />
           <div className="mt-6 flex gap-1 overflow-x-auto border-b border-line" role="tablist" aria-label="Communities">
             {[["mine", "My communities", mine.length], ["discover", "Discover", discover.length], ...(isPlatformAdmin ? [["admin", "Platform admin", null]] : [])].map(([k, label, n]) => (
               <button key={k} role="tab" aria-selected={view === k} onClick={() => setTab(k)} data-testid={`hub-tab-${k}`}
@@ -464,6 +469,9 @@ export default function Hub() {
           </div>)}
       </Modal>
 
+      <Modal open={guideOpen} onClose={() => setGuideOpen(false)} title="Ask the guide">
+        <GuideChat className="h-[65dvh]" signedIn hasProfile={!!account.startup?.stage} startupName={account.startup?.name} />
+      </Modal>
       <Modal open={editingProfile} onClose={() => setEditingProfile(false)} title="Your Pathwai profile">
         <div className="space-y-4">
           <p className="text-sm text-muted">This is the standard profile every new community application starts from. Editing it here doesn't change what you've already shared inside communities you've joined.</p>

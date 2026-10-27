@@ -17,10 +17,11 @@ from fastapi import APIRouter, Depends, HTTPException, Request
 from pydantic import BaseModel, Field
 
 import navigator as nav
+import navigator_guide as guide
 from auth import client_ip, rate_limit, require_role
-from database import COMMUNITY_SLUGS, db, dbfor
+from database import COMMUNITY_SLUGS, db, dbfor, hub_db
 from ._common import audit, now_iso
-from .hub import _summary, account_from_request
+from .hub import _summary, account_from_request, require_account
 
 router = APIRouter(tags=["navigator"])
 log = logging.getLogger(__name__)
@@ -39,6 +40,12 @@ class ProfileIn(BaseModel):
     student: Optional[bool] = None
     needs: Optional[List[str]] = None
     goal: Optional[str] = Field(default=None, max_length=500)
+
+
+class ChatIn(BaseModel):
+    message: str = Field(min_length=1, max_length=500)
+    focus: Optional[str] = Field(default=None, max_length=120)
+    profile: ProfileIn = ProfileIn()  # only used when the person has no startup profile on their account (signed out)
 
 
 class SuggestIn(BaseModel):
@@ -126,6 +133,57 @@ async def navigator_me(request: Request) -> Dict[str, Any]:
     returns an empty profile -- the Navigator works the same either way, this only saves them retyping."""
     acc = await account_from_request(request)
     return {"signed_in": bool(acc), "profile": nav.navigator_profile(acc), "startup": (acc or {}).get("startup") or {}}
+
+
+@router.get("/navigator/home")
+async def navigator_home(request: Request) -> Dict[str, Any]:
+    """The Hub's "Your next steps" card. Worked out fresh from the account's one startup profile and from what every
+    opted-in community lists right now, so editing the profile (or a community editing its programs) changes it at once."""
+    acc = await account_from_request(request)
+    return guide.home_feed(await _all_programs(), await _opted_in(), acc)
+
+
+@router.post("/navigator/seen")
+async def navigator_seen(acc: dict = Depends(require_account)) -> Dict[str, Any]:
+    """Remember which programs the person has now looked at, so the next visit can say how many are new."""
+    feed = guide.home_feed(await _all_programs(), await _opted_in(), acc)
+    ids = feed.get("live_ids") or []
+    await hub_db().accounts.update_one({"id": acc["id"]}, {"$set": {"nav_seen": ids}})
+    return {"ok": True, "count": len(ids)}
+
+
+async def _reword(question: str, reply: str) -> Optional[str]:
+    """Optionally smooth the rule-based reply. The model gets only the question and the facts already in the reply."""
+    if os.environ.get("ENABLE_AI_CHAT", "false").lower() != "true" or not os.environ.get("EMERGENT_LLM_KEY"):
+        return None
+    try:
+        from emergentintegrations.llm.chat import LlmChat, UserMessage  # lazy: not needed when the feature is off
+
+        chat = LlmChat(api_key=os.environ["EMERGENT_LLM_KEY"], session_id=f"navchat-{uuid.uuid4().hex[:8]}",
+                       system_message="You are a friendly Canadian startup guide. Answer the founder's question in at most 4 short sentences using ONLY the facts provided. "
+                                      "Keep every program name, amount, date and requirement exactly as given. Never add anything that is not in the facts. No markdown, no lists.").with_model("openai", "gpt-5.2")
+        text = await chat.send_message(UserMessage(text=f"Question: {question}\nFacts: {reply}"))
+        text = " ".join(str(text).split())
+        return text[:900] if text else None
+    except Exception as exc:  # noqa: BLE001
+        log.info("navigator: chat reword skipped: %s", exc)
+        return None
+
+
+@router.post("/navigator/chat")
+async def navigator_chat(body: ChatIn, request: Request) -> Dict[str, Any]:
+    """Ask the guide. Signed in, it answers from the one profile on the account; signed out, from whatever the form holds."""
+    await rate_limit("navigator_chat", client_ip(request), 90, 3600, "That's a lot of questions for now. Try again in a little while.")
+    acc = await account_from_request(request)
+    st = (acc or {}).get("startup") or {}
+    raw = nav.navigator_profile(acc) if st.get("stage") else body.profile.model_dump()
+    out = guide.answer(body.message, await _all_programs(), await _opted_in(), raw, focus=body.focus, startup=st, account=acc)
+    worded = await _reword(body.message, out["reply"])
+    out["by"] = "model" if worded else "rules"
+    out["reply"] = worded or out["reply"]
+    out["signed_in"] = bool(acc)
+    out["has_profile"] = bool(st.get("stage"))
+    return out
 
 
 @router.post("/navigator/suggest")

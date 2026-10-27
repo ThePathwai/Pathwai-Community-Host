@@ -7,7 +7,9 @@ import { toast } from "sonner";
 import { api, errMsg } from "../lib/api";
 import { useAuth } from "../lib/auth";
 import { Wordmark, PoweredBy, Spinner, Tabs, cx } from "../components/ui";
-import { NEED_LABEL, STATUS_LABEL, TYPE_LABEL, needsFromText } from "../lib/navigator";
+import { NEED_LABEL, TYPE_LABEL, needsFromText } from "../lib/navigator";
+import { Status } from "../components/NavBits";
+import GuideChat from "../components/GuideChat";
 
 // /navigator -- public, no login. Pick where you are and what you need; get a short path of Canadian programs with the
 // reason for each one. Everything on the cards comes from the program's own requirements (see backend/navigator.py).
@@ -16,16 +18,11 @@ import { NEED_LABEL, STATUS_LABEL, TYPE_LABEL, needsFromText } from "../lib/navi
 const STAGE_ICONS = { idea: Lightbulb, prototype: Wrench, launched: Rocket, revenue: TrendingUp, growth: Building2 };
 const STORE = "pw_nav_profile";
 const DEFAULT = { stage: "idea", needs: ["funding", "mentorship"], audiences: [], sectors: [], province: "ON", city: "", age: "", incorporated: "unsure", employees: "", goal: "" };
-const STATUS_STYLE = {
-  open: "bg-emerald-500/15 text-emerald-600 dark:text-emerald-400", rolling: "bg-emerald-500/15 text-emerald-600 dark:text-emerald-400",
-  check: "bg-amber-500/15 text-amber-700 dark:text-amber-400", closed: "bg-red-500/15 text-red-600 dark:text-red-400", paused: "bg-red-500/15 text-red-600 dark:text-red-400",
-};
 const FIT = { strong: "Strong fit", possible: "Possible fit", later: "Later" };
 const VERIFIED = { official: "Official page", third_party: "Third-party source", unconfirmed: "Not confirmed" };
 
 const load = () => { try { return { ...DEFAULT, ...JSON.parse(window.sessionStorage.getItem(STORE) || "{}") }; } catch { return DEFAULT; } };
 const save = (p) => { try { window.sessionStorage.setItem(STORE, JSON.stringify(p)); } catch { /* storage blocked: fine */ } };
-const key = (p) => JSON.stringify([p.stage, [...p.needs].sort(), [...p.audiences].sort(), [...p.sectors].sort(), p.province, p.incorporated, String(p.employees), p.goal]);
 // account profile -> the form's shape (the form uses strings for age/employees and yes/no/unsure for incorporated)
 const fromAccount = (p) => ({ ...DEFAULT, ...p, age: p.age ? String(p.age) : "", employees: p.employees == null ? "" : String(p.employees), city: p.city || "",
   incorporated: p.incorporated === true ? "yes" : p.incorporated === false ? "no" : "unsure", needs: p.needs || [], audiences: p.audiences || [], sectors: p.sectors || [] });
@@ -41,10 +38,6 @@ function Toggle({ on, onClick, children, testId }) {
       className={cx("rounded-full border px-3 py-1.5 text-sm transition", on ? "border-transparent font-semibold" : "border-line text-muted hover:text-ink")}
       style={on ? { background: "var(--accent)", color: "var(--on-accent)" } : undefined}>{children}</button>
   );
-}
-
-function Status({ status }) {
-  return <span className={cx("inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold", STATUS_STYLE[status] || STATUS_STYLE.check)}>{STATUS_LABEL[status] || status}</span>;
 }
 
 function Link2({ href, className, children, ...p }) {
@@ -278,8 +271,8 @@ export default function Navigator({ embedded }) {
   const { user, account, refresh } = useAuth();
   const [meta, setMeta] = useState(null);
   const [mine, setMine] = useState(null);   // the signed-in person's saved startup profile ({} when they have none yet)
-  const [saved, setSaved] = useState("");   // what the form looked like when it last matched the saved profile
-  const [saving, setSaving] = useState(false);
+  const [saveState, setSaveState] = useState(""); // "" | "saving" | "saved"
+  const [edits, setEdits] = useState(0);            // bumped by the person's own changes only, so loading a profile never triggers a save
   const [tab, setTab] = useState("path");
   const [formOpen, setFormOpen] = useState(false);
   const [profile, setProfile] = useState(load);
@@ -289,49 +282,56 @@ export default function Navigator({ embedded }) {
   const seq = useRef(0);
   const profileRef = useRef(profile);
   profileRef.current = profile;
+  const mineRef = useRef(mine);
+  mineRef.current = mine;
 
   useEffect(() => { document.title = "Navigator · Pathwai"; api.get("/navigator/meta").then((r) => setMeta(r.data)).catch(() => setErr("The directory could not load. Please try again.")); }, []);
 
-  // Signed in with a startup profile: start from it, unless they already changed the form during this visit.
+  // Signed in: the profile on the account IS the form. Load it, and from then on every change saves itself (a moment after you stop
+  // tapping), so the suggestions, the Hub's next steps and the guide all follow the same profile with nothing to remember to save.
   useEffect(() => {
     if (!account) { setMine(null); return; }
     api.get("/navigator/me").then((r) => {
       setMine(r.data.startup || {});
-      const fresh = (() => { try { return !window.sessionStorage.getItem(STORE); } catch { return true; } })();
-      if (fresh && r.data.profile && r.data.profile.stage) {
-        const p = fromAccount(r.data.profile);
-        setProfile(p); save(p); setSaved(key(p));
-      } else setSaved(key(profileRef.current));
+      if (r.data.profile && r.data.profile.stage) { const p = fromAccount(r.data.profile); setProfile(p); save(p); }
     }).catch(() => setMine({}));
   }, [account?.id]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  const saveToAccount = async () => {
-    setSaving(true);
-    try {
-      const body = { startup: { ...(mine || {}), ...toStartup(profile) } };
-      if (profile.city && !account?.location) body.location = profile.city;
-      await api.patch("/hub/profile", body);
-      setMine(body.startup); setSaved(key(profile)); await refresh();
-      toast.success("Saved to your profile");
-    } catch (e) { toast.error(errMsg(e)); } finally { setSaving(false); }
-  };
+  useEffect(() => {
+    if (!account || !edits) return undefined;
+    setSaveState("saving");
+    const t = setTimeout(async () => {
+      try {
+        const p = profileRef.current;
+        const body = { startup: { ...(mineRef.current || {}), ...toStartup(p) } };
+        if (p.city && !account.location) body.location = p.city;
+        await api.patch("/hub/profile", body);
+        setMine(body.startup); setSaveState("saved"); refresh();
+      } catch (e) { setSaveState(""); toast.error(errMsg(e)); }
+    }, 900);
+    return () => clearTimeout(t);
+  }, [edits]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  const set = useCallback((patch) => setProfile((p) => { const n = { ...p, ...patch }; save(n); return n; }), []);
-  const toggle = useCallback((key, v) => setProfile((p) => { const cur = p[key] || []; const n = { ...p, [key]: cur.includes(v) ? cur.filter((x) => x !== v) : [...cur, v] }; save(n); return n; }), []);
+  // Tell the account which programs have now been seen, so the Hub can say how many are new next time.
+  const seenOnce = useRef(false);
+  useEffect(() => { if (account && res && !seenOnce.current) { seenOnce.current = true; api.post("/navigator/seen").catch(() => {}); } }, [account, res]);
+
+  const set = useCallback((patch) => { setProfile((p) => { const n = { ...p, ...patch }; save(n); return n; }); setEdits((n) => n + 1); }, []);
+  const toggle = useCallback((key, v) => { setProfile((p) => { const cur = p[key] || []; const n = { ...p, [key]: cur.includes(v) ? cur.filter((x) => x !== v) : [...cur, v] }; save(n); return n; }); setEdits((n) => n + 1); }, []);
+  const apiProfile = { ...profile, age: profile.age ? Number(profile.age) : null, employees: profile.employees === "" ? null : Number(profile.employees) };
 
   useEffect(() => {
     if (!meta) return undefined;
     const my = ++seq.current;
     setLoading(true);
     const t = setTimeout(() => {
-      const body = { ...profile, age: profile.age ? Number(profile.age) : null, employees: profile.employees === "" ? null : Number(profile.employees) };
-      api.post("/navigator/suggest", { profile: body })
+      api.post("/navigator/suggest", { profile: apiProfile })
         .then((r) => { if (seq.current === my) { setRes(r.data); setErr(""); } })
         .catch((e) => { if (seq.current === my) setErr(e?.response?.data?.detail || "Could not get suggestions. Please try again."); })
         .finally(() => { if (seq.current === my) setLoading(false); });
     }, 300);
     return () => clearTimeout(t);
-  }, [profile, meta]);
+  }, [profile, meta]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const body = (
     <div className="mx-auto w-full max-w-[1200px]">
@@ -345,10 +345,12 @@ export default function Navigator({ embedded }) {
         </div>
       </div>
 
-      <Tabs tabs={[{ value: "path", label: "My path" }, { value: "all", label: "All programs" }]} value={tab} onChange={setTab} />
+      <Tabs tabs={[{ value: "path", label: "My path" }, { value: "ask", label: "Ask the guide" }, { value: "all", label: "All programs" }]} value={tab} onChange={setTab} />
 
       {err && <p className="mb-4 rounded-xl border border-red-500/40 p-3 text-sm text-red-500" role="alert">{err}</p>}
-      {!meta ? <Spinner /> : tab === "all" ? <Directory meta={meta} /> : (
+      {!meta ? <Spinner /> : tab === "all" ? <Directory meta={meta} /> : tab === "ask" ? (
+        <div className="mx-auto w-full max-w-3xl"><GuideChat className="h-[min(72dvh,680px)]" signedIn={!!account} hasProfile={!!mine?.stage} startupName={mine?.name} formProfile={apiProfile} /></div>
+      ) : (
         <div className="grid grid-cols-[minmax(0,1fr)] gap-6 lg:grid-cols-[360px_minmax(0,1fr)]">
           <div className="min-w-0 lg:sticky lg:top-24 lg:self-start lg:max-h-[calc(100dvh-7rem)] lg:overflow-y-auto">
             {/* On a phone the long form folds into one line so the answer is the first thing you see. */}
@@ -362,10 +364,9 @@ export default function Navigator({ embedded }) {
               <div className="mt-3 flex items-center gap-3 rounded-2xl border border-line bg-surface p-3 lg:mt-0 lg:mb-3" data-testid="nav-profile-bar">
                 <Rocket className="h-5 w-5 shrink-0" style={{ color: "var(--accent)" }} aria-hidden />
                 <p className="min-w-0 flex-1 text-sm">
-                  {mine.stage ? (mine.name ? `Starting from ${mine.name}` : "Starting from your startup profile") : "Save this to your profile"}
-                  <span className="block text-xs text-muted">{!mine.stage ? "Every community and this page will know where you are." : saved === key(profile) ? "Matches your profile." : "You changed something."}</span>
+                  {mine.name ? `Your profile: ${mine.name}` : "Your startup profile"}
+                  <span className="block text-xs text-muted" data-testid="nav-save-state">{saveState === "saving" ? "Saving…" : saveState === "saved" ? "Saved to your profile" : mine.stage ? "Changes here update your profile." : "Change anything and it becomes your profile."}</span>
                 </p>
-                {(!mine.stage || saved !== key(profile)) && <button type="button" onClick={saveToAccount} disabled={saving} className="btn-ghost !px-3 !py-1.5 text-sm" data-testid="nav-save-profile">{saving ? "Saving" : "Save"}</button>}
               </div>
             )}
             <div className={cx(formOpen ? "mt-3 block" : "hidden", "lg:mt-0 lg:block")}><AboutYou meta={meta} profile={profile} set={set} toggle={toggle} /></div>
