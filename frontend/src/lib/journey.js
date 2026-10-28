@@ -13,6 +13,7 @@ const addDays = (iso, n) => { const d = new Date(iso + "T12:00:00Z"); d.setUTCDa
 const validIso = (s) => /^\d{4}-\d{2}-\d{2}$/.test(s) && !Number.isNaN(Date.parse(s + "T12:00:00Z")) && new Date(s + "T12:00:00Z").toISOString().slice(0, 10) === s;
 const due = (v) => { const s = String(v ?? "").trim(); if (!s) return ""; const t = s.slice(0, 10); if (!validIso(t)) throw new Error("The due date is not a valid date."); return t; };
 const title = (v) => { const s = String(v ?? "").split(/\s+/).filter(Boolean).join(" "); if (s.length < 2) throw new Error("Give the milestone a short title."); return s.slice(0, 120); };
+const cleanUrl = (v) => { const s = String(v ?? "").trim(); return s.startsWith("https://") && !/\s/.test(s) ? s.slice(0, 300) : ""; };
 const squash = (v, n) => String(v ?? "").split(/\s+/).filter(Boolean).join(" ").slice(0, n);
 let counter = 0;
 const randomId = () => "j-" + (Date.now().toString(16) + (counter++).toString(16)).slice(-8);
@@ -24,6 +25,7 @@ const clean = (raw, defaultStage, today, newId) => {
   return {
     id: newId(), title: title(raw.title), stage: STAGES.includes(stage) ? stage : defaultStage, status, due: due(raw.due), note: squash(raw.note, 500),
     key: String(raw.key || "").slice(0, 60), program_id: String(raw.program_id || "").slice(0, 120), program_name: String(raw.program_name || "").slice(0, 120),
+    why: String(raw.why || "").split(/\s+/).filter(Boolean).join(" ").slice(0, 300), url: cleanUrl(raw.url),
     created_at: today, done_at: status === "done" ? today : "",
   };
 };
@@ -88,7 +90,7 @@ export function journeySuggestions(rawProfile, itemsIn, programs, today, templat
     if (picks.length >= programLimit) break;
     if (m.fit !== "strong" || !["open", "rolling"].includes(m.status) || have.has(key)) continue;
     const dl = m.deadline || {};
-    picks.push({ key, title: `${m.type === "resource" ? "Explore" : "Apply to"} ${m.name}`, stage: profile.stage, why: why(m), core: false, program_id: m.id, program_name: m.name, due: dl.kind === "fixed" ? dl.date : "" });
+    picks.push({ key, title: `${m.type === "resource" ? "Explore" : "Apply to"} ${m.name}`, stage: profile.stage, why: why(m), core: false, program_id: m.id, program_name: m.name, due: dl.kind === "fixed" ? dl.date : "", url: m.apply_url || "" });
   }
   const cur = out[profile.stage];
   out[profile.stage] = [...cur.filter((s) => s.core), ...picks, ...cur.filter((s) => !s.core)];

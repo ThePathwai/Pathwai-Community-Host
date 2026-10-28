@@ -186,6 +186,8 @@ class JourneyIn(BaseModel):
     key: Optional[str] = Field(default=None, max_length=60)
     program_id: Optional[str] = Field(default=None, max_length=120)
     program_name: Optional[str] = Field(default=None, max_length=120)
+    why: Optional[str] = Field(default=None, max_length=300)
+    url: Optional[str] = Field(default=None, max_length=300)
     items: Optional[List[Dict[str, Any]]] = None
 
 

@@ -68,6 +68,27 @@ export function verdictLine(p) {
 }
 const VERIFIED = { official: "Official page", third_party: "Third-party source", unconfirmed: "Not confirmed" };
 const isExternal = (u) => /^https?:\/\//.test(u || "");
+const hostOf = (u) => { try { return new URL(u).hostname.replace(/^www\./, ""); } catch { return ""; } };
+// What the button says depends on what the page is, so nobody expects an application form and lands on a news article.
+const LINK_VERB = { apply: "Go to the application page", program: "Open the program page", directory: "Open the list", contact: "Open the contact page", tool: "Open the tool", news: "Read the announcement", overview: "Open the overview page" };
+
+// The page we send you to, and why: what it is, what you will do there, and (when we know your profile) why this program suits you.
+function LinkCard({ p }) {
+  if (!isExternal(p.apply_url) || !p.link_label) return null;
+  const host = hostOf(p.apply_url);
+  const why = p.checks?.length && p.fit !== "skip" ? verdictLine(p) : "";
+  return (
+    <Section title="Where this takes you">
+      <a href={p.apply_url} target="_blank" rel="noreferrer" data-testid="link-card" className="block rounded-2xl border border-line p-4 transition hover:border-ink/40">
+        <span className="flex items-start justify-between gap-3"><span className="text-[15px] font-semibold leading-snug">{p.link_label}</span><ArrowUpRight className="mt-0.5 h-4 w-4 shrink-0 text-muted" aria-hidden /></span>
+        <span className="mt-0.5 block text-xs text-muted">{host}</span>
+        {p.link_note && <span className="mt-2 block text-sm text-ink/85" data-testid="link-note">{p.link_note}</span>}
+        {why && <span className="mt-2 block text-sm font-medium" data-testid="link-why">Why it is on your list: {why}</span>}
+        {p.link_exact === false && <span className="mt-2 flex items-start gap-1.5 text-xs text-amber-600 dark:text-amber-400"><TriangleAlert className="mt-0.5 h-3.5 w-3.5 shrink-0" aria-hidden />This is the closest page we could find, not a program page.</span>}
+      </a>
+    </Section>
+  );
+}
 const dayLabel = (iso) => { try { return new Date(iso + "T12:00:00").toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" }); } catch { return iso || ""; } };
 
 // Three bars, like a signal meter: more bars, better fit. Says it in a glance and avoids a made-up percentage.
@@ -156,7 +177,7 @@ export function ProgramDrawer({ p, onClose, meta, tracked, onTrack, onPlan, stag
   })();
   const mark = (state) => onTrack && onTrack({ id: p.id, name: p.name, org: p.org, type: p.type, state, stage: state === "done" ? doneStage : stage });
   const cta = isExternal(p.apply_url)
-    ? <a href={p.apply_url} target="_blank" rel="noreferrer" className="btn-primary flex-1 !py-3" data-testid={`apply-${p.id}`}>{p.community ? "See it" : "Open official page"}<ArrowUpRight className="h-4 w-4" /></a>
+    ? <a href={p.apply_url} target="_blank" rel="noreferrer" className="btn-primary flex-1 !py-3" data-testid={`apply-${p.id}`}>{p.community ? "See it" : (p.link_exact === false ? "Open the closest page" : LINK_VERB[p.link_kind] || "Open official page")}<ArrowUpRight className="h-4 w-4" /></a>
     : <Link to={p.apply_url || "/"} className="btn-primary flex-1 !py-3" data-testid={`apply-${p.id}`}>{p.community ? "See it" : "Open page"}<ArrowRight className="h-4 w-4" /></Link>;
   return (
     <div className="fixed inset-0 z-50" role="dialog" aria-modal="true" aria-label={p.name} data-testid="program-drawer">
@@ -196,6 +217,8 @@ export function ProgramDrawer({ p, onClose, meta, tracked, onTrack, onPlan, stag
           )}
           {(p.requirements || []).length > 0 && <Section title="What they ask for"><ul className="space-y-2.5">{p.requirements.map((r) => <li key={r} className="flex gap-2.5 text-sm text-ink/80"><Circle className="mt-0.5 h-4 w-4 shrink-0 text-muted" aria-hidden /><span>{r}</span></li>)}</ul></Section>}
 
+          <LinkCard p={p} />
+
           {onTrack && (
             <Section title="Your journey">
               <div className="flex flex-wrap gap-2" data-testid="drawer-journey">
@@ -204,7 +227,7 @@ export function ProgramDrawer({ p, onClose, meta, tracked, onTrack, onPlan, stag
                 <button type="button" onClick={() => mark("done")} aria-pressed={mineRow?.state === "done"} data-testid="track-done"
                   className={cx("rounded-full border px-3.5 py-2 text-sm font-semibold transition", mineRow?.state === "done" ? "border-transparent" : "border-line hover:border-ink/40")} style={mineRow?.state === "done" ? { background: "var(--accent)", color: "var(--on-accent)" } : undefined}>I've done this</button>
                 {onPlan && p.status !== "closed" && p.status !== "paused" && <button type="button" disabled={planned === "saving" || planned === "added"} data-testid="track-plan"
-                  onClick={async () => { setPlanned("saving"); try { await onPlan({ op: "add", title: `${p.type === "resource" ? "Explore" : "Apply to"} ${p.name}`, stage, due: dl ? dl.date : "", key: `prog:${p.id}`, program_id: p.id, program_name: p.name }); setPlanned("added"); } catch (e) { setPlanned(e?.response?.data?.detail || "Could not add it. Please try again."); } }}
+                  onClick={async () => { setPlanned("saving"); try { await onPlan({ op: "add", title: `${p.type === "resource" ? "Explore" : "Apply to"} ${p.name}`, stage, due: dl ? dl.date : "", key: `prog:${p.id}`, program_id: p.id, program_name: p.name, why: p.checks?.length && p.fit !== "skip" ? verdictLine(p) : (p.link_note || ""), url: isExternal(p.apply_url) ? p.apply_url : "" }); setPlanned("added"); } catch (e) { setPlanned(e?.response?.data?.detail || "Could not add it. Please try again."); } }}
                   className="rounded-full border border-line px-3.5 py-2 text-sm font-semibold transition hover:border-ink/40 disabled:opacity-70">{planned === "added" ? <span className="inline-flex items-center gap-1.5"><Check className="h-3.5 w-3.5" aria-hidden />On your plan</span> : "Add to my plan"}</button>}
                 {mineRow && <button type="button" onClick={() => onTrack({ id: p.id, state: "none" })} className="rounded-full px-3 py-2 text-sm text-muted hover:text-ink" data-testid="track-remove">Remove</button>}
               </div>

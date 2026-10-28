@@ -1,5 +1,5 @@
 {
-  "version": "2026-10-27",
+  "version": "2026-10-28",
   "notes": "A hand-checked catalog. Each entry says where it was confirmed (verified: official / third_party / unconfirmed) and when. Program owners change details without notice, so every card links to the official page. Deadlines are shown only when the source published one.",
   "programs": [
     {
@@ -45,11 +45,15 @@
       },
       "status": "check",
       "phase": "fund",
-      "apply_url": "https://nrc.canada.ca",
+      "apply_url": "https://nrc.canada.ca/en/support-technology-innovation/about-nrc-industrial-research-assistance-program",
       "source_url": "https://www.avinova.ca/en/blog/nrc-irap-program-guide",
       "verified": "third_party",
-      "last_checked": "2026-10-27",
-      "restricted_to": []
+      "last_checked": "2026-10-28",
+      "restricted_to": [],
+      "link_label": "NRC IRAP: about the program",
+      "link_kind": "program",
+      "link_note": "See who qualifies, then contact an Industrial Technology Advisor. IRAP starts with a conversation, not a form.",
+      "link_exact": true
     },
     {
       "id": "sred",
@@ -96,7 +100,11 @@
       "source_url": "https://leyton.com/ca/en/insights/articles/federal-budget-2025-sred-program-expansion/",
       "verified": "third_party",
       "last_checked": "2026-10-27",
-      "restricted_to": []
+      "restricted_to": [],
+      "link_label": "CRA: SR&ED tax incentive",
+      "link_kind": "program",
+      "link_note": "Check what counts as eligible R&D and how to claim it on your tax return.",
+      "link_exact": true
     },
     {
       "id": "oitc",
@@ -144,7 +152,11 @@
       "source_url": "https://ontario.ca/page/ontario-innovation-tax-credit",
       "verified": "official",
       "last_checked": "2026-10-27",
-      "restricted_to": []
+      "restricted_to": [],
+      "link_label": "Ontario: Innovation Tax Credit",
+      "link_kind": "program",
+      "link_note": "See the rules and how to claim the credit with your Ontario corporate tax return.",
+      "link_exact": true
     },
     {
       "id": "canexport-smes",
@@ -192,7 +204,11 @@
       "source_url": "https://www.tradecommissioner.gc.ca/en/our-solutions/funding-financing-international-business/canexport-smes/applicants-guide-2026-27.html",
       "verified": "official",
       "last_checked": "2026-10-27",
-      "restricted_to": []
+      "restricted_to": [],
+      "link_label": "Trade Commissioner Service: CanExport SMEs",
+      "link_kind": "program",
+      "link_note": "Read the eligibility and funding rules, then follow the link to apply.",
+      "link_exact": true
     },
     {
       "id": "csbfp",
@@ -235,7 +251,11 @@
       "source_url": "https://ised-isde.canada.ca/site/canada-small-business-financing-program/en/frequently-asked-questions-small-businesses",
       "verified": "official",
       "last_checked": "2026-10-27",
-      "restricted_to": []
+      "restricted_to": [],
+      "link_label": "ISED: Canada Small Business Financing Program",
+      "link_kind": "program",
+      "link_note": "See how the loans work. You apply at a bank or credit union, not here.",
+      "link_exact": true
     },
     {
       "id": "futurpreneur-core",
@@ -280,11 +300,15 @@
       },
       "status": "rolling",
       "phase": "fund",
-      "apply_url": "https://futurpreneur.ca",
+      "apply_url": "https://futurpreneur.ca/en/offering/core-startup/",
       "source_url": "https://arc-dev.theglobeandmail.com/investing/markets/stocks/RY-T/pressreleases/28504642/a-boost-for-new-business-futurpreneur-raises-loan-amounts-for-young-entrepreneurs-up-to-75000",
       "verified": "third_party",
-      "last_checked": "2026-10-27",
-      "restricted_to": []
+      "last_checked": "2026-10-28",
+      "restricted_to": [],
+      "link_label": "Futurpreneur: Core Startup Program",
+      "link_kind": "program",
+      "link_note": "Check the age and business rules, then start the loan application.",
+      "link_exact": true
     },
     {
       "id": "futurpreneur-newcomer",
@@ -331,13 +355,17 @@
       },
       "status": "rolling",
       "phase": "fund",
-      "apply_url": "https://futurpreneur.ca/offering/newcomer/",
+      "apply_url": "https://futurpreneur.ca/en/offering/newcomers/",
       "source_url": "https://futurpreneur.ca/offering/newcomer/",
       "verified": "official",
-      "last_checked": "2026-10-27",
+      "last_checked": "2026-10-28",
       "restricted_to": [
         "newcomer"
-      ]
+      ],
+      "link_label": "Futurpreneur: Newcomers Program",
+      "link_kind": "program",
+      "link_note": "Check who counts as a newcomer here and start the application.",
+      "link_exact": true
     },
     {
       "id": "belf",
@@ -384,7 +412,11 @@
       "last_checked": "2026-10-27",
       "restricted_to": [
         "black"
-      ]
+      ],
+      "link_label": "FACE: Black Entrepreneurship Loan Fund",
+      "link_kind": "program",
+      "link_note": "Read the loan terms and eligibility, then apply through the FACE coalition.",
+      "link_exact": true
     },
     {
       "id": "dmz-bip",
@@ -432,7 +464,11 @@
       "last_checked": "2026-10-27",
       "restricted_to": [
         "black"
-      ]
+      ],
+      "link_label": "DMZ: Black Innovation Programs",
+      "link_kind": "program",
+      "link_note": "See the Validator and other streams, then apply for the one that fits your stage.",
+      "link_exact": true
     },
     {
       "id": "indigenous-growth-fund",
@@ -480,7 +516,11 @@
       "last_checked": "2026-10-27",
       "restricted_to": [
         "indigenous"
-      ]
+      ],
+      "link_label": "NACCA: Indigenous Growth Fund",
+      "link_kind": "program",
+      "link_note": "Learn how the fund works. You borrow through an Indigenous Financial Institution near you.",
+      "link_exact": true
     },
     {
       "id": "wef",
@@ -522,13 +562,17 @@
       },
       "status": "closed",
       "phase": "fund",
-      "apply_url": "https://ised-isde.canada.ca",
+      "apply_url": "https://ised-isde.canada.ca/site/ised/en/programs-and-initiatives/women-entrepreneurship-strategy",
       "source_url": "https://hellodarwin.com/business-aid/programs/ised-women-entrepreneurship-fund",
       "verified": "third_party",
-      "last_checked": "2026-10-27",
+      "last_checked": "2026-10-28",
       "restricted_to": [
         "women"
-      ]
+      ],
+      "link_label": "ISED: Women Entrepreneurship Strategy",
+      "link_kind": "overview",
+      "link_note": "This fund is closed. This page lists what the strategy offers women entrepreneurs now.",
+      "link_exact": false
     },
     {
       "id": "communitech-fierce-founders",
@@ -570,16 +614,20 @@
       },
       "status": "check",
       "phase": "learn",
-      "apply_url": "https://www.communitech.ca/programs/fierce-founders/",
+      "apply_url": "https://communitech.ca/programs/fierce-founders/",
       "source_url": "https://grantcompass.ca/grants/communitech-fierce-founders-and-startup-programs.html",
       "verified": "third_party",
-      "last_checked": "2026-10-27",
+      "last_checked": "2026-10-28",
       "restricted_to": [
         "women",
         "black",
         "indigenous",
         "newcomer"
-      ]
+      ],
+      "link_label": "Communitech: Fierce Founders",
+      "link_kind": "program",
+      "link_note": "See who it is for, the cash and coaching on offer, and when applications open.",
+      "link_exact": true
     },
     {
       "id": "venturelab-hci",
@@ -628,7 +676,11 @@
       "source_url": "https://www.venturelab.ca/programs/hardware-catalyst-initiative",
       "verified": "official",
       "last_checked": "2026-10-27",
-      "restricted_to": []
+      "restricted_to": [],
+      "link_label": "ventureLAB: Hardware Catalyst Initiative",
+      "link_kind": "program",
+      "link_note": "Intake is closed. Read what the program offered and who it was for.",
+      "link_exact": true
     },
     {
       "id": "velocity",
@@ -673,7 +725,11 @@
       "source_url": "https://uwaterloo.ca/entrepreneurship/profiles/velocity-incubator",
       "verified": "official",
       "last_checked": "2026-10-27",
-      "restricted_to": []
+      "restricted_to": [],
+      "link_label": "Velocity: apply",
+      "link_kind": "apply",
+      "link_note": "Start the application. Intake is rolling, so you can apply anytime.",
+      "link_exact": true
     },
     {
       "id": "ovin-rd",
@@ -718,11 +774,15 @@
       },
       "status": "open",
       "phase": "fund",
-      "apply_url": "https://www.oc-innovation.ca/programs/",
+      "apply_url": "https://www.ovinhub.ca/programs/",
       "source_url": "https://grantcompass.ca/grants/ontario-vehicle-innovation-network",
       "verified": "third_party",
-      "last_checked": "2026-10-27",
-      "restricted_to": []
+      "last_checked": "2026-10-28",
+      "restricted_to": [],
+      "link_label": "OVIN: programs and R&D streams",
+      "link_kind": "directory",
+      "link_note": "Pick the R&D Partnership Fund stream that matches your technology and read its guidelines.",
+      "link_exact": true
     },
     {
       "id": "mitacs-accelerate",
@@ -770,7 +830,11 @@
       "source_url": "https://www.mitacs.ca:443/en/programs/accelerate",
       "verified": "official",
       "last_checked": "2026-10-27",
-      "restricted_to": []
+      "restricted_to": [],
+      "link_label": "Mitacs: Accelerate",
+      "link_kind": "program",
+      "link_note": "See how a research placement works and find your regional Mitacs contact.",
+      "link_exact": true
     },
     {
       "id": "summer-company",
@@ -821,7 +885,11 @@
       "source_url": "https://www.ontario.ca/page/summer-company-program-guidelines",
       "verified": "official",
       "last_checked": "2026-10-27",
-      "restricted_to": []
+      "restricted_to": [],
+      "link_label": "Ontario: Summer Company",
+      "link_kind": "program",
+      "link_note": "Check the student rules and find the local office that runs it.",
+      "link_exact": true
     },
     {
       "id": "starter-company-plus",
@@ -867,7 +935,11 @@
       "source_url": "https://www.toronto.ca/business-economy/business-operation-growth/business-incentives/starter-company-plus-grant/",
       "verified": "official",
       "last_checked": "2026-10-27",
-      "restricted_to": []
+      "restricted_to": [],
+      "link_label": "City of Toronto: Starter Company Plus",
+      "link_kind": "program",
+      "link_note": "Intake is closed. Read the grant rules so you are ready for the next round.",
+      "link_exact": true
     },
     {
       "id": "bmo-launch-me",
@@ -907,13 +979,17 @@
       },
       "status": "check",
       "phase": "learn",
-      "apply_url": "https://humber.ca/cfe/programs/bmo-launch-me-program",
+      "apply_url": "https://business.humber.ca/deans-news/bmo-launch-me-competition-opens-for-students-and-alumni.html",
       "source_url": "https://business.humber.ca/deans-news/bmo-launch-me-competition-opens-for-students-and-alumni.html",
       "verified": "unconfirmed",
-      "last_checked": "2026-10-27",
+      "last_checked": "2026-10-28",
       "restricted_to": [
         "student"
-      ]
+      ],
+      "link_label": "Humber: BMO Launch Me announcement",
+      "link_kind": "news",
+      "link_note": "Humber's program page was offline when we checked. This is the latest announcement; confirm dates with the Longo Centre.",
+      "link_exact": false
     },
     {
       "id": "bdc-capital",
@@ -956,11 +1032,15 @@
       },
       "status": "rolling",
       "phase": "scale",
-      "apply_url": "https://www.bdc.ca",
+      "apply_url": "https://www.bdc.ca/en/bdc-capital",
       "source_url": "https://hellodarwin.com/business-aid/programs/bdc-capital-venture-capital",
       "verified": "third_party",
-      "last_checked": "2026-10-27",
-      "restricted_to": []
+      "last_checked": "2026-10-28",
+      "restricted_to": [],
+      "link_label": "BDC Capital: venture capital",
+      "link_kind": "program",
+      "link_note": "See which funds invest in your kind of company and how to reach the team.",
+      "link_exact": true
     },
     {
       "id": "startup-visa",
@@ -1005,7 +1085,11 @@
       "last_checked": "2026-10-27",
       "restricted_to": [
         "newcomer"
-      ]
+      ],
+      "link_label": "IRCC: Start-up Visa",
+      "link_kind": "program",
+      "link_note": "Paused. Read the official notice and what it means for new applicants.",
+      "link_exact": true
     },
     {
       "id": "cdl-prime",
@@ -1051,7 +1135,11 @@
       "source_url": "https://creativedestructionlab.com/streams/prime/",
       "verified": "official",
       "last_checked": "2026-10-27",
-      "restricted_to": []
+      "restricted_to": [],
+      "link_label": "CDL: Prime stream",
+      "link_kind": "program",
+      "link_note": "See who it is for and how to apply.",
+      "link_exact": true
     },
     {
       "id": "dmz-incubator",
@@ -1095,7 +1183,11 @@
       "source_url": "https://dmz.torontomu.ca/apply",
       "verified": "official",
       "last_checked": "2026-10-27",
-      "restricted_to": []
+      "restricted_to": [],
+      "link_label": "DMZ: apply to the Incubator",
+      "link_kind": "apply",
+      "link_note": "Start the application. Review the program stages first so you know what you are applying to.",
+      "link_exact": true
     },
     {
       "id": "mars-incubator",
@@ -1137,7 +1229,11 @@
       "source_url": "https://hubs.marsdd.com/workspaces/incubator/",
       "verified": "official",
       "last_checked": "2026-10-27",
-      "restricted_to": []
+      "restricted_to": [],
+      "link_label": "MaRS: Incubator (life sciences)",
+      "link_kind": "program",
+      "link_note": "See the workspace options and the contact for applying.",
+      "link_exact": true
     },
     {
       "id": "alberta-catalyzer",
@@ -1176,9 +1272,13 @@
       "phase": "learn",
       "apply_url": "https://www.platformcalgary.com/programs",
       "source_url": "https://www.platformcalgary.com/programs",
-      "verified": "official",
-      "last_checked": "2026-10-27",
-      "restricted_to": []
+      "verified": "unconfirmed",
+      "last_checked": "2026-10-28",
+      "restricted_to": [],
+      "link_label": "Platform Calgary: programs",
+      "link_kind": "directory",
+      "link_note": "Platform has reshuffled its programs. Open the list to see what is running now and which fits your stage.",
+      "link_exact": false
     },
     {
       "id": "platform-incubator",
@@ -1186,7 +1286,7 @@
       "org": "Platform Calgary",
       "level": "nonprofit",
       "type": "incubator",
-      "summary": "A 12-month program for high-potential tech founders with two to four hours of structured support every two weeks.",
+      "summary": "A cohort-based incubator in Calgary for high-potential tech founders, with regular structured support from the Platform team.",
       "amount": "Free; 12 months",
       "stages": [
         "launched",
@@ -1218,8 +1318,12 @@
       "apply_url": "https://www.platformcalgary.com/programs",
       "source_url": "https://www.platformcalgary.com/programs",
       "verified": "official",
-      "last_checked": "2026-10-27",
-      "restricted_to": []
+      "last_checked": "2026-10-28",
+      "restricted_to": [],
+      "link_label": "Platform Calgary: programs",
+      "link_kind": "directory",
+      "link_note": "Find the Incubator on the list and read how long it runs and how to apply.",
+      "link_exact": true
     },
     {
       "id": "next-ai",
@@ -1262,7 +1366,11 @@
       "source_url": "https://www.nextcanada.com/programs-overview/",
       "verified": "official",
       "last_checked": "2026-10-27",
-      "restricted_to": []
+      "restricted_to": [],
+      "link_label": "NEXT Canada: NEXT AI",
+      "link_kind": "program",
+      "link_note": "See the program and apply for the next cohort.",
+      "link_exact": true
     },
     {
       "id": "next-36",
@@ -1306,7 +1414,11 @@
       "source_url": "https://www.nextcanada.com/programs-overview/",
       "verified": "official",
       "last_checked": "2026-10-27",
-      "restricted_to": []
+      "restricted_to": [],
+      "link_label": "NEXT Canada: NEXT 36",
+      "link_kind": "program",
+      "link_note": "Closed for now. Read who it is for so you can apply next year.",
+      "link_exact": true
     },
     {
       "id": "next-founders",
@@ -1348,7 +1460,11 @@
       "source_url": "https://www.nextcanada.com/programs-overview/",
       "verified": "official",
       "last_checked": "2026-10-27",
-      "restricted_to": []
+      "restricted_to": [],
+      "link_label": "NEXT Canada: NEXT Founders",
+      "link_kind": "program",
+      "link_note": "See the stage it targets and apply for the next cohort.",
+      "link_exact": true
     },
     {
       "id": "launch-academy",
@@ -1384,11 +1500,15 @@
       },
       "status": "check",
       "phase": "learn",
-      "apply_url": "https://www.launchacademy.ca/",
+      "apply_url": "https://www.launchacademy.ca/launchpad/",
       "source_url": "https://www.launchacademy.ca/",
       "verified": "unconfirmed",
-      "last_checked": "2026-10-27",
-      "restricted_to": []
+      "last_checked": "2026-10-28",
+      "restricted_to": [],
+      "link_label": "Launch Academy: LaunchPad",
+      "link_kind": "program",
+      "link_note": "See what LaunchPad offers and how to apply. Launch Academy also runs a Maple program for newcomers.",
+      "link_exact": true
     },
     {
       "id": "tbdc-business-inc",
@@ -1429,7 +1549,11 @@
       "source_url": "https://tbdc.com/programs/",
       "verified": "official",
       "last_checked": "2026-10-27",
-      "restricted_to": []
+      "restricted_to": [],
+      "link_label": "TBDC: Business Inc.",
+      "link_kind": "program",
+      "link_note": "Check that you are in Toronto and register.",
+      "link_exact": true
     },
     {
       "id": "liftoff-black",
@@ -1467,13 +1591,17 @@
       },
       "status": "check",
       "phase": "learn",
-      "apply_url": "https://uwaterloo.ca/news/magazine/liftoff-takes-flight-support-black-entrepreneurs-waterloo",
+      "apply_url": "https://velocityincubator.com/2022/02/cohort-ready-for-liftoff/",
       "source_url": "https://www.startupcan.ca/28-resources-to-support-black-entrepreneurs-in-canada/",
-      "verified": "third_party",
-      "last_checked": "2026-10-27",
+      "verified": "unconfirmed",
+      "last_checked": "2026-10-28",
       "restricted_to": [
         "black"
-      ]
+      ],
+      "link_label": "Velocity: LiftOff cohort announcement",
+      "link_kind": "news",
+      "link_note": "The newest page we could find is from 2022. We could not confirm LiftOff is still taking applicants, so ask Velocity before you plan around it.",
+      "link_exact": false
     },
     {
       "id": "black-entrepreneurship-alliance",
@@ -1511,13 +1639,17 @@
       },
       "status": "check",
       "phase": "learn",
-      "apply_url": "https://www.startupcan.ca/28-resources-to-support-black-entrepreneurs-in-canada/",
+      "apply_url": "https://www.yorku.ca/yspace/programs-streams/bea/",
       "source_url": "https://www.startupcan.ca/28-resources-to-support-black-entrepreneurs-in-canada/",
       "verified": "third_party",
-      "last_checked": "2026-10-27",
+      "last_checked": "2026-10-28",
       "restricted_to": [
         "black"
-      ]
+      ],
+      "link_label": "York University: Black Entrepreneurship Alliance",
+      "link_kind": "program",
+      "link_note": "See the streams and open calls run through York's YSpace.",
+      "link_exact": true
     },
     {
       "id": "isc",
@@ -1562,7 +1694,11 @@
       "source_url": "https://ised-isde.canada.ca/site/innovative-solutions-canada/",
       "verified": "official",
       "last_checked": "2026-10-27",
-      "restricted_to": []
+      "restricted_to": [],
+      "link_label": "ISED: Innovative Solutions Canada",
+      "link_kind": "program",
+      "link_note": "Open challenges and testing calls and see which ones match what you build.",
+      "link_exact": true
     },
     {
       "id": "ready-4-market",
@@ -1611,7 +1747,11 @@
       "source_url": "https://www.oc-innovation.ca/programs/ready-4-market/",
       "verified": "official",
       "last_checked": "2026-10-27",
-      "restricted_to": []
+      "restricted_to": [],
+      "link_label": "OCI: Ready 4 Market",
+      "link_kind": "program",
+      "link_note": "Read who qualifies for co-investment and how to contact the team.",
+      "link_exact": true
     },
     {
       "id": "scale-ai-projects",
@@ -1657,7 +1797,11 @@
       "source_url": "https://www.scaleai.ca/projects/",
       "verified": "official",
       "last_checked": "2026-10-27",
-      "restricted_to": []
+      "restricted_to": [],
+      "link_label": "Scale AI: projects",
+      "link_kind": "program",
+      "link_note": "Read the call for projects and how to submit an idea.",
+      "link_exact": true
     },
     {
       "id": "global-innovation-clusters",
@@ -1701,7 +1845,11 @@
       "source_url": "https://ised-isde.canada.ca/site/global-innovation-clusters/en/global-innovation-clusters",
       "verified": "official",
       "last_checked": "2026-10-27",
-      "restricted_to": []
+      "restricted_to": [],
+      "link_label": "ISED: Global Innovation Clusters",
+      "link_kind": "program",
+      "link_note": "Find the cluster for your industry. Each one runs its own calls.",
+      "link_exact": true
     },
     {
       "id": "swpp",
@@ -1742,7 +1890,11 @@
       "source_url": "https://www.canada.ca/en/employment-social-development/services/student-work-placements-wage-subsidies.html",
       "verified": "official",
       "last_checked": "2026-10-27",
-      "restricted_to": []
+      "restricted_to": [],
+      "link_label": "ESDC: Student Work Placement Program",
+      "link_kind": "program",
+      "link_note": "Read the employer rules and find a delivery partner for your sector.",
+      "link_exact": true
     },
     {
       "id": "canada-summer-jobs",
@@ -1786,7 +1938,11 @@
       "source_url": "https://www.canada.ca/en/employment-social-development/news/2026/04/canada-summer-jobs-2026.html",
       "verified": "official",
       "last_checked": "2026-10-27",
-      "restricted_to": []
+      "restricted_to": [],
+      "link_label": "ESDC: Canada Summer Jobs applicant guide",
+      "link_kind": "program",
+      "link_note": "Closed for this year. Read the guide so you are ready for the next call.",
+      "link_exact": true
     },
     {
       "id": "besp",
@@ -1832,13 +1988,17 @@
       },
       "status": "rolling",
       "phase": "fund",
-      "apply_url": "https://futurpreneur.ca/en/besp/",
+      "apply_url": "https://futurpreneur.ca/en/offering/black-entrepreneur-startup/",
       "source_url": "https://futurpreneur.ca/en/besp/",
       "verified": "official",
-      "last_checked": "2026-10-27",
+      "last_checked": "2026-10-28",
       "restricted_to": [
         "black"
-      ]
+      ],
+      "link_label": "Futurpreneur: Black Entrepreneur Startup Program",
+      "link_kind": "program",
+      "link_note": "Check the rules and start the application.",
+      "link_exact": true
     },
     {
       "id": "bdc-indigenous-loan",
@@ -1881,7 +2041,11 @@
       "last_checked": "2026-10-27",
       "restricted_to": [
         "indigenous"
-      ]
+      ],
+      "link_label": "BDC: Indigenous Entrepreneur loan",
+      "link_kind": "program",
+      "link_note": "See the loan terms and how to talk to a BDC advisor.",
+      "link_exact": true
     },
     {
       "id": "wes-loan-fund",
@@ -1919,11 +2083,15 @@
       },
       "status": "check",
       "phase": "fund",
-      "apply_url": "https://ised-isde.canada.ca/site/ised/en/programs-and-initiatives/women-entrepreneurship-strategy",
+      "apply_url": "https://ised-isde.canada.ca/site/ised/en/programs-and-initiatives/women-entrepreneurship-strategy/women-entrepreneurship-loan-fund",
       "source_url": "https://ised-isde.canada.ca/site/ised/en/programs-and-initiatives/women-entrepreneurship-strategy",
       "verified": "official",
-      "last_checked": "2026-10-27",
-      "restricted_to": []
+      "last_checked": "2026-10-28",
+      "restricted_to": [],
+      "link_label": "ISED: Women Entrepreneurship Loan Fund",
+      "link_kind": "program",
+      "link_note": "Read how the fund works. Loans are delivered through partner organizations, so use the page to find yours.",
+      "link_exact": true
     },
     {
       "id": "scotiabank-black-led",
@@ -1959,13 +2127,17 @@
       },
       "status": "check",
       "phase": "fund",
-      "apply_url": "https://www.startupcan.ca/28-resources-to-support-black-entrepreneurs-in-canada/",
+      "apply_url": "https://www.scotiabank.com/ca/en/business-banking/banking-solutions/loans-leases/blbfp.html",
       "source_url": "https://www.startupcan.ca/28-resources-to-support-black-entrepreneurs-in-canada/",
       "verified": "third_party",
-      "last_checked": "2026-10-27",
+      "last_checked": "2026-10-28",
       "restricted_to": [
         "black"
-      ]
+      ],
+      "link_label": "Scotiabank: Black-Led Business Financing Program",
+      "link_kind": "program",
+      "link_note": "See the financing terms and book a conversation with a business banker.",
+      "link_exact": true
     },
     {
       "id": "rbc-black-entrepreneur",
@@ -2003,13 +2175,17 @@
       },
       "status": "check",
       "phase": "fund",
-      "apply_url": "https://www.startupcan.ca/28-resources-to-support-black-entrepreneurs-in-canada/",
+      "apply_url": "https://www.rbcroyalbank.com/business/advice/blackentrepreneur.html",
       "source_url": "https://www.startupcan.ca/28-resources-to-support-black-entrepreneurs-in-canada/",
       "verified": "third_party",
-      "last_checked": "2026-10-27",
+      "last_checked": "2026-10-28",
       "restricted_to": [
         "black"
-      ]
+      ],
+      "link_label": "RBC: Black Entrepreneur Program",
+      "link_kind": "program",
+      "link_note": "See the loan and the supports on offer, then follow the link to apply.",
+      "link_exact": true
     },
     {
       "id": "td-black-credit",
@@ -2046,13 +2222,17 @@
       },
       "status": "check",
       "phase": "fund",
-      "apply_url": "https://www.startupcan.ca/28-resources-to-support-black-entrepreneurs-in-canada/",
+      "apply_url": "https://www.td.com/ca/en/business-banking/small-business/black-entrepreneurs",
       "source_url": "https://www.startupcan.ca/28-resources-to-support-black-entrepreneurs-in-canada/",
       "verified": "third_party",
-      "last_checked": "2026-10-27",
+      "last_checked": "2026-10-28",
       "restricted_to": [
         "black"
-      ]
+      ],
+      "link_label": "TD: Black entrepreneurs",
+      "link_kind": "program",
+      "link_note": "See how the credit access program works and contact a TD adviser.",
+      "link_exact": true
     },
     {
       "id": "bbi-atlantic",
@@ -2095,13 +2275,17 @@
       },
       "status": "check",
       "phase": "fund",
-      "apply_url": "https://www.startupcan.ca/28-resources-to-support-black-entrepreneurs-in-canada/",
+      "apply_url": "https://www.bbi.ca/programs/",
       "source_url": "https://www.startupcan.ca/28-resources-to-support-black-entrepreneurs-in-canada/",
       "verified": "third_party",
-      "last_checked": "2026-10-27",
+      "last_checked": "2026-10-28",
       "restricted_to": [
         "black"
-      ]
+      ],
+      "link_label": "Black Business Initiative: programs",
+      "link_kind": "directory",
+      "link_note": "Pick the training, grant or consulting program that matches your stage.",
+      "link_exact": true
     },
     {
       "id": "panache-ventures",
@@ -2139,7 +2323,11 @@
       "source_url": "https://www.panache.vc/",
       "verified": "official",
       "last_checked": "2026-10-27",
-      "restricted_to": []
+      "restricted_to": [],
+      "link_label": "Panache Ventures: pitch us",
+      "link_kind": "apply",
+      "link_note": "Pitch them through their own page.",
+      "link_exact": true
     },
     {
       "id": "bkr-capital",
@@ -2178,13 +2366,17 @@
       },
       "status": "check",
       "phase": "fund",
-      "apply_url": "https://betakit.com/bkr-capital-secures-initial-20-million-for-second-black-innovation-fund/",
+      "apply_url": "https://www.bkrcapital.ca/contact",
       "source_url": "https://betakit.com/bkr-capital-secures-initial-20-million-for-second-black-innovation-fund/",
       "verified": "third_party",
-      "last_checked": "2026-10-27",
+      "last_checked": "2026-10-28",
       "restricted_to": [
         "black"
-      ]
+      ],
+      "link_label": "BKR Capital: contact",
+      "link_kind": "contact",
+      "link_note": "Contact the team about a Black-led startup. The fund has no application form.",
+      "link_exact": true
     },
     {
       "id": "real-ventures",
@@ -2212,17 +2404,21 @@
       "requires": {},
       "requirements": [],
       "deadline": {
-        "kind": "none_published",
+        "kind": "closed",
         "date": null,
-        "note": "No pitch process listed; use the contact page"
+        "note": "The contact page said new investments were paused when we checked. Reconfirm before pitching."
       },
-      "status": "check",
+      "status": "paused",
       "phase": "fund",
       "apply_url": "https://realventures.com/contact/",
       "source_url": "https://realventures.com/",
       "verified": "official",
-      "last_checked": "2026-10-27",
-      "restricted_to": []
+      "last_checked": "2026-10-28",
+      "restricted_to": [],
+      "link_label": "Real Ventures: contact",
+      "link_kind": "contact",
+      "link_note": "The page said the fund was not taking new investments when we checked. Reconfirm before you pitch.",
+      "link_exact": true
     },
     {
       "id": "garage-capital",
@@ -2260,8 +2456,12 @@
       "apply_url": "https://www.garage.vc/",
       "source_url": "https://www.garage.vc/",
       "verified": "official",
-      "last_checked": "2026-10-27",
-      "restricted_to": []
+      "last_checked": "2026-10-28",
+      "restricted_to": [],
+      "link_label": "Garage Capital: website",
+      "link_kind": "contact",
+      "link_note": "We could not find a public pitch page. Start from the firm's own site and look for an intro route.",
+      "link_exact": false
     },
     {
       "id": "inovia-capital",
@@ -2299,8 +2499,12 @@
       "apply_url": "https://www.inovia.vc/",
       "source_url": "https://www.inovia.vc/",
       "verified": "unconfirmed",
-      "last_checked": "2026-10-27",
-      "restricted_to": []
+      "last_checked": "2026-10-28",
+      "restricted_to": [],
+      "link_label": "Inovia Capital: website",
+      "link_kind": "contact",
+      "link_note": "We could not find a public pitch page. Start from the firm's own site and look for an intro route.",
+      "link_exact": false
     },
     {
       "id": "georgian",
@@ -2336,11 +2540,15 @@
       },
       "status": "check",
       "phase": "scale",
-      "apply_url": "https://georgian.io/for-investors",
+      "apply_url": "https://georgian.io/for-ceos",
       "source_url": "https://georgian.io/for-investors",
       "verified": "official",
-      "last_checked": "2026-10-27",
-      "restricted_to": []
+      "last_checked": "2026-10-28",
+      "restricted_to": [],
+      "link_label": "Georgian: for CEOs",
+      "link_kind": "program",
+      "link_note": "See what Georgian looks for in growth-stage software companies and how to start a conversation.",
+      "link_exact": true
     },
     {
       "id": "golden-triangle-angels",
@@ -2379,7 +2587,11 @@
       "source_url": "https://gust.com/organizations/golden-triangle-angelnet",
       "verified": "unconfirmed",
       "last_checked": "2026-10-27",
-      "restricted_to": []
+      "restricted_to": [],
+      "link_label": "Golden Triangle Angelnet on Gust",
+      "link_kind": "apply",
+      "link_note": "Apply to pitch the group. Confirm they are taking applications.",
+      "link_exact": true
     },
     {
       "id": "naco-angels",
@@ -2414,11 +2626,15 @@
       },
       "status": "check",
       "phase": "fund",
-      "apply_url": "https://www.naco.ca",
+      "apply_url": "https://nacocanada.com/about",
       "source_url": "https://www.globenewswire.com/news-release/2022/09/28/2524148/0/en/NACO-in-collaboration-with-leading-academics-investors-and-entrepreneurs-releases-2022-Report-on-Angel-Investing-in-Canada.html",
       "verified": "unconfirmed",
-      "last_checked": "2026-10-27",
-      "restricted_to": []
+      "last_checked": "2026-10-28",
+      "restricted_to": [],
+      "link_label": "NACO: Canada's angel association",
+      "link_kind": "directory",
+      "link_note": "Start from NACO's site and find a member angel group near you. It is not a place to apply.",
+      "link_exact": false
     },
     {
       "id": "business-benefits-finder",
@@ -2456,11 +2672,15 @@
       },
       "status": "open",
       "phase": "learn",
-      "apply_url": "https://www.canada.ca/en/services/business/start/support-financing.html",
+      "apply_url": "https://innovation.ised-isde.canada.ca/s/?language=en_CA",
       "source_url": "https://www.canada.ca/en/services/business/start/support-financing.html",
       "verified": "official",
-      "last_checked": "2026-10-27",
-      "restricted_to": []
+      "last_checked": "2026-10-28",
+      "restricted_to": [],
+      "link_label": "Innovation Canada: Business Benefits Finder",
+      "link_kind": "tool",
+      "link_note": "Answer a few questions about your business and get a list of programs to look at.",
+      "link_exact": true
     },
     {
       "id": "regional-development-agencies",
@@ -2498,11 +2718,15 @@
       },
       "status": "check",
       "phase": "learn",
-      "apply_url": "https://www.canada.ca/en/services/business/start/support-financing.html",
+      "apply_url": "https://fednor.canada.ca/en/node/89",
       "source_url": "https://www.canada.ca/en/services/business/start/support-financing.html",
       "verified": "official",
-      "last_checked": "2026-10-27",
-      "restricted_to": []
+      "last_checked": "2026-10-28",
+      "restricted_to": [],
+      "link_label": "Regional development agencies across Canada",
+      "link_kind": "directory",
+      "link_note": "Find the agency for your province and see what it funds.",
+      "link_exact": true
     },
     {
       "id": "community-futures",
@@ -2541,11 +2765,15 @@
       },
       "status": "check",
       "phase": "learn",
-      "apply_url": "https://www.canada.ca/en/services/business/start/support-financing.html",
+      "apply_url": "https://www.communityfutures.ca/about-us/find-a-cf-office",
       "source_url": "https://www.canada.ca/en/services/business/start/support-financing.html",
       "verified": "official",
-      "last_checked": "2026-10-27",
-      "restricted_to": []
+      "last_checked": "2026-10-28",
+      "restricted_to": [],
+      "link_label": "Community Futures: find your office",
+      "link_kind": "directory",
+      "link_note": "Search for the office near you. Each one sets its own loan and support terms.",
+      "link_exact": true
     },
     {
       "id": "innovation-canada-ags",
@@ -2588,7 +2816,11 @@
       "source_url": "https://ised-isde.canada.ca/site/accelerated-growth-service/en",
       "verified": "official",
       "last_checked": "2026-10-27",
-      "restricted_to": []
+      "restricted_to": [],
+      "link_label": "ISED: Accelerated Growth Service",
+      "link_kind": "program",
+      "link_note": "Check if your company qualifies for a dedicated advisor and how to apply.",
+      "link_exact": true
     },
     {
       "id": "ip-village",
@@ -2629,7 +2861,11 @@
       "source_url": "https://ised-isde.canada.ca/site/canadian-intellectual-property-office/en/ip-village-ip-resources-your-business",
       "verified": "official",
       "last_checked": "2026-10-27",
-      "restricted_to": []
+      "restricted_to": [],
+      "link_label": "CIPO: IP Village",
+      "link_kind": "tool",
+      "link_note": "Free guides and courses on protecting your ideas. Start with the one for your stage.",
+      "link_exact": true
     },
     {
       "id": "elevateip",
@@ -2671,7 +2907,11 @@
       "source_url": "https://ised-isde.canada.ca/site/ised/en/programs-and-initiatives/elevateip",
       "verified": "official",
       "last_checked": "2026-10-27",
-      "restricted_to": []
+      "restricted_to": [],
+      "link_label": "ISED: ElevateIP",
+      "link_kind": "program",
+      "link_note": "Read what is covered and how to apply through a delivery partner.",
+      "link_exact": true
     },
     {
       "id": "tcs-diversity-export",
@@ -2710,11 +2950,15 @@
       },
       "status": "check",
       "phase": "scale",
-      "apply_url": "https://www.tradecommissioner.gc.ca/businesswomen-femmesdaffaires/aboutus-aproposdenous.aspx?lang=eng",
+      "apply_url": "https://www.tradecommissioner.gc.ca/en/our-solutions/exporters-diverse-backgrounds.html",
       "source_url": "https://www.tradecommissioner.gc.ca/businesswomen-femmesdaffaires/aboutus-aproposdenous.aspx?lang=eng",
       "verified": "official",
-      "last_checked": "2026-10-27",
-      "restricted_to": []
+      "last_checked": "2026-10-28",
+      "restricted_to": [],
+      "link_label": "Trade Commissioner Service: exporters from diverse backgrounds",
+      "link_kind": "program",
+      "link_note": "See the export supports for your group and how to reach a trade commissioner.",
+      "link_exact": true
     },
     {
       "id": "startup-canada-black-guide",
@@ -2758,7 +3002,11 @@
       "source_url": "https://www.startupcan.ca/28-resources-to-support-black-entrepreneurs-in-canada/",
       "verified": "official",
       "last_checked": "2026-10-27",
-      "restricted_to": []
+      "restricted_to": [],
+      "link_label": "Startup Canada: 28 resources for Black entrepreneurs",
+      "link_kind": "directory",
+      "link_note": "Browse the list and open the program that fits.",
+      "link_exact": true
     }
   ]
 }

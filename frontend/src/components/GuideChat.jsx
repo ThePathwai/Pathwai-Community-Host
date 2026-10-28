@@ -25,7 +25,7 @@ function Cards({ cards }) {
             {c.fit && <span className={cx("inline-flex rounded-full px-2.5 py-0.5 text-xs font-semibold", FIT_STYLE[c.fit])}>{FIT_LABEL[c.fit]}</span>}
           </div>
           {c.fit !== "skip" && (c.reasons || []).length > 0 && <p className="mt-1.5 text-xs text-muted">{c.reasons.find((r) => !isStageLine(r)) || c.reasons[0]}</p>}
-          {c.apply_url && /^https?:/.test(c.apply_url) && <a href={c.apply_url} target="_blank" rel="noreferrer" className="mt-2 inline-flex items-center gap-1 text-xs font-medium" style={{ color: "var(--accent)" }}>Open the page <ExternalLink className="h-3 w-3" aria-hidden /></a>}
+          {c.apply_url && /^https?:/.test(c.apply_url) && <a href={c.apply_url} target="_blank" rel="noreferrer" className="mt-2 inline-flex items-center gap-1 text-xs font-medium" style={{ color: "var(--accent)" }}>{c.link_label || "Open the page"} <ExternalLink className="h-3 w-3" aria-hidden /></a>}
         </li>
       ))}
     </ul>

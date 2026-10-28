@@ -63,6 +63,12 @@ def _title(v: Any) -> str:
     return s[:120]
 
 
+def _url(v: Any) -> str:
+    """The exact page a milestone points at. Only a plain https link is kept."""
+    s = str(v or "").strip()
+    return s[:300] if s.startswith("https://") and not any(c.isspace() for c in s) else ""
+
+
 def _new_id() -> str:
     return "j-" + uuid.uuid4().hex[:8]
 
@@ -77,6 +83,7 @@ def _clean(raw: Dict[str, Any], default_stage: str, today: date, new_id: Callabl
         "status": status, "due": _due(raw.get("due")), "note": " ".join(str(raw.get("note") or "").split())[:500],
         "key": str(raw.get("key") or "")[:60], "program_id": str(raw.get("program_id") or "")[:120],
         "program_name": str(raw.get("program_name") or "")[:120],
+        "why": " ".join(str(raw.get("why") or "").split())[:300], "url": _url(raw.get("url")),
         "created_at": today.isoformat(), "done_at": today.isoformat() if status == "done" else "",
     }
 
@@ -173,7 +180,8 @@ def suggestions(raw_profile: Optional[Dict[str, Any]], items: Optional[List[Dict
         dl = m.get("deadline") or {}
         verb = "Explore" if m.get("type") == "resource" else "Apply to"
         picks.append({"key": key, "title": f"{verb} {m['name']}", "stage": profile["stage"], "why": nav._why(m), "core": False,
-                      "program_id": m["id"], "program_name": m["name"], "due": dl.get("date") if dl.get("kind") == "fixed" else ""})
+                      "program_id": m["id"], "program_name": m["name"], "due": dl.get("date") if dl.get("kind") == "fixed" else "",
+                      "url": m.get("apply_url") or ""})
     cur = out[profile["stage"]]
     out[profile["stage"]] = [s for s in cur if s["core"]] + picks + [s for s in cur if not s["core"]]
     return out

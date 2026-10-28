@@ -75,7 +75,7 @@ def test_add_update_and_remove_a_milestone():
     items = jny.update_journey([], {"op": "add", "title": "  Talk to  ten   people ", "stage": "idea", "due": "2026-11-15", "note": "Start with the club owners"}, "launched", TODAY, nid)
     m = items[0]
     assert m == {"id": "j-1", "title": "Talk to ten people", "stage": "idea", "status": "todo", "due": "2026-11-15", "note": "Start with the club owners", "key": "",
-                 "program_id": "", "program_name": "", "created_at": "2026-10-27", "done_at": ""}
+                 "program_id": "", "program_name": "", "why": "", "url": "", "created_at": "2026-10-27", "done_at": ""}
     items = jny.update_journey(items, {"op": "update", "id": "j-1", "status": "doing"}, "launched", TODAY, nid)
     assert items[0]["status"] == "doing" and items[0]["done_at"] == ""
     items = jny.update_journey(items, {"op": "update", "id": "j-1", "status": "done", "note": "Did 12"}, "launched", date(2026, 10, 30), nid)
@@ -83,6 +83,13 @@ def test_add_update_and_remove_a_milestone():
     items = jny.update_journey(items, {"op": "update", "id": "j-1", "status": "todo"}, "launched", TODAY, nid)
     assert items[0]["done_at"] == ""  # taking a milestone back out of done forgets when it was done
     assert jny.update_journey(items, {"op": "remove", "id": "j-1"}, "launched", TODAY, nid) == []
+
+
+def test_a_milestone_keeps_its_reason_and_only_a_secure_link():
+    ok = jny.update_journey([], {"op": "add", "title": "Apply to X", "why": "  It funds   early teams ", "url": "https://x.example/apply"}, "idea", TODAY, ids())[0]
+    assert ok["why"] == "It funds early teams" and ok["url"] == "https://x.example/apply"
+    for bad in ("http://x.example/apply", "javascript:alert(1)", "https://x.example/a b", "/navigator"):
+        assert jny.update_journey([], {"op": "add", "title": "Apply to X", "url": bad}, "idea", TODAY, ids())[0]["url"] == ""
 
 
 def test_a_milestone_without_a_stage_goes_in_the_current_stage():
@@ -175,6 +182,7 @@ def test_matching_programs_are_suggested_as_things_to_apply_to_in_the_current_st
     progs = [r for r in sug["launched"] if r["key"].startswith("prog:")]
     assert 1 <= len(progs) <= 3
     assert all(r["program_id"] and r["title"].split()[0] in ("Apply", "Explore") and r["why"] for r in progs)
+    assert all(r["url"].startswith("https://") for r in progs)  # a program suggestion carries the exact page
     core = [i for i, r in enumerate(sug["launched"]) if r["core"]]
     first_prog = next(i for i, r in enumerate(sug["launched"]) if r["key"].startswith("prog:"))
     assert max(core) < first_prog  # the milestones that matter most come first, then the programs
@@ -223,7 +231,8 @@ def _cases():
             ops = []
             for _ in range(rnd.randint(4, 12)):
                 ops.append({"op": "add", "title": rnd.choice(["Ship it", "  Call  the bank ", "x", "Write the plan"]), "stage": rnd.choice(nav.STAGES + ["bogus"]),
-                            "status": rnd.choice(["todo", "doing", "done", None]), "due": rnd.choice(["", "2026-10-01", "2026-10-30", "2026-12-15", "bad"]), "key": rnd.choice(["", "", "k1", "k2"])})
+                            "status": rnd.choice(["todo", "doing", "done", None]), "due": rnd.choice(["", "2026-10-01", "2026-10-30", "2026-12-15", "bad"]), "key": rnd.choice(["", "", "k1", "k2"]),
+                            "why": rnd.choice(["", " Because  it helps ", None]), "url": rnd.choice(["", "https://a.example/x", "http://a.example", "https://a b", None])})
             for _ in range(rnd.randint(2, 6)):
                 ops.append({"op": "update", "id": f"j-{rnd.randint(1, 9)}", **rnd.choice([{"status": "done"}, {"status": "doing"}, {"status": "todo"}, {"due": "2026-11-02"}, {"note": " a  note "}, {"stage": "growth"}, {"status": "nope"}])})
             ops.append({"op": "remove", "id": f"j-{rnd.randint(1, 9)}"})

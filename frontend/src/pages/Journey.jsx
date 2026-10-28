@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { Link, Navigate } from "react-router-dom";
 import { toast } from "sonner";
-import { ArrowRight, Check, ChevronDown, CircleCheck, Flag, Plus, Trash2 } from "lucide-react";
+import { ArrowRight, ArrowUpRight, Check, ChevronDown, CircleCheck, Flag, Plus, Trash2 } from "lucide-react";
 import { api } from "../lib/api";
 import { useAuth } from "../lib/auth";
 import { useJourney } from "../lib/useJourney";
@@ -52,10 +52,13 @@ function Row({ m, act, stages }) {
             <span className={cx("min-w-0 text-[15px] font-medium leading-snug", done && "text-muted line-through")}>{m.title}</span>
             <ChevronDown className={cx("mt-1 h-4 w-4 shrink-0 text-muted transition", open && "rotate-180")} aria-hidden />
           </button>
+          {m.why && <p className="mt-1 text-sm text-muted" data-testid="journey-why">{m.why}</p>}
           <div className="mt-1.5 flex flex-wrap items-center gap-2">
             {m.status === "doing" && <span className="inline-flex rounded-full bg-amber-500/15 px-2 py-0.5 text-xs font-semibold text-amber-600 dark:text-amber-400">In progress</span>}
             <DueChip due={m.due} done={done} />
-            {m.program_id && !m.title.includes(m.program_name || "\u0000") && <Link to="/navigator" className="inline-flex items-center gap-1 text-xs font-medium text-muted underline hover:text-ink">{m.program_name || "Program"}</Link>}
+            {m.url
+              ? <a href={m.url} target="_blank" rel="noreferrer" data-testid="journey-open-page" className="inline-flex items-center gap-1 text-xs font-semibold underline hover:text-ink" style={{ color: "var(--accent)" }}>Open the page<ArrowUpRight className="h-3 w-3" aria-hidden /></a>
+              : m.program_id && !m.title.includes(m.program_name || "\u0000") && <Link to="/navigator" className="inline-flex items-center gap-1 text-xs font-medium text-muted underline hover:text-ink">{m.program_name || "Program"}</Link>}
             {m.status === "todo" && <button type="button" onClick={() => set({ status: "doing" })} className="text-xs font-semibold text-muted underline hover:text-ink" data-testid="journey-start">Start</button>}
             {m.note && !open && <span className="min-w-0 truncate text-xs text-muted">{m.note}</span>}
           </div>
@@ -85,7 +88,7 @@ function Suggestion({ s, onAdd }) {
       <div className="min-w-0 flex-1">
         <p className="text-[15px] font-medium leading-snug">{s.title}</p>
         <p className="mt-0.5 text-sm text-muted">{s.why}</p>
-        {s.due && <div className="mt-1.5"><DueChip due={s.due} /></div>}
+        {(s.due || s.url) && <div className="mt-1.5 flex flex-wrap items-center gap-2">{s.due && <DueChip due={s.due} />}{s.url && <a href={s.url} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 text-xs font-semibold underline hover:text-ink" style={{ color: "var(--accent)" }}>Look at the page first<ArrowUpRight className="h-3 w-3" aria-hidden /></a>}</div>}
       </div>
     </li>
   );
@@ -98,8 +101,8 @@ function Panel({ stage, current, items, suggestions, act, stages }) {
   const open = items.filter((m) => m.status !== "done").sort((a, b) => (a.status === "doing" ? 0 : 1) - (b.status === "doing" ? 0 : 1) || (a.due && b.due ? (a.due < b.due ? -1 : 1) : a.due ? -1 : b.due ? 1 : 0));
   const done = items.filter((m) => m.status === "done");
   const addOne = async (e) => { e.preventDefault(); if (text.trim().length < 2) return; if (await act({ op: "add", title: text, stage: stage.stage, due })) { setText(""); setDue(""); } };
-  const addSuggestion = (s) => act({ op: "add", title: s.title, stage: s.stage, key: s.key, due: s.due || "", program_id: s.program_id || "", program_name: s.program_name || "" });
-  const seed = () => act({ op: "add_many", items: suggestions.slice(0, 6).map((s) => ({ title: s.title, stage: s.stage, key: s.key, due: s.due || "", program_id: s.program_id || "", program_name: s.program_name || "" })) });
+  const addSuggestion = (s) => act({ op: "add", title: s.title, stage: s.stage, key: s.key, due: s.due || "", program_id: s.program_id || "", program_name: s.program_name || "", why: s.why || "", url: s.url || "" });
+  const seed = () => act({ op: "add_many", items: suggestions.slice(0, 6).map((s) => ({ title: s.title, stage: s.stage, key: s.key, due: s.due || "", program_id: s.program_id || "", program_name: s.program_name || "", why: s.why || "", url: s.url || "" })) });
   const shown = more ? suggestions : suggestions.slice(0, 4);
   const empty = items.length === 0;
   const verb = stage.stage === current ? "right now" : stage.index < stages.findIndex((s) => s.stage === current) ? "behind you" : "ahead of you";

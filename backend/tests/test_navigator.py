@@ -25,6 +25,33 @@ def by_id(pid):
 
 
 # --------------------------------------------------------------------------- catalog hygiene
+# Entries whose link is knowingly not an exact program page; each says so to the founder (link_exact false), so the list stays short and visible.
+CLOSEST_PAGE_ONLY = {"wef", "bmo-launch-me", "alberta-catalyzer", "liftoff-black", "garage-capital", "inovia-capital", "naco-angels"}
+
+
+def test_every_link_goes_to_a_specific_page_and_says_why():
+    from urllib.parse import urlparse
+    bad_hosts = {"startupcan.ca", "betakit.com", "hellodarwin.com", "grantcompass.ca"}
+    for p in PROGRAMS:
+        u = urlparse(p["apply_url"])
+        assert u.scheme == "https", p["id"]
+        assert len(p["link_label"]) >= 8 and len(p["link_note"]) >= 20, p["id"]
+        assert p["link_kind"] in ("apply", "program", "directory", "contact", "tool", "news", "overview"), p["id"]
+        assert isinstance(p["link_exact"], bool), p["id"]
+        if p["id"] in CLOSEST_PAGE_ONLY:
+            assert p["link_exact"] is False, p["id"]
+            continue
+        assert p["link_exact"] is True, p["id"]
+        assert u.path.strip("/") or u.query, f"{p['id']} links to a homepage"
+        if p["id"] != "startup-canada-black-guide":
+            assert u.netloc.removeprefix("www.") not in bad_hosts, f"{p['id']} links to an aggregator or article"
+        assert p["link_kind"] != "news", p["id"]
+
+
+def test_the_brief_carries_the_link_fields():
+    brief = nav._brief(PROGRAMS[0])
+    assert {"link_label", "link_kind", "link_note", "link_exact"} <= set(brief)
+
 def test_every_catalog_entry_is_complete_and_honest():
     ids = set()
     for p in PROGRAMS:

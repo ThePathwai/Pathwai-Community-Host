@@ -64,7 +64,7 @@ export const DEMO_STARTUP = cleanStartup({ name: "Bright Court", one_liner: "Boo
 // Demo only: a founder partway through the plan, with something doing, something due soon and something overdue, so the tracking shows.
 export function demoJourney(today) {
   const day = (n) => { const d = new Date(today + "T12:00:00Z"); d.setUTCDate(d.getUTCDate() + n); return d.toISOString().slice(0, 10); };
-  const m = (n, stage, title, status, extra = {}) => ({ id: "j-demo" + n, stage, title, status, due: "", note: "", key: "", program_id: "", program_name: "", created_at: day(-60), done_at: status === "done" ? day(-40 + n * 2) : "", ...extra });
+  const m = (n, stage, title, status, extra = {}) => ({ id: "j-demo" + n, stage, title, status, due: "", note: "", key: "", program_id: "", program_name: "", why: "", url: "", created_at: day(-60), done_at: status === "done" ? day(-40 + n * 2) : "", ...extra });
   return [
     m(1, "idea", "Talk to 10 people who have the problem", "done", { key: "idea-interviews" }),
     m(2, "idea", "Write the problem and who has it in two sentences", "done", { key: "idea-problem" }),
@@ -75,7 +75,7 @@ export function demoJourney(today) {
     m(7, "launched", "Open a business bank account and start bookkeeping", "done", { key: "launch-bank", done_at: day(-3) }),
     m(8, "launched", "Pick the three numbers you will track every month", "doing", { key: "launch-metrics", note: "Active groups, weekly rebooking rate, revenue per group." }),
     m(9, "launched", "Send the grant intro email to our city's economic development office", "todo", { due: day(-3) }),
-    m(10, "launched", "Apply to DMZ Incubator", "todo", { key: "prog:dmz-incubator", program_id: "dmz-incubator", program_name: "DMZ Incubator", due: day(12) }),
+    m(10, "launched", "Apply to DMZ Incubator", "todo", { key: "prog:dmz-incubator", program_id: "dmz-incubator", program_name: "DMZ Incubator", due: day(12), why: "You have customers and you are in Toronto, which is who this incubator is built for.", url: "https://dmz.torontomu.ca/apply" }),
     m(11, "launched", "Register for GST/HST once your sales pass $30,000 in four quarters", "todo", { key: "launch-gst" }),
     m(12, "revenue", "Write a 12-month plan and budget", "todo", { key: "rev-plan" }),
   ];
