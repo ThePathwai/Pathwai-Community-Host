@@ -131,7 +131,8 @@ function Results({ res, meta, loading, generic, onOpen }) {
             <p className="min-w-0 pt-1 text-[15px] leading-snug text-ink/90">{res.narrative || res.summary}</p>
           </div>
           <p className="eyebrow">Your trajectory</p>
-          <p className="mb-5 mt-1 text-sm text-muted">{trajectory.story}</p>
+          <p className="mt-1 text-sm text-muted">{trajectory.story}</p>
+          <p className="mb-5 mt-1 text-xs text-muted">Not every program lines up with a stage. Stage-specific ones sit on the route; the rest apply whenever you are ready.</p>
           <Trajectory data={trajectory} onPick={onOpen} />
         </section>
       )}

@@ -9,6 +9,11 @@ import { cx } from "./ui";
 
 const STATE_TEXT = { past: "Behind you", current: "Right now", future: "Ahead" };
 const DOT = { open: "#34D399", rolling: "#34D399", check: "#FBBF24", closed: "#94A3B8", paused: "#94A3B8" };
+const EMPTY = {
+  past: "Nothing in the directory is aimed only at this stage.",
+  current: "Nothing stage-specific fits you right now. The any-stage resources below still apply.",
+  future: "Nothing new opens up here. What already fits you keeps working.",
+};
 const cap = (s) => (s ? s.charAt(0).toUpperCase() + s.slice(1) : "");
 const ink = (a) => `rgb(var(--c-ink) / ${a})`;
 
@@ -40,7 +45,7 @@ function Mini({ r, state, onPick }) {
 }
 
 function Programs({ c, onPick, cols }) {
-  if (!c.programs.length) return <p className="text-xs text-muted">Nothing listed for this stage yet.</p>;
+  if (!c.programs.length) return <p className="rounded-xl border border-dashed border-line p-2.5 text-xs text-muted" data-testid={`traj-empty-${c.stage}`}>{EMPTY[c.state]}</p>;
   const extra = c.available - c.programs.length;
   return (
     <>
@@ -64,7 +69,7 @@ function Wide({ stages, onPick }) {
           <p className="mt-3 text-[11px] font-semibold uppercase text-muted" style={{ letterSpacing: "0.12em" }}>{STATE_TEXT[c.state]}</p>
           <p className="mt-0.5 text-lg font-bold leading-tight">{cap(c.label)}</p>
           <p className="mt-0.5 text-xs text-muted">{c.hint}</p>
-          <p className="mb-3 mt-1 text-xs font-medium text-ink/70">{c.available} programs</p>
+          <p className="mb-3 mt-1 text-xs font-medium text-ink/70">{c.available ? `${c.available} ${c.available === 1 ? "program" : "programs"}` : "None specific"}</p>
           <Programs c={c} onPick={onPick} />
         </li>
       ))}
@@ -91,7 +96,7 @@ function Tall({ stages, index, onPick, compact }) {
                 <span className="block text-[11px] font-semibold uppercase text-muted" style={{ letterSpacing: "0.12em" }}>{STATE_TEXT[c.state]}</span>
                 <span className="flex flex-wrap items-center gap-x-2 gap-y-1"><span className="text-base font-bold leading-tight">{cap(c.label)}</span>{c.state === "current" && <HereTag />}</span>
               </span>
-              {!compact && <><span className="shrink-0 text-xs text-muted">{c.available}</span><ChevronDown className={cx("h-4 w-4 shrink-0 text-muted transition", isOpen && "rotate-180")} aria-hidden /></>}
+              {!compact && <><span className="shrink-0 text-xs text-muted">{c.available || "None"}</span><ChevronDown className={cx("h-4 w-4 shrink-0 text-muted transition", isOpen && "rotate-180")} aria-hidden /></>}
             </Head>
             {isOpen ? (
               <div className="mt-2">
@@ -99,7 +104,7 @@ function Tall({ stages, index, onPick, compact }) {
                 {compact ? <ul className="space-y-2">{c.programs.slice(0, 2).map((r) => <li key={r.id}><Mini r={r} state={c.state} onPick={onPick} /></li>)}</ul> : <Programs c={c} onPick={onPick} cols />}
               </div>
             ) : (
-              <p className="mt-0.5 truncate text-xs text-muted">{compact ? `${c.available} programs` : names || "Nothing listed yet"}</p>
+              <p className="mt-0.5 truncate text-xs text-muted">{compact ? (c.available ? `${c.available} ${c.available === 1 ? "program" : "programs"}` : "Nothing stage-specific") : names || "Nothing stage-specific"}</p>
             )}
           </li>
         );
@@ -108,13 +113,38 @@ function Tall({ stages, index, onPick, compact }) {
   );
 }
 
+// Programs that are not tied to a stage: they apply now and later, so they sit under the route instead of inside it.
+function AnyStage({ data, onPick }) {
+  const list = data.anytime || [];
+  if (!list.length) return null;
+  const more = (data.anytime_total || list.length) - list.length;
+  return (
+    <div className="mt-6 rounded-2xl border border-line p-4" data-testid="traj-anytime">
+      <div className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1">
+        <p className="text-base font-bold">At any stage</p>
+        <p className="text-xs text-muted">Not tied to a stage, so they apply to you now and later.</p>
+      </div>
+      <ul className="mt-3 grid grid-cols-[minmax(0,1fr)] gap-2 sm:grid-cols-[repeat(2,minmax(0,1fr))] xl:grid-cols-[repeat(3,minmax(0,1fr))]">{list.map((r) => <li key={r.id}><Mini r={r} state="current" onPick={onPick} /></li>)}</ul>
+      {more > 0 && <p className="mt-2 text-[11px] text-muted">+{more} more at any stage</p>}
+    </div>
+  );
+}
+
 export default function Trajectory({ data, onPick, compact }) {
   if (!data || !data.stages || !data.stages.length) return null;
-  if (compact) return <Tall stages={data.stages} index={data.index} onPick={onPick} compact />;
+  if (compact) {
+    return (
+      <>
+        <Tall stages={data.stages} index={data.index} onPick={onPick} compact />
+        {data.anytime_total > 0 && <p className="mt-4 border-t border-line pt-3 text-xs text-muted" data-testid="traj-anytime-compact">{data.anytime_total} programs and resources apply at any stage.</p>}
+      </>
+    );
+  }
   return (
     <div data-testid="trajectory">
       <Wide stages={data.stages} onPick={onPick} />
       <Tall stages={data.stages} index={data.index} onPick={onPick} />
+      <AnyStage data={data} onPick={onPick} />
     </div>
   );
 }

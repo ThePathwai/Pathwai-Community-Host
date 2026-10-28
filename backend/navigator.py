@@ -344,82 +344,105 @@ def suggest(programs: List[Dict[str, Any]], raw_profile: Optional[Dict[str, Any]
     }
 
 
-def trajectory(programs: List[Dict[str, Any]], raw_profile: Optional[Dict[str, Any]], today: Optional[date] = None, per_stage: int = 3) -> Dict[str, Any]:
-    """Where the founder came from, where they are and where they are going: the five stages, each with the programs that serve it.
+def _anytime(p: Dict[str, Any]) -> bool:
+    """Not tied to a stage: resources, and anything that serves four or more of the five stages."""
+    st = [x for x in (p.get("stages") or STAGES) if x in STAGES]
+    return p.get("type") == "resource" or len(st) >= 4 or not st
 
-    Programs are re-scored as if the founder were at each stage, so the same hard rules (province, age, group, sector) apply
-    all the way along. Behind you favours programs that end at that stage, ahead favours programs that first open there,
-    and a program is shown in one column only."""
+
+def trajectory(programs: List[Dict[str, Any]], raw_profile: Optional[Dict[str, Any]], today: Optional[date] = None, per_stage: int = 3, any_limit: int = 6) -> Dict[str, Any]:
+    """Where the founder came from, where they are and where they are going.
+
+    Not every program lines up with a stage, and the route does not pretend they do. Programs aimed at particular stages sit
+    on the route: behind you are those that end at a stage you have passed, ahead are those that first open at a later stage,
+    and the current column holds what fits right now. A column can be short or empty. Programs that are not tied to a stage
+    (resources, and anything serving four or more stages) go in "anytime". The same hard rules (province, age, group,
+    sector) apply to everything, and a program is shown once."""
     today = today or date.today()
     profile = normalize_profile(raw_profile)
     cur = STAGES.index(profile["stage"])
     state_of = lambda i: "past" if i < cur else "current" if i == cur else "future"
-    order = [cur] + list(range(cur + 1, len(STAGES))) + list(range(cur - 1, -1, -1))
-    used: set = set()
-    cols: Dict[int, Dict[str, Any]] = {}
-    for i in order:
-        stage = STAGES[i]
+
+    def usable(p: Dict[str, Any], stage: str):
+        ev = evaluate(p, {**profile, "stage": stage}, today)
+        return None if ev["fit"] == "skip" else ev
+
+    stages_out: List[Dict[str, Any]] = []
+    for i, stage in enumerate(STAGES):
         state = state_of(i)
-        at = {**profile, "stage": stage}
         rows = []
         for p in programs:
-            st_list = [x for x in (p.get("stages") or STAGES) if x in STAGES] or list(STAGES)
-            if stage not in st_list:
+            if _anytime(p):
                 continue
-            ev = evaluate(p, at, today)
-            if ev["fit"] == "skip":
+            st_list = [x for x in (p.get("stages") or STAGES) if x in STAGES]
+            first, last = min(STAGES.index(x) for x in st_list), max(STAGES.index(x) for x in st_list)
+            if state == "past" and last != i:
+                continue
+            if state == "future" and first != i:
+                continue
+            if state == "current" and stage not in st_list:
+                continue
+            ev = usable(p, stage)
+            if ev is None:
                 continue
             status = effective_status(p, today)
-            first, last = min(STAGES.index(x) for x in st_list), max(STAGES.index(x) for x in st_list)
-            live = 0 if status in ("open", "rolling") else 1 if status == "check" else 2
-            if state == "past":
-                lead = 0 if last == i else 1
-            elif state == "future":
-                lead = 0 if first == i else 1
-            else:
-                lead = 0
-            res = 1 if p.get("type") == "resource" else 0
-            if state == "current":
-                live = 0  # the column you are in follows the same order as your matches: best fit first
-            rows.append((lead, res, live, -ev["score"], p["name"], p, ev, status, first, last))
-        rows.sort(key=lambda r: r[:5])
-        pool = [r for r in rows if r[5]["id"] not in used and not (r[7] in ("closed", "paused") and state != "past")]
-        picked = []
+            if status in ("closed", "paused") and state != "past":
+                continue
+            live = 0 if state == "current" or status in ("open", "rolling") else 1 if status == "check" else 2
+            rows.append((live, -ev["score"], p["name"], p, ev, status, first, last))
+        rows.sort(key=lambda r: r[:3])
+        picked: List[Any] = []
         # Mix the column: at most two of one kind first, then fill any gaps from what is left.
         for cap in (2, per_stage):
-            for r in pool:
+            for r in rows:
                 if len(picked) >= per_stage:
                     break
-                if r in picked or sum(1 for x in picked if x[5].get("type") == r[5].get("type")) >= cap:
+                if r in picked or sum(1 for x in picked if x[3].get("type") == r[3].get("type")) >= cap:
                     continue
                 picked.append(r)
-        picked.sort(key=lambda r: r[:5])
+        picked.sort(key=lambda r: r[:3])
         out = []
-        for lead, _res, live, _s, _n, p, ev, status, first, last in picked:
-            used.add(p["id"])
+        for _live, _s, _n, p, ev, status, first, last in picked:
             if state == "future":
-                note = (f"Opens up at the {STAGE_LABEL[stage]} stage." if first == i else "Gets easier to land as you grow.")
+                note = f"Opens up at the {STAGE_LABEL[stage]} stage."
                 if ev["cautions"]:
                     note += " " + ev["cautions"][0]
             elif state == "past":
-                note = "Built for this stage; you have likely used or outgrown it." if last == i else p.get("summary", "")
+                note = "Aimed at this stage and earlier. You may have used it, or skipped it."
             else:
                 note = _why({**_brief(p), "reasons": ev["reasons"]})
             out.append({**_brief(p), "status": status, "fit": ev["fit"], "score": ev["score"], "note": note})
-        cols[i] = {"stage": stage, "label": STAGE_LABEL[stage], "hint": STAGE_HINT[stage], "state": state, "available": len(rows), "programs": out}
-    stages = [cols[i] for i in range(len(STAGES))]
-    nxt = stages[cur + 1] if cur + 1 < len(stages) else None
-    prev = stages[cur - 1] if cur > 0 else None
+        stages_out.append({"stage": stage, "label": STAGE_LABEL[stage], "hint": STAGE_HINT[stage], "state": state, "available": len(rows), "programs": out})
+
+    anytime_rows = []
+    for p in programs:
+        if not _anytime(p):
+            continue
+        ev = usable(p, profile["stage"])
+        status = effective_status(p, today)
+        if ev is None or status in ("closed", "paused"):
+            continue
+        live = 0 if status in ("open", "rolling") else 1
+        anytime_rows.append((live, -ev["score"], p["name"], p, ev, status))
+    anytime_rows.sort(key=lambda r: r[:3])
+    anytime = [{**_brief(p), "status": status, "fit": ev["fit"], "score": ev["score"], "note": p.get("summary", "")} for _l, _s, _n, p, ev, status in anytime_rows[:any_limit]]
+
+    nxt = stages_out[cur + 1] if cur + 1 < len(stages_out) else None
     story = ""
     if cur > 0:
-        story += f"You've come through {_join([c['label'] for c in stages[:cur]])}. "
+        story += f"You've come through {_join([c['label'] for c in stages_out[:cur]])}. "
     story += f"Right now you're {STAGE_NOW[profile['stage']]}. "
     if nxt:
         names = [r["name"] for r in nxt["programs"][:2]]
-        story += f"Next up is {nxt['label']}" + (f", where {_join(names)} come into reach." if len(names) > 1 else f", where {names[0]} comes into reach." if names else ".")
+        if len(names) > 1:
+            story += f"Next up is {nxt['label']}, where {_join(names)} come into reach."
+        elif names:
+            story += f"Next up is {nxt['label']}, where {names[0]} comes into reach."
+        else:
+            story += f"Next up is {nxt['label']}. Nothing new opens up there, so lean on what already fits."
     else:
         story += "You're at the top of the ladder, so the focus now is scaling and export."
-    return {"current": profile["stage"], "index": cur, "stages": stages, "story": story}
+    return {"current": profile["stage"], "index": cur, "stages": stages_out, "anytime": anytime, "anytime_total": len(anytime_rows), "story": story}
 
 
 def summary_text(profile: Dict[str, Any], ranked: List[Dict[str, Any]], later: List[Dict[str, Any]]) -> str:

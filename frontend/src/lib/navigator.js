@@ -197,42 +197,42 @@ export function suggest(programs, rawProfile, today = todayIso(), limit = 8) {
 
 export const STAGE_NOW = { idea: "at the idea stage", prototype: "at the prototype stage", launched: "just launched", revenue: "earning revenue", growth: "growing" };
 
-// Where the founder came from, where they are and where they are going: the five stages, each with the programs that serve it.
-// Mirrors backend/navigator.py trajectory(); tests/test_navigator_guide_parity-style checks keep the two in step.
-export function trajectory(programs, rawProfile, today = todayIso(), perStage = 3) {
+// Where the founder came from, where they are and where they are going. Mirrors backend/navigator.py trajectory().
+// Not every program lines up with a stage, and the route does not pretend they do: columns can be short or empty, and programs
+// that are not tied to a stage (resources, anything serving four or more stages) go in "anytime".
+const isAnytime = (p) => {
+  const st = (p.stages || STAGES).filter((x) => STAGES.includes(x));
+  return p.type === "resource" || st.length >= 4 || st.length === 0;
+};
+const cmpKey = (a, b) => { for (let k = 0; k < 3; k += 1) { if (a.key[k] < b.key[k]) return -1; if (a.key[k] > b.key[k]) return 1; } return 0; };
+
+export function trajectory(programs, rawProfile, today = todayIso(), perStage = 3, anyLimit = 6) {
   const profile = normalizeProfile(rawProfile);
   const cur = STAGES.indexOf(profile.stage);
   const stateOf = (i) => (i < cur ? "past" : i === cur ? "current" : "future");
-  const order = [cur];
-  for (let i = cur + 1; i < STAGES.length; i += 1) order.push(i);
-  for (let i = cur - 1; i >= 0; i -= 1) order.push(i);
-  const used = new Set();
-  const cols = {};
-  for (const i of order) {
-    const stage = STAGES[i];
+  const usable = (p, stage) => { const ev = evaluate(p, { ...profile, stage }, today); return ev.fit === "skip" ? null : ev; };
+  const stages = STAGES.map((stage, i) => {
     const state = stateOf(i);
-    const at = { ...profile, stage };
     const rows = [];
     for (const p of programs) {
+      if (isAnytime(p)) continue;
       const stList = (p.stages || STAGES).filter((x) => STAGES.includes(x));
-      const sl = stList.length ? stList : STAGES;
-      if (!sl.includes(stage)) continue;
-      const ev = evaluate(p, at, today);
-      if (ev.fit === "skip") continue;
-      const status = effectiveStatus(p, today);
-      const idx = sl.map((x) => STAGES.indexOf(x));
+      const idx = stList.map((x) => STAGES.indexOf(x));
       const first = Math.min(...idx); const last = Math.max(...idx);
-      let live = status === "open" || status === "rolling" ? 0 : status === "check" ? 1 : 2;
-      if (state === "current") live = 0; // the column you are in follows the same order as your matches: best fit first
-      const lead = state === "past" ? (last === i ? 0 : 1) : state === "future" ? (first === i ? 0 : 1) : 0;
-      const res = p.type === "resource" ? 1 : 0;
-      rows.push({ key: [lead, res, live, -ev.score, p.name], p, ev, status, first, last });
+      if (state === "past" && last !== i) continue;
+      if (state === "future" && first !== i) continue;
+      if (state === "current" && !stList.includes(stage)) continue;
+      const ev = usable(p, stage);
+      if (!ev) continue;
+      const status = effectiveStatus(p, today);
+      if ((status === "closed" || status === "paused") && state !== "past") continue;
+      const live = state === "current" || status === "open" || status === "rolling" ? 0 : status === "check" ? 1 : 2;
+      rows.push({ key: [live, -ev.score, p.name], p, ev, status });
     }
-    rows.sort((a, b) => { for (let k = 0; k < 5; k += 1) { if (a.key[k] < b.key[k]) return -1; if (a.key[k] > b.key[k]) return 1; } return 0; });
-    const pool = rows.filter((r) => !used.has(r.p.id) && !((r.status === "closed" || r.status === "paused") && state !== "past"));
+    rows.sort(cmpKey);
     let picked = [];
     for (const cap of [2, perStage]) {
-      for (const r of pool) {
+      for (const r of rows) {
         if (picked.length >= perStage) break;
         if (picked.includes(r) || picked.filter((x) => x.p.type === r.p.type).length >= cap) continue;
         picked.push(r);
@@ -240,27 +240,35 @@ export function trajectory(programs, rawProfile, today = todayIso(), perStage = 
     }
     picked = rows.filter((r) => picked.includes(r));
     const out = picked.map((r) => {
-      used.add(r.p.id);
       let note;
-      if (state === "future") {
-        note = r.first === i ? `Opens up at the ${STAGE_LABEL[stage]} stage.` : "Gets easier to land as you grow.";
-        if (r.ev.cautions.length) note += " " + r.ev.cautions[0];
-      } else if (state === "past") note = r.last === i ? "Built for this stage; you have likely used or outgrown it." : (r.p.summary || "");
+      if (state === "future") { note = `Opens up at the ${STAGE_LABEL[stage]} stage.`; if (r.ev.cautions.length) note += " " + r.ev.cautions[0]; }
+      else if (state === "past") note = "Aimed at this stage and earlier. You may have used it, or skipped it.";
       else note = why({ ...brief(r.p), reasons: r.ev.reasons });
       return { ...brief(r.p), status: r.status, fit: r.ev.fit, score: r.ev.score, note };
     });
-    cols[i] = { stage, label: STAGE_LABEL[stage], hint: STAGE_HINT[stage], state, available: rows.length, programs: out };
+    return { stage, label: STAGE_LABEL[stage], hint: STAGE_HINT[stage], state, available: rows.length, programs: out };
+  });
+  const anyRows = [];
+  for (const p of programs) {
+    if (!isAnytime(p)) continue;
+    const ev = usable(p, profile.stage);
+    const status = effectiveStatus(p, today);
+    if (!ev || status === "closed" || status === "paused") continue;
+    anyRows.push({ key: [status === "open" || status === "rolling" ? 0 : 1, -ev.score, p.name], p, ev, status });
   }
-  const stages = STAGES.map((_, i) => cols[i]);
+  anyRows.sort(cmpKey);
+  const anytime = anyRows.slice(0, anyLimit).map((r) => ({ ...brief(r.p), status: r.status, fit: r.ev.fit, score: r.ev.score, note: r.p.summary || "" }));
   const nxt = cur + 1 < stages.length ? stages[cur + 1] : null;
   let story = "";
   if (cur > 0) story += `You've come through ${joinList(stages.slice(0, cur).map((c) => c.label))}. `;
   story += `Right now you're ${STAGE_NOW[profile.stage]}. `;
   if (nxt) {
     const names = nxt.programs.slice(0, 2).map((r) => r.name);
-    story += `Next up is ${nxt.label}` + (names.length > 1 ? `, where ${joinList(names)} come into reach.` : names.length ? `, where ${names[0]} comes into reach.` : ".");
+    if (names.length > 1) story += `Next up is ${nxt.label}, where ${joinList(names)} come into reach.`;
+    else if (names.length) story += `Next up is ${nxt.label}, where ${names[0]} comes into reach.`;
+    else story += `Next up is ${nxt.label}. Nothing new opens up there, so lean on what already fits.`;
   } else story += "You're at the top of the ladder, so the focus now is scaling and export.";
-  return { current: profile.stage, index: cur, stages, story };
+  return { current: profile.stage, index: cur, stages, anytime, anytime_total: anyRows.length, story };
 }
 
 export function evaluateCommunity(com, profile) {

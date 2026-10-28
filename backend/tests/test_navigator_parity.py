@@ -103,14 +103,14 @@ def test_trajectory_has_every_stage_and_marks_where_you_are():
 def test_trajectory_shows_a_program_in_one_column_only():
     programs = nav.load_catalog()["programs"]
     t = nav.trajectory(programs, {"stage": "launched", "province": "ON", "audiences": ["black"], "age": 34}, date.fromisoformat(TODAY))
-    ids = [r["id"] for c in t["stages"] for r in c["programs"]]
+    ids = [r["id"] for c in t["stages"] for r in c["programs"]] + [r["id"] for r in t["anytime"]]
     assert len(ids) == len(set(ids)) and len(ids) >= 8
 
 
 def test_trajectory_respects_hard_rules_all_the_way_along():
     programs = nav.load_catalog()["programs"]
     t = nav.trajectory(programs, {"stage": "idea", "province": "BC", "age": 52}, date.fromisoformat(TODAY))
-    ids = {r["id"] for c in t["stages"] for r in c["programs"]}
+    ids = {r["id"] for c in t["stages"] for r in c["programs"]} | {r["id"] for r in t["anytime"]}
     assert "besp" not in ids and "dmz-bip" not in ids          # group-specific, and this founder is not in the group
     assert "futurpreneur-core" not in ids                       # age limit
     assert "alberta-catalyzer" not in ids                       # Alberta only
@@ -125,3 +125,19 @@ def test_catalog_is_populated_with_every_kind_of_program():
     for p in programs:
         assert p["type"] in nav.TYPES and p["verified"] in ("official", "third_party", "unconfirmed")
         assert p["apply_url"].startswith("https://") and p["source_url"].startswith("https://")
+
+
+def test_not_every_program_is_tied_to_a_stage():
+    """Resources and programs that serve four or more stages sit under the route; stage columns may be short or empty."""
+    programs = nav.load_catalog()["programs"]
+    by_id = {p["id"]: p for p in programs}
+    t = nav.trajectory(programs, {"stage": "launched", "province": "ON"}, date.fromisoformat(TODAY))
+    assert t["anytime"] and t["anytime_total"] >= len(t["anytime"])
+    assert all(nav._anytime(by_id[r["id"]]) for r in t["anytime"])
+    for c in t["stages"]:
+        assert all(not nav._anytime(by_id[r["id"]]) for r in c["programs"])
+        assert len(c["programs"]) <= 3
+    assert any(len(c["programs"]) < 3 for c in t["stages"])
+    # Nothing is forced onto a stage: a founder past the last stage still gets an honest, possibly empty, set of columns.
+    top = nav.trajectory(programs, {"stage": "growth", "province": "ON"}, date.fromisoformat(TODAY))
+    assert "top of the ladder" in top["story"]
