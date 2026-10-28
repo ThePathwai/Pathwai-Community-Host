@@ -111,7 +111,7 @@ def test_suggest_returns_reasons_a_path_and_counts_what_it_left_out():
     assert [m["score"] for m in res["matches"]] == sorted((m["score"] for m in res["matches"]), reverse=True)
     assert res["path"] and res["path"][0]["why"]
     assert res["summary"].startswith("You're at the prototype stage")
-    assert {x["name"] for x in res["later"]} >= {"NRC IRAP"}  # needs incorporating first
+    assert res["later"] and all(x["fit"] == "later" for x in res["later"])  # programs that need a step you have not taken (incorporating)
 
 
 def test_garbage_profile_is_clamped_not_trusted():
@@ -322,3 +322,88 @@ def test_tracking_round_trips_on_the_account():
         assert len(c.post("/api/navigator/track", json={"id": "sred", "state": "none"}).json()["tracked"]) == 1
         c.patch("/api/hub/profile", json={"bio": "hi"})
         assert len(c.get("/api/navigator/me").json()["tracked"]) == 1
+
+
+# ---- the four questions: every match is explained by the same four answers -------------------------------------------------
+
+import itertools as _it
+
+QUESTIONS = ["apply", "stage", "need", "timing"]
+
+
+def _profiles():
+    for stage, prov, inc, aud, sec, needs, age in _it.product(
+        nav.STAGES, ["ON", "BC"], [True, False, "unknown"], [[], ["black"], ["women", "youth"]], [[], ["tech"], ["health"]], [[], ["funding", "mentorship"]], [None, 27, 45]
+    ):
+        yield {"stage": stage, "province": prov, "incorporated": None if inc == "unknown" else inc, "audiences": aud, "sectors": sec, "needs": needs, "age": age}
+
+
+def test_every_program_gets_four_answers_in_a_fixed_order():
+    p = nav.normalize_profile({"stage": "prototype", "needs": ["funding"], "sectors": ["tech"], "age": 30})
+    for prog in PROGRAMS:
+        ev = nav.evaluate(prog, p, TODAY)
+        assert [c["key"] for c in ev["checks"]] == QUESTIONS, prog["id"]
+        assert all(c["state"] in ("yes", "maybe", "later", "no") and c["text"] and c["q"] for c in ev["checks"]), prog["id"]
+
+
+def test_the_match_follows_from_the_four_answers_with_no_hidden_points():
+    seen = set()
+    for raw in _profiles():
+        p = nav.normalize_profile(raw)
+        for prog in PROGRAMS:
+            ev = nav.evaluate(prog, p, TODAY)
+            st = {c["key"]: c["state"] for c in ev["checks"]}
+            if "no" in (st["apply"], st["stage"]):
+                want = "skip"
+            elif "later" in (st["apply"], st["stage"]):
+                want = "later"
+            elif st["apply"] == st["stage"] == st["need"] == "yes":
+                want = "strong"
+            else:
+                want = "possible"
+            assert ev["fit"] == want, (prog["id"], raw, st)
+            seen.add(ev["fit"])
+            if ev["fit"] == "skip":
+                assert ev["skip"] and ev["skip"] != "Not a strong match", (prog["id"], raw)
+    assert seen == {"strong", "possible", "later", "skip"}
+
+
+def test_a_closed_program_that_fits_you_is_still_a_match_and_says_it_is_closed():
+    p = nav.normalize_profile({"stage": "revenue", "province": "ON", "needs": ["mentorship"], "sectors": ["services"], "age": 35, "incorporated": True})
+    ev = nav.evaluate(by_id("starter-company-plus"), p, TODAY)
+    st = {c["key"]: c["state"] for c in ev["checks"]}
+    assert ev["fit"] in ("strong", "possible") and st["stage"] == "yes" and st["need"] == "yes" and st["timing"] == "no"
+    assert any("Closed" in c for c in ev["cautions"])
+
+
+def test_timing_only_changes_the_order_not_the_match():
+    p = nav.normalize_profile({"stage": "idea", "province": "ON", "needs": ["funding"], "age": 30})
+    live = next(g for g in PROGRAMS if g["status"] == "rolling" and nav.evaluate(g, p, TODAY)["fit"] != "skip")
+    closed = {**live, "status": "closed", "deadline": {"kind": "rolling", "note": "Closed for now"}}
+    a, b = nav.evaluate(live, p, TODAY), nav.evaluate(closed, p, TODAY)
+    assert a["fit"] == b["fit"] and a["score"] > b["score"]
+
+
+def test_missing_answers_are_asked_for_not_guessed():
+    # age and incorporation unknown: the program that needs them is "worth a look", and the card says what to add.
+    p = nav.normalize_profile({"stage": "prototype", "needs": ["funding"]})
+    ev = nav.evaluate(by_id("irap"), p, TODAY)
+    ap = next(c for c in ev["checks"] if c["key"] == "apply")
+    assert ap["state"] == "maybe" and "incorporated" in {f.get("ask") for f in ap["items"]} and ev["fit"] == "possible"
+    ev = nav.evaluate(by_id("futurpreneur-core"), p, TODAY)
+    ap = next(c for c in ev["checks"] if c["key"] == "apply")
+    assert ap["state"] == "maybe" and "age" in {f.get("ask") for f in ap["items"]}
+    # nothing said about needs: the need row asks for them
+    bare = nav.normalize_profile({"stage": "idea"})
+    need = next(c for c in nav.evaluate(by_id("summer-company"), bare, TODAY)["checks"] if c["key"] == "need")
+    assert need["state"] == "maybe" and need["ask"] == "needs"
+
+
+def test_a_program_that_does_not_cover_what_you_asked_is_worth_a_look_and_says_so():
+    p = nav.normalize_profile({"stage": "idea", "province": "ON", "needs": ["visa"]})
+    rows = [nav.evaluate(g, p, TODAY) for g in PROGRAMS]
+    rows = [ev for ev in rows if ev["fit"] != "skip" and next(c for c in ev["checks"] if c["key"] == "need")["state"] == "no"]
+    assert rows
+    for ev in rows:
+        need = next(c for c in ev["checks"] if c["key"] == "need")
+        assert "Does not cover" in need["text"] and ev["fit"] in ("possible", "later")

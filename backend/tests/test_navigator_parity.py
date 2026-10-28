@@ -66,8 +66,8 @@ def test_python_and_javascript_rules_agree():
         js = json.loads(res.stdout)
 
     def shape(r):
-        rows = lambda xs: [(x["id"], x["fit"], x["score"], x["status"], x["reasons"], x["cautions"]) for x in xs]
-        return {"matches": rows(r["matches"]), "more": rows(r["more"]), "later": rows(r["later"]), "skipped": r["skipped"], "others": [(o["id"], o["status"], o["cautions"]) for o in r["others"]], "path": r["path"], "summary": r["summary"], "profile": r["profile"], "trajectory": r["trajectory"]}
+        rows = lambda xs: [(x["id"], x["fit"], x["score"], x["status"], x["reasons"], x["cautions"], x["checks"]) for x in xs]
+        return {"matches": rows(r["matches"]), "more": rows(r["more"]), "later": rows(r["later"]), "skipped": r["skipped"], "others": [(o["id"], o["status"], o["cautions"], o["checks"]) for o in r["others"]], "path": r["path"], "summary": r["summary"], "profile": r["profile"], "trajectory": r["trajectory"]}
 
     today = date.fromisoformat(TODAY)
     assert len(js) == len(cs) > 100

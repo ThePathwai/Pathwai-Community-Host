@@ -54,8 +54,8 @@ STATUS_HELP = {
     "closed": "Not taking applications.",
     "paused": "Not taking applications for now.",
 }
-STATUS_POINTS = {"open": 10, "rolling": 8, "check": 0, "closed": -25, "paused": -35}
-VERIFIED_POINTS = {"official": 4, "third_party": 1, "unconfirmed": -4}
+
+
 PHASE_ORDER = ["learn", "fund", "scale"]
 PHASE_LABEL = {"learn": "Start here", "fund": "Then fund it", "scale": "Then scale"}
 
@@ -188,7 +188,7 @@ def effective_status(program: Dict[str, Any], today: date) -> str:
 def _why(row: Dict[str, Any]) -> str:
     """The most specific reason first: skip the generic stage line when a sharper one exists."""
     rs = row.get("reasons") or []
-    return next((r for r in rs if not r.startswith("Built for founders at your stage")), rs[0] if rs else row.get("summary", ""))
+    return next((r for r in rs if not r.startswith(STAGE_LINE_PREFIXES)), rs[0] if rs else row.get("summary", ""))
 
 
 def _join(items: List[str]) -> str:
@@ -198,124 +198,204 @@ def _join(items: List[str]) -> str:
     return ", ".join(items[:-1]) + " and " + items[-1]
 
 
-def evaluate(program: Dict[str, Any], profile: Dict[str, Any], today: Optional[date] = None) -> Dict[str, Any]:
-    """Score one program for one founder. `profile` must already be normalize_profile()'d.
+CHECK_Q = {"apply": "Can I apply?", "stage": "Is it for my stage?", "need": "Does it give me what I need?", "timing": "Can I apply now?"}
+CHECK_ORDER = ["apply", "stage", "need", "timing"]
+_SEVERITY = {"yes": 0, "maybe": 1, "later": 2, "no": 3}
+STAGE_LINE_PREFIXES = ("Built for founders at your stage", "Open to companies at any stage")
+FIT_WORD = {"strong": "Good match", "possible": "Worth a look", "later": "Not yet", "skip": "Not matched"}
 
-    Returns {"fit": strong|possible|later|skip, "score": int, "reasons": [...], "cautions": [...], "skip": why}.
-    "skip" means a hard rule rules it out (wrong province, group-specific program, age or sector mismatch);
-    "later" means they will fit after a step they have not taken yet (incorporating, reaching a later stage)."""
+
+def _worst(items: List[Dict[str, Any]]) -> str:
+    return max((i["state"] for i in items), key=lambda s: _SEVERITY[s], default="yes")
+
+
+def evaluate(program: Dict[str, Any], profile: Dict[str, Any], today: Optional[date] = None) -> Dict[str, Any]:
+    """Judge one program for one founder by asking four plain questions. `profile` must already be normalize_profile()'d.
+
+    1. Can I apply?            province, group, age, student, team size, sector, incorporation
+    2. Is it for my stage?     the program's stages against yours
+    3. Does it give me what I need?   what it offers against what you asked for
+    4. Can I apply now?        open, apply anytime, closed, paused, deadline
+
+    Each question is answered "yes", "maybe" (we are missing an answer from your profile), "later" (a step you have not taken
+    yet, such as incorporating) or "no". There are no points. The match follows from the answers:
+      - a "no" on question 1 or 2 means "skip" (not matched, with that reason)
+      - a "later" on question 1 or 2 means "later" (not yet)
+      - yes, yes, yes on questions 1 to 3 means "strong" (good match); anything else left means "possible" (worth a look)
+    Timing (question 4) never changes the match: a closed program that fits you is still a match, shown as closed.
+    `score` only orders programs inside a match group; it is never shown."""
     today = today or date.today()
     req = program.get("requires") or {}
-    reasons: List[str] = []
-    cautions: List[str] = []
-    later: List[str] = []
-    score = 0
 
-    def skip(why: str) -> Dict[str, Any]:
-        return {"fit": "skip", "score": 0, "reasons": [], "cautions": [], "skip": why}
+    # 1. Can I apply?
+    facets: List[Dict[str, Any]] = []
+    tailored: List[str] = []   # reasons that show a program is made for this person (their group), not just open to them
+    focus: List[str] = []      # and the same for their sector, which reads second
+
+    def add(state: str, text: str, ask: str = "") -> None:
+        facets.append({"state": state, "text": text, **({"ask": ask} if ask else {})})
 
     restricted = program.get("restricted_to") or []
-    if restricted and not any(a in profile["audiences"] for a in restricted):
-        return skip("For " + _join([AUDIENCE_LABEL.get(a, a) for a in restricted]) + " founders")
+    if restricted:
+        label = _join([AUDIENCE_LABEL.get(a, a) for a in restricted])
+        if any(a in profile["audiences"] for a in restricted):
+            add("yes", f"For {label} founders only. You qualify.")
+            tailored.append(f"For {label} founders, which you are.")
+        else:
+            add("no", f"For {label} founders")
     provs = program.get("provinces") or ["any"]
-    if "any" not in provs and profile["province"] not in provs:
-        return skip("Only for " + _join(provs))
+    if "any" not in provs:
+        if profile["province"] in provs:
+            add("yes", f"Open to founders in {profile['province']}.")
+        else:
+            add("no", "Only for " + _join(provs))
     age = profile["age"]
-    if req.get("age_min") is not None or req.get("age_max") is not None:
-        lo, hi = req.get("age_min"), req.get("age_max")
-        if age is not None and ((lo is not None and age < lo) or (hi is not None and age > hi)):
-            return skip("Age limit " + (f"{lo} to {hi}" if lo is not None and hi is not None else f"{lo}+" if lo is not None else f"up to {hi}"))
+    lo, hi = req.get("age_min"), req.get("age_max")
+    if lo is not None or hi is not None:
+        span = f"{lo} to {hi}" if lo is not None and hi is not None else f"{lo}+" if lo is not None else f"up to {hi}"
         if age is None:
-            cautions.append("Has an age limit" + (f" ({lo} to {hi})" if lo is not None and hi is not None else "") + "; add your age to check")
-    if req.get("student") and not profile["student"]:
-        return skip("Only for students")
+            add("maybe", "Has an age limit" + (f" ({lo} to {hi})" if lo is not None and hi is not None else "") + "; add your age to check", "age")
+        elif (lo is not None and age < lo) or (hi is not None and age > hi):
+            add("no", "Age limit " + span)
+        else:
+            add("yes", f"Age limit {span}. You fit.")
+    if req.get("student"):
+        add("yes", "For students. You are one.") if profile["student"] else add("no", "Only for students")
     emp = profile["employees"]
-    if req.get("max_employees") is not None and emp is not None and emp > req["max_employees"]:
-        return skip(f"Limit of {req['max_employees']} employees")
+    if req.get("max_employees") is not None:
+        if emp is None:
+            add("maybe", f"Limit of {req['max_employees']} employees; add your team size to check", "employees")
+        elif emp > req["max_employees"]:
+            add("no", f"Limit of {req['max_employees']} employees")
+        else:
+            add("yes", f"Limit of {req['max_employees']} employees. You are within it.")
     sectors = [s for s in (program.get("sectors") or ["any"])]
     specific = "any" not in sectors
-    if specific and profile["sectors"] and not any(s in sectors for s in profile["sectors"]):
-        return skip("Focused on " + _join(sectors))
-
-    stages = program.get("stages") or STAGES
-    si = STAGES.index(profile["stage"])
-    if profile["stage"] in stages:
-        score += 30
-        reasons.append(f"Built for founders at your stage ({STAGE_LABEL[profile['stage']]}).")
-    else:
-        earliest = min(STAGES.index(s) for s in stages if s in STAGES)
-        latest = max(STAGES.index(s) for s in stages if s in STAGES)
-        if si > latest:
-            return skip("Aimed at earlier-stage companies")
-        later.append(f"Aimed at companies that are {STAGE_LABEL[STAGES[earliest]]} or further along.")
-        score -= 10
-
-    if req.get("incorporated"):
-        if profile["incorporated"] is False:
-            later.append("Needs an incorporated company.")
-        elif profile["incorporated"] is None:
-            cautions.append("Requires an incorporated company.")
-    if req.get("min_employees") is not None and emp is not None and emp < req["min_employees"]:
-        later.append(f"Needs at least {req['min_employees']} full-time employees.")
-
-    prov = set(program.get("needs") or [])
-    hits = [n for n in profile["needs"] if n in prov]
-    if hits:
-        score += min(3, len(hits)) * 12
-        reasons.append("Gives you " + _join([NEED_LABEL[n] for n in hits[:3]]) + ", which you asked for.")
-    elif profile["needs"]:
-        cautions.append("Does not cover what you listed as your needs.")
-
-    aud_hits = [a for a in profile["audiences"] if a in (program.get("audiences") or [])]
-    if aud_hits:
-        score += 15
-        reasons.append("Designed for " + _join([AUDIENCE_LABEL[a] for a in aud_hits]) + " founders.")
     if specific:
         sec_hits = [s for s in profile["sectors"] if s in sectors]
         if sec_hits:
-            score += 10
-            reasons.append("Focused on " + _join(sec_hits) + ", your area.")
-        elif not profile["sectors"]:
-            score -= 15
-            cautions.append("Focused on " + _join(sectors) + "; add your sector to check.")
+            add("yes", "Focused on " + _join(sec_hits) + ", your area.")
+            focus.append("Focused on " + _join(sec_hits) + ", your area.")
+        elif profile["sectors"]:
+            add("no", "Focused on " + _join(sectors))
+        else:
+            add("maybe", "Focused on " + _join(sectors) + "; add your sector to check.", "sectors")
+    aud_hits = [a for a in profile["audiences"] if a in (program.get("audiences") or [])]
+    if aud_hits and not restricted:
+        add("yes", "Designed for " + _join([AUDIENCE_LABEL[a] for a in aud_hits]) + " founders.")
+        tailored.append("Designed for " + _join([AUDIENCE_LABEL[a] for a in aud_hits]) + " founders.")
+    if req.get("incorporated"):
+        if profile["incorporated"] is True:
+            add("yes", "Needs an incorporated company. You have one.")
+        elif profile["incorporated"] is False:
+            add("later", "Needs an incorporated company.")
+        else:
+            add("maybe", "Requires an incorporated company; say whether you are incorporated to check.", "incorporated")
+    if req.get("min_employees") is not None:
+        if emp is None:
+            add("maybe", f"Needs at least {req['min_employees']} full-time employees; add your team size to check", "employees")
+        elif emp < req["min_employees"]:
+            add("later", f"Needs at least {req['min_employees']} full-time employees.")
+        else:
+            add("yes", f"Needs at least {req['min_employees']} employees. You have them.")
+    a_state = _worst(facets)
+    blocking = next((f for f in facets if f["state"] == a_state), None)
+    if a_state == "yes":
+        a_text = ("You meet what they ask for." + (" " + (tailored + focus)[0] if tailored or focus else "")) if facets else "Nothing rules you out."
+    else:
+        a_text = blocking["text"]
+    apply_check = {"key": "apply", "q": CHECK_Q["apply"], "state": a_state, "text": a_text, "items": facets, **({"ask": blocking["ask"]} if blocking and blocking.get("ask") else {})}
 
+    # 2. Is it for my stage?
+    stages = [s for s in (program.get("stages") or STAGES) if s in STAGES] or list(STAGES)
+    si = STAGES.index(profile["stage"])
+    if profile["stage"] in stages:
+        if len(stages) >= 4:
+            stage_check = {"key": "stage", "q": CHECK_Q["stage"], "state": "yes", "text": f"Open to companies at any stage, including yours ({STAGE_LABEL[profile['stage']]})."}
+        else:
+            stage_check = {"key": "stage", "q": CHECK_Q["stage"], "state": "yes", "text": f"Built for founders at your stage ({STAGE_LABEL[profile['stage']]})."}
+    else:
+        earliest = min(STAGES.index(s) for s in stages)
+        latest = max(STAGES.index(s) for s in stages)
+        if si > latest:
+            stage_check = {"key": "stage", "q": CHECK_Q["stage"], "state": "no", "text": "Aimed at earlier-stage companies"}
+        else:
+            stage_check = {"key": "stage", "q": CHECK_Q["stage"], "state": "later", "text": f"Aimed at companies that are {STAGE_LABEL[STAGES[earliest]]} or further along."}
+
+    # 3. Does it give me what I need?
+    provides = program.get("needs") or []
+    hits = [n for n in profile["needs"] if n in provides]
+    misses = [n for n in profile["needs"] if n not in provides]
+    if hits:
+        text = "Gives you " + _join([NEED_LABEL[n] for n in hits[:3]]) + ", which you asked for."
+        if misses:
+            text += " It does not cover " + _join([NEED_LABEL[n] for n in misses[:3]]) + "."
+        need_check = {"key": "need", "q": CHECK_Q["need"], "state": "yes", "text": text}
+    elif profile["needs"]:
+        text = "Does not cover what you asked for (" + _join([NEED_LABEL[n] for n in profile["needs"][:3]]) + ")."
+        if provides:
+            text += " It offers " + _join([NEED_LABEL[n] for n in provides[:3] if n in NEED_LABEL]) + "."
+        need_check = {"key": "need", "q": CHECK_Q["need"], "state": "no", "text": text}
+    else:
+        need_check = {"key": "need", "q": CHECK_Q["need"], "state": "maybe", "text": "You have not said what you need, so this cannot be checked yet.", "ask": "needs"}
+
+    # 4. Can I apply now?
     status = effective_status(program, today)
-    score += STATUS_POINTS[status]
     dl = program.get("deadline") or {}
     days = _days_until(dl.get("date"), today) if dl.get("kind") == "fixed" else None
     if status == "closed":
-        cautions.append("Closed right now. " + (dl.get("note") or ""))
+        timing_check = {"key": "timing", "q": CHECK_Q["timing"], "state": "no", "text": ("Closed right now. " + (dl.get("note") or "")).strip()}
     elif status == "paused":
-        cautions.append("Paused. " + (dl.get("note") or ""))
+        timing_check = {"key": "timing", "q": CHECK_Q["timing"], "state": "no", "text": ("Paused. " + (dl.get("note") or "")).strip()}
     elif days is not None:
-        if days <= 60:
-            score += 8
-        reasons.append(f"Closes in {days} day{'' if days == 1 else 's'} ({dl.get('date')}).")
+        timing_check = {"key": "timing", "q": CHECK_Q["timing"], "state": "yes", "text": f"Closes in {days} day{'' if days == 1 else 's'} ({dl.get('date')})."}
     elif status in ("open", "rolling"):
-        reasons.append("Taking applications now" + (": " + dl["note"] if dl.get("kind") == "rolling" and dl.get("note") else "."))
+        timing_check = {"key": "timing", "q": CHECK_Q["timing"], "state": "yes", "text": "Taking applications now" + (": " + dl["note"] if dl.get("kind") == "rolling" and dl.get("note") else ".")}
     else:
-        cautions.append("No deadline was published, so check the site before planning around it.")
+        timing_check = {"key": "timing", "q": CHECK_Q["timing"], "state": "maybe", "text": "No deadline was published, so check the site before planning around it."}
 
-    score += VERIFIED_POINTS.get(program.get("verified") or "unconfirmed", -4)
+    checks = [apply_check, stage_check, need_check, timing_check]
+
+    # The order inside a match group: live before closed, made for you before merely open to you, more needs covered,
+    # sooner deadline, then how sure we are of the details. Packed into one number, used for sorting only.
+    live = 0 if status in ("closed", "paused") else 1
+    urgency = 3 if (days is not None and days <= 60) else 2 if status == "open" else 1 if status == "rolling" else 0
+    trust = {"official": 2, "third_party": 1}.get(program.get("verified") or "unconfirmed", 0)
+    score = live * 10000 + (len(tailored) + len(focus)) * 1000 + min(3, len(hits)) * 100 + urgency * 10 + trust
+
+    # Reasons and cautions are the same answers, flattened to sentences for the places that show one line.
+    reasons = tailored + ([need_check["text"]] if need_check["state"] == "yes" else []) + focus + ([timing_check["text"]] if timing_check["state"] == "yes" else []) + ([stage_check["text"]] if stage_check["state"] == "yes" else [])
+    steps = [f["text"] for f in facets if f["state"] == "later"] + ([stage_check["text"]] if stage_check["state"] == "later" else [])
+    cautions = steps + [f["text"] for f in facets if f["state"] in ("maybe", "no")]
+    cautions += [c["text"] for c in (need_check, timing_check) if c["state"] != "yes"]
     if program.get("verified") == "unconfirmed":
         cautions.append("We could not confirm the current details. Check the program page.")
+    out = {"score": score, "reasons": [r for r in reasons if r], "cautions": cautions, "skip": "", "checks": checks}
 
-    reasons = [r for r in reasons if r]
-    if later:
-        return {"fit": "later", "score": score, "reasons": reasons, "cautions": later + cautions, "skip": ""}
-    if score >= 55:
-        fit = "strong"
-    elif score >= 25:
-        fit = "possible"
-    else:
-        return skip("Not a strong match")
-    return {"fit": fit, "score": score, "reasons": reasons, "cautions": cautions, "skip": ""}
+    stopper = next((c for c in (apply_check, stage_check) if c["state"] == "no"), None)
+    if stopper:
+        why = blocking["text"] if stopper is apply_check else stopper["text"]
+        return {**out, "fit": "skip", "score": 0, "reasons": [], "cautions": [], "skip": why}
+    if "later" in (apply_check["state"], stage_check["state"]):
+        return {**out, "fit": "later"}
+    if apply_check["state"] == "yes" and stage_check["state"] == "yes" and need_check["state"] == "yes":
+        return {**out, "fit": "strong"}
+    return {**out, "fit": "possible"}
 
 
 def _brief(program: Dict[str, Any]) -> Dict[str, Any]:
     keys = ["id", "name", "org", "level", "type", "summary", "amount", "stages", "audiences", "needs", "sectors", "provinces", "requirements",
             "deadline", "status", "phase", "apply_url", "source_url", "verified", "last_checked", "restricted_to", "community"]
     return {k: program.get(k) for k in keys if k in program}
+
+
+def _verdict(p: Dict[str, Any], profile: Dict[str, Any], today: date) -> Dict[str, Any]:
+    """What a card needs to show about one program for one founder: the match, the sentences and the four answers.
+    A program that is not matched carries its one reason in `cautions`, so the card can say why."""
+    ev = evaluate(p, profile, today)
+    if ev["fit"] == "skip":
+        return {"fit": "skip", "score": 0, "reasons": [], "cautions": [ev["skip"]], "checks": ev["checks"]}
+    return {"fit": ev["fit"], "score": ev["score"], "reasons": ev["reasons"], "cautions": ev["cautions"], "checks": ev["checks"]}
 
 
 def suggest(programs: List[Dict[str, Any]], raw_profile: Optional[Dict[str, Any]], today: Optional[date] = None, limit: int = 8) -> Dict[str, Any]:
@@ -331,9 +411,9 @@ def suggest(programs: List[Dict[str, Any]], raw_profile: Optional[Dict[str, Any]
         if ev["fit"] == "skip":
             skipped += 1
             # Not left out, just not matched: the founder can still look, and sees why it does not line up.
-            others.append({**_brief(p), "status": effective_status(p, today), "fit": "skip", "score": 0, "reasons": [], "cautions": [ev["skip"]]})
+            others.append({**_brief(p), "status": effective_status(p, today), **_verdict(p, profile, today)})
             continue
-        row = {**_brief(p), "status": effective_status(p, today), "fit": ev["fit"], "score": ev["score"], "reasons": ev["reasons"], "cautions": ev["cautions"]}
+        row = {**_brief(p), "status": effective_status(p, today), **_verdict(p, profile, today)}
         {"strong": strong, "possible": possible, "later": later}[ev["fit"]].append(row)
     for bucket in (strong, possible, later):
         bucket.sort(key=lambda r: (-r["score"], r["name"]))
@@ -428,7 +508,7 @@ def trajectory(programs: List[Dict[str, Any]], raw_profile: Optional[Dict[str, A
                 note = "Aimed at this stage and earlier. You may have used it, or skipped it."
             else:
                 note = _why({**_brief(p), "reasons": ev["reasons"]})
-            out.append({**_brief(p), "status": status, "fit": ev["fit"], "score": ev["score"], "note": note})
+            out.append({**_brief(p), "status": status, **_verdict(p, profile, today), "note": note})
         stages_out.append({"stage": stage, "label": STAGE_LABEL[stage], "hint": STAGE_HINT[stage], "state": state, "available": len(rows), "programs": out})
 
     anytime_rows = []
@@ -442,7 +522,7 @@ def trajectory(programs: List[Dict[str, Any]], raw_profile: Optional[Dict[str, A
         live = 0 if status in ("open", "rolling") else 1
         anytime_rows.append((live, -ev["score"], p["name"], p, ev, status))
     anytime_rows.sort(key=lambda r: r[:3])
-    anytime = [{**_brief(p), "status": status, "fit": ev["fit"], "score": ev["score"], "note": p.get("summary", "")} for _l, _s, _n, p, ev, status in anytime_rows[:any_limit]]
+    anytime = [{**_brief(p), "status": status, **_verdict(p, profile, today), "note": p.get("summary", "")} for _l, _s, _n, p, ev, status in anytime_rows[:any_limit]]
 
     nxt = stages_out[cur + 1] if cur + 1 < len(stages_out) else None
     story = ""

@@ -7,7 +7,7 @@ export const STATUS_STYLE = {
   open: "bg-emerald-500/15 text-emerald-600 dark:text-emerald-400", rolling: "bg-emerald-500/15 text-emerald-600 dark:text-emerald-400",
   check: "bg-amber-500/15 text-amber-700 dark:text-amber-400", closed: "bg-red-500/15 text-red-600 dark:text-red-400", paused: "bg-red-500/15 text-red-600 dark:text-red-400",
 };
-export const FIT_LABEL = { strong: "Strong fit", possible: "Possible fit", later: "Later", skip: "Not a fit" };
+export const FIT_LABEL = { strong: "Good match", possible: "Worth a look", later: "Not yet", skip: "Not matched" };
 export const FIT_STYLE = { strong: "bg-emerald-500/15 text-emerald-600 dark:text-emerald-400", possible: "bg-sky-500/15 text-sky-600 dark:text-sky-400", later: "bg-amber-500/15 text-amber-700 dark:text-amber-400", skip: "bg-ink/10 text-muted" };
 
 export function Status({ status }) {

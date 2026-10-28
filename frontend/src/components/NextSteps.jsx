@@ -4,6 +4,7 @@ import { ArrowRight, Clock, MessageCircle, Rocket, Sparkles, User, Users } from 
 import { api } from "../lib/api";
 import { Button } from "./ui";
 import { Ring, Status } from "./NavBits";
+import { isStageLine } from "../lib/navigator";
 
 // The Hub's "Your next steps" card. There is nothing to fill in here: it reads the one startup profile on your account and the
 // programs every community currently lists, so it changes the moment either changes (GET /navigator/home, worked out fresh each time).
@@ -48,7 +49,7 @@ export default function NextSteps({ version, onEditProfile, onAsk, profileLink }
         {top.map((m) => (
           <li key={m.id} className="min-w-0 rounded-xl border border-line p-3" data-testid={`next-${m.id}`}>
             <div className="flex items-center gap-2"><p className="min-w-0 flex-1 truncate text-sm font-semibold">{m.name}</p><Status status={m.status} /></div>
-            <p className="mt-1 line-clamp-2 text-xs text-muted">{(m.reasons || []).find((r) => !r.startsWith("Built for founders at your stage")) || m.reasons?.[0] || m.summary}</p>
+            <p className="mt-1 line-clamp-2 text-xs text-muted">{(m.reasons || []).find((r) => !isStageLine(r)) || m.reasons?.[0] || m.summary}</p>
           </li>
         ))}
       </ul>

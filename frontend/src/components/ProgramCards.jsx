@@ -1,16 +1,71 @@
 import React, { useEffect } from "react";
 import { Link } from "react-router-dom";
-import { ArrowRight, ArrowUpRight, BadgeCheck, Check, Circle, Clock, Info, MessageCircle, TriangleAlert, X } from "lucide-react";
+import { ArrowRight, ArrowUpRight, BadgeCheck, Check, Circle, CircleCheck, CircleHelp, CircleX, Clock, Hourglass, Info, MessageCircle, TriangleAlert, X } from "lucide-react";
 import { Status } from "./NavBits";
 import ScrollLock from "./ScrollLock";
 import { useShell } from "./AccountShell";
-import { STAGES, STATUS_HELP, TYPE_LABEL } from "../lib/navigator";
+import { isStageLine, STAGES, STATUS_HELP, TYPE_LABEL } from "../lib/navigator";
 import { deadlineInfo, leadReason, tint, typeMeta } from "../lib/programStyle";
 import { cx } from "./ui";
 
 // The program pieces shared by Home, Programs and the Navigator: a card for scanning, a drawer for the detail, and the three-step path.
 
-const FIT = { strong: { n: 3, label: "Strong fit" }, possible: { n: 2, label: "Possible fit" }, later: { n: 1, label: "Later" } };
+const FIT = { strong: { n: 3, label: "Good match" }, possible: { n: 2, label: "Worth a look" }, later: { n: 1, label: "Not yet" } };
+
+// The four questions every program is judged by, and the four possible answers. Same words on the card and in the drawer.
+const ANSWER = {
+  yes: { Icon: CircleCheck, cls: "text-emerald-500", word: "Yes" },
+  maybe: { Icon: CircleHelp, cls: "text-amber-500", word: "Not sure" },
+  later: { Icon: Hourglass, cls: "text-amber-500", word: "Not yet" },
+  no: { Icon: CircleX, cls: "text-red-500", word: "No" },
+};
+const SHORT = { apply: "Eligible", stage: "Stage", need: "Needs", timing: "Timing" };
+
+// One line on a card: four marks, one per question, so you can see at a glance which ones hold.
+export function CheckStrip({ checks }) {
+  if (!checks?.length) return null;
+  return (
+    <span className="flex flex-wrap items-center gap-x-3 gap-y-1" data-testid="check-strip">
+      {checks.map((c) => { const a = ANSWER[c.state] || ANSWER.maybe; return <span key={c.key} title={`${c.q} ${a.word}. ${c.text}`} className="inline-flex items-center gap-1 text-[11px] font-medium text-muted"><a.Icon className={cx("h-3.5 w-3.5", a.cls)} aria-hidden />{SHORT[c.key]}</span>; })}
+    </span>
+  );
+}
+
+// The answers in full: each question, yes or no, and the plain reason. Anything we could not check says what to add.
+export function CheckList({ checks }) {
+  return (
+    <ul className="space-y-3.5" data-testid="check-list">
+      {checks.map((c) => {
+        const a = ANSWER[c.state] || ANSWER.maybe;
+        const items = c.key === "apply" && (c.items || []).length > 1 ? c.items : [];
+        return (
+          <li key={c.key} className="flex gap-3" data-testid={`check-${c.key}`} data-state={c.state}>
+            <a.Icon className={cx("mt-0.5 h-5 w-5 shrink-0", a.cls)} aria-hidden />
+            <div className="min-w-0 flex-1">
+              <p className="text-sm font-semibold leading-snug">{c.q} <span className={cx("font-medium", a.cls)}>{a.word}</span></p>
+              <p className="mt-0.5 text-sm text-ink/80">{c.text}</p>
+              {items.length > 0 && <ul className="mt-1.5 space-y-1">{items.map((f) => { const fa = ANSWER[f.state] || ANSWER.maybe; return <li key={f.text} className="flex gap-1.5 text-xs text-muted"><fa.Icon className={cx("mt-px h-3.5 w-3.5 shrink-0", fa.cls)} aria-hidden /><span>{f.text}</span></li>; })}</ul>}
+              {c.ask && <Link to="/me?edit=startup" className="mt-1.5 inline-flex items-center gap-1 text-xs font-semibold underline" data-testid={`check-ask-${c.ask}`}>Add it to your profile<ArrowRight className="h-3 w-3" aria-hidden /></Link>}
+            </div>
+          </li>
+        );
+      })}
+    </ul>
+  );
+}
+
+// One sentence that says why the program has the label it has, built from the same four answers.
+export function verdictLine(p) {
+  const cs = Object.fromEntries((p.checks || []).map((c) => [c.key, c]));
+  if (p.fit === "skip") return (p.cautions || [])[0] || "A rule rules you out.";
+  if (p.fit === "strong") return "You can apply, it is for your stage, and it gives you what you asked for.";
+  if (p.fit === "later") return "A step is in the way for now: " + ((p.cautions || [])[0] || "see below").replace(/\.$/, "").replace(/^./, (m) => m.toLowerCase()) + ".";
+  const gaps = [];
+  if (cs.apply?.state === "maybe") gaps.push("we cannot tell yet whether you can apply");
+  if (cs.need?.state === "no") gaps.push("it does not cover what you asked for");
+  if (cs.need?.state === "maybe") gaps.push("we do not know what you need yet");
+  return "It is not ruled out, but " + (gaps.join(" and ") || "one answer is missing") + ".";
+}
 const VERIFIED = { official: "Official page", third_party: "Third-party source", unconfirmed: "Not confirmed" };
 const isExternal = (u) => /^https?:\/\//.test(u || "");
 const dayLabel = (iso) => { try { return new Date(iso + "T12:00:00").toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" }); } catch { return iso || ""; } };
@@ -43,6 +98,8 @@ export function ProgramCard({ p, onOpen }) {
   const { color } = typeMeta(p.type);
   const lead = leadReason(p);
   const unmatched = p.fit === "skip" ? (p.cautions || [])[0] : "";
+  // A good match leads with its best reason. Anything less says what is holding it back, so the label is never a mystery.
+  const gap = p.fit === "possible" || p.fit === "later" ? (p.checks || []).slice(0, 3).find((c) => c.state !== "yes") : null;
   return (
     <button type="button" onClick={() => onOpen(p)} data-testid={`program-${p.id}`}
       className="group flex h-full w-full flex-col rounded-2xl border border-line p-4 text-left transition hover:-translate-y-0.5 hover:border-ink/30 hover:shadow-lg"
@@ -56,8 +113,10 @@ export function ProgramCard({ p, onOpen }) {
       <span className="mt-3 block text-[17px] font-semibold leading-snug" style={{ textWrap: "balance" }}>{p.name}</span>
       {p.community && <span className="mt-0.5 block truncate text-xs text-muted">{p.org}</span>}
       {unmatched ? <span className="mt-2 flex gap-2 text-sm text-muted" data-testid="card-unmatched"><Info className="mt-0.5 h-4 w-4 shrink-0" aria-hidden /><span className="line-clamp-2">Not matched to you: {unmatched.charAt(0).toLowerCase() + unmatched.slice(1)}</span></span>
+        : gap ? <span className="mt-2 flex gap-2 text-sm text-ink/80" data-testid="card-gap">{(() => { const a = ANSWER[gap.state]; return <a.Icon className={cx("mt-0.5 h-4 w-4 shrink-0", a.cls)} aria-hidden />; })()}<span className="line-clamp-2">{gap.text}</span></span>
         : lead ? <span className="mt-2 flex gap-2 text-sm text-ink/80"><Check className="mt-0.5 h-4 w-4 shrink-0 text-emerald-500" aria-hidden /><span className="line-clamp-2">{lead}</span></span>
         : p.summary && <span className="mt-2 line-clamp-2 text-sm text-muted">{p.summary}</span>}
+      {p.checks?.length > 0 && <span className="mt-3 block"><CheckStrip checks={p.checks} /></span>}
       <span className="mt-auto flex items-center gap-2 pt-4">
         <Status status={p.status} />
         <DeadlineChip p={p} />
@@ -83,7 +142,7 @@ export function ProgramDrawer({ p, onClose, meta, tracked, onTrack, stage }) {
   if (!p) return null;
   const { color } = typeMeta(p.type);
   const dl = deadlineInfo(p);
-  const reasons = [...(p.reasons || [])].sort((a, b) => /^Built for founders at your stage/.test(a) - /^Built for founders at your stage/.test(b));
+  const reasons = [...(p.reasons || [])].sort((a, b) => isStageLine(a) - isStageLine(b));
   const cautions = (p.cautions || []).filter(Boolean);
   const unmatched = p.fit === "skip";
   const mineRow = (tracked || []).find((t) => t.id === p.id);
@@ -122,8 +181,17 @@ export function ProgramDrawer({ p, onClose, meta, tracked, onTrack, stage }) {
           {p.amount && <div className="rounded-2xl p-4" style={{ background: tint(color, 0.12), border: `1px solid ${tint(color, 0.3)}` }}><p className="text-[11px] font-semibold uppercase" style={{ letterSpacing: "0.12em", color }}>What you get</p><p className="mt-1.5 text-[15px] leading-snug">{p.amount}</p></div>}
           {p.summary && <p className="text-[15px] leading-relaxed text-ink/90">{p.summary}</p>}
 
-          {reasons.length > 0 && <Section title="Why it fits you"><ul className="space-y-2.5">{reasons.map((r) => <li key={r} className="flex gap-2.5 text-sm"><Check className="mt-0.5 h-4 w-4 shrink-0 text-emerald-500" aria-hidden /><span>{r}</span></li>)}</ul></Section>}
-          {cautions.length > 0 && <Section title={unmatched ? "Why it is not matched to you" : "Watch out for"}><ul className="space-y-2.5">{cautions.map((r) => <li key={r} className="flex gap-2.5 text-sm text-ink/80"><TriangleAlert className="mt-0.5 h-4 w-4 shrink-0 text-amber-500" aria-hidden /><span>{r}</span></li>)}</ul></Section>}
+          {p.checks?.length > 0 ? (
+            <Section title={unmatched ? "Why it is not matched to you" : "Is it right for you?"}>
+              <p className="mb-4 text-sm font-semibold leading-snug" data-testid="drawer-verdict">{verdictLine(p)}</p>
+              <CheckList checks={p.checks} />
+            </Section>
+          ) : (
+            <>
+              {reasons.length > 0 && <Section title="Why it fits you"><ul className="space-y-2.5">{reasons.map((r) => <li key={r} className="flex gap-2.5 text-sm"><Check className="mt-0.5 h-4 w-4 shrink-0 text-emerald-500" aria-hidden /><span>{r}</span></li>)}</ul></Section>}
+              {cautions.length > 0 && <Section title={unmatched ? "Why it is not matched to you" : "Watch out for"}><ul className="space-y-2.5">{cautions.map((r) => <li key={r} className="flex gap-2.5 text-sm text-ink/80"><TriangleAlert className="mt-0.5 h-4 w-4 shrink-0 text-amber-500" aria-hidden /><span>{r}</span></li>)}</ul></Section>}
+            </>
+          )}
           {(p.requirements || []).length > 0 && <Section title="What they ask for"><ul className="space-y-2.5">{p.requirements.map((r) => <li key={r} className="flex gap-2.5 text-sm text-ink/80"><Circle className="mt-0.5 h-4 w-4 shrink-0 text-muted" aria-hidden /><span>{r}</span></li>)}</ul></Section>}
 
           {onTrack && (

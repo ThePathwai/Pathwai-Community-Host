@@ -112,10 +112,10 @@ def _deadline_text(p: Dict[str, Any], today: date) -> str:
 
 def _row(p: Dict[str, Any], ev: Dict[str, Any], today: date) -> Dict[str, Any]:
     return {**nav._brief(p), "status": nav.effective_status(p, today), "fit": ev["fit"], "score": ev["score"],
-            "reasons": ev["reasons"], "cautions": ev["cautions"], "skip": ev.get("skip")}
+            "reasons": ev["reasons"], "cautions": ev["cautions"], "skip": ev.get("skip"), "checks": ev.get("checks")}
 
 
-FIT_LINE = {"strong": "It looks like a strong fit for you.", "possible": "It could work for you.", "later": "Not yet, but it could be a fit later."}
+FIT_LINE = {"strong": "It looks like a good match for you.", "possible": "It is worth a look.", "later": "Not yet, but it could be a match later."}
 
 
 def _detail(p: Dict[str, Any], profile: Dict[str, Any], q: str, today: date) -> Dict[str, Any]:

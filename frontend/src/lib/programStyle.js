@@ -1,5 +1,5 @@
 import { Banknote, Building2, FlaskConical, Handshake, Landmark, Percent, Plane, Rocket, TrendingUp, Trophy } from "lucide-react";
-import { daysUntil, todayIso } from "./navigator";
+import { daysUntil, isStageLine, todayIso } from "./navigator";
 
 // Each kind of program gets its own colour and icon, so a list reads at a glance (grant vs loan vs accelerator) before a word is read.
 // Colours are mid-tones that hold up on both the dark and the light themes; they only ever tint a tile or colour an icon.
@@ -29,4 +29,4 @@ export function deadlineInfo(p) {
 }
 
 // The most useful reason to lead with: "built for founders at your stage" is true of almost everything, so it goes last.
-export const leadReason = (p) => [...(p.reasons || [])].sort((a, b) => /^Built for founders at your stage/.test(a) - /^Built for founders at your stage/.test(b))[0] || "";
+export const leadReason = (p) => [...(p.reasons || [])].sort((a, b) => isStageLine(a) - isStageLine(b))[0] || "";

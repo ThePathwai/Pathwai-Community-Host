@@ -26,8 +26,6 @@ export const STATUS_HELP = {
   closed: "Not taking applications.",
   paused: "Not taking applications for now.",
 };
-const STATUS_POINTS = { open: 10, rolling: 8, check: 0, closed: -25, paused: -35 };
-const VERIFIED_POINTS = { official: 4, third_party: 1, unconfirmed: -4 };
 const PHASE_ORDER = ["learn", "fund", "scale"];
 const PHASE_LABEL = { learn: "Start here", fund: "Then fund it", scale: "Then scale" };
 
@@ -94,79 +92,141 @@ export function effectiveStatus(p, today) {
 }
 
 const joinList = (items) => (items.length <= 1 ? items.join("") : items.slice(0, -1).join(", ") + " and " + items[items.length - 1]);
-const why = (row) => { const rs = row.reasons || []; return rs.find((r) => !r.startsWith("Built for founders at your stage")) || rs[0] || row.summary || ""; };
-const skipRow = (why) => ({ fit: "skip", score: 0, reasons: [], cautions: [], skip: why });
+const why = (row) => { const rs = row.reasons || []; return rs.find((r) => !isStageLine(r)) || rs[0] || row.summary || ""; };
+export const CHECK_Q = { apply: "Can I apply?", stage: "Is it for my stage?", need: "Does it give me what I need?", timing: "Can I apply now?" };
+export const FIT_WORD = { strong: "Good match", possible: "Worth a look", later: "Not yet", skip: "Not matched" };
+export const STAGE_LINE_PREFIXES = ["Built for founders at your stage", "Open to companies at any stage"];
+export const isStageLine = (r) => STAGE_LINE_PREFIXES.some((x) => String(r || "").startsWith(x));
+const SEVERITY = { yes: 0, maybe: 1, later: 2, no: 3 };
+const worst = (items) => items.reduce((w, i) => (SEVERITY[i.state] > SEVERITY[w] ? i.state : w), "yes");
 
+// Judge one program for one founder by asking four plain questions (the twin of navigator.py: keep the two identical).
+//   1. Can I apply?  2. Is it for my stage?  3. Does it give me what I need?  4. Can I apply now?
+// Each is "yes", "maybe" (an answer is missing from the profile), "later" (a step not taken yet) or "no". No points.
+// A "no" on 1 or 2 is "skip", a "later" on 1 or 2 is "later", yes/yes/yes on 1 to 3 is "strong", anything else is "possible".
+// Timing never changes the match. `score` only orders programs inside a match group and is never shown.
 export function evaluate(p, profile, today) {
   const req = p.requires || {};
-  const reasons = []; const cautions = []; const later = [];
-  let score = 0;
+  const facets = []; const tailored = []; const focus = [];
+  const add = (state, text, ask) => facets.push(ask ? { state, text, ask } : { state, text });
+
   const restricted = p.restricted_to || [];
-  if (restricted.length && !restricted.some((a) => profile.audiences.includes(a))) return skipRow("For " + joinList(restricted.map((a) => AUDIENCE_LABEL[a] || a)) + " founders");
+  if (restricted.length) {
+    const label = joinList(restricted.map((a) => AUDIENCE_LABEL[a] || a));
+    if (restricted.some((a) => profile.audiences.includes(a))) { add("yes", `For ${label} founders only. You qualify.`); tailored.push(`For ${label} founders, which you are.`); }
+    else add("no", `For ${label} founders`);
+  }
   const provs = p.provinces || ["any"];
-  if (!provs.includes("any") && !provs.includes(profile.province)) return skipRow("Only for " + joinList(provs));
+  if (!provs.includes("any")) {
+    if (provs.includes(profile.province)) add("yes", `Open to founders in ${profile.province}.`);
+    else add("no", "Only for " + joinList(provs));
+  }
   const age = profile.age;
   const lo = req.age_min ?? null; const hi = req.age_max ?? null;
   if (lo !== null || hi !== null) {
-    if (age !== null && ((lo !== null && age < lo) || (hi !== null && age > hi))) return skipRow("Age limit " + (lo !== null && hi !== null ? `${lo} to ${hi}` : lo !== null ? `${lo}+` : `up to ${hi}`));
-    if (age === null) cautions.push("Has an age limit" + (lo !== null && hi !== null ? ` (${lo} to ${hi})` : "") + "; add your age to check");
+    const span = lo !== null && hi !== null ? `${lo} to ${hi}` : lo !== null ? `${lo}+` : `up to ${hi}`;
+    if (age === null) add("maybe", "Has an age limit" + (lo !== null && hi !== null ? ` (${lo} to ${hi})` : "") + "; add your age to check", "age");
+    else if ((lo !== null && age < lo) || (hi !== null && age > hi)) add("no", "Age limit " + span);
+    else add("yes", `Age limit ${span}. You fit.`);
   }
-  if (req.student && !profile.student) return skipRow("Only for students");
+  if (req.student) { if (profile.student) add("yes", "For students. You are one."); else add("no", "Only for students"); }
   const emp = profile.employees;
-  if (req.max_employees != null && emp !== null && emp > req.max_employees) return skipRow(`Limit of ${req.max_employees} employees`);
+  if (req.max_employees != null) {
+    if (emp === null) add("maybe", `Limit of ${req.max_employees} employees; add your team size to check`, "employees");
+    else if (emp > req.max_employees) add("no", `Limit of ${req.max_employees} employees`);
+    else add("yes", `Limit of ${req.max_employees} employees. You are within it.`);
+  }
   const sectors = p.sectors || ["any"];
   const specific = !sectors.includes("any");
-  if (specific && profile.sectors.length && !profile.sectors.some((s) => sectors.includes(s))) return skipRow("Focused on " + joinList(sectors));
-
-  const stages = p.stages || STAGES;
-  const si = STAGES.indexOf(profile.stage);
-  if (stages.includes(profile.stage)) {
-    score += 30; reasons.push(`Built for founders at your stage (${STAGE_LABEL[profile.stage]}).`);
-  } else {
-    const idx = stages.map((s) => STAGES.indexOf(s)).filter((i) => i >= 0);
-    const earliest = Math.min(...idx); const latest = Math.max(...idx);
-    if (si > latest) return skipRow("Aimed at earlier-stage companies");
-    later.push(`Aimed at companies that are ${STAGE_LABEL[STAGES[earliest]]} or further along.`);
-    score -= 10;
+  if (specific) {
+    const secHits = profile.sectors.filter((s) => sectors.includes(s));
+    if (secHits.length) { add("yes", "Focused on " + joinList(secHits) + ", your area."); focus.push("Focused on " + joinList(secHits) + ", your area."); }
+    else if (profile.sectors.length) add("no", "Focused on " + joinList(sectors));
+    else add("maybe", "Focused on " + joinList(sectors) + "; add your sector to check.", "sectors");
+  }
+  const audHits = profile.audiences.filter((a) => (p.audiences || []).includes(a));
+  if (audHits.length && !restricted.length) {
+    const t = "Designed for " + joinList(audHits.map((a) => AUDIENCE_LABEL[a])) + " founders.";
+    add("yes", t); tailored.push(t);
   }
   if (req.incorporated) {
-    if (profile.incorporated === false) later.push("Needs an incorporated company.");
-    else if (profile.incorporated === null) cautions.push("Requires an incorporated company.");
+    if (profile.incorporated === true) add("yes", "Needs an incorporated company. You have one.");
+    else if (profile.incorporated === false) add("later", "Needs an incorporated company.");
+    else add("maybe", "Requires an incorporated company; say whether you are incorporated to check.", "incorporated");
   }
-  if (req.min_employees != null && emp !== null && emp < req.min_employees) later.push(`Needs at least ${req.min_employees} full-time employees.`);
+  if (req.min_employees != null) {
+    if (emp === null) add("maybe", `Needs at least ${req.min_employees} full-time employees; add your team size to check`, "employees");
+    else if (emp < req.min_employees) add("later", `Needs at least ${req.min_employees} full-time employees.`);
+    else add("yes", `Needs at least ${req.min_employees} employees. You have them.`);
+  }
+  const aState = worst(facets);
+  const blocking = facets.find((f) => f.state === aState) || null;
+  const aText = aState === "yes" ? (facets.length ? "You meet what they ask for." + (tailored.length || focus.length ? " " + [...tailored, ...focus][0] : "") : "Nothing rules you out.") : blocking.text;
+  const applyCheck = { key: "apply", q: CHECK_Q.apply, state: aState, text: aText, items: facets, ...(blocking && blocking.ask ? { ask: blocking.ask } : {}) };
+
+  const stages = (p.stages || STAGES).filter((s) => STAGES.includes(s)); const stageList = stages.length ? stages : STAGES;
+  const si = STAGES.indexOf(profile.stage);
+  let stageCheck;
+  if (stageList.includes(profile.stage)) {
+    stageCheck = { key: "stage", q: CHECK_Q.stage, state: "yes", text: stageList.length >= 4 ? `Open to companies at any stage, including yours (${STAGE_LABEL[profile.stage]}).` : `Built for founders at your stage (${STAGE_LABEL[profile.stage]}).` };
+  } else {
+    const idx = stageList.map((s) => STAGES.indexOf(s));
+    const earliest = Math.min(...idx); const latest = Math.max(...idx);
+    stageCheck = si > latest
+      ? { key: "stage", q: CHECK_Q.stage, state: "no", text: "Aimed at earlier-stage companies" }
+      : { key: "stage", q: CHECK_Q.stage, state: "later", text: `Aimed at companies that are ${STAGE_LABEL[STAGES[earliest]]} or further along.` };
+  }
 
   const provides = p.needs || [];
   const hits = profile.needs.filter((n) => provides.includes(n));
-  if (hits.length) { score += Math.min(3, hits.length) * 12; reasons.push("Gives you " + joinList(hits.slice(0, 3).map((n) => NEED_LABEL[n])) + ", which you asked for."); }
-  else if (profile.needs.length) cautions.push("Does not cover what you listed as your needs.");
-
-  const audHits = profile.audiences.filter((a) => (p.audiences || []).includes(a));
-  if (audHits.length) { score += 15; reasons.push("Designed for " + joinList(audHits.map((a) => AUDIENCE_LABEL[a])) + " founders."); }
-  if (specific) {
-    const secHits = profile.sectors.filter((s) => sectors.includes(s));
-    if (secHits.length) { score += 10; reasons.push("Focused on " + joinList(secHits) + ", your area."); }
-    else if (!profile.sectors.length) { score -= 15; cautions.push("Focused on " + joinList(sectors) + "; add your sector to check."); }
-  }
+  const misses = profile.needs.filter((n) => !provides.includes(n));
+  let needCheck;
+  if (hits.length) {
+    let text = "Gives you " + joinList(hits.slice(0, 3).map((n) => NEED_LABEL[n])) + ", which you asked for.";
+    if (misses.length) text += " It does not cover " + joinList(misses.slice(0, 3).map((n) => NEED_LABEL[n])) + ".";
+    needCheck = { key: "need", q: CHECK_Q.need, state: "yes", text };
+  } else if (profile.needs.length) {
+    let text = "Does not cover what you asked for (" + joinList(profile.needs.slice(0, 3).map((n) => NEED_LABEL[n])) + ").";
+    if (provides.length) text += " It offers " + joinList(provides.slice(0, 3).filter((n) => n in NEED_LABEL).map((n) => NEED_LABEL[n])) + ".";
+    needCheck = { key: "need", q: CHECK_Q.need, state: "no", text };
+  } else needCheck = { key: "need", q: CHECK_Q.need, state: "maybe", text: "You have not said what you need, so this cannot be checked yet.", ask: "needs" };
 
   const status = effectiveStatus(p, today);
-  score += STATUS_POINTS[status];
   const dl = p.deadline || {};
   const days = dl.kind === "fixed" ? daysUntil(dl.date, today) : null;
-  if (status === "closed") cautions.push("Closed right now. " + (dl.note || ""));
-  else if (status === "paused") cautions.push("Paused. " + (dl.note || ""));
-  else if (days !== null) { if (days <= 60) score += 8; reasons.push(`Closes in ${days} day${days === 1 ? "" : "s"} (${dl.date}).`); }
-  else if (status === "open" || status === "rolling") reasons.push("Taking applications now" + (dl.kind === "rolling" && dl.note ? ": " + dl.note : "."));
-  else cautions.push("No deadline was published, so check the site before planning around it.");
+  let timingCheck;
+  if (status === "closed") timingCheck = { key: "timing", q: CHECK_Q.timing, state: "no", text: ("Closed right now. " + (dl.note || "")).trim() };
+  else if (status === "paused") timingCheck = { key: "timing", q: CHECK_Q.timing, state: "no", text: ("Paused. " + (dl.note || "")).trim() };
+  else if (days !== null) timingCheck = { key: "timing", q: CHECK_Q.timing, state: "yes", text: `Closes in ${days} day${days === 1 ? "" : "s"} (${dl.date}).` };
+  else if (status === "open" || status === "rolling") timingCheck = { key: "timing", q: CHECK_Q.timing, state: "yes", text: "Taking applications now" + (dl.kind === "rolling" && dl.note ? ": " + dl.note : ".") };
+  else timingCheck = { key: "timing", q: CHECK_Q.timing, state: "maybe", text: "No deadline was published, so check the site before planning around it." };
 
-  score += VERIFIED_POINTS[p.verified || "unconfirmed"] ?? -4;
+  const checks = [applyCheck, stageCheck, needCheck, timingCheck];
+  const live = status === "closed" || status === "paused" ? 0 : 1;
+  const urgency = days !== null && days <= 60 ? 3 : status === "open" ? 2 : status === "rolling" ? 1 : 0;
+  const trust = { official: 2, third_party: 1 }[p.verified || "unconfirmed"] ?? 0;
+  const score = live * 10000 + (tailored.length + focus.length) * 1000 + Math.min(3, hits.length) * 100 + urgency * 10 + trust;
+
+  const reasons = [...tailored, ...(needCheck.state === "yes" ? [needCheck.text] : []), ...focus, ...(timingCheck.state === "yes" ? [timingCheck.text] : []), ...(stageCheck.state === "yes" ? [stageCheck.text] : [])].filter(Boolean);
+  const steps = [...facets.filter((f) => f.state === "later").map((f) => f.text), ...(stageCheck.state === "later" ? [stageCheck.text] : [])];
+  const cautions = [...steps, ...facets.filter((f) => f.state === "maybe" || f.state === "no").map((f) => f.text), ...[needCheck, timingCheck].filter((c) => c.state !== "yes").map((c) => c.text)];
   if (p.verified === "unconfirmed") cautions.push("We could not confirm the current details. Check the program page.");
+  const out = { score, reasons, cautions, skip: "", checks };
 
-  const rs = reasons.filter(Boolean);
-  if (later.length) return { fit: "later", score, reasons: rs, cautions: [...later, ...cautions], skip: "" };
-  if (score >= 55) return { fit: "strong", score, reasons: rs, cautions, skip: "" };
-  if (score >= 25) return { fit: "possible", score, reasons: rs, cautions, skip: "" };
-  return skipRow("Not a strong match");
+  const stopper = [applyCheck, stageCheck].find((c) => c.state === "no");
+  if (stopper) return { ...out, fit: "skip", score: 0, reasons: [], cautions: [], skip: stopper === applyCheck ? blocking.text : stopper.text };
+  if (aState === "later" || stageCheck.state === "later") return { ...out, fit: "later" };
+  if (aState === "yes" && stageCheck.state === "yes" && needCheck.state === "yes") return { ...out, fit: "strong" };
+  return { ...out, fit: "possible" };
 }
+
+// What a card needs about one program: the match, the sentences and the four answers. A program that is not matched
+// carries its one reason in `cautions`, so the card can say why.
+const verdict = (p, profile, today) => {
+  const ev = evaluate(p, profile, today);
+  if (ev.fit === "skip") return { fit: "skip", score: 0, reasons: [], cautions: [ev.skip], checks: ev.checks };
+  return { fit: ev.fit, score: ev.score, reasons: ev.reasons, cautions: ev.cautions, checks: ev.checks };
+};
 
 const BRIEF_KEYS = ["id", "name", "org", "level", "type", "summary", "amount", "stages", "audiences", "needs", "sectors", "provinces", "requirements", "deadline", "status", "phase", "apply_url", "source_url", "verified", "last_checked", "restricted_to", "community"];
 const brief = (p) => { const o = {}; for (const k of BRIEF_KEYS) if (k in p) o[k] = p[k]; return o; };
@@ -194,10 +254,10 @@ export function suggest(programs, rawProfile, today = todayIso(), limit = 8) {
     if (ev.fit === "skip") {
       skipped += 1;
       // Not left out, just not matched: the founder can still look, and sees why it does not line up.
-      others.push({ ...brief(p), status: effectiveStatus(p, today), fit: "skip", score: 0, reasons: [], cautions: [ev.skip] });
+      others.push({ ...brief(p), status: effectiveStatus(p, today), ...verdict(p, profile, today) });
       continue;
     }
-    buckets[ev.fit].push({ ...brief(p), status: effectiveStatus(p, today), fit: ev.fit, score: ev.score, reasons: ev.reasons, cautions: ev.cautions });
+    buckets[ev.fit].push({ ...brief(p), status: effectiveStatus(p, today), ...verdict(p, profile, today) });
   }
   for (const k of Object.keys(buckets)) buckets[k].sort(byScore);
   const ranked = [...buckets.strong, ...buckets.possible];
@@ -261,7 +321,7 @@ export function trajectory(programs, rawProfile, today = todayIso(), perStage = 
       if (state === "future") { note = `Opens up at the ${STAGE_LABEL[stage]} stage.`; if (r.ev.cautions.length) note += " " + r.ev.cautions[0]; }
       else if (state === "past") note = "Aimed at this stage and earlier. You may have used it, or skipped it.";
       else note = why({ ...brief(r.p), reasons: r.ev.reasons });
-      return { ...brief(r.p), status: r.status, fit: r.ev.fit, score: r.ev.score, note };
+      return { ...brief(r.p), status: r.status, ...verdict(r.p, profile, today), note };
     });
     return { stage, label: STAGE_LABEL[stage], hint: STAGE_HINT[stage], state, available: rows.length, programs: out };
   });
@@ -274,7 +334,7 @@ export function trajectory(programs, rawProfile, today = todayIso(), perStage = 
     anyRows.push({ key: [status === "open" || status === "rolling" ? 0 : 1, -ev.score, p.name], p, ev, status });
   }
   anyRows.sort(cmpKey);
-  const anytime = anyRows.slice(0, anyLimit).map((r) => ({ ...brief(r.p), status: r.status, fit: r.ev.fit, score: r.ev.score, note: r.p.summary || "" }));
+  const anytime = anyRows.slice(0, anyLimit).map((r) => ({ ...brief(r.p), status: r.status, ...verdict(r.p, profile, today), note: r.p.summary || "" }));
   const nxt = cur + 1 < stages.length ? stages[cur + 1] : null;
   let story = "";
   if (cur > 0) story += `You've come through ${joinList(stages.slice(0, cur).map((c) => c.label))}. `;

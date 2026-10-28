@@ -4,6 +4,7 @@ import { ArrowUp, Compass, ExternalLink, Users } from "lucide-react";
 import { api, errMsg } from "../lib/api";
 import { FIT_LABEL, FIT_STYLE, Status } from "./NavBits";
 import { cx } from "./ui";
+import { isStageLine } from "../lib/navigator";
 
 // The Navigator's guide: ask about programs, deadlines, eligibility and communities. Signed in, it answers from the ONE profile
 // on your account (so it already knows where your startup is at); signed out, from whatever the Navigator form holds.
@@ -23,7 +24,7 @@ function Cards({ cards }) {
             <Status status={c.status} />
             {c.fit && <span className={cx("inline-flex rounded-full px-2.5 py-0.5 text-xs font-semibold", FIT_STYLE[c.fit])}>{FIT_LABEL[c.fit]}</span>}
           </div>
-          {c.fit !== "skip" && (c.reasons || []).length > 0 && <p className="mt-1.5 text-xs text-muted">{c.reasons.find((r) => !r.startsWith("Built for founders at your stage")) || c.reasons[0]}</p>}
+          {c.fit !== "skip" && (c.reasons || []).length > 0 && <p className="mt-1.5 text-xs text-muted">{c.reasons.find((r) => !isStageLine(r)) || c.reasons[0]}</p>}
           {c.apply_url && /^https?:/.test(c.apply_url) && <a href={c.apply_url} target="_blank" rel="noreferrer" className="mt-2 inline-flex items-center gap-1 text-xs font-medium" style={{ color: "var(--accent)" }}>Open the page <ExternalLink className="h-3 w-3" aria-hidden /></a>}
         </li>
       ))}

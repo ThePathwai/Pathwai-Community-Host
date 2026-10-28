@@ -109,6 +109,25 @@ function ProfileBar({ mine, meta }) {
   );
 }
 
+// The whole decision, in the open: four questions, and how their answers become a label. Collapsed so it is there when asked for.
+const QUESTIONS = [["Can I apply?", "Your province, group, age, team size, sector and whether you are incorporated, against what the program requires."], ["Is it for my stage?", "The stages the program serves, against yours."], ["Does it give me what I need?", "What it offers, against what you said you need."], ["Can I apply now?", "Open, apply anytime, closed or paused, and any deadline."]];
+function HowWeDecide() {
+  return (
+    <details className="mt-3 rounded-xl border border-line px-4 py-3 text-sm" data-testid="nav-how">
+      <summary className="cursor-pointer font-semibold">How we decide what fits you</summary>
+      <p className="mt-3 text-muted">Every program is checked with the same four questions. Each answer is yes, no, not sure (we are missing something in your profile) or not yet (a step like incorporating is in the way).</p>
+      <ol className="mt-3 space-y-2">{QUESTIONS.map(([q, d], i) => <li key={q} className="flex gap-3"><span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-ink/10 text-xs font-bold">{i + 1}</span><span><span className="font-semibold">{q}</span> <span className="text-muted">{d}</span></span></li>)}</ol>
+      <ul className="mt-4 space-y-1.5 text-muted">
+        <li><span className="font-semibold text-ink">Good match:</span> yes to questions 1, 2 and 3.</li>
+        <li><span className="font-semibold text-ink">Worth a look:</span> not ruled out, but one answer is a no or not sure.</li>
+        <li><span className="font-semibold text-ink">Not yet:</span> a step is in the way, so keep it in view.</li>
+        <li><span className="font-semibold text-ink">Not matched:</span> a rule rules you out, like your province or stage. It is still listed under Everything else.</li>
+      </ul>
+      <p className="mt-3 text-muted">Question 4 never changes the label. A program that fits you stays a match when it is closed, and sinks to the bottom of its group.</p>
+    </details>
+  );
+}
+
 const LEGEND = [["open", "taking applications now"], ["rolling", "no deadline, apply whenever"], ["check", "dates not published"]];
 
 function Results({ res, meta, loading, generic, onOpen, tracked, onTrack }) {
@@ -151,6 +170,7 @@ function Results({ res, meta, loading, generic, onOpen, tracked, onTrack }) {
         </div>
         <p className="mt-2 text-sm text-muted">{view === "fit" ? "Matched to your stage, needs, province and group." : "Real programs too. They are not matched to you yet because of stage, province, group or sector. Each card says why."}</p>
         <p className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1.5 text-xs text-muted" data-testid="nav-legend">{LEGEND.map(([k, t]) => <span key={k} className="inline-flex items-center gap-1.5"><Status status={k} />{t}</span>)}</p>
+        <HowWeDecide />
         {Object.keys(counts).length > 1 && (
           <div className="pw-rail -mx-4 mt-4 flex gap-2 overflow-x-auto px-4 pb-1 sm:mx-0 sm:px-0" role="group" aria-label="Filter by type">
             <Pill on={!type} onClick={() => setType("")} testId="nav-type-all">All<span className="text-xs opacity-60">{base.length}</span></Pill>
@@ -159,8 +179,8 @@ function Results({ res, meta, loading, generic, onOpen, tracked, onTrack }) {
         )}
         {view === "fit" ? (
           <>
-            {best.length > 0 && <div className="mt-6"><p className="mb-3 text-sm font-semibold">Best fits</p><div className={grid}>{best.map((p) => <ProgramCard key={p.id} p={p} onOpen={onOpen} />)}</div></div>}
-            {worth.length > 0 && <div className="mt-8"><p className="mb-3 text-sm font-semibold">Worth a look</p><div className={grid}>{worth.map((p) => <ProgramCard key={p.id} p={p} onOpen={onOpen} />)}</div></div>}
+            {best.length > 0 && <div className="mt-6"><p className="mb-1 text-sm font-semibold">Good matches</p><p className="mb-3 text-xs text-muted">You can apply, it is for your stage, and it gives you what you asked for.</p><div className={grid}>{best.map((p) => <ProgramCard key={p.id} p={p} onOpen={onOpen} />)}</div></div>}
+            {worth.length > 0 && <div className="mt-8"><p className="mb-1 text-sm font-semibold">Worth a look</p><p className="mb-3 text-xs text-muted">Not ruled out, but one answer is a no or missing. The card says which.</p><div className={grid}>{worth.map((p) => <ProgramCard key={p.id} p={p} onOpen={onOpen} />)}</div></div>}
           </>
         ) : (
           <div className={cx("mt-6", grid)} data-testid="nav-others">{visible.map((p) => <ProgramCard key={p.id} p={p} onOpen={onOpen} />)}</div>

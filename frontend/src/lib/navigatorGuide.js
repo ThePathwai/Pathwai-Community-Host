@@ -33,7 +33,7 @@ const KEYWORD_WORDS = {
   ip: ["patent", "trademark", "intellectual"], talent: ["hire", "hiring", "talent", "intern", "staff"], network: ["network", "introduc", "connect"],
   tax: ["tax"], training: ["training", "course", "learn", "workshop"], visa: ["immigra", "visa", "permanent resident", "work permit"],
 };
-const FIT_LINE = { strong: "It looks like a strong fit for you.", possible: "It could work for you.", later: "Not yet, but it could be a fit later." };
+const FIT_LINE = { strong: "It looks like a good match for you.", possible: "It is worth a look.", later: "Not yet, but it could be a match later." };
 const MISSING_LABELS = [["needs", "what you need next"], ["sectors", "what you build"], ["incorporated", "whether you are incorporated"], ["goal", "your next goal"], ["city", "your city"], ["age", "your age or birthday"]];
 
 const esc = (s) => s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
@@ -77,7 +77,7 @@ function deadlineRaw(p, today) {
 }
 export const deadlineText = (p, today) => sent(deadlineRaw(p, today));
 
-const rowOf = (p, ev, today) => ({ ...brief(p), status: effectiveStatus(p, today), fit: ev.fit, score: ev.score, reasons: ev.reasons, cautions: ev.cautions, skip: ev.skip ?? null });
+const rowOf = (p, ev, today) => ({ ...brief(p), status: effectiveStatus(p, today), fit: ev.fit, score: ev.score, reasons: ev.reasons, cautions: ev.cautions, skip: ev.skip ?? null, checks: ev.checks });
 
 function detail(p, profile, q, today) {
   let ev = evaluate(p, profile, today);
