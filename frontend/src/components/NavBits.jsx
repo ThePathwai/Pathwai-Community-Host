@@ -1,6 +1,6 @@
 import React from "react";
 import { cx } from "./ui";
-import { STATUS_LABEL } from "../lib/navigator";
+import { STATUS_HELP, STATUS_LABEL } from "../lib/navigator";
 
 // Small pieces shared by the Navigator page, the guide chat and the Hub's next-steps card.
 export const STATUS_STYLE = {
@@ -11,7 +11,7 @@ export const FIT_LABEL = { strong: "Strong fit", possible: "Possible fit", later
 export const FIT_STYLE = { strong: "bg-emerald-500/15 text-emerald-600 dark:text-emerald-400", possible: "bg-sky-500/15 text-sky-600 dark:text-sky-400", later: "bg-amber-500/15 text-amber-700 dark:text-amber-400", skip: "bg-ink/10 text-muted" };
 
 export function Status({ status }) {
-  return <span className={cx("inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold", STATUS_STYLE[status] || STATUS_STYLE.check)}>{STATUS_LABEL[status] || status}</span>;
+  return <span title={STATUS_HELP[status]} className={cx("inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold", STATUS_STYLE[status] || STATUS_STYLE.check)}>{STATUS_LABEL[status] || status}</span>;
 }
 
 // A small ring showing how complete the profile is. The fuller it is, the sharper the matches.

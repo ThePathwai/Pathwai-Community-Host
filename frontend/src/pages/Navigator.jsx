@@ -8,6 +8,8 @@ import { NEED_LABEL, TYPE_LABEL } from "../lib/navigator";
 import { startDemo } from "../lib/demo";
 import { tint, typeMeta } from "../lib/programStyle";
 import { FitMeter, ProgramCard, ProgramDrawer, TypeTile } from "../components/ProgramCards";
+import { Status } from "../components/NavBits";
+import { useTracked } from "../lib/useTracked";
 import Trajectory from "../components/Trajectory";
 import AccountShell from "../components/AccountShell";
 import GuideChat from "../components/GuideChat";
@@ -107,19 +109,25 @@ function ProfileBar({ mine, meta }) {
   );
 }
 
-function Results({ res, meta, loading, generic, onOpen }) {
+const LEGEND = [["open", "taking applications now"], ["rolling", "no deadline, apply whenever"], ["check", "dates not published"]];
+
+function Results({ res, meta, loading, generic, onOpen, tracked, onTrack }) {
+  const [view, setView] = useState("fit");
   const [type, setType] = useState("");
   const [showAll, setShowAll] = useState(false);
   if (!res) return <Spinner />;
-  const { matches, more, later, communities, trajectory, skipped } = res;
-  const all = [...matches, ...more];
-  const counts = all.reduce((o, p) => ({ ...o, [p.type]: (o[p.type] || 0) + 1 }), {});
-  const shown = type ? all.filter((p) => p.type === type) : all;
+  const { matches, more, later, communities, trajectory } = res;
+  const others = res.others || [];
+  const fits = [...matches, ...more];
+  const base = view === "fit" ? fits : others;
+  const counts = base.reduce((o, p) => ({ ...o, [p.type]: (o[p.type] || 0) + 1 }), {});
+  const shown = type ? base.filter((p) => p.type === type) : base;
   const LIMIT = 6;
   const visible = showAll || type ? shown : shown.slice(0, LIMIT);
   const best = visible.filter((p) => p.fit === "strong");
   const worth = visible.filter((p) => p.fit !== "strong");
-  const grid = "grid grid-cols-[minmax(0,1fr)] gap-3 md:grid-cols-[repeat(2,minmax(0,1fr))] 2xl:grid-cols-[repeat(3,minmax(0,1fr))]";
+  const grid = "grid grid-cols-[minmax(0,1fr)] gap-3 md:grid-cols-[repeat(2,minmax(0,1fr))]";
+  const switchView = (v) => { setView(v); setType(""); setShowAll(false); };
   return (
     <div className={cx("space-y-10 transition-opacity", loading && "opacity-60")} aria-busy={loading} data-testid="nav-results">
       {generic && <p className="rounded-xl bg-ink/[.05] p-3 text-sm text-muted">These are examples for an early-stage founder in Ontario. Add your startup to your profile to see yours.</p>}
@@ -131,24 +139,32 @@ function Results({ res, meta, loading, generic, onOpen }) {
             <p className="min-w-0 pt-1 text-[15px] leading-snug text-ink/90">{res.narrative || res.summary}</p>
           </div>
           <p className="eyebrow">Your trajectory</p>
-          <p className="mt-1 text-sm text-muted">{trajectory.story}</p>
-          <p className="mb-5 mt-1 text-xs text-muted">Not every program lines up with a stage. Stage-specific ones sit on the route; the rest apply whenever you are ready.</p>
-          <Trajectory data={trajectory} onPick={onOpen} />
+          <p className="mb-5 mt-1 text-sm text-muted">{trajectory.story}</p>
+          <Trajectory data={trajectory} tracked={tracked} onPick={onOpen} onTrack={onTrack} />
         </section>
       )}
 
       <section data-testid="nav-list">
-        <div className="flex items-end justify-between gap-3">
-          <h2 className="text-xl" style={{ textTransform: "none", letterSpacing: "-0.01em", fontWeight: 700 }}>{all.length ? `${all.length} programs that fit` : "No clean fit yet"}</h2>
+        <div className="flex flex-wrap items-end justify-between gap-3">
+          <h2 className="text-xl" style={{ textTransform: "none", letterSpacing: "-0.01em", fontWeight: 700 }}>{view === "fit" ? (fits.length ? `${fits.length} programs that fit you` : "No clean fit yet") : `${others.length} programs not matched to you`}</h2>
+          <Segmented items={[["fit", `For you · ${fits.length}`], ["other", `Everything else · ${others.length}`]]} value={view} onChange={switchView} />
         </div>
+        <p className="mt-2 text-sm text-muted">{view === "fit" ? "Matched to your stage, needs, province and group." : "Real programs too. They are not matched to you yet because of stage, province, group or sector. Each card says why."}</p>
+        <p className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1.5 text-xs text-muted" data-testid="nav-legend">{LEGEND.map(([k, t]) => <span key={k} className="inline-flex items-center gap-1.5"><Status status={k} />{t}</span>)}</p>
         {Object.keys(counts).length > 1 && (
           <div className="pw-rail -mx-4 mt-4 flex gap-2 overflow-x-auto px-4 pb-1 sm:mx-0 sm:px-0" role="group" aria-label="Filter by type">
-            <Pill on={!type} onClick={() => setType("")} testId="nav-type-all">All<span className="text-xs opacity-60">{all.length}</span></Pill>
+            <Pill on={!type} onClick={() => setType("")} testId="nav-type-all">All<span className="text-xs opacity-60">{base.length}</span></Pill>
             {Object.entries(counts).map(([k, n]) => { const { color, Icon } = typeMeta(k); return <Pill key={k} on={type === k} color={color} onClick={() => setType(type === k ? "" : k)} testId={`nav-type-${k}`}><Icon className="h-3.5 w-3.5" aria-hidden />{TYPE_LABEL[k] || k}<span className="text-xs opacity-60">{n}</span></Pill>; })}
           </div>
         )}
-        {best.length > 0 && <div className="mt-6"><p className="mb-3 text-sm font-semibold">Best fits</p><div className={grid}>{best.map((p) => <ProgramCard key={p.id} p={p} onOpen={onOpen} />)}</div></div>}
-        {worth.length > 0 && <div className="mt-8"><p className="mb-3 text-sm font-semibold">Worth a look</p><div className={grid}>{worth.map((p) => <ProgramCard key={p.id} p={p} onOpen={onOpen} />)}</div></div>}
+        {view === "fit" ? (
+          <>
+            {best.length > 0 && <div className="mt-6"><p className="mb-3 text-sm font-semibold">Best fits</p><div className={grid}>{best.map((p) => <ProgramCard key={p.id} p={p} onOpen={onOpen} />)}</div></div>}
+            {worth.length > 0 && <div className="mt-8"><p className="mb-3 text-sm font-semibold">Worth a look</p><div className={grid}>{worth.map((p) => <ProgramCard key={p.id} p={p} onOpen={onOpen} />)}</div></div>}
+          </>
+        ) : (
+          <div className={cx("mt-6", grid)} data-testid="nav-others">{visible.map((p) => <ProgramCard key={p.id} p={p} onOpen={onOpen} />)}</div>
+        )}
         {!showAll && !type && shown.length > LIMIT && <button type="button" onClick={() => setShowAll(true)} className="btn-ghost mt-5 w-full !py-3 text-sm" data-testid="nav-show-all">Show {shown.length - LIMIT} more</button>}
       </section>
 
@@ -174,10 +190,7 @@ function Results({ res, meta, loading, generic, onOpen }) {
         </details>
       )}
 
-      <p className="text-xs text-muted">
-        {skipped > 0 ? `${skipped} programs were left out because they are for other provinces, other groups, other stages or age limits. ` : ""}
-        Details change without notice, so always confirm on the official page. Directory checked {dayLabel(meta.version)}.
-      </p>
+      <p className="text-xs text-muted">Details change without notice, so always confirm on the official page. Directory checked {dayLabel(meta.version)}.</p>
     </div>
   );
 }
@@ -222,6 +235,7 @@ export default function Navigator({ embedded }) {
   const [loading, setLoading] = useState(false);
   const [err, setErr] = useState("");
   const [open, setOpen] = useState(null);
+  const { tracked, setTracked, track } = useTracked();
   const seq = useRef(0);
   const ready = !account || mine !== null;       // signed in: wait for the profile so we never flash results for someone else's answers
   const generic = !!account && ready && !mine?.stage;
@@ -233,6 +247,7 @@ export default function Navigator({ embedded }) {
     if (!account) { setMine(null); return; }
     api.get("/navigator/me").then((r) => {
       setMine(r.data.startup || {});
+      setTracked(r.data.tracked || []);
       setProfile(r.data.profile && r.data.profile.stage ? fromAccount(r.data.profile) : DEFAULT);
     }).catch(() => setMine({}));
   }, [account?.id]); // eslint-disable-line react-hooks/exhaustive-deps
@@ -272,10 +287,10 @@ export default function Navigator({ embedded }) {
       ) : account ? (
         <div className="space-y-6">
           {mine === null ? <Spinner /> : <ProfileBar mine={mine} meta={meta} />}
-          {ready && <Results res={res} meta={meta} loading={loading} generic={generic} onOpen={setOpen} />}
+          {ready && <Results res={res} meta={meta} loading={loading} generic={generic} onOpen={setOpen} tracked={tracked} onTrack={track} />}
         </div>
       ) : <SignedOutGate />}
-      <ProgramDrawer p={open} onClose={() => setOpen(null)} meta={meta} />
+      <ProgramDrawer p={open} onClose={() => setOpen(null)} meta={meta} tracked={tracked} onTrack={account ? track : undefined} stage={res?.trajectory?.current || mine?.stage || "idea"} />
     </div>
   );
 

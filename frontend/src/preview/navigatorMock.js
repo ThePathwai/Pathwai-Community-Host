@@ -78,9 +78,14 @@ export function navigatorCall(method, path, body, params, ctx) {
     const a = ctx.account;
     const st = (a && a.startup) || {};
     const profile = Object.keys(st).length ? { ...st, age: a.age || null, city: String(a.location || "").split(",")[0].trim() } : {};
-    return ok(config, { signed_in: !!a, profile, startup: st });
+    return ok(config, { signed_in: !!a, profile, startup: st, tracked: (a && a.tracked) || [] });
   }
   if (path === "/navigator/home") return ok(config, guide.homeFeed(allPrograms(ctx), optedIn(ctx), ctx.account, today));
+  if (path === "/navigator/track" && method === "post") {
+    if (!ctx.account) return fail(config, 401, "Not authenticated");
+    try { ctx.account.tracked = nav.updateTracked(ctx.account.tracked, body || {}, (ctx.account.startup || {}).stage || "idea", today); } catch (e) { return fail(config, 400, e.message); }
+    return ok(config, { tracked: ctx.account.tracked });
+  }
   if (path === "/navigator/seen" && method === "post") {
     if (!ctx.account) return fail(config, 401, "Not authenticated");
     ctx.account.nav_seen = guide.homeFeed(allPrograms(ctx), optedIn(ctx), ctx.account, today).live_ids || [];

@@ -17,7 +17,15 @@ export const PROVINCES = ["ON", "BC", "AB", "SK", "MB", "QC", "NB", "NS", "PE", 
 export const TYPES = ["grant", "loan", "tax_credit", "accelerator", "incubator", "mentorship", "competition", "investor", "immigration", "research_partnership", "resource"];
 export const TYPE_LABEL = { grant: "Grant", loan: "Loan", tax_credit: "Tax credit", accelerator: "Accelerator", incubator: "Incubator", mentorship: "Mentorship", competition: "Competition", investor: "Investor", immigration: "Immigration", research_partnership: "Research partner", resource: "Resource" };
 export const STATUSES = ["open", "rolling", "check", "closed", "paused"];
-export const STATUS_LABEL = { open: "Open", rolling: "Rolling", check: "Check the site", closed: "Closed", paused: "Paused" };
+// Plain words: open = taking applications now, rolling = no deadline, check = dates not published.
+export const STATUS_LABEL = { open: "Open now", rolling: "Apply anytime", check: "Dates not posted", closed: "Closed", paused: "Paused" };
+export const STATUS_HELP = {
+  open: "Taking applications right now. If there is a closing date, it is shown.",
+  rolling: "No deadline. Apply whenever you are ready.",
+  check: "The organisation has not published dates. Check its page before you plan around it.",
+  closed: "Not taking applications.",
+  paused: "Not taking applications for now.",
+};
 const STATUS_POINTS = { open: 10, rolling: 8, check: 0, closed: -25, paused: -35 };
 const VERIFIED_POINTS = { official: 4, third_party: 1, unconfirmed: -4 };
 const PHASE_ORDER = ["learn", "fund", "scale"];
@@ -100,7 +108,7 @@ export function evaluate(p, profile, today) {
   const age = profile.age;
   const lo = req.age_min ?? null; const hi = req.age_max ?? null;
   if (lo !== null || hi !== null) {
-    if (age !== null && ((lo !== null && age < lo) || (hi !== null && age > hi))) return skipRow("Age limit");
+    if (age !== null && ((lo !== null && age < lo) || (hi !== null && age > hi))) return skipRow("Age limit " + (lo !== null && hi !== null ? `${lo} to ${hi}` : lo !== null ? `${lo}+` : `up to ${hi}`));
     if (age === null) cautions.push("Has an age limit" + (lo !== null && hi !== null ? ` (${lo} to ${hi})` : "") + "; add your age to check");
   }
   if (req.student && !profile.student) return skipRow("Only for students");
@@ -180,19 +188,27 @@ export function suggest(programs, rawProfile, today = todayIso(), limit = 8) {
   const profile = normalizeProfile(rawProfile);
   const buckets = { strong: [], possible: [], later: [] };
   let skipped = 0;
+  const others = [];
   for (const p of programs) {
     const ev = evaluate(p, profile, today);
-    if (ev.fit === "skip") { skipped += 1; continue; }
+    if (ev.fit === "skip") {
+      skipped += 1;
+      // Not left out, just not matched: the founder can still look, and sees why it does not line up.
+      others.push({ ...brief(p), status: effectiveStatus(p, today), fit: "skip", score: 0, reasons: [], cautions: [ev.skip] });
+      continue;
+    }
     buckets[ev.fit].push({ ...brief(p), status: effectiveStatus(p, today), fit: ev.fit, score: ev.score, reasons: ev.reasons, cautions: ev.cautions });
   }
   for (const k of Object.keys(buckets)) buckets[k].sort(byScore);
   const ranked = [...buckets.strong, ...buckets.possible];
+  const liveRank = { open: 0, rolling: 1, check: 2, closed: 3, paused: 3 };
+  others.sort((a, b) => ((liveRank[a.status] ?? 2) - (liveRank[b.status] ?? 2)) || (a.name < b.name ? -1 : a.name > b.name ? 1 : 0));
   const path = [];
   for (const phase of PHASE_ORDER) {
     const pick = ranked.find((r) => r.phase === phase && r.status !== "closed" && r.status !== "paused") || ranked.find((r) => r.phase === phase);
     if (pick) path.push({ phase, label: PHASE_LABEL[phase], program_id: pick.id, name: pick.name, why: why(pick) });
   }
-  return { profile, matches: ranked.slice(0, limit), more: ranked.slice(limit, limit + 8), later: buckets.later.slice(0, 5), skipped, path, trajectory: trajectory(programs, profile, today), summary: summaryText(profile, ranked, buckets.later), as_of: today };
+  return { profile, matches: ranked.slice(0, limit), more: ranked.slice(limit, limit + 8), later: buckets.later.slice(0, 5), skipped, others, path, trajectory: trajectory(programs, profile, today), summary: summaryText(profile, ranked, buckets.later), as_of: today };
 }
 
 export const STAGE_NOW = { idea: "at the idea stage", prototype: "at the prototype stage", launched: "just launched", revenue: "earning revenue", growth: "growing" };
@@ -206,7 +222,7 @@ const isAnytime = (p) => {
 };
 const cmpKey = (a, b) => { for (let k = 0; k < 3; k += 1) { if (a.key[k] < b.key[k]) return -1; if (a.key[k] > b.key[k]) return 1; } return 0; };
 
-export function trajectory(programs, rawProfile, today = todayIso(), perStage = 3, anyLimit = 6) {
+export function trajectory(programs, rawProfile, today = todayIso(), perStage = 3, anyLimit = 6, currentLimit = 5) {
   const profile = normalizeProfile(rawProfile);
   const cur = STAGES.indexOf(profile.stage);
   const stateOf = (i) => (i < cur ? "past" : i === cur ? "current" : "future");
@@ -231,9 +247,10 @@ export function trajectory(programs, rawProfile, today = todayIso(), perStage = 
     }
     rows.sort(cmpKey);
     let picked = [];
-    for (const cap of [2, perStage]) {
+    const limit = state === "current" ? currentLimit : perStage;
+    for (const cap of [2, limit]) {
       for (const r of rows) {
-        if (picked.length >= perStage) break;
+        if (picked.length >= limit) break;
         if (picked.includes(r) || picked.filter((x) => x.p.type === r.p.type).length >= cap) continue;
         picked.push(r);
       }
@@ -269,6 +286,25 @@ export function trajectory(programs, rawProfile, today = todayIso(), perStage = 
     else story += `Next up is ${nxt.label}. Nothing new opens up there, so lean on what already fits.`;
   } else story += "You're at the top of the ladder, so the focus now is scaling and export.";
   return { current: profile.stage, index: cur, stages, anytime, anytime_total: anyRows.length, story };
+}
+
+// Programs a founder is in now, or has been part of at an earlier stage. Mirrors update_tracked() in backend/navigator.py.
+export const MAX_TRACKED = 60;
+export function updateTracked(items, body, defaultStage = "idea", today = todayIso()) {
+  const rows = (items || []).filter((i) => i && i.id);
+  const state = String(body.state || "");
+  if (!["in", "done", "none"].includes(state)) throw new Error("Choose in, done or none");
+  const pid = String(body.id || "").trim().slice(0, 80);
+  if (state === "none") return rows.filter((i) => i.id !== pid);
+  const name = String(body.name || "").split(/\s+/).filter(Boolean).join(" ").slice(0, 120);
+  if (name.length < 2) throw new Error("Give the program a name");
+  let stage = String(body.stage || "").trim().toLowerCase();
+  if (!STAGES.includes(stage)) stage = STAGES.includes(defaultStage) ? defaultStage : "idea";
+  const kind = String(body.type || "");
+  const row = { id: pid || "m-" + Math.random().toString(16).slice(2, 10), name, org: String(body.org || "").split(/\s+/).filter(Boolean).join(" ").slice(0, 120), type: TYPES.includes(kind) ? kind : "", state, stage, at: today };
+  const out = [...rows.filter((i) => i.id !== row.id), row];
+  if (out.length > MAX_TRACKED) throw new Error(`You can track up to ${MAX_TRACKED} programs`);
+  return out;
 }
 
 export function evaluateCommunity(com, profile) {

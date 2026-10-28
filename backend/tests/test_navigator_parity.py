@@ -67,7 +67,7 @@ def test_python_and_javascript_rules_agree():
 
     def shape(r):
         rows = lambda xs: [(x["id"], x["fit"], x["score"], x["status"], x["reasons"], x["cautions"]) for x in xs]
-        return {"matches": rows(r["matches"]), "more": rows(r["more"]), "later": rows(r["later"]), "skipped": r["skipped"], "path": r["path"], "summary": r["summary"], "profile": r["profile"], "trajectory": r["trajectory"]}
+        return {"matches": rows(r["matches"]), "more": rows(r["more"]), "later": rows(r["later"]), "skipped": r["skipped"], "others": [(o["id"], o["status"], o["cautions"]) for o in r["others"]], "path": r["path"], "summary": r["summary"], "profile": r["profile"], "trajectory": r["trajectory"]}
 
     today = date.fromisoformat(TODAY)
     assert len(js) == len(cs) > 100
@@ -136,8 +136,8 @@ def test_not_every_program_is_tied_to_a_stage():
     assert all(nav._anytime(by_id[r["id"]]) for r in t["anytime"])
     for c in t["stages"]:
         assert all(not nav._anytime(by_id[r["id"]]) for r in c["programs"])
-        assert len(c["programs"]) <= 3
-    assert any(len(c["programs"]) < 3 for c in t["stages"])
+        assert len(c["programs"]) <= (5 if c["state"] == "current" else 3)
+    assert any(len(c["programs"]) < 3 for c in t["stages"] if c["state"] != "current")
     # Nothing is forced onto a stage: a founder past the last stage still gets an honest, possibly empty, set of columns.
     top = nav.trajectory(programs, {"stage": "growth", "province": "ON"}, date.fromisoformat(TODAY))
     assert "top of the ladder" in top["story"]

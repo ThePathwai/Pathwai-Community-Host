@@ -12,6 +12,7 @@ tests/test_navigator.py checks the two give identical answers on shared cases. C
 from __future__ import annotations
 
 import json
+import uuid
 from datetime import date
 from pathlib import Path
 from typing import Any, Dict, List, Optional
@@ -43,7 +44,16 @@ TYPE_LABEL = {
     "competition": "Competition", "investor": "Investor", "immigration": "Immigration", "research_partnership": "Research partner", "resource": "Resource",
 }
 STATUSES = ["open", "rolling", "check", "closed", "paused"]
-STATUS_LABEL = {"open": "Open", "rolling": "Rolling", "check": "Check the site", "closed": "Closed", "paused": "Paused"}
+# Plain words, because "open" and "rolling" read as the same thing: open = taking applications now (often with a closing date),
+# rolling = no deadline, apply whenever, check = the organisation has not published dates.
+STATUS_LABEL = {"open": "Open now", "rolling": "Apply anytime", "check": "Dates not posted", "closed": "Closed", "paused": "Paused"}
+STATUS_HELP = {
+    "open": "Taking applications right now. If there is a closing date, it is shown.",
+    "rolling": "No deadline. Apply whenever you are ready.",
+    "check": "The organisation has not published dates. Check its page before you plan around it.",
+    "closed": "Not taking applications.",
+    "paused": "Not taking applications for now.",
+}
 STATUS_POINTS = {"open": 10, "rolling": 8, "check": 0, "closed": -25, "paused": -35}
 VERIFIED_POINTS = {"official": 4, "third_party": 1, "unconfirmed": -4}
 PHASE_ORDER = ["learn", "fund", "scale"]
@@ -315,16 +325,21 @@ def suggest(programs: List[Dict[str, Any]], raw_profile: Optional[Dict[str, Any]
     possible: List[Dict[str, Any]] = []
     later: List[Dict[str, Any]] = []
     skipped = 0
+    others: List[Dict[str, Any]] = []
     for p in programs:
         ev = evaluate(p, profile, today)
         if ev["fit"] == "skip":
             skipped += 1
+            # Not left out, just not matched: the founder can still look, and sees why it does not line up.
+            others.append({**_brief(p), "status": effective_status(p, today), "fit": "skip", "score": 0, "reasons": [], "cautions": [ev["skip"]]})
             continue
         row = {**_brief(p), "status": effective_status(p, today), "fit": ev["fit"], "score": ev["score"], "reasons": ev["reasons"], "cautions": ev["cautions"]}
         {"strong": strong, "possible": possible, "later": later}[ev["fit"]].append(row)
     for bucket in (strong, possible, later):
         bucket.sort(key=lambda r: (-r["score"], r["name"]))
     ranked = strong + possible
+    live_rank = {"open": 0, "rolling": 1, "check": 2, "closed": 3, "paused": 3}
+    others.sort(key=lambda r: (live_rank.get(r["status"], 2), r["name"]))
     # A three-step path: the best "start here", "fund it" and "scale" match, so the answer reads as a plan rather than a list.
     path: List[Dict[str, Any]] = []
     for phase in PHASE_ORDER:
@@ -337,6 +352,7 @@ def suggest(programs: List[Dict[str, Any]], raw_profile: Optional[Dict[str, Any]
         "more": ranked[limit:limit + 8],
         "later": later[:5],
         "skipped": skipped,
+        "others": others,
         "path": path,
         "trajectory": trajectory(programs, profile, today),
         "summary": summary_text(profile, ranked, later),
@@ -350,7 +366,7 @@ def _anytime(p: Dict[str, Any]) -> bool:
     return p.get("type") == "resource" or len(st) >= 4 or not st
 
 
-def trajectory(programs: List[Dict[str, Any]], raw_profile: Optional[Dict[str, Any]], today: Optional[date] = None, per_stage: int = 3, any_limit: int = 6) -> Dict[str, Any]:
+def trajectory(programs: List[Dict[str, Any]], raw_profile: Optional[Dict[str, Any]], today: Optional[date] = None, per_stage: int = 3, any_limit: int = 6, current_limit: int = 5) -> Dict[str, Any]:
     """Where the founder came from, where they are and where they are going.
 
     Not every program lines up with a stage, and the route does not pretend they do. Programs aimed at particular stages sit
@@ -392,10 +408,11 @@ def trajectory(programs: List[Dict[str, Any]], raw_profile: Optional[Dict[str, A
             rows.append((live, -ev["score"], p["name"], p, ev, status, first, last))
         rows.sort(key=lambda r: r[:3])
         picked: List[Any] = []
+        limit = current_limit if state == "current" else per_stage
         # Mix the column: at most two of one kind first, then fill any gaps from what is left.
-        for cap in (2, per_stage):
+        for cap in (2, limit):
             for r in rows:
-                if len(picked) >= per_stage:
+                if len(picked) >= limit:
                     break
                 if r in picked or sum(1 for x in picked if x[3].get("type") == r[3].get("type")) >= cap:
                     continue
@@ -458,6 +475,38 @@ def summary_text(profile: Dict[str, Any], ranked: List[Dict[str, Any]], later: L
     if later:
         s += f" {later[0]['name']} is worth keeping in view for later."
     return s
+
+
+# ---------- programs a founder is in, or has been part of ----------
+TRACK_STATES = ("in", "done", "none")
+MAX_TRACKED = 60
+
+
+def update_tracked(items: Optional[List[Dict[str, Any]]], body: Dict[str, Any], default_stage: str = "idea", today: Optional[date] = None) -> List[Dict[str, Any]]:
+    """Add, change or remove one entry in the account's "programs I'm in / have done" list. Raises ValueError with a readable message.
+
+    state "in" = in it now, "done" = took part before, "none" = remove. `stage` is the company stage it happened at."""
+    today = today or date.today()
+    rows = [i for i in (items or []) if isinstance(i, dict) and i.get("id")]
+    state = str(body.get("state") or "")
+    if state not in TRACK_STATES:
+        raise ValueError("Choose in, done or none")
+    pid = str(body.get("id") or "").strip()[:80]
+    if state == "none":
+        return [i for i in rows if i["id"] != pid]
+    name = " ".join(str(body.get("name") or "").split())[:120]
+    if len(name) < 2:
+        raise ValueError("Give the program a name")
+    stage = str(body.get("stage") or "").strip().lower()
+    if stage not in STAGES:
+        stage = default_stage if default_stage in STAGES else "idea"
+    kind = str(body.get("type") or "")
+    row = {"id": pid or "m-" + uuid.uuid4().hex[:8], "name": name, "org": " ".join(str(body.get("org") or "").split())[:120],
+           "type": kind if kind in TYPES else "", "state": state, "stage": stage, "at": today.isoformat()}
+    out = [i for i in rows if i["id"] != row["id"]] + [row]
+    if len(out) > MAX_TRACKED:
+        raise ValueError(f"You can track up to {MAX_TRACKED} programs")
+    return out
 
 
 # ---------- communities ----------

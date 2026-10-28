@@ -240,7 +240,7 @@ def test_navigator_profile_merges_age_and_city_back_in():
 
 def test_account_startup_profile_round_trips_and_prefills_the_navigator():
     with TestClient(server.app) as c:
-        assert c.get("/api/navigator/me").json() == {"signed_in": False, "profile": {}, "startup": {}}
+        assert c.get("/api/navigator/me").json() == {"signed_in": False, "profile": {}, "startup": {}, "tracked": []}
         r = c.post("/api/hub/signup", json={"accepted_terms": True, "email": "founder-nav@example.com", "password": "Sup3rSecret!", "name": "Ada Founder"})
         assert r.status_code == 201, r.text
         r = c.patch("/api/hub/profile", json={"location": "Toronto, ON", "startup": {"name": "Lumen", "one_liner": "Solar for condos", "stage": "revenue", "sectors": ["cleantech", "zzz"],
@@ -271,3 +271,54 @@ def test_joining_a_community_carries_the_startup_name_across_but_not_the_private
     card = hub._startup_card(nav.clean_startup({"name": "Lumen", "one_liner": "Solar", "stage": "prototype", "sectors": ["cleantech"], "needs": ["funding"], "goal": "secret"}))
     assert card == {"startup_name": "Lumen", "startup_one_liner": "Solar", "startup_stage": "mvp", "startup_sector": "cleantech"}
     assert hub._startup_card({}) == {}
+
+
+# --------------------------------------------------------------------------- plain status words, non-matches, tracking
+def test_status_words_say_what_they_mean():
+    assert nav.STATUS_LABEL["open"] == "Open now" and nav.STATUS_LABEL["rolling"] == "Apply anytime" and nav.STATUS_LABEL["check"] == "Dates not posted"
+    assert len(set(nav.STATUS_LABEL.values())) == len(nav.STATUS_LABEL)
+    assert set(nav.STATUS_HELP) == set(nav.STATUSES)
+
+
+def test_programs_that_do_not_match_are_listed_with_the_reason_not_hidden():
+    res = nav.suggest(PROGRAMS, {"stage": "growth", "province": "ON", "needs": ["funding"]}, TODAY, limit=100)
+    ids = {m["id"] for m in res["matches"] + res["more"]} | {m["id"] for m in nav.suggest(PROGRAMS, {"stage": "growth", "province": "ON", "needs": ["funding"]}, TODAY, limit=100)["later"]}
+    others = {o["id"] for o in res["others"]}
+    assert ids.isdisjoint(others) and len(res["others"]) == res["skipped"] > 0
+    assert len(ids) + len(others) == len(PROGRAMS)
+    assert all(o["fit"] == "skip" and o["cautions"] and o["cautions"][0] for o in res["others"])
+    belf = next(o for o in res["others"] if o["id"] == "belf")
+    assert "Black" in belf["cautions"][0]
+
+
+def test_tracking_programs_you_are_in_or_have_done():
+    items = nav.update_tracked([], {"id": "irap", "name": "NRC IRAP", "type": "grant", "state": "in"}, "launched", TODAY)
+    assert items == [{"id": "irap", "name": "NRC IRAP", "org": "", "type": "grant", "state": "in", "stage": "launched", "at": "2026-10-27"}]
+    items = nav.update_tracked(items, {"id": "irap", "name": "NRC IRAP", "state": "done", "stage": "prototype"}, "launched", TODAY)
+    assert len(items) == 1 and items[0]["state"] == "done" and items[0]["stage"] == "prototype"
+    manual = nav.update_tracked(items, {"name": "  Founders  Club ", "state": "done", "stage": "idea", "type": "nope"}, "launched", TODAY)
+    assert manual[-1]["id"].startswith("m-") and manual[-1]["name"] == "Founders Club" and manual[-1]["type"] == ""
+    assert nav.update_tracked(manual, {"id": "irap", "state": "none"}, "launched", TODAY) == [manual[-1]]
+    for bad in ({"state": "maybe", "name": "x y"}, {"state": "in", "name": " "}):
+        with pytest.raises(ValueError):
+            nav.update_tracked([], bad, "idea", TODAY)
+    many = [{"id": f"m-{i}", "name": "ab", "state": "done", "stage": "idea"} for i in range(nav.MAX_TRACKED)]
+    with pytest.raises(ValueError):
+        nav.update_tracked(many, {"name": "one more", "state": "in"}, "idea", TODAY)
+
+
+def test_tracking_round_trips_on_the_account():
+    with TestClient(server.app) as c:
+        assert c.post("/api/navigator/track", json={"id": "irap", "name": "NRC IRAP", "state": "in"}).status_code in (401, 403)
+        r = c.post("/api/hub/signup", json={"accepted_terms": True, "email": "tracker-nav@example.com", "password": "Sup3rSecret!", "name": "Tracker"})
+        assert r.status_code == 201, r.text
+        c.patch("/api/hub/profile", json={"startup": {"name": "T", "stage": "revenue"}})
+        r = c.post("/api/navigator/track", json={"id": "sred", "name": "SR&ED tax incentive", "type": "tax_credit", "state": "in"})
+        assert r.status_code == 200 and r.json()["tracked"][0]["stage"] == "revenue"
+        c.post("/api/navigator/track", json={"name": "Basecamp", "state": "done", "stage": "idea"})
+        me = c.get("/api/navigator/me").json()
+        assert [t["state"] for t in me["tracked"]] == ["in", "done"]
+        assert c.post("/api/navigator/track", json={"state": "wat", "name": "zz"}).status_code == 400
+        assert len(c.post("/api/navigator/track", json={"id": "sred", "state": "none"}).json()["tracked"]) == 1
+        c.patch("/api/hub/profile", json={"bio": "hi"})
+        assert len(c.get("/api/navigator/me").json()["tracked"]) == 1

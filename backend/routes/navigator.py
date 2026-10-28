@@ -88,7 +88,7 @@ async def navigator_meta() -> Dict[str, Any]:
         "audiences": [{"key": k, "label": nav.AUDIENCE_LABEL[k]} for k in nav.AUDIENCES],
         "sectors": nav.SECTORS, "provinces": nav.PROVINCES,
         "types": [{"key": k, "label": nav.TYPE_LABEL[k]} for k in nav.TYPES],
-        "statuses": [{"key": k, "label": nav.STATUS_LABEL[k]} for k in nav.STATUSES],
+        "statuses": [{"key": k, "label": nav.STATUS_LABEL[k], "help": nav.STATUS_HELP[k]} for k in nav.STATUSES],
     }
 
 
@@ -132,7 +132,7 @@ async def navigator_me(request: Request) -> Dict[str, Any]:
     """The signed-in person's startup profile, shaped for the Navigator form. Signed out (or nothing filled in yet)
     returns an empty profile -- the Navigator works the same either way, this only saves them retyping."""
     acc = await account_from_request(request)
-    return {"signed_in": bool(acc), "profile": nav.navigator_profile(acc), "startup": (acc or {}).get("startup") or {}}
+    return {"signed_in": bool(acc), "profile": nav.navigator_profile(acc), "startup": (acc or {}).get("startup") or {}, "tracked": (acc or {}).get("tracked") or []}
 
 
 @router.get("/navigator/home")
@@ -150,6 +150,28 @@ async def navigator_seen(acc: dict = Depends(require_account)) -> Dict[str, Any]
     ids = feed.get("live_ids") or []
     await hub_db().accounts.update_one({"id": acc["id"]}, {"$set": {"nav_seen": ids}})
     return {"ok": True, "count": len(ids)}
+
+
+class TrackIn(BaseModel):
+    id: str = Field(default="", max_length=80)
+    name: str = Field(default="", max_length=120)
+    org: str = Field(default="", max_length=120)
+    type: str = Field(default="", max_length=30)
+    state: str = Field(max_length=10)
+    stage: Optional[str] = Field(default=None, max_length=20)
+
+
+@router.post("/navigator/track")
+async def navigator_track(body: TrackIn, acc: dict = Depends(require_account)) -> Dict[str, Any]:
+    """Mark a program as one the person is in now, or has been part of at an earlier stage (or remove it). Kept on the
+    account, so the trajectory can show their history without it crowding the page."""
+    st = acc.get("startup") or {}
+    try:
+        items = nav.update_tracked(acc.get("tracked"), body.model_dump(), st.get("stage") or "idea")
+    except ValueError as exc:
+        raise HTTPException(400, str(exc))
+    await hub_db().accounts.update_one({"id": acc["id"]}, {"$set": {"tracked": items}})
+    return {"tracked": items}
 
 
 async def _reword(question: str, reply: str) -> Optional[str]:

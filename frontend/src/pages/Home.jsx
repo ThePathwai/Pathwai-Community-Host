@@ -9,6 +9,7 @@ import { deadlineInfo, leadReason, tint, typeMeta } from "../lib/programStyle";
 import { Ring, Status } from "../components/NavBits";
 import { DeadlineChip, ProgramDrawer, TypeTile } from "../components/ProgramCards";
 import Trajectory from "../components/Trajectory";
+import { useTracked } from "../lib/useTracked";
 import { useShell } from "../components/AccountShell";
 import { Spinner, cx } from "../components/ui";
 
@@ -39,7 +40,8 @@ export default function Home({ items, onEnter }) {
   const [d, setD] = useState(null);
   const [open, setOpen] = useState(null);
   const [q, setQ] = useState("");
-  useEffect(() => { api.get("/navigator/home").then((r) => setD(r.data)).catch(() => setD({ has_profile: false, completeness: { percent: 0, missing: [] } })); }, [account?.startup]);
+  const { tracked, setTracked, track } = useTracked();
+  useEffect(() => { api.get("/navigator/home").then((r) => { setD(r.data); setTracked(r.data.tracked || []); }).catch(() => setD({ has_profile: false, completeness: { percent: 0, missing: [] } })); }, [account?.startup, setTracked]);
   const mineInnovation = useMemo(() => (items || []).filter((c) => c.my?.status === "approved" && groupOf(c) === "innovation"), [items]);
   const first = (account?.name || "").split(/\s+/)[0];
   const ask = (text) => shell?.openGuide(text);
@@ -163,7 +165,7 @@ export default function Home({ items, onEnter }) {
           <section className="rounded-3xl border border-line bg-surface p-5" data-testid="home-path">
             <h2 className="text-lg" style={{ textTransform: "none", letterSpacing: "-0.01em", fontWeight: 700 }}>Your trajectory</h2>
             <p className="mb-4 mt-1 text-xs text-muted">Where you came from, where you are, what opens up next.</p>
-            <Trajectory compact data={d.trajectory} onPick={(r) => setOpen(r)} />
+            <Trajectory compact data={d.trajectory} tracked={tracked} onPick={(r) => setOpen(r)} />
             <Link to="/navigator" className="mt-4 inline-flex items-center gap-1 text-sm font-semibold hover:underline">See the full route<ArrowRight className="h-4 w-4" aria-hidden /></Link>
           </section>
 
@@ -180,7 +182,7 @@ export default function Home({ items, onEnter }) {
           </section>
         </aside>
       </div>
-      <ProgramDrawer p={open} onClose={() => setOpen(null)} />
+      <ProgramDrawer p={open} onClose={() => setOpen(null)} tracked={tracked} onTrack={track} stage={d.trajectory?.current || d.startup?.stage || "idea"} />
     </div>
   );
 }
