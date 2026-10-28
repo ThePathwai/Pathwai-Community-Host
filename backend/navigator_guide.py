@@ -12,6 +12,7 @@ import re
 from datetime import date
 from typing import Any, Dict, List, Optional
 
+import journey as jny
 import navigator as nav
 
 MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
@@ -294,7 +295,8 @@ def home_feed(programs: List[Dict[str, Any]], communities: List[Dict[str, Any]],
     return {
         "signed_in": True, "has_profile": True,
         "startup": {"name": startup.get("name") or "", "one_liner": startup.get("one_liner") or "", "stage": raw["stage"], "stage_label": nav.STAGE_LABEL[raw["stage"]]},
-        "summary": res["summary"], "top": ranked[:3], "path": res["path"], "trajectory": res["trajectory"], "tracked": (account or {}).get("tracked") or [], "closing_soon": soon[:6], "matched": len(ranked),
+        "summary": res["summary"], "top": ranked[:3], "path": res["path"], "trajectory": res["trajectory"], "tracked": (account or {}).get("tracked") or [],
+        "journey": jny.summary((account or {}).get("journey") or [], raw["stage"], today), "closing_soon": soon[:6], "matched": len(ranked),
         "communities": nav.rank_communities(communities, raw, limit=3),
         "new_ids": new_ids[:20], "new_count": len(new_ids), "live_ids": live_ids[:100],
         "completeness": comp, "as_of": today.isoformat(),

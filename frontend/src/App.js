@@ -45,6 +45,7 @@ import Teams from "./pages/Teams";
 import TeamDetail from "./pages/TeamDetail";
 import PublicReport from "./pages/PublicReport";
 import Navigator from "./pages/Navigator";
+import Journey from "./pages/Journey";
 import MyProfile from "./pages/MyProfile";
 
 function Protected({ children, admin }) {
@@ -61,7 +62,7 @@ function Protected({ children, admin }) {
 function NavigatorRoute() {
   const { user, loading } = useAuth();
   if (loading) return <Spinner />;
-  return user ? <Layout><Navigator embedded /></Layout> : <Navigator />;
+  return user ? <Layout><Navigator embedded /></Layout> : <Navigator />; // signed in with no community open: Navigator wraps itself in the account shell
 }
 
 // "Your profile" is the account's own profile, so it works with or without a community open: inside the community's layout when
@@ -69,7 +70,14 @@ function NavigatorRoute() {
 function MyProfileRoute() {
   const { user, loading } = useAuth();
   if (loading) return <Spinner />;
-  return user ? <Layout><MyProfile embedded /></Layout> : <MyProfile />;
+  return user ? <Layout><MyProfile embedded /></Layout> : <MyProfile />; // no community open: MyProfile wraps itself in the account shell
+}
+
+// "Journey" is the account's own startup plan, so like the profile it sits inside a community's layout when one is open and on its own page otherwise.
+function JourneyRoute() {
+  const { user, loading } = useAuth();
+  if (loading) return <Spinner />;
+  return user ? <Layout><Journey embedded /></Layout> : <Journey />;
 }
 
 const P = ({ children, admin }) => <Protected admin={admin}><Layout>{children}</Layout></Protected>;
@@ -94,6 +102,7 @@ export default function App() {
         <Route path="/about" element={<About />} />
         <Route path="/demo/:short" element={<DemoLanding />} />
         <Route path="/navigator" element={<NavigatorRoute />} />
+        <Route path="/journey" element={<JourneyRoute />} />
         <Route path="/me" element={<MyProfileRoute />} />
         <Route path="/humber" element={<Navigate to="/demo/humber" replace />} />
         <Route path="/install" element={<Install />} />

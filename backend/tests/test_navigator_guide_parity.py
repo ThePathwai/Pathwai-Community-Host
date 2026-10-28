@@ -54,7 +54,8 @@ def test_python_and_javascript_guides_agree():
     ]
     with tempfile.TemporaryDirectory() as tmp:
         shutil.copy(LIB / "navigator.js", Path(tmp) / "navigator.mjs")
-        guide = (LIB / "navigatorGuide.js").read_text().replace('from "./navigator"', 'from "./navigator.mjs"')
+        (Path(tmp) / "journey.mjs").write_text((LIB / "journey.js").read_text().replace('from "./navigator"', 'from "./navigator.mjs"'))
+        guide = (LIB / "navigatorGuide.js").read_text().replace('from "./navigator"', 'from "./navigator.mjs"').replace('from "./journey"', 'from "./journey.mjs"')
         (Path(tmp) / "guide.mjs").write_text(guide)
         (Path(tmp) / "run.mjs").write_text(
             "import * as G from './guide.mjs';\nimport fs from 'fs';\n"

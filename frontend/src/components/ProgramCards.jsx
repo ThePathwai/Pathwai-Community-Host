@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { ArrowRight, ArrowUpRight, BadgeCheck, Check, Circle, CircleCheck, CircleHelp, CircleX, Clock, Hourglass, Info, MessageCircle, TriangleAlert, X } from "lucide-react";
 import { Status } from "./NavBits";
@@ -131,8 +131,10 @@ function Section({ title, children }) {
 }
 
 // The detail: a right-hand panel on a computer, a bottom sheet on a phone. Everything about one program, with the way to apply pinned at the bottom.
-export function ProgramDrawer({ p, onClose, meta, tracked, onTrack, stage }) {
+export function ProgramDrawer({ p, onClose, meta, tracked, onTrack, onPlan, stage }) {
   const shell = useShell();
+  const [planned, setPlanned] = useState("");   // "" | "saving" | "added" | an error message
+  useEffect(() => setPlanned(""), [p?.id]);
   useEffect(() => {
     if (!p) return undefined;
     const k = (e) => { if (e.key === "Escape") onClose(); };
@@ -201,9 +203,13 @@ export function ProgramDrawer({ p, onClose, meta, tracked, onTrack, stage }) {
                   className={cx("rounded-full border px-3.5 py-2 text-sm font-semibold transition", mineRow?.state === "in" ? "border-transparent" : "border-line hover:border-ink/40")} style={mineRow?.state === "in" ? { background: "var(--accent)", color: "var(--on-accent)" } : undefined}>I'm in this now</button>
                 <button type="button" onClick={() => mark("done")} aria-pressed={mineRow?.state === "done"} data-testid="track-done"
                   className={cx("rounded-full border px-3.5 py-2 text-sm font-semibold transition", mineRow?.state === "done" ? "border-transparent" : "border-line hover:border-ink/40")} style={mineRow?.state === "done" ? { background: "var(--accent)", color: "var(--on-accent)" } : undefined}>I've done this</button>
+                {onPlan && p.status !== "closed" && p.status !== "paused" && <button type="button" disabled={planned === "saving" || planned === "added"} data-testid="track-plan"
+                  onClick={async () => { setPlanned("saving"); try { await onPlan({ op: "add", title: `${p.type === "resource" ? "Explore" : "Apply to"} ${p.name}`, stage, due: dl ? dl.date : "", key: `prog:${p.id}`, program_id: p.id, program_name: p.name }); setPlanned("added"); } catch (e) { setPlanned(e?.response?.data?.detail || "Could not add it. Please try again."); } }}
+                  className="rounded-full border border-line px-3.5 py-2 text-sm font-semibold transition hover:border-ink/40 disabled:opacity-70">{planned === "added" ? <span className="inline-flex items-center gap-1.5"><Check className="h-3.5 w-3.5" aria-hidden />On your plan</span> : "Add to my plan"}</button>}
                 {mineRow && <button type="button" onClick={() => onTrack({ id: p.id, state: "none" })} className="rounded-full px-3 py-2 text-sm text-muted hover:text-ink" data-testid="track-remove">Remove</button>}
               </div>
-              <p className="mt-2 text-xs text-muted">Kept on your profile. Programs you've done are filed under the stage you were at, out of the way.</p>
+              {planned && planned !== "saving" && planned !== "added" && <p className="mt-2 text-xs text-red-500" role="alert">{planned}</p>}
+              <p className="mt-2 text-xs text-muted">Kept on your profile. Programs you've done are filed under the stage you were at, out of the way.{onPlan ? " \"Add to my plan\" puts it on your Journey with its deadline." : ""}</p>
             </Section>
           )}
 

@@ -16,6 +16,7 @@ from datetime import date
 from fastapi import APIRouter, Depends, HTTPException, Request
 from pydantic import BaseModel, Field
 
+import journey as jny
 import navigator as nav
 import navigator_guide as guide
 from auth import client_ip, rate_limit, require_role
@@ -172,6 +173,50 @@ async def navigator_track(body: TrackIn, acc: dict = Depends(require_account)) -
         raise HTTPException(400, str(exc))
     await hub_db().accounts.update_one({"id": acc["id"]}, {"$set": {"tracked": items}})
     return {"tracked": items}
+
+
+class JourneyIn(BaseModel):
+    op: str = Field(max_length=20)
+    id: Optional[str] = Field(default=None, max_length=40)
+    title: Optional[str] = Field(default=None, max_length=300)
+    stage: Optional[str] = Field(default=None, max_length=20)
+    status: Optional[str] = Field(default=None, max_length=20)
+    due: Optional[str] = Field(default=None, max_length=20)
+    note: Optional[str] = Field(default=None, max_length=1000)
+    key: Optional[str] = Field(default=None, max_length=60)
+    program_id: Optional[str] = Field(default=None, max_length=120)
+    program_name: Optional[str] = Field(default=None, max_length=120)
+    items: Optional[List[Dict[str, Any]]] = None
+
+
+async def _journey_payload(acc: Dict[str, Any], items: List[Dict[str, Any]]) -> Dict[str, Any]:
+    st = acc.get("startup") or {}
+    stage = st.get("stage") or "idea"
+    today = date.today()
+    return {
+        "has_profile": bool(st.get("stage")), "current": stage, "milestones": items,
+        "stages": [{"stage": k, "name": jny.STAGE_NAME[k], "label": nav.STAGE_LABEL[k], "hint": nav.STAGE_HINT[k]} for k in nav.STAGES],
+        "summary": jny.summary(items, stage, today),
+        "suggestions": jny.suggestions(nav.navigator_profile(acc), items, await _all_programs(), today),
+    }
+
+
+@router.get("/navigator/journey")
+async def navigator_journey(acc: dict = Depends(require_account)) -> Dict[str, Any]:
+    """The founder's own plan: milestones by stage, how far along it is, and suggestions that each say why."""
+    return await _journey_payload(acc, acc.get("journey") or [])
+
+
+@router.post("/navigator/journey")
+async def navigator_journey_change(body: JourneyIn, acc: dict = Depends(require_account)) -> Dict[str, Any]:
+    """One change to the plan: add, add_many, update (status, due date, note, stage, title) or remove. Returns the whole journey again."""
+    st = acc.get("startup") or {}
+    try:
+        items = jny.update_journey(acc.get("journey"), body.model_dump(exclude_none=True), st.get("stage") or "idea")
+    except ValueError as exc:
+        raise HTTPException(400, str(exc))
+    await hub_db().accounts.update_one({"id": acc["id"]}, {"$set": {"journey": items}})
+    return await _journey_payload(acc, items)
 
 
 async def _reword(question: str, reply: str) -> Optional[str]:

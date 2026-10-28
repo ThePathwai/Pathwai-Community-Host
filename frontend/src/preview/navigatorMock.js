@@ -4,6 +4,8 @@ import catalog from "./programs_ca.json";
 import * as nav from "../lib/navigator";
 import { humberNavigator } from "./humber";
 import * as guide from "../lib/navigatorGuide";
+import * as jny from "../lib/journey";
+import journeyTemplates from "./journey_templates.json";
 
 const BLANK_PROFILE = { public: false, blurb: "", stages: [], provides: [], audiences: [], sectors: [], city: "", provinces: [] };
 const SEEDED = { "humber-innovation-network": humberNavigator };
@@ -59,6 +61,26 @@ export const DEMO_STARTUP = cleanStartup({ name: "Bright Court", one_liner: "Boo
     traction: "14 groups, 900 players, 38% of groups rebooking weekly.", market: "Recreational leagues and club nights across Canadian cities.", ask: "A $25k grant and one mentor who has scaled a two-sided marketplace." },
   documents: [{ title: "Pitch deck · 10 slides", url: "https://example.com/bright-court-deck" }] });
 
+// Demo only: a founder partway through the plan, with something doing, something due soon and something overdue, so the tracking shows.
+export function demoJourney(today) {
+  const day = (n) => { const d = new Date(today + "T12:00:00Z"); d.setUTCDate(d.getUTCDate() + n); return d.toISOString().slice(0, 10); };
+  const m = (n, stage, title, status, extra = {}) => ({ id: "j-demo" + n, stage, title, status, due: "", note: "", key: "", program_id: "", program_name: "", created_at: day(-60), done_at: status === "done" ? day(-40 + n * 2) : "", ...extra });
+  return [
+    m(1, "idea", "Talk to 10 people who have the problem", "done", { key: "idea-interviews" }),
+    m(2, "idea", "Write the problem and who has it in two sentences", "done", { key: "idea-problem" }),
+    m(3, "prototype", "Build a working prototype", "done", { key: "proto-build" }),
+    m(4, "prototype", "Put it in front of 5 real users and write down what they say", "done", { key: "proto-users" }),
+    m(5, "prototype", "Incorporate your company", "done", { key: "proto-incorporate", note: "Federal, through Corporations Canada." }),
+    m(6, "launched", "Get your first paying customer", "done", { key: "launch-customer", done_at: day(-12) }),
+    m(7, "launched", "Open a business bank account and start bookkeeping", "done", { key: "launch-bank", done_at: day(-3) }),
+    m(8, "launched", "Pick the three numbers you will track every month", "doing", { key: "launch-metrics", note: "Active groups, weekly rebooking rate, revenue per group." }),
+    m(9, "launched", "Send the grant intro email to our city's economic development office", "todo", { due: day(-3) }),
+    m(10, "launched", "Apply to DMZ Incubator", "todo", { key: "prog:dmz-incubator", program_id: "dmz-incubator", program_name: "DMZ Incubator", due: day(12) }),
+    m(11, "launched", "Register for GST/HST once your sales pass $30,000 in four quarters", "todo", { key: "launch-gst" }),
+    m(12, "revenue", "Write a 12-month plan and budget", "todo", { key: "rev-plan" }),
+  ];
+}
+
 const pick = (arr, allowed) => arr.filter((x, i) => allowed.includes(x) && arr.indexOf(x) === i);
 
 export function navigatorCall(method, path, body, params, ctx) {
@@ -85,6 +107,19 @@ export function navigatorCall(method, path, body, params, ctx) {
     if (!ctx.account) return fail(config, 401, "Not authenticated");
     try { ctx.account.tracked = nav.updateTracked(ctx.account.tracked, body || {}, (ctx.account.startup || {}).stage || "idea", today); } catch (e) { return fail(config, 400, e.message); }
     return ok(config, { tracked: ctx.account.tracked });
+  }
+  if (path === "/navigator/journey" && (method === "get" || method === "post")) {
+    const a = ctx.account;
+    if (!a) return fail(config, 401, "Not authenticated");
+    const stage = (a.startup || {}).stage || "idea";
+    if (method === "post") { try { a.journey = jny.updateJourney(a.journey, body || {}, stage, today); } catch (e) { return fail(config, 400, e.message); } }
+    const items = a.journey || [];
+    return ok(config, {
+      has_profile: !!(a.startup || {}).stage, current: stage, milestones: items,
+      stages: nav.STAGES.map((k) => ({ stage: k, name: jny.STAGE_NAME[k], label: nav.STAGE_LABEL[k], hint: nav.STAGE_HINT[k] })),
+      summary: jny.journeySummary(items, stage, today),
+      suggestions: jny.journeySuggestions(guide.navigatorProfile(a), items, allPrograms(ctx), today, journeyTemplates.templates),
+    });
   }
   if (path === "/navigator/seen" && method === "post") {
     if (!ctx.account) return fail(config, 401, "Not authenticated");

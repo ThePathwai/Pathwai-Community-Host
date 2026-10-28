@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useEffect, useMemo, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { Compass, Home, Inbox, LogOut, MessageCircle, Search, Sparkles, User, UserRound, Users, Info } from "lucide-react";
+import { Compass, Home, Inbox, LogOut, MessageCircle, Route, Search, Sparkles, User, UserRound, Users, Info } from "lucide-react";
 import { api } from "../lib/api";
 import { useAuth } from "../lib/auth";
 import { groupOf } from "../lib/communityGroup";
@@ -53,6 +53,7 @@ export default function AccountShell({ active, children }) {
     <>
       <NavItem to="/hub" icon={Home} label="Home" active={active === "home"} testId="shell-home" />
       <NavItem to="/navigator" icon={Compass} label="Programs" active={active === "programs"} testId="shell-programs" />
+      <NavItem to="/journey" icon={Route} label="Journey" active={active === "journey"} testId="shell-journey" />
       <GroupLabel>Communities</GroupLabel>
       <NavItem to="/hub?v=innovation" icon={Sparkles} label="Innovation" active={active === "innovation"} badge={counts.innovation || null} testId="shell-innovation" />
       <NavItem to="/hub?v=leisure" icon={Users} label="Leisure" active={active === "leisure"} badge={counts.leisure || null} testId="shell-leisure" />

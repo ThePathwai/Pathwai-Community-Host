@@ -2,6 +2,7 @@
 // backend/navigator_guide.py (the real site); backend/tests/test_navigator_guide_parity.py runs both on the same questions
 // and fails if a word differs. Rules only: every sentence comes from the catalog entry and the matching rules.
 import { NEEDS, NEED_LABEL, STAGE_LABEL, brief, daysUntil, effectiveStatus, evaluate, joinList, normalizeProfile, rankCommunities, suggest, why } from "./navigator";
+import { journeySummary } from "./journey";
 
 const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
 const ALIASES = {
@@ -222,7 +223,7 @@ export function homeFeed(programs, communities, account, today) {
   return {
     signed_in: true, has_profile: true,
     startup: { name: startup.name || "", one_liner: startup.one_liner || "", stage: res.profile.stage, stage_label: STAGE_LABEL[res.profile.stage] },
-    summary: res.summary, top: ranked.slice(0, 3), path: res.path, trajectory: res.trajectory, tracked: (account && account.tracked) || [], closing_soon: soon.slice(0, 6), matched: ranked.length, communities: rankCommunities(communities, raw, 3),
+    summary: res.summary, top: ranked.slice(0, 3), path: res.path, trajectory: res.trajectory, tracked: (account && account.tracked) || [], journey: journeySummary((account && account.journey) || [], raw.stage, today), closing_soon: soon.slice(0, 6), matched: ranked.length, communities: rankCommunities(communities, raw, 3),
     new_ids: newIds.slice(0, 20), new_count: newIds.length, live_ids: liveIds.slice(0, 100), completeness: comp, as_of: today,
   };
 }

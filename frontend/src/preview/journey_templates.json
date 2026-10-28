@@ -1,0 +1,295 @@
+{
+ "version": "2026-10",
+ "notes": "Starter milestones for each stage. A founder can keep, edit or ignore them; `when` limits a suggestion to people it applies to.",
+ "templates": [
+  {
+   "key": "idea-interviews",
+   "stage": "idea",
+   "title": "Talk to 10 people who have the problem",
+   "why": "Programs and investors at this stage all ask what you learned from real customers.",
+   "core": true
+  },
+  {
+   "key": "idea-problem",
+   "stage": "idea",
+   "title": "Write the problem and who has it in two sentences",
+   "why": "If you can say it in two sentences, you can fit any application form.",
+   "core": true
+  },
+  {
+   "key": "idea-landscape",
+   "stage": "idea",
+   "title": "List what people use today instead, and why it falls short",
+   "why": "Shows you know the competition and gives you your reason to exist.",
+   "core": false
+  },
+  {
+   "key": "idea-first-version",
+   "stage": "idea",
+   "title": "Sketch the smallest version you could build in 8 weeks",
+   "why": "A small first version is what lets you reach the prototype stage.",
+   "core": true
+  },
+  {
+   "key": "idea-mentor",
+   "stage": "idea",
+   "title": "Find one advisor who has built something similar",
+   "why": "You asked for mentorship, and one good advisor saves months.",
+   "core": false,
+   "when": {
+    "needs_any": [
+     "mentorship"
+    ]
+   }
+  },
+  {
+   "key": "idea-community",
+   "stage": "idea",
+   "title": "Join a founder community near you",
+   "why": "You asked for a network, and peers are where first introductions come from.",
+   "core": false,
+   "when": {
+    "needs_any": [
+     "network"
+    ]
+   }
+  },
+  {
+   "key": "idea-youth",
+   "stage": "idea",
+   "title": "Look at programs for young or student founders",
+   "why": "Several programs only take founders under 30 or in school.",
+   "core": false,
+   "when": {
+    "audiences_any": [
+     "youth",
+     "student"
+    ]
+   }
+  },
+  {
+   "key": "proto-build",
+   "stage": "prototype",
+   "title": "Build a working prototype",
+   "why": "Most accelerators want to see something that works, even if it is rough.",
+   "core": true
+  },
+  {
+   "key": "proto-users",
+   "stage": "prototype",
+   "title": "Put it in front of 5 real users and write down what they say",
+   "why": "User feedback is the main thing a prototype-stage program looks for.",
+   "core": true
+  },
+  {
+   "key": "proto-pricing",
+   "stage": "prototype",
+   "title": "Decide what you will charge and test it with three people",
+   "why": "A price you have tested beats a guess on every application.",
+   "core": false
+  },
+  {
+   "key": "proto-incorporate",
+   "stage": "prototype",
+   "title": "Incorporate your company",
+   "why": "Most grants and loans need an incorporated company.",
+   "core": true,
+   "when": {
+    "incorporated": false
+   }
+  },
+  {
+   "key": "proto-pitch",
+   "stage": "prototype",
+   "title": "Write a one-page summary of what you are building",
+   "why": "One page is what every intake form and intro email ends up needing.",
+   "core": true
+  },
+  {
+   "key": "proto-accelerator",
+   "stage": "prototype",
+   "title": "Apply to an incubator or accelerator that matches you",
+   "why": "You asked for mentorship or a network, and these give you both.",
+   "core": false,
+   "when": {
+    "needs_any": [
+     "mentorship",
+     "network"
+    ]
+   }
+  },
+  {
+   "key": "launch-customer",
+   "stage": "launched",
+   "title": "Get your first paying customer",
+   "why": "Revenue is the clearest proof you are past the idea.",
+   "core": true
+  },
+  {
+   "key": "launch-bank",
+   "stage": "launched",
+   "title": "Open a business bank account and start bookkeeping",
+   "why": "Funders ask for clean records, and it is hard to rebuild them later.",
+   "core": true
+  },
+  {
+   "key": "launch-gst",
+   "stage": "launched",
+   "title": "Register for GST/HST once your sales pass $30,000 in four quarters",
+   "why": "Canada requires small businesses to register after that point.",
+   "core": false
+  },
+  {
+   "key": "launch-metrics",
+   "stage": "launched",
+   "title": "Pick the three numbers you will track every month",
+   "why": "Users, revenue and how many come back are what funders ask for first.",
+   "core": true
+  },
+  {
+   "key": "launch-ip",
+   "stage": "launched",
+   "title": "Protect your name and what you built",
+   "why": "You asked about IP, and a trademark or filing is cheapest early.",
+   "core": false,
+   "when": {
+    "needs_any": [
+     "ip"
+    ]
+   }
+  },
+  {
+   "key": "launch-funding",
+   "stage": "launched",
+   "title": "Apply for funding you match",
+   "why": "You asked for funding, and some programs are open to you now.",
+   "core": false,
+   "when": {
+    "needs_any": [
+     "funding"
+    ]
+   }
+  },
+  {
+   "key": "rev-repeat",
+   "stage": "revenue",
+   "title": "Reach revenue you can count on each month",
+   "why": "Repeatable revenue is what moves you from earning to growing.",
+   "core": true
+  },
+  {
+   "key": "rev-plan",
+   "stage": "revenue",
+   "title": "Write a 12-month plan and budget",
+   "why": "Lenders and investors ask for it, and it keeps you honest.",
+   "core": true
+  },
+  {
+   "key": "rev-sred",
+   "stage": "revenue",
+   "title": "Check whether you can claim SR&ED for your technical work",
+   "why": "You asked for R&D support, and SR&ED returns part of what you spend.",
+   "core": false,
+   "when": {
+    "needs_any": [
+     "rd"
+    ]
+   }
+  },
+  {
+   "key": "rev-export",
+   "stage": "revenue",
+   "title": "Pick your first export market and what it needs",
+   "why": "You asked for export help, and export programs ask for a target market.",
+   "core": false,
+   "when": {
+    "needs_any": [
+     "export"
+    ]
+   }
+  },
+  {
+   "key": "rev-hire",
+   "stage": "revenue",
+   "title": "Hire or contract your first help",
+   "why": "You asked for talent, and it is the first thing that frees up your time.",
+   "core": false,
+   "when": {
+    "needs_any": [
+     "talent"
+    ]
+   }
+  },
+  {
+   "key": "rev-funding",
+   "stage": "revenue",
+   "title": "Line up funding for the next 12 months",
+   "why": "You asked for funding, and it takes months from start to cash.",
+   "core": false,
+   "when": {
+    "needs_any": [
+     "funding"
+    ]
+   }
+  },
+  {
+   "key": "rev-payroll",
+   "stage": "revenue",
+   "title": "Set up payroll and CRA remittances before your first hire",
+   "why": "Missing remittances cause penalties that are easy to avoid.",
+   "core": false
+  },
+  {
+   "key": "grow-team",
+   "stage": "growth",
+   "title": "Name the next three hires and what each one unlocks",
+   "why": "Growth is usually limited by people, not by ideas.",
+   "core": true
+  },
+  {
+   "key": "grow-channel",
+   "stage": "growth",
+   "title": "Open a second market or sales channel",
+   "why": "One channel is a risk, and funders look for a second.",
+   "core": true
+  },
+  {
+   "key": "grow-raise",
+   "stage": "growth",
+   "title": "Decide how to fund growth: investors, debt or revenue",
+   "why": "You asked for funding, and each route changes who you talk to.",
+   "core": false,
+   "when": {
+    "needs_any": [
+     "funding"
+    ]
+   }
+  },
+  {
+   "key": "grow-reporting",
+   "stage": "growth",
+   "title": "Set a monthly update for your advisors or board",
+   "why": "A regular update keeps support coming when you need it.",
+   "core": false
+  },
+  {
+   "key": "grow-protect",
+   "stage": "growth",
+   "title": "Protect what you have built before you expand",
+   "why": "You asked about IP, and expanding without it is the costly time to start.",
+   "core": false,
+   "when": {
+    "needs_any": [
+     "ip"
+    ]
+   }
+  },
+  {
+   "key": "grow-mentor",
+   "stage": "growth",
+   "title": "Mentor one earlier-stage founder",
+   "why": "Giving back builds your network and sharpens your own thinking.",
+   "core": false
+  }
+ ]
+}

@@ -310,7 +310,7 @@ export default function Navigator({ embedded }) {
           {ready && <Results res={res} meta={meta} loading={loading} generic={generic} onOpen={setOpen} tracked={tracked} onTrack={track} />}
         </div>
       ) : <SignedOutGate />}
-      <ProgramDrawer p={open} onClose={() => setOpen(null)} meta={meta} tracked={tracked} onTrack={account ? track : undefined} stage={res?.trajectory?.current || mine?.stage || "idea"} />
+      <ProgramDrawer p={open} onClose={() => setOpen(null)} meta={meta} tracked={tracked} onTrack={account ? track : undefined} onPlan={account ? (b) => api.post("/navigator/journey", b) : undefined} stage={res?.trajectory?.current || mine?.stage || "idea"} />
     </div>
   );
 
