@@ -83,7 +83,9 @@ def test_without_choices_it_offers_the_likely_ones_for_the_stage():
     r = nav.route_plan(PROGRAMS, {"stage": "idea", "needs": []}, [], TODAY)
     assert r["steps"] == []
     common = [o["key"] for o in r["options"] if o["common"]]
-    assert set(common) == set(nav.STAGE_GOALS["idea"]) and len(r["options"]) == len(nav.NEEDS)
+    assert set(common) == set(nav.STAGE_GOALS["idea"])
+    assert all(o["count"] > 0 for o in r["options"]), "an option is only offered when there are live resources behind it"
+    assert [o["common"] for o in r["options"]] == sorted((o["common"] for o in r["options"]), reverse=True)
 
 
 def test_the_route_endpoint_follows_the_profile_and_tracking():
@@ -129,3 +131,17 @@ def test_python_and_javascript_routes_agree():
     for case, got in zip(cases, js):
         want = json.loads(json.dumps(nav.route_plan(PROGRAMS, case["profile"], case["tracked"], TODAY)))
         assert got == want, f"route differs for {case['profile']}"
+
+
+def test_options_only_offer_what_the_directory_can_deliver():
+    r = nav.route_plan(PROGRAMS, {"stage": "launched", "needs": [], "province": "ON"}, [], TODAY)
+    keys = [o["key"] for o in r["options"]]
+    assert "funding" in keys and "customers" in keys
+    for o in r["options"]:
+        assert o["count"] == sum(1 for x in nav.suggest(PROGRAMS, nav.normalize_profile({"stage": "launched", "needs": [], "province": "ON"}), TODAY, limit=999)["matches"]
+                                 if o["key"] in x["needs"] and x["status"] in ("open", "rolling", "check"))
+    # a need the founder already picked never disappears, even with nothing behind it
+    odd = [k for k in nav.NEEDS if k not in keys]
+    if odd:
+        r2 = nav.route_plan(PROGRAMS, {"stage": "launched", "needs": [odd[0]], "province": "ON"}, [], TODAY)
+        assert odd[0] in [o["key"] for o in r2["options"]]

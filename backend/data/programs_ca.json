@@ -3007,6 +3007,190 @@
       "link_kind": "directory",
       "link_note": "Browse the list and open the program that fits.",
       "link_exact": true
+    },
+    {
+      "level": "federal",
+      "sectors": [
+        "any"
+      ],
+      "provinces": [
+        "any"
+      ],
+      "requires": {},
+      "restricted_to": [],
+      "last_checked": "2026-10-28",
+      "verified": "official",
+      "id": "pac",
+      "name": "Procurement Assistance Canada",
+      "org": "Public Services and Procurement Canada",
+      "type": "resource",
+      "summary": "Free seminars, guides and one-to-one help for businesses that want to sell to the federal government.",
+      "amount": "Free",
+      "stages": [
+        "launched",
+        "revenue",
+        "growth"
+      ],
+      "audiences": [],
+      "needs": [
+        "customers",
+        "training"
+      ],
+      "requirements": [],
+      "deadline": {
+        "kind": "none_published",
+        "date": null,
+        "note": "Seminars run year-round"
+      },
+      "status": "open",
+      "phase": "scale",
+      "apply_url": "https://www.canada.ca/en/public-services-procurement/services/acquisitions/support-for-businesses.html",
+      "source_url": "https://www.canada.ca/en/public-services-procurement/services/acquisitions/support-for-businesses.html",
+      "link_label": "PSPC: Procurement support for businesses",
+      "link_kind": "program",
+      "link_note": "See the free seminars and how to get personal help selling to government.",
+      "link_exact": true
+    },
+    {
+      "level": "nonprofit",
+      "sectors": [
+        "any"
+      ],
+      "provinces": [
+        "any"
+      ],
+      "requires": {},
+      "restricted_to": [],
+      "last_checked": "2026-10-28",
+      "verified": "official",
+      "id": "camsc",
+      "name": "CAMSC supplier certification",
+      "org": "Canadian Aboriginal and Minority Supplier Council",
+      "type": "resource",
+      "summary": "Certification that lists your Black, Indigenous or other visible-minority owned business with large corporate and government buyers.",
+      "amount": "$295 to apply, then $350 a year under $500K revenue",
+      "stages": [
+        "launched",
+        "revenue",
+        "growth"
+      ],
+      "audiences": [
+        "black",
+        "indigenous"
+      ],
+      "needs": [
+        "customers",
+        "network"
+      ],
+      "requirements": [
+        "At least 51% owned, managed and controlled by visible minority or Indigenous people",
+        "For-profit business selling to other businesses",
+        "Canadian citizen or permanent resident"
+      ],
+      "deadline": {
+        "kind": "none_published",
+        "date": null,
+        "note": "Apply any time; review takes about 30 business days"
+      },
+      "status": "open",
+      "phase": "scale",
+      "apply_url": "https://camsc.ca/supplier-certification/",
+      "source_url": "https://camsc.ca/supplier-certification/",
+      "link_label": "CAMSC: supplier certification",
+      "link_kind": "program",
+      "link_note": "Check the ownership rules and fees, then start the registration.",
+      "link_exact": true
+    },
+    {
+      "level": "nonprofit",
+      "sectors": [
+        "any"
+      ],
+      "provinces": [
+        "any"
+      ],
+      "requires": {},
+      "restricted_to": [],
+      "last_checked": "2026-10-28",
+      "verified": "third_party",
+      "id": "vfc-fellows",
+      "name": "Venture for Canada Fellows",
+      "org": "Venture for Canada",
+      "type": "resource",
+      "summary": "Hire screened, entrepreneurial recent graduates for your startup, with no hiring fee.",
+      "amount": "No fee to hire",
+      "stages": [
+        "launched",
+        "revenue",
+        "growth"
+      ],
+      "audiences": [],
+      "needs": [
+        "talent",
+        "network"
+      ],
+      "requirements": [
+        "Canadian startup under 10 years old with fewer than 250 staff"
+      ],
+      "deadline": {
+        "kind": "none_published",
+        "date": null,
+        "note": "The employer page says cohorts are finalized each spring; confirm the current intake"
+      },
+      "status": "check",
+      "phase": "scale",
+      "apply_url": "https://ventureforcanada.ca/employers/fellows",
+      "source_url": "https://ventureforcanada.ca/employers/fellows",
+      "link_label": "Venture for Canada: hire a Fellow",
+      "link_kind": "program",
+      "link_note": "Read how hiring a Fellow works and book a call. The page may be out of date, so confirm the current intake.",
+      "link_exact": true
+    },
+    {
+      "level": "provincial",
+      "sectors": [
+        "any"
+      ],
+      "provinces": [
+        "ON"
+      ],
+      "requires": {},
+      "restricted_to": [],
+      "last_checked": "2026-10-28",
+      "verified": "official",
+      "id": "ocetc",
+      "name": "Ontario Co-operative Education Tax Credit",
+      "org": "Government of Ontario",
+      "type": "tax_credit",
+      "summary": "A refundable tax credit of 25 to 30 percent of what you pay a co-op student, up to $3,000 per placement.",
+      "amount": "Up to $3,000 per placement",
+      "stages": [
+        "launched",
+        "revenue",
+        "growth"
+      ],
+      "audiences": [],
+      "needs": [
+        "talent",
+        "tax"
+      ],
+      "requirements": [
+        "Ontario business",
+        "Qualifying post-secondary co-op placement of at least 10 consecutive weeks"
+      ],
+      "deadline": {
+        "kind": "rolling",
+        "date": null,
+        "note": "Claimed on your corporate tax return"
+      },
+      "status": "rolling",
+      "phase": "fund",
+      "apply_url": "https://www.ontario.ca/page/co-operative-education-tax-credit",
+      "source_url": "https://www.ontario.ca/page/co-operative-education-tax-credit",
+      "link_label": "Ontario: Co-operative education tax credit",
+      "link_kind": "program",
+      "link_note": "See the rate, the placement rules and how to claim it.",
+      "link_exact": true
     }
   ]
 }

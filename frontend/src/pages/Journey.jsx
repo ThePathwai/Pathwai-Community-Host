@@ -164,10 +164,10 @@ export default function Journey({ embedded }) {
 
     items.push(<Widget key="wants" data-testid="path-wants">
           <h2 className="text-lg" style={heading}>What do you want next?</h2>
-          <p className="mb-3 mt-1 text-sm text-muted">Each one gets its own widget, in the order you pick them.</p>
+          <p className="mb-3 mt-1 text-sm text-muted">Only what has real resources for you. The number is how many. Each one you pick gets its own widget.</p>
           <div className="flex flex-wrap gap-2">
             {chosen.map((o, i) => <button key={o.key} type="button" disabled={saving} onClick={() => toggleNeed(o.key)} aria-pressed="true" data-testid={`want-${o.key}`} className="inline-flex items-center gap-1.5 rounded-full px-3.5 py-2 text-sm font-semibold" style={{ background: "var(--accent)", color: "var(--on-accent)" }}><span className="tabular-nums opacity-80">{i + 1}</span>{cap(o.label)}</button>)}
-            {rest.map((o) => <button key={o.key} type="button" disabled={saving} onClick={() => toggleNeed(o.key)} aria-pressed="false" data-testid={`want-${o.key}`} className={cx("rounded-full border px-3.5 py-2 text-sm font-medium transition hover:border-ink/50", o.common ? "border-ink/40" : "border-line text-muted")}>+ {cap(o.label)}</button>)}
+            {rest.map((o) => <button key={o.key} type="button" disabled={saving} onClick={() => toggleNeed(o.key)} aria-pressed="false" data-testid={`want-${o.key}`} className={cx("inline-flex items-center gap-1.5 rounded-full border px-3.5 py-2 text-sm font-medium transition hover:border-ink/50", o.common ? "border-ink/40" : "border-line text-muted")}>+ {cap(o.label)}<span className="text-xs tabular-nums text-muted" title={`${o.count} resources for you`}>{o.count}</span></button>)}
           </div>
           {!chosen.length && <p className="mt-3 text-sm text-muted" data-testid="path-pick">Pick at least one and your path appears here. The outlined ones are common at your stage.</p>}
         </Widget>);

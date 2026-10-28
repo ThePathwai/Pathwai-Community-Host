@@ -551,6 +551,19 @@ ROUTE_PER_GOAL = 2   # resources shown under each thing the founder wants
 ROUTE_COMING_UP = 3  # resources previewed for the next stage
 
 
+def _route_options(ranked: List[Dict[str, Any]], profile: Dict[str, Any]) -> List[Dict[str, Any]]:
+    """The things a founder can ask for next. Only what the directory can actually deliver for this founder: a need is offered when at
+    least one live (open, rolling or dates-not-posted) resource that suits them covers it, with that number shown. Needs they already
+    picked always stay, so a choice never vanishes. Likely-for-this-stage first, then the best-covered."""
+    out = []
+    for k in NEEDS:
+        n = sum(1 for r in ranked if k in (r.get("needs") or []) and r["status"] in ("open", "rolling", "check"))
+        if n or k in profile["needs"]:
+            out.append({"key": k, "label": NEED_LABEL[k], "common": k in STAGE_GOALS[profile["stage"]], "count": n})
+    out.sort(key=lambda o: (0 if o["common"] else 1, -o["count"]))
+    return out
+
+
 def route_plan(programs: List[Dict[str, Any]], raw_profile: Optional[Dict[str, Any]], tracked: Optional[List[Dict[str, Any]]] = None,
                today: Optional[date] = None) -> Dict[str, Any]:
     """The founder's path: for each thing they want next (their `needs`, in the order they chose them), the few resources worth
@@ -586,7 +599,7 @@ def route_plan(programs: List[Dict[str, Any]], raw_profile: Optional[Dict[str, A
         coming = {"stage": nxt, "label": STAGE_LABEL[nxt], "hint": STAGE_HINT[nxt], "programs": rows}
     return {
         "stage": profile["stage"], "label": STAGE_LABEL[profile["stage"]], "goal": profile["goal"], "needs": profile["needs"],
-        "options": [{"key": k, "label": NEED_LABEL[k], "common": k in STAGE_GOALS[profile["stage"]]} for k in NEEDS],
+        "options": _route_options(ranked, profile),
         "steps": steps, "coming_up": coming, "next": nxt, "as_of": today.isoformat(),
     }
 

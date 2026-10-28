@@ -357,6 +357,15 @@ export const STAGE_GOALS = {
 };
 const ROUTE_PER_GOAL = 2;
 const ROUTE_COMING_UP = 3;
+function routeOptions(ranked, profile) {
+  const out = [];
+  for (const k of NEEDS) {
+    const n = ranked.filter((r) => (r.needs || []).includes(k) && ["open", "rolling", "check"].includes(r.status)).length;
+    if (n || profile.needs.includes(k)) out.push({ key: k, label: NEED_LABEL[k], common: STAGE_GOALS[profile.stage].includes(k), count: n });
+  }
+  return out.map((o, i) => [o, i]).sort((a, b) => ((a[0].common ? 0 : 1) - (b[0].common ? 0 : 1)) || (b[0].count - a[0].count) || (a[1] - b[1])).map((x) => x[0]);
+}
+
 export function routePlan(programs, rawProfile, tracked = [], today = todayIso()) {
   const profile = normalizeProfile(rawProfile);
   const cur = STAGES.indexOf(profile.stage);
@@ -384,7 +393,7 @@ export function routePlan(programs, rawProfile, tracked = [], today = todayIso()
   }
   return {
     stage: profile.stage, label: STAGE_LABEL[profile.stage], goal: profile.goal, needs: profile.needs,
-    options: NEEDS.map((k) => ({ key: k, label: NEED_LABEL[k], common: STAGE_GOALS[profile.stage].includes(k) })),
+    options: routeOptions(ranked, profile),
     steps, coming_up: coming, next: nxt, as_of: today,
   };
 }
