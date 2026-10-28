@@ -542,6 +542,55 @@ def trajectory(programs: List[Dict[str, Any]], raw_profile: Optional[Dict[str, A
     return {"current": profile["stage"], "index": cur, "stages": stages_out, "anytime": anytime, "anytime_total": len(anytime_rows), "story": story}
 
 
+# What founders most often want at each stage. Only used to put the likely choices first when someone has not picked anything yet.
+STAGE_GOALS = {
+    "idea": ["mentorship", "training", "funding"], "prototype": ["funding", "mentorship", "space"], "launched": ["customers", "funding", "network"],
+    "revenue": ["funding", "export", "talent"], "growth": ["export", "talent", "funding"],
+}
+ROUTE_PER_GOAL = 2   # resources shown under each thing the founder wants
+ROUTE_COMING_UP = 3  # resources previewed for the next stage
+
+
+def route_plan(programs: List[Dict[str, Any]], raw_profile: Optional[Dict[str, Any]], tracked: Optional[List[Dict[str, Any]]] = None,
+               today: Optional[date] = None) -> Dict[str, Any]:
+    """The founder's path: for each thing they want next (their `needs`, in the order they chose them), the few resources worth
+    using for it, best first, each with the four-question verdict and the exact page. Then a short preview of what opens up at
+    the next stage. A resource is shown once, under the first thing it helps with. Resources already marked done are left out
+    here (they are listed under what the founder has used). Closed or paused ones only appear when too few are open."""
+    today = today or date.today()
+    profile = normalize_profile(raw_profile)
+    cur = STAGES.index(profile["stage"])
+    res = suggest(programs, profile, today, limit=len(programs) + 1)
+    mine = {t.get("id"): t for t in (tracked or [])}
+    done = {i for i, t in mine.items() if t.get("state") == "done"}
+    ranked = [r for r in res["matches"] if r["id"] not in done]
+    used: set = set()
+    steps = []
+    for need in profile["needs"]:
+        fits = [r for r in ranked if need in (r.get("needs") or []) and r["id"] not in used]
+        live = [r for r in fits if r["status"] in ("open", "rolling", "check")]
+        waiting = [r for r in fits if r["status"] in ("closed", "paused")]
+        live.sort(key=lambda r: 0 if (mine.get(r["id"]) or {}).get("state") == "in" else 1)  # what you are already in comes first (stable)
+        picks = live[:ROUTE_PER_GOAL]
+        if len(picks) < 2:
+            picks = picks + waiting[:2 - len(picks)]
+        used.update(r["id"] for r in picks)
+        steps.append({"need": need, "label": NEED_LABEL[need], "title": "To get " + NEED_LABEL[need],
+                      "resources": [{**r, "mine": (mine.get(r["id"]) or {}).get("state", "")} for r in picks],
+                      "more": max(0, len(live) - ROUTE_PER_GOAL)})
+    nxt = STAGES[cur + 1] if cur + 1 < len(STAGES) else None
+    coming = None
+    if nxt:
+        col = res["trajectory"]["stages"][cur + 1]
+        rows = [r for r in col["programs"] if r["id"] not in used and r["id"] not in done][:ROUTE_COMING_UP]
+        coming = {"stage": nxt, "label": STAGE_LABEL[nxt], "hint": STAGE_HINT[nxt], "programs": rows}
+    return {
+        "stage": profile["stage"], "label": STAGE_LABEL[profile["stage"]], "goal": profile["goal"], "needs": profile["needs"],
+        "options": [{"key": k, "label": NEED_LABEL[k], "common": k in STAGE_GOALS[profile["stage"]]} for k in NEEDS],
+        "steps": steps, "coming_up": coming, "next": nxt, "as_of": today.isoformat(),
+    }
+
+
 def summary_text(profile: Dict[str, Any], ranked: List[Dict[str, Any]], later: List[Dict[str, Any]]) -> str:
     stage = STAGE_LABEL[profile["stage"]]
     need = _join([NEED_LABEL[n] for n in profile["needs"][:3]])

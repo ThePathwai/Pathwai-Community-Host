@@ -108,6 +108,11 @@ export function navigatorCall(method, path, body, params, ctx) {
     try { ctx.account.tracked = nav.updateTracked(ctx.account.tracked, body || {}, (ctx.account.startup || {}).stage || "idea", today); } catch (e) { return fail(config, 400, e.message); }
     return ok(config, { tracked: ctx.account.tracked });
   }
+  if (path === "/navigator/route" && method === "get") {
+    const a = ctx.account;
+    if (!a) return fail(config, 401, "Not authenticated");
+    return ok(config, { has_profile: !!(a.startup || {}).stage, ...nav.routePlan(allPrograms(ctx), guide.navigatorProfile(a), a.tracked || [], today), tracked: a.tracked || [] });
+  }
   if (path === "/navigator/journey" && (method === "get" || method === "post")) {
     const a = ctx.account;
     if (!a) return fail(config, 401, "Not authenticated");

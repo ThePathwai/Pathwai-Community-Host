@@ -349,6 +349,46 @@ export function trajectory(programs, rawProfile, today = todayIso(), perStage = 
 }
 
 // Programs a founder is in now, or has been part of at an earlier stage. Mirrors update_tracked() in backend/navigator.py.
+// The founder's path: for each thing they want next, the few resources worth using, best first, then a preview of the next stage.
+// Mirrors backend/navigator.py route_plan().
+export const STAGE_GOALS = {
+  idea: ["mentorship", "training", "funding"], prototype: ["funding", "mentorship", "space"], launched: ["customers", "funding", "network"],
+  revenue: ["funding", "export", "talent"], growth: ["export", "talent", "funding"],
+};
+const ROUTE_PER_GOAL = 2;
+const ROUTE_COMING_UP = 3;
+export function routePlan(programs, rawProfile, tracked = [], today = todayIso()) {
+  const profile = normalizeProfile(rawProfile);
+  const cur = STAGES.indexOf(profile.stage);
+  const res = suggest(programs, profile, today, programs.length + 1);
+  const mine = Object.fromEntries((tracked || []).map((t) => [t.id, t]));
+  const done = new Set((tracked || []).filter((t) => t.state === "done").map((t) => t.id));
+  const ranked = res.matches.filter((r) => !done.has(r.id));
+  const used = new Set();
+  const steps = [];
+  for (const need of profile.needs) {
+    const fits = ranked.filter((r) => (r.needs || []).includes(need) && !used.has(r.id));
+    const live = fits.filter((r) => ["open", "rolling", "check"].includes(r.status));
+    const waiting = fits.filter((r) => ["closed", "paused"].includes(r.status));
+    live.sort((a, b) => (mine[a.id]?.state === "in" ? 0 : 1) - (mine[b.id]?.state === "in" ? 0 : 1));
+    let picks = live.slice(0, ROUTE_PER_GOAL);
+    if (picks.length < 2) picks = picks.concat(waiting.slice(0, 2 - picks.length));
+    picks.forEach((r) => used.add(r.id));
+    steps.push({ need, label: NEED_LABEL[need], title: "To get " + NEED_LABEL[need], resources: picks.map((r) => ({ ...r, mine: mine[r.id]?.state || "" })), more: Math.max(0, live.length - ROUTE_PER_GOAL) });
+  }
+  const nxt = cur + 1 < STAGES.length ? STAGES[cur + 1] : null;
+  let coming = null;
+  if (nxt) {
+    const col = res.trajectory.stages[cur + 1];
+    coming = { stage: nxt, label: STAGE_LABEL[nxt], hint: STAGE_HINT[nxt], programs: col.programs.filter((r) => !used.has(r.id) && !done.has(r.id)).slice(0, ROUTE_COMING_UP) };
+  }
+  return {
+    stage: profile.stage, label: STAGE_LABEL[profile.stage], goal: profile.goal, needs: profile.needs,
+    options: NEEDS.map((k) => ({ key: k, label: NEED_LABEL[k], common: STAGE_GOALS[profile.stage].includes(k) })),
+    steps, coming_up: coming, next: nxt, as_of: today,
+  };
+}
+
 export const MAX_TRACKED = 60;
 export function updateTracked(items, body, defaultStage = "idea", today = todayIso()) {
   const rows = (items || []).filter((i) => i && i.id);

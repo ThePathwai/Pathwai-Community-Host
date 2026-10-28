@@ -70,6 +70,7 @@ const VERIFIED = { official: "Official page", third_party: "Third-party source",
 const isExternal = (u) => /^https?:\/\//.test(u || "");
 const hostOf = (u) => { try { return new URL(u).hostname.replace(/^www\./, ""); } catch { return ""; } };
 // What the button says depends on what the page is, so nobody expects an application form and lands on a news article.
+export const linkVerb = (p) => (p.community ? "See it" : LINK_VERB[p.link_kind] || "Open official page");
 const LINK_VERB = { apply: "Go to the application page", program: "Open the program page", directory: "Open the list", contact: "Open the contact page", tool: "Open the tool", news: "Read the announcement", overview: "Open the overview page" };
 
 // The page we send you to, and why: what it is, what you will do there, and (when we know your profile) why this program suits you.
@@ -152,10 +153,8 @@ function Section({ title, children }) {
 }
 
 // The detail: a right-hand panel on a computer, a bottom sheet on a phone. Everything about one program, with the way to apply pinned at the bottom.
-export function ProgramDrawer({ p, onClose, meta, tracked, onTrack, onPlan, stage }) {
+export function ProgramDrawer({ p, onClose, meta, tracked, onTrack, stage }) {
   const shell = useShell();
-  const [planned, setPlanned] = useState("");   // "" | "saving" | "added" | an error message
-  useEffect(() => setPlanned(""), [p?.id]);
   useEffect(() => {
     if (!p) return undefined;
     const k = (e) => { if (e.key === "Escape") onClose(); };
@@ -220,19 +219,15 @@ export function ProgramDrawer({ p, onClose, meta, tracked, onTrack, onPlan, stag
           <LinkCard p={p} />
 
           {onTrack && (
-            <Section title="Your journey">
+            <Section title="Where you are with it">
               <div className="flex flex-wrap gap-2" data-testid="drawer-journey">
                 <button type="button" onClick={() => mark("in")} aria-pressed={mineRow?.state === "in"} data-testid="track-in"
                   className={cx("rounded-full border px-3.5 py-2 text-sm font-semibold transition", mineRow?.state === "in" ? "border-transparent" : "border-line hover:border-ink/40")} style={mineRow?.state === "in" ? { background: "var(--accent)", color: "var(--on-accent)" } : undefined}>I'm in this now</button>
                 <button type="button" onClick={() => mark("done")} aria-pressed={mineRow?.state === "done"} data-testid="track-done"
                   className={cx("rounded-full border px-3.5 py-2 text-sm font-semibold transition", mineRow?.state === "done" ? "border-transparent" : "border-line hover:border-ink/40")} style={mineRow?.state === "done" ? { background: "var(--accent)", color: "var(--on-accent)" } : undefined}>I've done this</button>
-                {onPlan && p.status !== "closed" && p.status !== "paused" && <button type="button" disabled={planned === "saving" || planned === "added"} data-testid="track-plan"
-                  onClick={async () => { setPlanned("saving"); try { await onPlan({ op: "add", title: `${p.type === "resource" ? "Explore" : "Apply to"} ${p.name}`, stage, due: dl ? dl.date : "", key: `prog:${p.id}`, program_id: p.id, program_name: p.name, why: p.checks?.length && p.fit !== "skip" ? verdictLine(p) : (p.link_note || ""), url: isExternal(p.apply_url) ? p.apply_url : "" }); setPlanned("added"); } catch (e) { setPlanned(e?.response?.data?.detail || "Could not add it. Please try again."); } }}
-                  className="rounded-full border border-line px-3.5 py-2 text-sm font-semibold transition hover:border-ink/40 disabled:opacity-70">{planned === "added" ? <span className="inline-flex items-center gap-1.5"><Check className="h-3.5 w-3.5" aria-hidden />On your plan</span> : "Add to my plan"}</button>}
                 {mineRow && <button type="button" onClick={() => onTrack({ id: p.id, state: "none" })} className="rounded-full px-3 py-2 text-sm text-muted hover:text-ink" data-testid="track-remove">Remove</button>}
               </div>
-              {planned && planned !== "saving" && planned !== "added" && <p className="mt-2 text-xs text-red-500" role="alert">{planned}</p>}
-              <p className="mt-2 text-xs text-muted">Kept on your profile. Programs you've done are filed under the stage you were at, out of the way.{onPlan ? " \"Add to my plan\" puts it on your Journey with its deadline." : ""}</p>
+              <p className="mt-2 text-xs text-muted">Kept on your profile. Once you have done a program it leaves your path and is filed under the stage you were at.</p>
             </Section>
           )}
 

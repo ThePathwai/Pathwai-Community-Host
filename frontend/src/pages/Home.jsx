@@ -7,7 +7,6 @@ import { groupOf } from "../lib/communityGroup";
 import { TYPE_LABEL } from "../lib/navigator";
 import { deadlineInfo, leadReason, tint, typeMeta } from "../lib/programStyle";
 import { Ring, Status } from "../components/NavBits";
-import { DueChip } from "./Journey";
 import { DeadlineChip, ProgramDrawer, TypeTile } from "../components/ProgramCards";
 import Trajectory from "../components/Trajectory";
 import { useTracked } from "../lib/useTracked";
@@ -34,6 +33,31 @@ function Initials({ c, size = 44 }) {
   );
 }
 
+// A short version of your path: what you want next, and the best resource for each. The full path lives on /journey.
+function PathCard({ onPick }) {
+  const [r, setR] = useState(null);
+  useEffect(() => { api.get("/navigator/route").then((x) => setR(x.data)).catch(() => setR(false)); }, []);
+  if (!r || !r.has_profile) return null;
+  const rows = r.steps.filter((s) => s.resources.length).slice(0, 3);
+  return (
+    <section className="rounded-3xl border border-line bg-surface p-5" data-testid="home-journey">
+      <h2 className="text-lg" style={{ textTransform: "none", letterSpacing: "-0.01em", fontWeight: 700 }}>Your path</h2>
+      <p className="mb-4 mt-1 text-xs text-muted">{r.steps.length ? "The best resource for each thing you want next." : "Pick what you want next and your path appears."}</p>
+      {rows.length > 0 && (
+        <ul className="space-y-3">
+          {rows.map((s) => (
+            <li key={s.need}>
+              <p className="text-[11px] font-semibold uppercase text-muted" style={{ letterSpacing: "0.12em" }}>{s.title}</p>
+              <button type="button" onClick={() => onPick(s.resources[0])} className="mt-1 block w-full text-left text-sm font-semibold leading-snug hover:underline" data-testid={`home-path-${s.need}`}>{s.resources[0].name}</button>
+            </li>
+          ))}
+        </ul>
+      )}
+      <Link to="/journey" className="mt-4 inline-flex items-center gap-1 text-sm font-semibold hover:underline" data-testid="home-journey-link">{r.steps.length ? "See your whole path" : "Build your path"}<ArrowRight className="h-4 w-4" aria-hidden /></Link>
+    </section>
+  );
+}
+
 export default function Home({ items, onEnter }) {
   const { account } = useAuth();
   const nav = useNavigate();
@@ -46,7 +70,6 @@ export default function Home({ items, onEnter }) {
   const mineInnovation = useMemo(() => (items || []).filter((c) => c.my?.status === "approved" && groupOf(c) === "innovation"), [items]);
   const first = (account?.name || "").split(/\s+/)[0];
   const ask = (text) => shell?.openGuide(text);
-  const planIt = (body) => api.post("/navigator/journey", body);
 
   if (!d) return <Spinner />;
   const today = new Date().toLocaleDateString(undefined, { weekday: "long", month: "long", day: "numeric" });
@@ -171,16 +194,7 @@ export default function Home({ items, onEnter }) {
             <Link to="/navigator" className="mt-4 inline-flex items-center gap-1 text-sm font-semibold hover:underline">See the full route<ArrowRight className="h-4 w-4" aria-hidden /></Link>
           </section>
 
-          {d.journey && (
-            <section className="rounded-3xl border border-line bg-surface p-5" data-testid="home-journey">
-              <div className="flex items-center gap-4">
-                <Ring percent={d.journey.percent} size={56} />
-                <div className="min-w-0"><h2 className="text-lg" style={{ textTransform: "none", letterSpacing: "-0.01em", fontWeight: 700 }}>Your journey</h2><p className="text-xs text-muted">{d.journey.total ? `${d.journey.done} of ${d.journey.total} milestones done${d.journey.overdue ? ` · ${d.journey.overdue} overdue` : ""}` : "Plan what you will do at each stage."}</p></div>
-              </div>
-              {d.journey.next_up.length > 0 && <ul className="mt-4 space-y-2.5">{d.journey.next_up.map((m) => <li key={m.id} className="flex flex-wrap items-center gap-x-2 gap-y-1 text-sm"><span className="min-w-0 flex-1 basis-40 font-medium leading-snug">{m.title}</span><DueChip due={m.due} /></li>)}</ul>}
-              <Link to="/journey" className="mt-4 inline-flex items-center gap-1 text-sm font-semibold hover:underline" data-testid="home-journey-link">{d.journey.total ? "Open your journey" : "Start your plan"}<ArrowRight className="h-4 w-4" aria-hidden /></Link>
-            </section>
-          )}
+          <PathCard onPick={(r) => setOpen(r)} />
 
           <div className="grid grid-cols-2 gap-3">
             <Tile to="/navigator" n={d.matched ?? d.top.length} label="Programs fit" hint="matched to you" />
@@ -195,7 +209,7 @@ export default function Home({ items, onEnter }) {
           </section>
         </aside>
       </div>
-      <ProgramDrawer p={open} onClose={() => setOpen(null)} tracked={tracked} onTrack={track} onPlan={planIt} stage={d.trajectory?.current || d.startup?.stage || "idea"} />
+      <ProgramDrawer p={open} onClose={() => setOpen(null)} tracked={tracked} onTrack={track} stage={d.trajectory?.current || d.startup?.stage || "idea"} />
     </div>
   );
 }

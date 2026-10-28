@@ -203,6 +203,13 @@ async def _journey_payload(acc: Dict[str, Any], items: List[Dict[str, Any]]) -> 
     }
 
 
+@router.get("/navigator/route")
+async def navigator_route(acc: dict = Depends(require_account)) -> Dict[str, Any]:
+    """Your path: for each thing the founder wants next, the resources worth using, why, and the exact page. Plus what opens up next stage."""
+    st = acc.get("startup") or {}
+    return {"has_profile": bool(st.get("stage")), **nav.route_plan(await _all_programs(), nav.navigator_profile(acc), acc.get("tracked") or [], date.today()), "tracked": acc.get("tracked") or []}
+
+
 @router.get("/navigator/journey")
 async def navigator_journey(acc: dict = Depends(require_account)) -> Dict[str, Any]:
     """The founder's own plan: milestones by stage, how far along it is, and suggestions that each say why."""
