@@ -1,7 +1,7 @@
 import React, { useCallback, useEffect, useState } from "react";
 import { Link, Navigate } from "react-router-dom";
 import { toast } from "sonner";
-import { ArrowRight, ArrowUpRight, Check, Flag, MapPin, Pencil } from "lucide-react";
+import { ArrowRight, ArrowUpRight, Check, CheckCircle2, Flag, HelpCircle, ListChecks, MapPin, MousePointerClick, Pencil, Sparkles } from "lucide-react";
 import { api } from "../lib/api";
 import { useAuth } from "../lib/auth";
 import { useTracked } from "../lib/useTracked";
@@ -36,7 +36,7 @@ function Why({ lines, caution }) {
   );
 }
 
-function Resource({ r, onOpen, onTrack }) {
+function Resource({ r, onOpen, onTrack, start }) {
   const mine = r.mine;
   const waiting = r.status === "closed" || r.status === "paused";
   const url = /^https?:\/\//.test(r.apply_url || "") ? r.apply_url : "";
@@ -49,13 +49,13 @@ function Resource({ r, onOpen, onTrack }) {
             <span className="block text-[15px] font-semibold leading-snug">{r.name}</span>
             <span className="block truncate text-xs text-muted">{r.org}</span>
           </button>
-          <div className="mt-1.5 flex flex-wrap items-center gap-1.5"><Status status={r.status} /><DeadlineChip p={r} />{mine === "in" && <span className="inline-flex rounded-full bg-amber-500/15 px-2.5 py-0.5 text-xs font-semibold text-amber-600 dark:text-amber-400">You are in this</span>}</div>
+          <div className="mt-1.5 flex flex-wrap items-center gap-1.5"><Status status={r.status} /><DeadlineChip p={r} />{start && !mine && <span className="inline-flex rounded-full px-2.5 py-0.5 text-xs font-bold" style={{ background: "var(--accent)", color: "var(--on-accent)" }} data-testid="path-start-tag">Start here</span>}{mine === "in" && <span className="inline-flex rounded-full bg-amber-500/15 px-2.5 py-0.5 text-xs font-semibold text-amber-600 dark:text-amber-400">You are doing this</span>}</div>
           <Why lines={whyLines(r)} caution={waiting ? "Not taking applications now. Read the page and plan for the next round." : ""} />
           <div className="mt-3 flex flex-wrap items-center gap-2">
             {url && <a href={url} target="_blank" rel="noreferrer" className="btn-primary !px-3.5 !py-2 text-[13px]" data-testid={`path-go-${r.id}`}>{r.link_exact === false ? "Open the closest page" : linkVerb(r)}<ArrowUpRight className="h-3.5 w-3.5" aria-hidden /></a>}
             {mine === "in"
-              ? <button type="button" onClick={() => onTrack(r, "done")} className={smallBtn} data-testid={`path-done-${r.id}`}>I have done this</button>
-              : <button type="button" onClick={() => onTrack(r, "in")} className={smallBtn} data-testid={`path-in-${r.id}`}>I am using this</button>}
+              ? <button type="button" onClick={() => onTrack(r, "done")} className={smallBtn} data-testid={`path-done-${r.id}`}title="Move it off your list and into what you have used">Mark as done</button>
+              : <button type="button" onClick={() => onTrack(r, "in")} className={smallBtn} data-testid={`path-in-${r.id}`}title="Tell us you are working on this. It stays pinned at the top of its list.">I am doing this</button>}
             {mine === "in" && <button type="button" onClick={() => onTrack(r, "none")} className="px-1.5 py-1 text-[13px] text-muted hover:text-ink">Not for me</button>}
           </div>
           {url && <p className="mt-2 line-clamp-2 text-xs leading-snug text-muted" data-testid="path-link">{r.link_note} <span className="whitespace-nowrap">({hostOf(url)})</span></p>}
@@ -65,7 +65,7 @@ function Resource({ r, onOpen, onTrack }) {
   );
 }
 
-function Step({ n, step, onOpen, onTrack }) {
+function Step({ n, step, onOpen, onTrack, startId }) {
   return (
     <Widget data-testid={`path-step-${step.need}`}>
       <div className="mb-4 flex items-center gap-3">
@@ -74,7 +74,7 @@ function Step({ n, step, onOpen, onTrack }) {
         {step.resources.length > 0 && <span className="shrink-0 rounded-full bg-ink/5 px-2.5 py-0.5 text-xs font-semibold text-muted tabular-nums">{step.resources.length}</span>}
       </div>
       {step.resources.length ? (
-        <ul className="divide-y divide-line">{step.resources.map((r) => <Resource key={r.id} r={r} onOpen={onOpen} onTrack={onTrack} />)}</ul>
+        <ul className="divide-y divide-line">{step.resources.map((r) => <Resource key={r.id} r={r} onOpen={onOpen} onTrack={onTrack} start={r.id === startId} />)}</ul>
       ) : (
         <p className="rounded-2xl border border-dashed border-line p-4 text-sm text-muted" data-testid="path-step-empty">Nothing matches {step.label} right now. Adding details to your profile (province, size, who you are) can open more up.</p>
       )}
@@ -97,6 +97,72 @@ function useWide() {
   return w;
 }
 
+// First visit shows a three-step "how this works"; dismissing it is remembered on this device (per-viewer convenience only).
+function useIntro() {
+  const key = "pw_path_intro_seen";
+  const [show, setShow] = useState(() => { try { return localStorage.getItem(key) !== "1"; } catch { return true; } });
+  const set = (v) => { setShow(v); if (!v) { try { localStorage.setItem(key, "1"); } catch { /* storage is optional */ } } };
+  return [show, set];
+}
+
+const HOW = [
+  { Icon: ListChecks, t: "Pick what you need", d: "Funding, mentors, first customers. Choose the one or two that matter most right now." },
+  { Icon: MousePointerClick, t: "Open the exact page", d: "Every resource says why it fits you and takes you straight to the right page, not a home page." },
+  { Icon: CheckCircle2, t: "Mark what you do", d: "Tell us when you are doing it or done. It leaves your list and the next best one moves up." },
+];
+
+function HowItWorks({ onClose }) {
+  return (
+    <Widget className="mb-4" data-testid="path-how">
+      <div className="mb-4 flex items-start justify-between gap-3">
+        <div><Label>New here?</Label><h2 className="mt-1 text-lg" style={heading}>How this page works</h2></div>
+        <button type="button" onClick={onClose} className={smallBtn} data-testid="path-how-close">Got it</button>
+      </div>
+      <ol className="grid gap-4 sm:grid-cols-3">
+        {HOW.map(({ Icon, t, d }, i) => (
+          <li key={t} className="flex gap-3">
+            <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full" style={{ background: "var(--accent)", color: "var(--on-accent)" }} aria-hidden><Icon className="h-4 w-4" /></span>
+            <div><p className="text-sm font-semibold"><span className="tabular-nums text-muted">{i + 1}. </span>{t}</p><p className="mt-0.5 text-[13px] leading-snug text-muted">{d}</p></div>
+          </li>
+        ))}
+      </ol>
+    </Widget>
+  );
+}
+
+// The one thing to do now: the best resource for the first thing you asked for, with the page to open and the reason.
+function NextMove({ r, step, then, onOpen, onTrack }) {
+  const mine = r.mine;
+  const url = /^https?:\/\//.test(r.apply_url || "") ? r.apply_url : "";
+  const waiting = r.status === "closed" || r.status === "paused";
+  return (
+    <section className="mb-4 rounded-3xl border-2 p-5 sm:p-6" style={{ borderColor: "var(--accent)", background: "var(--surface)" }} data-testid="path-next-move">
+      <div className="flex items-center gap-2"><Sparkles className="h-4 w-4" aria-hidden /><Label>{mine === "in" ? "Keep going" : "Your next move"}</Label><span className="text-xs text-muted">· {step.title.toLowerCase()}</span></div>
+      <div className="mt-3 flex items-start gap-4">
+        <TypeTile type={r.type} size={48} />
+        <div className="min-w-0 flex-1">
+          <button type="button" onClick={() => onOpen(r)} className="block text-left" data-testid="path-next-open"><h2 className="text-2xl leading-tight" style={{ ...heading, letterSpacing: "-0.02em" }}>{r.name}</h2><span className="block text-sm text-muted">{r.org}</span></button>
+          <div className="mt-2 flex flex-wrap items-center gap-1.5"><Status status={r.status} /><DeadlineChip p={r} /></div>
+          <Why lines={whyLines(r)} caution={waiting ? "Not taking applications now. Read the page and plan for the next round." : ""} />
+          <div className="mt-4 flex flex-wrap items-center gap-2.5">
+            {url && <a href={url} target="_blank" rel="noreferrer" className="btn-primary" data-testid="path-next-go">{r.link_exact === false ? "Open the closest page" : linkVerb(r)}<ArrowUpRight className="h-4 w-4" aria-hidden /></a>}
+            {mine === "in"
+              ? <button type="button" onClick={() => onTrack(r, "done")} className="btn-ghost !py-2.5 text-sm" data-testid="path-next-done">Mark as done</button>
+              : <button type="button" onClick={() => onTrack(r, "in")} className="btn-ghost !py-2.5 text-sm" data-testid="path-next-in">I am doing this</button>}
+          </div>
+          {url && <p className="mt-2.5 text-xs leading-snug text-muted">{r.link_note} <span className="whitespace-nowrap">({hostOf(url)})</span></p>}
+        </div>
+      </div>
+      {then.length > 0 && (
+        <div className="mt-5 flex flex-wrap items-center gap-x-4 gap-y-2 border-t border-line pt-4 text-sm" data-testid="path-then">
+          <span className="text-muted">After that</span>
+          {then.map((t) => <button key={t.r.id} type="button" onClick={() => onOpen(t.r)} className="inline-flex items-center gap-1.5 font-semibold hover:underline"><span className="text-xs font-medium text-muted">{cap(t.label)}</span>{t.r.name}<ArrowRight className="h-3.5 w-3.5" aria-hidden /></button>)}
+        </div>
+      )}
+    </section>
+  );
+}
+
 export default function Journey({ embedded }) {
   const { account, loading, refresh } = useAuth();
   const { tracked, setTracked, track } = useTracked();
@@ -105,6 +171,7 @@ export default function Journey({ embedded }) {
   const [saving, setSaving] = useState(false);
   const [open, setOpen] = useState(null);
   const wide = useWide();
+  const [intro, setIntro] = useIntro();
   useEffect(() => { document.title = "Your path · Pathwai"; }, []);
 
   const load = useCallback(async () => {
@@ -160,19 +227,25 @@ export default function Journey({ embedded }) {
               : <p className="text-sm text-muted">Say what you are trying to do next and it will show here. <Link to="/me?edit=startup" className="font-semibold underline hover:text-ink">Add it</Link></p>}
           </div>
           {data.next && <button type="button" onClick={() => saveStartup({ stage: data.next }, `You are now at the ${STAGE_LABEL[data.next]} stage`)} disabled={saving} className="btn-ghost mt-4 self-start !py-2 text-sm" data-testid="path-advance">I have reached {STAGE_LABEL[data.next]}</button>}
+          {data.next && <p className="mt-1.5 text-xs text-muted">Tap it when this is true. Your whole path updates to the new stage.</p>}
         </Widget>);
 
-    items.push(<Widget key="wants" data-testid="path-wants">
-          <h2 className="text-lg" style={heading}>What do you want next?</h2>
-          <p className="mb-3 mt-1 text-sm text-muted">Only what has real resources for you. The number is how many. Each one you pick gets its own widget.</p>
+    const chips = (
           <div className="flex flex-wrap gap-2">
             {chosen.map((o, i) => <button key={o.key} type="button" disabled={saving} onClick={() => toggleNeed(o.key)} aria-pressed="true" data-testid={`want-${o.key}`} className="inline-flex items-center gap-1.5 rounded-full px-3.5 py-2 text-sm font-semibold" style={{ background: "var(--accent)", color: "var(--on-accent)" }}><span className="tabular-nums opacity-80">{i + 1}</span>{cap(o.label)}</button>)}
             {rest.map((o) => <button key={o.key} type="button" disabled={saving} onClick={() => toggleNeed(o.key)} aria-pressed="false" data-testid={`want-${o.key}`} className={cx("inline-flex items-center gap-1.5 rounded-full border px-3.5 py-2 text-sm font-medium transition hover:border-ink/50", o.common ? "border-ink/40" : "border-line text-muted")}>+ {cap(o.label)}<span className="text-xs tabular-nums text-muted" title={`${o.count} resources for you`}>{o.count}</span></button>)}
           </div>
-          {!chosen.length && <p className="mt-3 text-sm text-muted" data-testid="path-pick">Pick at least one and your path appears here. The outlined ones are common at your stage.</p>}
+    );
+    const moveStep = data.steps.find((st) => st.resources.length);
+    const move = moveStep ? (moveStep.resources.find((r) => r.mine === "in") || moveStep.resources[0]) : null;
+    const then = data.steps.filter((st) => st !== moveStep && st.resources.length).slice(0, 2).map((st) => ({ label: st.label, r: st.resources.find((r) => r.mine === "in") || st.resources[0] }));
+    if (chosen.length) items.push(<Widget key="wants" data-testid="path-wants">
+          <h2 className="text-lg" style={heading}>Add or change what you want</h2>
+          <p className="mb-3 mt-1 text-sm text-muted">Tap to add or remove. The number is how many resources fit you. The numbered ones get a widget below, in this order.</p>
+          {chips}
         </Widget>);
 
-    data.steps.forEach((s, i) => items.push(<Step key={s.need} n={i + 1} step={s} onOpen={setOpen} onTrack={mark} />));
+    data.steps.forEach((s, i) => items.push(<Step key={s.need} n={i + 1} step={s} onOpen={setOpen} onTrack={mark} startId={move && !move.mine ? move.id : ""} />));
 
     if (data.coming_up) items.push(
           <Widget key="coming" data-testid="path-coming">
@@ -212,6 +285,16 @@ export default function Journey({ embedded }) {
     body = (
       <div>
         {error && <p className="mb-4 rounded-xl border border-red-500/40 p-3 text-sm text-red-500" role="alert">{error}</p>}
+        {intro && <HowItWorks onClose={() => setIntro(false)} />}
+        {!chosen.length && (
+          <Widget className="mb-4 sm:p-6" data-testid="path-pickhero">
+            <Label>Step 1 · Start here</Label>
+            <h2 className="mt-1 text-2xl" style={{ ...heading, letterSpacing: "-0.02em" }}>What do you need most right now?</h2>
+            <p className="mb-4 mt-1 max-w-xl text-sm text-muted" data-testid="path-pick">Pick one to three. We will show the best resources for each, why they fit you, and the exact page to open. The outlined ones are common at your stage, and the number is how many fit you.</p>
+            {chips}
+          </Widget>
+        )}
+        {move && <NextMove r={move} step={moveStep} then={then} onOpen={setOpen} onTrack={mark} />}
         {wide
           ? <div className="grid grid-cols-2 items-start gap-4"><div className="flex flex-col gap-4">{items.filter((_, i) => i % 2 === 0)}</div><div className="flex flex-col gap-4">{items.filter((_, i) => i % 2 === 1)}</div></div>
           : <div className="flex flex-col gap-4">{items}</div>}
@@ -225,7 +308,7 @@ export default function Journey({ embedded }) {
       <div className="mb-6 max-w-3xl">
         <p className="eyebrow">Journey</p>
         <h1 className="mt-2 text-3xl sm:text-4xl" style={{ textTransform: "none", letterSpacing: "-0.03em", fontWeight: 800, textWrap: "balance" }}>{account.startup?.name ? `${account.startup.name}'s path` : "Your path"}</h1>
-        <p className="mt-2 text-sm text-muted">The resources worth your time for what you want next, why each one is for you, and the exact page to go to.</p>
+        <p className="mt-2 text-sm text-muted">Pick what you need next. We show the best resources for it, why each one fits you, and the exact page to open. {!intro && data?.has_profile && <button type="button" onClick={() => setIntro(true)} className="ml-1 inline-flex items-center gap-1 font-semibold underline hover:text-ink" data-testid="path-how-open"><HelpCircle className="h-3.5 w-3.5" aria-hidden />How this works</button>}</p>
       </div>
       {body}
     </div>
