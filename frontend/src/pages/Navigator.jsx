@@ -138,6 +138,7 @@ function Results({ res, meta, loading, generic, onOpen, tracked, onTrack }) {
   const { matches, more, later, communities, trajectory } = res;
   const others = res.others || [];
   const fits = [...matches, ...more];
+  const communityN = [...fits, ...later, ...others].filter((p) => p.community).length;
   const base = view === "fit" ? fits : others;
   const counts = base.reduce((o, p) => ({ ...o, [p.type]: (o[p.type] || 0) + 1 }), {});
   const shown = type ? base.filter((p) => p.type === type) : base;
@@ -168,6 +169,7 @@ function Results({ res, meta, loading, generic, onOpen, tracked, onTrack }) {
           <h2 className="text-xl" style={{ textTransform: "none", letterSpacing: "-0.01em", fontWeight: 700 }}>{view === "fit" ? (fits.length ? `${fits.length} programs that fit you` : "No clean fit yet") : `${others.length} programs not matched to you`}</h2>
           <Segmented items={[["fit", `For you · ${fits.length}`], ["other", `Everything else · ${others.length}`]]} value={view} onChange={switchView} />
         </div>
+        <p className="mt-2 text-xs text-muted" data-testid="nav-totals">All {fits.length + later.length + others.length} programs: {fits.length} fit you{later.length ? `, ${later.length} are not yet` : ""}, {others.length} are not matched to you.{communityN > 0 ? ` That includes ${communityN} from communities you joined.` : ""}</p>
         <p className="mt-2 text-sm text-muted">{view === "fit" ? "Matched to your stage, needs, province and group." : "Real programs too. They are not matched to you yet because of stage, province, group or sector. Each card says why."}</p>
         <p className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1.5 text-xs text-muted" data-testid="nav-legend">{LEGEND.map(([k, t]) => <span key={k} className="inline-flex items-center gap-1.5"><Status status={k} />{t}</span>)}</p>
         <HowWeDecide />
@@ -179,7 +181,7 @@ function Results({ res, meta, loading, generic, onOpen, tracked, onTrack }) {
         )}
         {view === "fit" ? (
           <>
-            {best.length > 0 && <div className="mt-6"><p className="mb-1 text-sm font-semibold">Good matches</p><p className="mb-3 text-xs text-muted">You can apply, it is for your stage, and it gives you what you asked for.</p><div className={grid}>{best.map((p) => <ProgramCard key={p.id} p={p} onOpen={onOpen} />)}</div></div>}
+            {best.length > 0 && <div className="mt-6"><p className="mb-1 text-sm font-semibold">Good matches</p><p className="mb-3 text-xs text-muted">Nothing in your profile rules it out, it is for your stage, and it gives you what you asked for. Confirm what each one asks for on its page.</p><div className={grid}>{best.map((p) => <ProgramCard key={p.id} p={p} onOpen={onOpen} />)}</div></div>}
             {worth.length > 0 && <div className="mt-8"><p className="mb-1 text-sm font-semibold">Worth a look</p><p className="mb-3 text-xs text-muted">Not ruled out, but one answer is a no or missing. The card says which.</p><div className={grid}>{worth.map((p) => <ProgramCard key={p.id} p={p} onOpen={onOpen} />)}</div></div>}
           </>
         ) : (
@@ -296,7 +298,7 @@ export default function Navigator({ embedded }) {
         <div>
           <p className="eyebrow">Programs</p>
           <h1 className="mt-2 text-3xl sm:text-4xl" style={{ textTransform: "none", letterSpacing: "-0.03em", fontWeight: 800, textWrap: "balance" }}>{account ? "Programs that fit you" : "Canadian programs that fit you"}</h1>
-          <p className="mt-2 text-sm text-muted">{meta ? `${meta.count} grants, loans, accelerators and mentors, hand-checked. Communities add their own.` : "Loading"}</p>
+          <p className="mt-2 text-sm text-muted">{meta ? `${meta.count} grants, loans, accelerators and mentors, hand-checked. Communities you join add their own on top.` : "Loading"}</p>
         </div>
         <Segmented items={[["path", "For you"], ["all", "Browse all"], ["ask", "Ask the guide"]]} value={tab} onChange={setTab} />
       </div>

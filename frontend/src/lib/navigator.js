@@ -105,6 +105,21 @@ const worst = (items) => items.reduce((w, i) => (SEVERITY[i.state] > SEVERITY[w]
 // Each is "yes", "maybe" (an answer is missing from the profile), "later" (a step not taken yet) or "no". No points.
 // A "no" on 1 or 2 is "skip", a "later" on 1 or 2 is "later", yes/yes/yes on 1 to 3 is "strong", anything else is "possible".
 // Timing never changes the match. `score` only orders programs inside a match group and is never shown.
+const PROVINCE_WORDS = { ON: "ontario", BC: "british columbia|b\\.c\\.", AB: "alberta", SK: "saskatchewan", MB: "manitoba", QC: "quebec|québec", NB: "new brunswick", NS: "nova scotia", PE: "prince edward", NL: "newfoundland|labrador", YT: "yukon", NT: "northwest territories", NU: "nunavut" };
+export function uncheckedRequirements(program) {
+  const req = program.requires || {};
+  const pats = [];
+  if (req.incorporated) pats.push("incorporat|corporation|business number");
+  if (req.min_employees != null || req.max_employees != null) pats.push("employee");
+  if (req.age_min != null || req.age_max != null) pats.push("\\bage\\b|years old|aged|under \\d\\d");
+  if (req.student) pats.push("student");
+  const provs = program.provinces || ["any"];
+  if (!provs.includes("any")) provs.forEach((x) => { if (PROVINCE_WORDS[x]) pats.push(PROVINCE_WORDS[x]); });
+  if ((program.restricted_to || []).length) pats.push("black|women|woman|indigenous|newcomer|youth|student|owned|led by|visible minorit");
+  const rx = pats.length ? new RegExp(pats.join("|"), "i") : null;
+  return (program.requirements || []).filter((r) => !(rx && rx.test(r)));
+}
+
 export function evaluate(p, profile, today) {
   const req = p.requires || {};
   const facets = []; const tailored = []; const focus = [];
@@ -163,6 +178,12 @@ export function evaluate(p, profile, today) {
   const blocking = facets.find((f) => f.state === aState) || null;
   const aText = aState === "yes" ? (facets.length ? "You meet what they ask for." + (tailored.length || focus.length ? " " + [...tailored, ...focus][0] : "") : "Nothing rules you out.") : blocking.text;
   const applyCheck = { key: "apply", q: CHECK_Q.apply, state: aState, text: aText, items: facets, ...(blocking && blocking.ask ? { ask: blocking.ask } : {}) };
+  const unchecked = uncheckedRequirements(p);
+  if (aState === "yes" && unchecked.length) {
+    applyCheck.text = "Nothing in your profile rules you out. Confirm what they ask for on their page.";
+    applyCheck.caveat = true;
+    applyCheck.unchecked = unchecked;
+  }
 
   const stages = (p.stages || STAGES).filter((s) => STAGES.includes(s)); const stageList = stages.length ? stages : STAGES;
   const si = STAGES.indexOf(profile.stage);
@@ -268,7 +289,7 @@ export function suggest(programs, rawProfile, today = todayIso(), limit = 8) {
     const pick = ranked.find((r) => r.phase === phase && r.status !== "closed" && r.status !== "paused") || ranked.find((r) => r.phase === phase);
     if (pick) path.push({ phase, label: PHASE_LABEL[phase], program_id: pick.id, name: pick.name, why: why(pick) });
   }
-  return { profile, matches: ranked.slice(0, limit), more: ranked.slice(limit, limit + 8), later: buckets.later.slice(0, 5), skipped, others, path, trajectory: trajectory(programs, profile, today), summary: summaryText(profile, ranked, buckets.later), as_of: today };
+  return { profile, matches: ranked.slice(0, limit), more: ranked.slice(limit), later: buckets.later, skipped, totals: { fit: ranked.length, later: buckets.later.length, others: others.length, all: ranked.length + buckets.later.length + others.length }, others, path, trajectory: trajectory(programs, profile, today), summary: summaryText(profile, ranked, buckets.later), as_of: today };
 }
 
 export const STAGE_NOW = { idea: "at the idea stage", prototype: "at the prototype stage", launched: "just launched", revenue: "earning revenue", growth: "growing" };

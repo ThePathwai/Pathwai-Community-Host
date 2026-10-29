@@ -2087,7 +2087,9 @@
       "source_url": "https://ised-isde.canada.ca/site/ised/en/programs-and-initiatives/women-entrepreneurship-strategy",
       "verified": "official",
       "last_checked": "2026-10-28",
-      "restricted_to": [],
+      "restricted_to": [
+        "women"
+      ],
       "link_label": "ISED: Women Entrepreneurship Loan Fund",
       "link_kind": "program",
       "link_note": "Read how the fund works. Loans are delivered through partner organizations, so use the page to find yours.",
@@ -2927,6 +2929,7 @@
       ],
       "audiences": [
         "women",
+        "black",
         "indigenous",
         "youth"
       ],
@@ -2954,7 +2957,12 @@
       "source_url": "https://www.tradecommissioner.gc.ca/businesswomen-femmesdaffaires/aboutus-aproposdenous.aspx?lang=eng",
       "verified": "official",
       "last_checked": "2026-10-28",
-      "restricted_to": [],
+      "restricted_to": [
+        "women",
+        "black",
+        "indigenous",
+        "youth"
+      ],
       "link_label": "Trade Commissioner Service: exporters from diverse backgrounds",
       "link_kind": "program",
       "link_note": "See the export supports for your group and how to reach a trade commissioner.",
@@ -3002,7 +3010,9 @@
       "source_url": "https://www.startupcan.ca/28-resources-to-support-black-entrepreneurs-in-canada/",
       "verified": "official",
       "last_checked": "2026-10-27",
-      "restricted_to": [],
+      "restricted_to": [
+        "black"
+      ],
       "link_label": "Startup Canada: 28 resources for Black entrepreneurs",
       "link_kind": "directory",
       "link_note": "Browse the list and open the program that fits.",
@@ -3060,7 +3070,10 @@
         "any"
       ],
       "requires": {},
-      "restricted_to": [],
+      "restricted_to": [
+        "black",
+        "indigenous"
+      ],
       "last_checked": "2026-10-28",
       "verified": "official",
       "id": "camsc",

@@ -13,6 +13,7 @@ from __future__ import annotations
 
 import json
 import uuid
+import re
 from datetime import date
 from pathlib import Path
 from typing import Any, Dict, List, Optional
@@ -205,6 +206,33 @@ STAGE_LINE_PREFIXES = ("Built for founders at your stage", "Open to companies at
 FIT_WORD = {"strong": "Good match", "possible": "Worth a look", "later": "Not yet", "skip": "Not matched"}
 
 
+_PROVINCE_WORDS = {"ON": r"ontario", "BC": r"british columbia|b\.c\.", "AB": r"alberta", "SK": r"saskatchewan", "MB": r"manitoba", "QC": r"quebec|québec",
+                   "NB": r"new brunswick", "NS": r"nova scotia", "PE": r"prince edward", "NL": r"newfoundland|labrador", "YT": r"yukon", "NT": r"northwest territories", "NU": r"nunavut"}
+
+
+def unchecked_requirements(program: Dict[str, Any]) -> List[str]:
+    """The program's written requirements that the profile cannot answer. The structured rules (province, group, age, student, team size,
+    incorporation) are checked against the profile; everything else on the list (a full-time founder, traction, a working MVP) is the
+    founder's to confirm on the program page, and the answer to "Can I apply?" has to say so."""
+    req = program.get("requires") or {}
+    pats = []
+    if req.get("incorporated"):
+        pats.append(r"incorporat|corporation|business number")
+    if req.get("min_employees") is not None or req.get("max_employees") is not None:
+        pats.append(r"employee")
+    if req.get("age_min") is not None or req.get("age_max") is not None:
+        pats.append(r"\bage\b|years old|aged|under \d\d")
+    if req.get("student"):
+        pats.append(r"student")
+    provs = program.get("provinces") or ["any"]
+    if "any" not in provs:
+        pats += [_PROVINCE_WORDS[x] for x in provs if x in _PROVINCE_WORDS]
+    if program.get("restricted_to"):
+        pats.append(r"black|women|woman|indigenous|newcomer|youth|student|owned|led by|visible minorit")
+    rx = re.compile("|".join(pats), re.I) if pats else None
+    return [r for r in (program.get("requirements") or []) if not (rx and rx.search(r))]
+
+
 def _worst(items: List[Dict[str, Any]]) -> str:
     return max((i["state"] for i in items), key=lambda s: _SEVERITY[s], default="yes")
 
@@ -305,6 +333,12 @@ def evaluate(program: Dict[str, Any], profile: Dict[str, Any], today: Optional[d
     else:
         a_text = blocking["text"]
     apply_check = {"key": "apply", "q": CHECK_Q["apply"], "state": a_state, "text": a_text, "items": facets, **({"ask": blocking["ask"]} if blocking and blocking.get("ask") else {})}
+    unchecked = unchecked_requirements(program)
+    if a_state == "yes" and unchecked:
+        # Everything the profile can answer is fine, but the program asks for things it cannot (a full-time founder, traction...). Say so.
+        apply_check["text"] = "Nothing in your profile rules you out. Confirm what they ask for on their page."
+        apply_check["caveat"] = True
+        apply_check["unchecked"] = unchecked
 
     # 2. Is it for my stage?
     stages = [s for s in (program.get("stages") or STAGES) if s in STAGES] or list(STAGES)
@@ -429,9 +463,10 @@ def suggest(programs: List[Dict[str, Any]], raw_profile: Optional[Dict[str, Any]
     return {
         "profile": profile,
         "matches": ranked[:limit],
-        "more": ranked[limit:limit + 8],
-        "later": later[:5],
+        "more": ranked[limit:],
+        "later": later,
         "skipped": skipped,
+        "totals": {"fit": len(ranked), "later": len(later), "others": len(others), "all": len(ranked) + len(later) + len(others)},
         "others": others,
         "path": path,
         "trajectory": trajectory(programs, profile, today),

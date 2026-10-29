@@ -339,7 +339,7 @@ export default function Hub() {
               <button key={x.key} role="tab" aria-selected={space === x.key} onClick={() => setSpace(x.key)} data-testid={`hub-space-${x.key}`}
                 className={cx("flex-1 rounded-full px-5 py-1.5 text-sm font-medium transition sm:flex-none", space === x.key ? "" : "text-muted hover:text-ink")}
                 style={space === x.key ? { background: "var(--accent)", color: "var(--on-accent)" } : undefined}>
-                {x.short}<span className={cx("ml-2 text-xs tabular-nums", space === x.key ? "opacity-70" : "text-muted")}>{spaceCount(x.key)}</span>
+                {x.short}<span className={cx("ml-2 text-xs tabular-nums", space === x.key ? "opacity-70" : "text-muted")}>{spaceCount(x.key)} joined</span>
               </button>
             ))}
           </div>
@@ -357,7 +357,7 @@ export default function Hub() {
               {mine.length === 0 ? (
                 <div className="rounded-xl border border-dashed border-line p-8 text-center">
                   <p className="text-sm text-muted">{space === "innovation" ? "You haven't joined an innovation or business community yet." : "You haven't joined a leisure or lifestyle community yet."}</p>
-                  <Button className="mt-4" onClick={() => setTab("discover")} data-testid="hub-browse">Browse communities</Button>
+                  <Button className="mt-4" onClick={() => setTab("discover")} data-testid="hub-browse">Browse {discover.length} communit{discover.length === 1 ? "y" : "ies"}</Button>
                 </div>
               ) : (
                 <>

@@ -18,7 +18,10 @@ const ANSWER = {
   maybe: { Icon: CircleHelp, cls: "text-amber-500", word: "Not sure" },
   later: { Icon: Hourglass, cls: "text-amber-500", word: "Not yet" },
   no: { Icon: CircleX, cls: "text-red-500", word: "No" },
+  probably: { Icon: CircleCheck, cls: "text-amber-500", word: "Probably" },
 };
+// A "yes" that rests only on what your profile can answer, while the program also asks for things it cannot check, is "Probably".
+const answerOf = (c) => (c.caveat && c.state === "yes" ? ANSWER.probably : ANSWER[c.state] || ANSWER.maybe);
 const SHORT = { apply: "Eligible", stage: "Stage", need: "Needs", timing: "Timing" };
 
 // One line on a card: four marks, one per question, so you can see at a glance which ones hold.
@@ -26,7 +29,7 @@ export function CheckStrip({ checks }) {
   if (!checks?.length) return null;
   return (
     <span className="flex flex-wrap items-center gap-x-3 gap-y-1" data-testid="check-strip">
-      {checks.map((c) => { const a = ANSWER[c.state] || ANSWER.maybe; return <span key={c.key} title={`${c.q} ${a.word}. ${c.text}`} className="inline-flex items-center gap-1 text-[11px] font-medium text-muted"><a.Icon className={cx("h-3.5 w-3.5", a.cls)} aria-hidden />{SHORT[c.key]}</span>; })}
+      {checks.map((c) => { const a = answerOf(c); return <span key={c.key} title={`${c.q} ${a.word}. ${c.text}`} className="inline-flex items-center gap-1 text-[11px] font-medium text-muted"><a.Icon className={cx("h-3.5 w-3.5", a.cls)} aria-hidden />{SHORT[c.key]}</span>; })}
     </span>
   );
 }
@@ -36,7 +39,7 @@ export function CheckList({ checks }) {
   return (
     <ul className="space-y-3.5" data-testid="check-list">
       {checks.map((c) => {
-        const a = ANSWER[c.state] || ANSWER.maybe;
+        const a = answerOf(c);
         const items = c.key === "apply" && (c.items || []).length > 1 ? c.items : [];
         return (
           <li key={c.key} className="flex gap-3" data-testid={`check-${c.key}`} data-state={c.state}>
@@ -45,6 +48,12 @@ export function CheckList({ checks }) {
               <p className="text-sm font-semibold leading-snug">{c.q} <span className={cx("font-medium", a.cls)}>{a.word}</span></p>
               <p className="mt-0.5 text-sm text-ink/80">{c.text}</p>
               {items.length > 0 && <ul className="mt-1.5 space-y-1">{items.map((f) => { const fa = ANSWER[f.state] || ANSWER.maybe; return <li key={f.text} className="flex gap-1.5 text-xs text-muted"><fa.Icon className={cx("mt-px h-3.5 w-3.5 shrink-0", fa.cls)} aria-hidden /><span>{f.text}</span></li>; })}</ul>}
+              {c.caveat && (c.unchecked || []).length > 0 && (
+                <div className="mt-2 rounded-xl bg-amber-500/10 p-3" data-testid="check-unchecked">
+                  <p className="text-xs font-semibold text-amber-700 dark:text-amber-400">We cannot check these from your profile. Confirm them on the page:</p>
+                  <ul className="mt-1.5 space-y-1">{c.unchecked.map((u) => <li key={u} className="flex gap-1.5 text-xs text-ink/80"><CircleHelp className="mt-px h-3.5 w-3.5 shrink-0 text-amber-500" aria-hidden /><span>{u}</span></li>)}</ul>
+                </div>
+              )}
               {c.ask && <Link to="/me?edit=startup" className="mt-1.5 inline-flex items-center gap-1 text-xs font-semibold underline" data-testid={`check-ask-${c.ask}`}>Add it to your profile<ArrowRight className="h-3 w-3" aria-hidden /></Link>}
             </div>
           </li>
@@ -58,7 +67,7 @@ export function CheckList({ checks }) {
 export function verdictLine(p) {
   const cs = Object.fromEntries((p.checks || []).map((c) => [c.key, c]));
   if (p.fit === "skip") return (p.cautions || [])[0] || "A rule rules you out.";
-  if (p.fit === "strong") return "You can apply, it is for your stage, and it gives you what you asked for.";
+  if (p.fit === "strong") return cs.apply?.caveat ? "Nothing in your profile rules it out, it is for your stage, and it gives you what you asked for. Confirm what they ask for on the page." : "You can apply, it is for your stage, and it gives you what you asked for.";
   if (p.fit === "later") return "A step is in the way for now: " + ((p.cautions || [])[0] || "see below").replace(/\.$/, "").replace(/^./, (m) => m.toLowerCase()) + ".";
   const gaps = [];
   if (cs.apply?.state === "maybe") gaps.push("we cannot tell yet whether you can apply");

@@ -434,3 +434,46 @@ def test_a_program_that_does_not_cover_what_you_asked_is_worth_a_look_and_says_s
     for ev in rows:
         need = next(c for c in ev["checks"] if c["key"] == "need")
         assert "Does not cover" in need["text"] and ev["fit"] in ("possible", "later")
+
+
+# --------------------------------------------------------------------------- honesty: groups, requirements and counts
+GROUPS_NEEDING_A_GATE = {"black", "indigenous", "women", "newcomer"}
+
+
+def test_a_program_made_for_a_group_is_only_matched_to_that_group():
+    for p in PROGRAMS:
+        if GROUPS_NEEDING_A_GATE & set(p.get("audiences") or []):
+            assert p.get("restricted_to"), f"{p['id']} is made for a group but is not gated to it"
+    base = {"stage": "launched", "province": "ON", "needs": ["mentorship"], "sectors": ["tech"]}
+    plain = nav.suggest(PROGRAMS, base, TODAY, limit=999)
+    assert "startup-canada-black-guide" not in {r["id"] for r in plain["matches"]}
+    other = next(r for r in plain["others"] if r["id"] == "startup-canada-black-guide")
+    assert "Black" in other["cautions"][0]
+    mine = nav.suggest(PROGRAMS, {**base, "audiences": ["black"]}, TODAY, limit=999)
+    assert "startup-canada-black-guide" in {r["id"] for r in mine["matches"]}
+
+
+def test_can_i_apply_does_not_say_yes_when_the_requirements_cannot_be_checked():
+    profile = nav.normalize_profile({"stage": "launched", "province": "ON", "needs": ["funding"], "sectors": ["tech"], "incorporated": True, "employees": 2})
+    ev = nav.evaluate(by_id("dmz-incubator"), profile, TODAY)
+    apply_check = next(c for c in ev["checks"] if c["key"] == "apply")
+    assert apply_check["state"] == "yes" and apply_check["caveat"] is True
+    assert "rules you out" in apply_check["text"] and "Confirm" in apply_check["text"]
+    assert any("full-time founder" in u for u in apply_check["unchecked"])
+    assert apply_check["unchecked"] == by_id("dmz-incubator")["requirements"]
+    # a requirement the profile does answer is never listed as unchecked
+    sred = nav.unchecked_requirements(by_id("sred"))
+    assert not any("ncorporated" in r for r in sred)
+    # nothing to confirm, no caveat
+    bare = {**by_id("ip-village")}
+    assert nav.unchecked_requirements(bare) == []
+    ev2 = nav.evaluate(bare, profile, TODAY)
+    assert "caveat" not in next(c for c in ev2["checks"] if c["key"] == "apply")
+
+
+def test_the_counts_add_up_and_nothing_is_capped():
+    res = nav.suggest(PROGRAMS, {"stage": "launched", "province": "ON", "needs": ["funding"], "sectors": ["tech"]}, TODAY)
+    t = res["totals"]
+    assert t["fit"] == len(res["matches"]) + len(res["more"]) and t["later"] == len(res["later"]) and t["others"] == len(res["others"])
+    assert t["all"] == len(PROGRAMS)
+    assert t["fit"] > 16, "the For you count used to stop at 16"
