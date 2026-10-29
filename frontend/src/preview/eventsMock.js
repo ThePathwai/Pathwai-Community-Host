@@ -1,5 +1,5 @@
-// Upcoming founder events inside the in-browser demo (no server): invented sample events with dates counted from today, ranked the same way
-// the real site ranks them (province or online, what you asked for, the group you belong to). Organizers here are fictional.
+// Upcoming founder events inside the in-browser demo (no server): real listings with real links, ranked the same way the live site ranks them
+// (province or online, what you asked for, the group you belong to).
 import * as nav from "../lib/navigator";
 
 const TOPIC_LABEL = { network: "Meet people", pitch: "Pitch", mentorship: "Mentors", funding: "Funding", workshop: "Learn", customers: "Customers" };
@@ -10,20 +10,15 @@ const NEED_REASON = {
 };
 const AUD = { black: "Black", women: "women", indigenous: "Indigenous", newcomer: "newcomer", youth: "young", student: "student" };
 
+// Real listings, read from the organizers' own public pages on 2026-10-29. Dates are fixed, so past ones drop off the list by themselves.
 const SAMPLES = [
-  { n: "Harbourfront Founders Night", d: 1, t: "18:30", org: "Harbourfront Founders Club", city: "Toronto", prov: "ON", topics: ["network"], price: "free", s: "A relaxed evening for early-stage founders to swap introductions and what is working right now." },
-  { n: "Seed Investor Fireside: What Funds Read First", d: 3, t: "17:00", org: "Northline Ventures", city: "Toronto", prov: "ON", topics: ["funding", "mentorship"], price: "free", s: "Two seed investors walk through the first five minutes of a deck and take questions." },
-  { n: "Customer Discovery Workshop for First Sales", d: 5, t: "09:30", org: "Lakeshore Startup Network", city: "Toronto", prov: "ON", topics: ["customers", "workshop"], price: "paid", s: "A hands-on half day on finding and closing your first ten customers." },
-  { n: "Black Founders Mixer", d: 6, t: "19:00", org: "Maple Mentor Collective", city: "Toronto", prov: "ON", topics: ["network"], price: "free", aud: ["black"], s: "An evening for Black founders and operators to meet peers and mentors." },
-  { n: "Founder Office Hours: Pricing and Packaging", d: 8, t: "12:00", org: "Maple Mentor Collective", city: "", prov: "", online: true, topics: ["mentorship"], price: "free", s: "Book 20 minutes with an operator who has priced a marketplace product." },
-  { n: "Startup Pitch Night", d: 9, t: "18:00", org: "Northline Ventures", city: "Mississauga", prov: "ON", topics: ["pitch", "funding"], price: "paid", s: "Five startups pitch to a room of angels. Tickets include a drink." },
-  { n: "Women in Startups Breakfast", d: 11, t: "08:00", org: "Lakeshore Startup Network", city: "Toronto", prov: "ON", topics: ["network"], price: "free", aud: ["women"], s: "Breakfast and a panel on raising your first round." },
-  { n: "Calgary Founders Pitch Showcase", d: 12, t: "18:00", org: "Prairie Startup Alliance", city: "Calgary", prov: "AB", topics: ["pitch"], price: "free", s: "Local founders pitch to a mixed panel of operators and investors." },
-  { n: "Selling to Government: A Founder Webinar", d: 14, t: "13:00", org: "Harbourfront Founders Club", city: "", prov: "", online: true, topics: ["customers", "workshop"], price: "free", s: "How to find tenders and what buyers look for from small suppliers." },
-  { n: "Cleantech Founders Roundtable", d: 18, t: "17:30", org: "Lakeshore Startup Network", city: "Toronto", prov: "ON", topics: ["network", "mentorship"], price: "free", s: "A small, closed-door roundtable for founders building in cleantech." },
-  { n: "Newcomer Founders Meetup", d: 21, t: "18:00", org: "Maple Mentor Collective", city: "Toronto", prov: "ON", topics: ["network"], price: "free", aud: ["newcomer"], s: "Meet other founders who started their company after moving to Canada." },
-  { n: "Vancouver Seed Stage Mixer", d: 23, t: "18:30", org: "Pacific Founders Circle", city: "Vancouver", prov: "BC", topics: ["network", "funding"], price: "paid", s: "An evening with seed-stage founders and local angels." },
-  { n: "Intro to IP for Founders", d: 27, t: "12:00", org: "Northline Ventures", city: "", prov: "", online: true, topics: ["workshop"], price: "free", s: "What to protect, when, and what it costs, in 45 minutes." },
+  { n: "Startup Grind Toronto: Founder & Investor Mixer", date: "2026-11-04", t: "18:00", org: "Startup Grind Toronto", city: "Toronto", prov: "ON", topics: ["network", "funding"], price: "", url: "https://www.startupgrind.com/events/details/startup-grind-toronto-presents-startup-grind-toronto-founder-amp-investor-mixer/", s: "An in-person evening for founders and investors at The Flatiron, with food included." },
+  { n: "AI Power Hours: Hiring your first 5 AI employees", date: "2026-11-04", t: "17:30", org: "Communitech", city: "Kitchener", prov: "ON", topics: ["workshop"], price: "", url: "https://luma.com/aipowerhoursnov4", s: "A one-hour session at the Communitech Hub on putting AI to work as your first hires." },
+  { n: "Startup Pitch: 5 Founders on Stage", date: "2026-11-10", t: "19:00", org: "Ascent Valley", city: "Toronto", prov: "ON", topics: ["pitch", "network"], price: "", url: "https://ascentvalley.com/events/networking-event-startup-toronto-nov10", s: "Five founders pitch for five minutes each at Blood Brothers Brewing, then themed networking tables." },
+  { n: "Pitch Night", date: "2026-11-19", t: "19:00", org: "Startup Valley", city: "Toronto", prov: "ON", topics: ["pitch", "network"], price: "paid", url: "https://startupvalley.club/events/toronto-2026-11-19", s: "Startup pitches and networking with investors at 229 Niagara St. Doors at 7 PM." },
+  { n: "Marketing Without a Team: Build an AI Video Engine for Your Startup", date: "2026-11-19", t: "", org: "Startup Grind Toronto", city: "", prov: "", online: true, topics: ["workshop", "customers"], price: "free", url: "https://www.startupgrind.com/events/details/startup-grind-toronto-presents-marketing-without-a-team-build-an-ai-video-engine-for-your-startup/cohost-toronto", s: "A free online masterclass on making marketing video with AI when you have no team." },
+  { n: "Startup Pitch: 5 Founders on Stage", date: "2026-11-24", t: "19:00", org: "Ascent Valley", city: "Toronto", prov: "ON", topics: ["pitch", "network"], price: "", url: "https://ascentvalley.com/events/networking-event-startup-toronto-nov24", s: "Five founders pitch for five minutes each at Blood Brothers Brewing, then themed networking tables." },
+  { n: "Pitch Night", date: "2026-12-10", t: "19:00", org: "Startup Valley", city: "Toronto", prov: "ON", topics: ["pitch", "network"], price: "paid", url: "https://startupvalley.club/events/toronto-2026-12-10", s: "Startup pitches and networking with investors at Alternity. Doors at 7 PM." },
 ];
 
 function weekLabel(iso, today) {
@@ -34,13 +29,13 @@ function weekLabel(iso, today) {
 }
 
 function build(today) {
-  const base = new Date(today + "T12:00:00Z");
-  return SAMPLES.map((x, i) => {
-    const d = new Date(base); d.setUTCDate(d.getUTCDate() + x.d);
-    const date = d.toISOString().slice(0, 10);
-    return { id: "sample-" + i, title: x.n, date, time: x.t, start: `${date}T${x.t}:00-04:00`, end: `${date}T${x.t}:00-04:00`, url: "https://example.com/sample-event/" + (i + 1), summary: x.s, image: "",
-      venue: x.online ? "" : "", city: x.city, province: x.prov, online: !!x.online, price: x.price, org: x.org, source_id: "sample", source_name: "Sample", priority: 3,
-      topics: x.topics, audiences: x.aud || [], days_away: x.d, week: weekLabel(date, today), topic_labels: x.topics.map((t) => TOPIC_LABEL[t]) };
+  const t0 = new Date(today + "T12:00:00Z");
+  return SAMPLES.filter((x) => x.date >= today).map((x, i) => {
+    const days = Math.round((new Date(x.date + "T12:00:00Z") - t0) / 86400000);
+    const tm = x.t || "00:00";
+    return { id: "real-" + i, title: x.n, date: x.date, time: x.t, start: `${x.date}T${tm}:00-05:00`, end: `${x.date}T${tm}:00-05:00`, url: x.url, summary: x.s, image: "",
+      venue: "", city: x.city, province: x.prov, online: !!x.online, price: x.price, org: x.org, source_id: "real", source_name: x.org, priority: 3,
+      topics: x.topics, audiences: x.aud || [], days_away: days, week: weekLabel(x.date, today), topic_labels: x.topics.map((t) => TOPIC_LABEL[t]) };
   });
 }
 

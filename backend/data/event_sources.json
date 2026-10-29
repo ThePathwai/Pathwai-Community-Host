@@ -193,6 +193,42 @@
       "priority": 4,
       "founder": false,
       "confirmed": false
+    },
+    {
+      "id": "ascentvalley",
+      "name": "Ascent Valley",
+      "group": "organizer",
+      "kind": "auto",
+      "url": "https://ascentvalley.com/events/city/toronto",
+      "province": "ON",
+      "city": "Toronto",
+      "priority": 2,
+      "founder": true,
+      "confirmed": true
+    },
+    {
+      "id": "startupvalley",
+      "name": "Startup Valley",
+      "group": "organizer",
+      "kind": "auto",
+      "url": "https://startupvalley.club/cities/toronto",
+      "province": "ON",
+      "city": "Toronto",
+      "priority": 2,
+      "founder": true,
+      "confirmed": true
+    },
+    {
+      "id": "startupgrind-toronto",
+      "name": "Startup Grind Toronto",
+      "group": "organizer",
+      "kind": "auto",
+      "url": "https://www.startupgrind.com/toronto/",
+      "province": "ON",
+      "city": "Toronto",
+      "priority": 2,
+      "founder": true,
+      "confirmed": true
     }
   ]
 }
