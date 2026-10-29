@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useEffect, useMemo, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { Compass, Home, Inbox, LogOut, MessageCircle, Route, Search, Sparkles, User, UserRound, Users, Info } from "lucide-react";
+import { CalendarDays, Compass, Home, Inbox, LogOut, MessageCircle, Route, Search, Sparkles, User, UserRound, Users, Info } from "lucide-react";
 import { api } from "../lib/api";
 import { useAuth } from "../lib/auth";
 import { groupOf } from "../lib/communityGroup";
@@ -54,6 +54,7 @@ export default function AccountShell({ active, children }) {
       <NavItem to="/hub" icon={Home} label="Home" active={active === "home"} testId="shell-home" />
       <NavItem to="/navigator" icon={Compass} label="Programs" active={active === "programs"} testId="shell-programs" />
       <NavItem to="/journey" icon={Route} label="Journey" active={active === "journey"} testId="shell-journey" />
+      <NavItem to="/founder-events" icon={CalendarDays} label="Events" active={active === "events"} testId="shell-events" />
       <GroupLabel>Communities</GroupLabel>
       <NavItem to="/hub?v=innovation" icon={Sparkles} label="Innovation" active={active === "innovation"} badge={counts.innovation || null} testId="shell-innovation" />
       <NavItem to="/hub?v=leisure" icon={Users} label="Leisure" active={active === "leisure"} badge={counts.leisure || null} testId="shell-leisure" />
@@ -110,8 +111,8 @@ export default function AccountShell({ active, children }) {
         </div>
 
         {/* phone: guide button and tab bar */}
-        <nav className="fixed inset-x-0 bottom-0 z-30 grid grid-cols-4 border-t border-line pb-[env(safe-area-inset-bottom)] glass lg:hidden" aria-label="Main" data-testid="shell-tabs">
-          {[["home", "/hub", Home, "Home"], ["programs", "/navigator", Compass, "Programs"], [["innovation", "leisure"].includes(active) ? active : "innovation", "/hub?v=" + (active === "leisure" ? "leisure" : "innovation"), Users, "Communities"], ["profile", "/me", User, "Profile"]].map(([k, to, Icon, label]) => {
+        <nav className="fixed inset-x-0 bottom-0 z-30 grid grid-cols-5 border-t border-line pb-[env(safe-area-inset-bottom)] glass lg:hidden" aria-label="Main" data-testid="shell-tabs">
+          {[["home", "/hub", Home, "Home"], ["programs", "/navigator", Compass, "Programs"], ["events", "/founder-events", CalendarDays, "Events"], [["innovation", "leisure"].includes(active) ? active : "innovation", "/hub?v=" + (active === "leisure" ? "leisure" : "innovation"), Users, "Communities"], ["profile", "/me", User, "Profile"]].map(([k, to, Icon, label]) => {
             const on = k === active || (label === "Communities" && ["innovation", "leisure"].includes(active));
             return (
               <Link key={label} to={to} aria-current={on ? "page" : undefined} className={cx("flex flex-col items-center gap-1 py-2.5 text-[11px] font-medium", on ? "text-ink" : "text-muted")}>

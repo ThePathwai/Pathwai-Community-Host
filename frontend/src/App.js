@@ -46,6 +46,7 @@ import TeamDetail from "./pages/TeamDetail";
 import PublicReport from "./pages/PublicReport";
 import Navigator from "./pages/Navigator";
 import Journey from "./pages/Journey";
+import FounderEvents from "./pages/FounderEvents";
 import MyProfile from "./pages/MyProfile";
 
 function Protected({ children, admin }) {
@@ -80,6 +81,13 @@ function JourneyRoute() {
   return user ? <Layout><Journey embedded /></Layout> : <Journey />;
 }
 
+// Events for founders is the account's own list, so like Journey it sits inside a community's layout when one is open and on its own page otherwise.
+function FounderEventsRoute() {
+  const { user, loading } = useAuth();
+  if (loading) return <Spinner />;
+  return user ? <Layout><FounderEvents embedded /></Layout> : <FounderEvents />;
+}
+
 const P = ({ children, admin }) => <Protected admin={admin}><Layout>{children}</Layout></Protected>;
 
 // Reports now live inside Admin; the old address (and anything bookmarked or shared with it) lands in the right place.
@@ -103,6 +111,7 @@ export default function App() {
         <Route path="/demo/:short" element={<DemoLanding />} />
         <Route path="/navigator" element={<NavigatorRoute />} />
         <Route path="/journey" element={<JourneyRoute />} />
+        <Route path="/founder-events" element={<FounderEventsRoute />} />
         <Route path="/me" element={<MyProfileRoute />} />
         <Route path="/humber" element={<Navigate to="/demo/humber" replace />} />
         <Route path="/install" element={<Install />} />

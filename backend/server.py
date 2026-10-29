@@ -109,6 +109,7 @@ api_router = APIRouter(prefix="/api")
 # Route modules — each owns its own APIRouter and gets mounted under /api.
 from routes.matches import router as matches_router  # noqa: E402
 from routes.events import router as events_router  # noqa: E402
+from routes.founder_events import router as founder_events_router  # noqa: E402
 from routes.classes import router as classes_router  # noqa: E402
 from routes.teams import router as teams_router, ensure_indexes as ensure_team_indexes  # noqa: E402
 from routes.impact import router as impact_router  # noqa: E402
@@ -264,6 +265,9 @@ async def on_startup():
     validate_production_config()
     # Ages are worked out from birthdays and ticked over daily; see birthday.py.
     _BACKGROUND.append(asyncio.create_task(age_loop()))
+    # Upcoming founder events are read from public pages twice a day; see events_job.py. EVENTS_SCRAPER=false turns it off.
+    from events_job import events_loop
+    _BACKGROUND.append(asyncio.create_task(events_loop(hub_db)))
     # Self-serve communities created via POST /hub/communities (see routes/hub.py) are registered
     # into COMMUNITY_SLUGS in-process at creation time; reload them here too so a restarted worker
     # still recognizes them instead of 404-ing every request into that community.
@@ -1645,6 +1649,7 @@ async def update_user(user_id: str, body: UserUpdate, request: Request, me: dict
 
 # Mount all per-domain routers under /api
 api_router.include_router(events_router)
+api_router.include_router(founder_events_router)
 api_router.include_router(classes_router)
 api_router.include_router(teams_router)
 api_router.include_router(impact_router)

@@ -58,6 +58,32 @@ function PathCard({ onPick }) {
   );
 }
 
+// The next few events that fit you. The whole list, with filters, lives on /founder-events.
+function EventsCard() {
+  const [r, setR] = useState(null);
+  useEffect(() => { api.get("/founder-events").then((x) => setR(x.data)).catch(() => setR(false)); }, []);
+  if (!r) return null;
+  const rows = r.events.slice(0, 3);
+  const dayOf = (e) => (e.days_away === 0 ? "Today" : e.days_away === 1 ? "Tomorrow" : new Date(e.date + "T12:00:00").toLocaleDateString(undefined, { weekday: "short", month: "short", day: "numeric" }));
+  return (
+    <section className="rounded-3xl border border-line bg-surface p-5" data-testid="home-events">
+      <h2 className="text-lg" style={{ textTransform: "none", letterSpacing: "-0.01em", fontWeight: 700 }}>Events near you</h2>
+      <p className="mb-4 mt-1 text-xs text-muted">{rows.length ? "Upcoming events that fit what you asked for." : "No upcoming events yet. We check event pages twice a day."}</p>
+      {rows.length > 0 && (
+        <ul className="space-y-3">
+          {rows.map((e) => (
+            <li key={e.id}>
+              <p className="text-[11px] font-semibold uppercase text-muted" style={{ letterSpacing: "0.12em" }}>{dayOf(e)}{e.online ? " · Online" : e.city ? ` · ${e.city}` : ""}</p>
+              <a href={e.url} target="_blank" rel="noreferrer" className="mt-1 block text-sm font-semibold leading-snug hover:underline" data-testid={`home-event-${e.id}`}>{e.title}</a>
+            </li>
+          ))}
+        </ul>
+      )}
+      <Link to="/founder-events" className="mt-4 inline-flex items-center gap-1 text-sm font-semibold hover:underline" data-testid="home-events-link">See all events<ArrowRight className="h-4 w-4" aria-hidden /></Link>
+    </section>
+  );
+}
+
 export default function Home({ items, onEnter }) {
   const { account } = useAuth();
   const nav = useNavigate();
@@ -195,6 +221,8 @@ export default function Home({ items, onEnter }) {
           </section>
 
           <PathCard onPick={(r) => setOpen(r)} />
+
+          <EventsCard />
 
           <div className="grid grid-cols-2 gap-3">
             <Tile to="/navigator" n={d.matched ?? d.top.length} label="Programs fit" hint="matched to you" />

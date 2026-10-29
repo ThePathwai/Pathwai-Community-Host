@@ -14,6 +14,7 @@ import { eventsImport, guestsImport } from "./importMock";
 import { segments, smsBody } from "../lib/messaging";
 import { teamsHandler } from "./teams";
 import { navigatorCall, cleanStartup, DEMO_STARTUP, demoJourney } from "./navigatorMock";
+import { eventsCall } from "./eventsMock";
 
 const S = { role: null, email: null, community: null, books: {}, extra: {} };
 const book = () => { const k = S.community || "playr"; return (S.books[k] = S.books[k] || JSON.parse(JSON.stringify(fixtures.communities[k]))); };
@@ -624,6 +625,7 @@ const seedDemoStartup = (email) => { const m = (S.extra.acctProfile = S.extra.ac
 const navCtx = (config) => ({ account: S.role ? (((S.extra.acctProfile = S.extra.acctProfile || {})[S.email] = S.extra.acctProfile[S.email] || {})) : null, config, ok, fail, slug: slugOf(), signedIn: !!S.role, isAdmin: !!S.role && isAdminHere(), store: (S.extra.nav = S.extra.nav || {}), communityInfo: communityPublicInfo });
 function get(path, p, config) {
   if (path.startsWith("/navigator")) return navigatorCall("get", path, {}, p, navCtx(config));
+  if (path.startsWith("/founder-events")) return eventsCall("get", path, p, navCtx(config));
   if (path.startsWith("/classes")) return classesCall("get", path, {}, p, config);
   if (path.startsWith("/teams")) return teamsCall("get", path, {}, config);
   if (/^\/(admin\/(impact|report-types|reports\/|report-shares|deck-selection|partnership-offer|quiet|instagram|tiktok)|public\/report\/)/.test(path) || path === "/community/reliability") return impactCall("get", path, {}, config);
@@ -1028,6 +1030,7 @@ function get(path, p, config) {
 
 function write(method, path, body, config) {
   if (path.startsWith("/navigator")) return navigatorCall(method, path, body, config.params || {}, navCtx(config));
+  if (path.startsWith("/founder-events")) return eventsCall(method, path, config.params || {}, navCtx(config));
   if (path.startsWith("/classes")) return classesCall(method, path, body, config.params || {}, config);
   if (path.startsWith("/teams")) return teamsCall(method, path, body, config);
   if (/^\/admin\/(report-shares|deck-selection|partnership-offer|quiet)/.test(path)) return impactCall(method, path, body, config);

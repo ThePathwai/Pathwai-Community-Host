@@ -73,14 +73,17 @@ def friendly_url(raw: str) -> str:
     return u
 
 
-async def _get_once(url: str) -> Tuple[httpx.Response, bytes]:
+BOT_UA = "PathwaiEventsBot/1.0 (+https://pathwai-production-17f6.up.railway.app; lists public events and links back to the organizer)"
+
+
+async def _get_once(url: str, ua: str = "Pathwai-import/1.0", accept: str = "text/csv,text/calendar,text/plain,*/*;q=0.5") -> Tuple[httpx.Response, bytes]:
     p = urlparse(url)
     if p.scheme != "https":
         raise FetchError("Only secure (https) links can be read.")
     host = p.hostname or ""
     ip = (await resolve_public(host))[0]
     pinned = urlunparse(p._replace(netloc=(f"[{ip}]" if ":" in ip else ip) + (f":{p.port}" if p.port else "")))
-    headers = {"Host": host if not p.port else f"{host}:{p.port}", "User-Agent": "Pathwai-import/1.0", "Accept": "text/csv,text/calendar,text/plain,*/*;q=0.5"}
+    headers = {"Host": host if not p.port else f"{host}:{p.port}", "User-Agent": ua, "Accept": accept}
     try:
         async with httpx.AsyncClient(timeout=TIMEOUT, follow_redirects=False) as client:
             async with client.stream("GET", pinned, headers=headers, extensions={"sni_hostname": host}) as r:
@@ -122,4 +125,27 @@ async def fetch_text(raw_url: str) -> str:
         if head.startswith("<!doctype html") or head.startswith("<html") or "<head" in head[:200]:
             raise FetchError("That link opened a web page, not a data file. For Google Sheets use File > Share > anyone with the link can view (or File > Share > Publish to web > CSV).")
         return text
+    raise FetchError("That link redirected too many times.")
+
+
+async def fetch_page(raw_url: str, *, ua: str = BOT_UA) -> str:
+    """Download a public web page (HTML allowed) with the same protections as fetch_text. Used by the events reader, which says who it is."""
+    url = friendly_url(raw_url)
+    for _ in range(MAX_REDIRECTS + 1):
+        r, body = await _get_once(url, ua=ua, accept="text/html,application/xhtml+xml,text/calendar,text/plain;q=0.8,*/*;q=0.5")
+        if r.is_redirect:
+            loc = r.headers.get("location")
+            if not loc:
+                raise FetchError("That link redirected somewhere I couldn't follow.")
+            url = str(httpx.URL(url).join(loc))
+            continue
+        if r.status_code == 429:
+            raise FetchError("The site asked us to slow down (HTTP 429). We will try again at the next run.")
+        if r.status_code in (401, 403):
+            raise FetchError(f"The site refused the request (HTTP {r.status_code}).")
+        if r.status_code == 404:
+            raise FetchError("That page does not exist (HTTP 404). The address may have changed.")
+        if r.status_code >= 400:
+            raise FetchError(f"The site answered with an error (HTTP {r.status_code}).")
+        return body.decode(r.encoding or "utf-8", errors="replace").lstrip("\ufeff")
     raise FetchError("That link redirected too many times.")
