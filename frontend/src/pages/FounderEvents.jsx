@@ -35,21 +35,8 @@ const Widget = ({ children, className = "", ...rest }) => <section className={cx
 const Label = ({ children }) => <p className="text-[11px] font-semibold uppercase text-muted" style={{ letterSpacing: "0.12em" }}>{children}</p>;
 const plural = (n, w) => `${n} ${w}${n === 1 ? "" : "s"}`;
 
-// Two columns from the lg breakpoint so widgets of different heights pack without gaps; one column (in date order) below it.
-function useWide() {
-  const q = "(min-width: 1024px)";
-  const [w, setW] = useState(() => (typeof window !== "undefined" && window.matchMedia ? window.matchMedia(q).matches : false));
-  useEffect(() => {
-    if (!window.matchMedia) return undefined;
-    const m = window.matchMedia(q); const f = () => setW(m.matches);
-    f(); m.addEventListener ? m.addEventListener("change", f) : m.addListener(f);
-    return () => { m.removeEventListener ? m.removeEventListener("change", f) : m.removeListener(f); };
-  }, []);
-  return w;
-}
-
 // One event inside a week widget: date tile, what and where, why it is on your list, and the link to the organizer's own page.
-function EventItem({ e, other }) {
+function EventItem({ e, other, next }) {
   const where = e.online ? "Online" : [e.venue, e.city].filter(Boolean).join(", ") || e.province || "See the event page";
   const lines = other ? (e.cautions || []).slice(0, 1) : [...e.reasons].slice(0, 2);
   return (
@@ -60,7 +47,7 @@ function EventItem({ e, other }) {
           <span className="mt-0.5 text-lg font-bold tabular-nums">{DAY(e.date)}</span>
         </div>
         <div className="min-w-0 flex-1">
-          <p className="text-xs font-semibold text-muted" data-testid="event-when">{when(e)}</p>
+          <p className="flex flex-wrap items-center gap-2 text-xs font-semibold text-muted" data-testid="event-when">{when(e)}{next && <span className="rounded-full px-2 py-0.5 text-[10px] font-bold uppercase" style={{ background: "var(--accent)", color: "var(--on-accent)", letterSpacing: "0.08em" }} data-testid="event-next">Next up</span>}</p>
           <h3 className="mt-0.5 text-[16px] font-semibold leading-snug" style={{ textWrap: "balance" }}>{e.title}</h3>
           <p className="mt-0.5 flex flex-wrap items-center gap-x-1.5 text-sm text-muted">
             <span className="font-medium text-ink/80">{e.org}</span><span aria-hidden>·</span>
@@ -88,14 +75,16 @@ function EventItem({ e, other }) {
 }
 
 // A widget per stretch of time (this week, next week, a month), each holding its events.
-function WeekWidget({ g, other }) {
+function WeekWidget({ g, other, first, later }) {
+  const a = g.items[0].date; const z = g.items[g.items.length - 1].date;
+  const span = a === z ? `${MONTH(a)} ${DAY(a)}` : `${MONTH(a)} ${DAY(a)} to ${MONTH(z)} ${DAY(z)}`;
   return (
     <Widget data-testid={`events-week-${g.week.toLowerCase().replace(/\s+/g, "-")}`}>
-      <div className="flex items-baseline justify-between gap-3">
-        <h2 className="text-lg" style={heading}>{g.week}</h2>
-        <Label>{plural(g.items.length, "event")}</Label>
+      <div className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1">
+        <h2 className="text-lg" style={heading}>{later ? `Later in ${new Date(g.items[0].date + "T12:00:00").toLocaleDateString(undefined, { month: "long" })}` : g.week}</h2>
+        <Label>{span} · {plural(g.items.length, "event")}</Label>
       </div>
-      <ul className="mt-3 divide-y divide-line">{g.items.map((e) => <EventItem key={e.id} e={e} other={other} />)}</ul>
+      <ul className="mt-3 divide-y divide-line">{g.items.map((e, i) => <EventItem key={e.id} e={e} other={other} next={first && i === 0 && !other} />)}</ul>
     </Widget>
   );
 }
@@ -147,7 +136,6 @@ export default function FounderEvents({ embedded }) {
   const [online, setOnline] = useState(false);
   const [q, setQ] = useState("");
   const [limit, setLimit] = useState(12);
-  const wide = useWide();
   useEffect(() => { document.title = "Events · Pathwai"; }, []);
 
   useEffect(() => {
@@ -173,7 +161,7 @@ export default function FounderEvents({ embedded }) {
   const filtersOn = !!(q || topic || free || online);
 
   const page = (
-    <div className="mx-auto w-full max-w-6xl" data-testid="events-page">
+    <div className="mx-auto w-full max-w-3xl" data-testid="events-page">
       <p className="eyebrow">Events</p>
       <h1 className="mt-2 text-3xl sm:text-4xl" style={{ textTransform: "none", letterSpacing: "-0.03em", fontWeight: 800, textWrap: "balance" }}>Events for founders</h1>
       <p className="mt-2 max-w-2xl text-sm text-muted">Upcoming networking, pitch, mentor and learning events{prov ? ` in ${prov} and online` : ""}, picked for what you asked for. Each one links to the organizer's own page.</p>
@@ -209,13 +197,7 @@ export default function FounderEvents({ embedded }) {
       {!data && !error ? <div className="mt-10"><Spinner /></div> : data && (
         <div className="mt-6 space-y-8">
           {view === "other" && <p className="text-sm text-muted">Real events too. They are outside your province or made for a group you have not said you belong to. Each card says why.</p>}
-          {groups.length > 0 && (wide ? (
-            <div className="grid grid-cols-2 items-start gap-4">
-              {[0, 1].map((c) => <div key={c} className="space-y-4">{groups.filter((_, i) => i % 2 === c).map((g) => <WeekWidget key={g.week} g={g} other={view === "other"} />)}</div>)}
-            </div>
-          ) : (
-            <div className="space-y-4">{groups.map((g) => <WeekWidget key={g.week} g={g} other={view === "other"} />)}</div>
-          ))}
+          {groups.length > 0 && <div className="space-y-4" data-testid="events-timeline">{groups.map((g, gi) => <WeekWidget key={g.week} g={g} other={view === "other"} first={gi === 0} later={gi > 0 && groups[gi - 1].items[0].date.slice(0, 7) === g.items[0].date.slice(0, 7)} />)}</div>}
           {!list.length && (
             <div className="rounded-2xl border border-dashed border-line p-8 text-center" data-testid="events-empty">
               <CalendarDays className="mx-auto h-6 w-6 text-muted" aria-hidden />
