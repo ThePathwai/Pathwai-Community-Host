@@ -1,7 +1,7 @@
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { Link, Navigate } from "react-router-dom";
 import { toast } from "sonner";
-import { ArrowRight, ArrowUpRight, CalendarDays, Check, ChevronDown, ChevronLeft, ChevronRight, List as ListIcon, MapPin, Search, Video } from "lucide-react";
+import { ArrowRight, ArrowUpRight, CalendarDays, Check, ChevronDown, MapPin, Search, Video } from "lucide-react";
 import { api } from "../lib/api";
 import { useAuth } from "../lib/auth";
 import AccountShell from "../components/AccountShell";
@@ -31,42 +31,72 @@ function Chip({ children, tone = "" }) {
   return <span className={cx("inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-xs font-semibold", tone || "bg-ink/[.06] text-muted")}>{children}</span>;
 }
 
-function EventCard({ e, other }) {
-  const where = e.online ? "Online" : [e.venue, e.city].filter(Boolean).join(", ") || e.province || "Location on the event page";
-  const lines = other ? e.cautions : [...e.reasons].slice(0, 2);
+const Widget = ({ children, className = "", ...rest }) => <section className={cx("flex flex-col rounded-3xl border border-line bg-surface p-5", className)} {...rest}>{children}</section>;
+const Label = ({ children }) => <p className="text-[11px] font-semibold uppercase text-muted" style={{ letterSpacing: "0.12em" }}>{children}</p>;
+const plural = (n, w) => `${n} ${w}${n === 1 ? "" : "s"}`;
+
+// Two columns from the lg breakpoint so widgets of different heights pack without gaps; one column (in date order) below it.
+function useWide() {
+  const q = "(min-width: 1024px)";
+  const [w, setW] = useState(() => (typeof window !== "undefined" && window.matchMedia ? window.matchMedia(q).matches : false));
+  useEffect(() => {
+    if (!window.matchMedia) return undefined;
+    const m = window.matchMedia(q); const f = () => setW(m.matches);
+    f(); m.addEventListener ? m.addEventListener("change", f) : m.addListener(f);
+    return () => { m.removeEventListener ? m.removeEventListener("change", f) : m.removeListener(f); };
+  }, []);
+  return w;
+}
+
+// One event inside a week widget: date tile, what and where, why it is on your list, and the link to the organizer's own page.
+function EventItem({ e, other }) {
+  const where = e.online ? "Online" : [e.venue, e.city].filter(Boolean).join(", ") || e.province || "See the event page";
+  const lines = other ? (e.cautions || []).slice(0, 1) : [...e.reasons].slice(0, 2);
   return (
-    <li className="rounded-2xl border border-line bg-surface p-4 sm:p-5" data-testid={`event-${e.id}`} data-fit={e.fit}>
-      <div className="flex items-start gap-4">
-        <div className="flex h-14 w-14 shrink-0 flex-col items-center justify-center rounded-2xl bg-ink/[.06] leading-none" aria-hidden>
-          <span className="text-[11px] font-semibold uppercase text-muted" style={{ letterSpacing: "0.08em" }}>{MONTH(e.date)}</span>
-          <span className="mt-1 text-xl font-bold tabular-nums">{DAY(e.date)}</span>
+    <li className="py-4 first:pt-1 last:pb-0" data-testid={`event-${e.id}`} data-fit={e.fit}>
+      <div className="flex items-start gap-3.5">
+        <div className="flex h-12 w-12 shrink-0 flex-col items-center justify-center rounded-2xl bg-ink/[.06] leading-none" aria-hidden>
+          <span className="text-[10px] font-semibold uppercase text-muted" style={{ letterSpacing: "0.08em" }}>{MONTH(e.date)}</span>
+          <span className="mt-0.5 text-lg font-bold tabular-nums">{DAY(e.date)}</span>
         </div>
         <div className="min-w-0 flex-1">
           <p className="text-xs font-semibold text-muted" data-testid="event-when">{when(e)}</p>
-          <h3 className="mt-0.5 text-[17px] font-semibold leading-snug" style={{ textWrap: "balance" }}>{e.title}</h3>
+          <h3 className="mt-0.5 text-[16px] font-semibold leading-snug" style={{ textWrap: "balance" }}>{e.title}</h3>
           <p className="mt-0.5 flex flex-wrap items-center gap-x-1.5 text-sm text-muted">
             <span className="font-medium text-ink/80">{e.org}</span><span aria-hidden>·</span>
             <span className="inline-flex items-center gap-1">{e.online ? <Video className="h-3.5 w-3.5" aria-hidden /> : <MapPin className="h-3.5 w-3.5" aria-hidden />}{where}</span>
           </p>
-          <div className="mt-2.5 flex flex-wrap items-center gap-1.5">
+          <div className="mt-2 flex flex-wrap items-center gap-1.5">
             {e.price === "free" && <Chip tone="bg-emerald-500/15 text-emerald-600 dark:text-emerald-400">Free</Chip>}
             {e.price === "paid" && <Chip>Paid</Chip>}
             {e.topic_labels.map((t) => <Chip key={t}>{t}</Chip>)}
             {e.audiences.length > 0 && <Chip tone="bg-sky-500/15 text-sky-600 dark:text-sky-400">For {e.audiences.join(", ")} founders</Chip>}
           </div>
-          {e.summary && <p className="mt-2.5 line-clamp-2 text-sm leading-snug text-ink/80">{e.summary}</p>}
           {lines.length > 0 && (
-            <ul className="mt-2.5 space-y-1" data-testid="event-why">
-              {lines.map((l) => <li key={l} className="flex gap-1.5 text-[13px] leading-snug">{other ? <span className="pl-5 text-muted">{l}</span> : <><Check className="mt-0.5 h-3.5 w-3.5 shrink-0 text-emerald-500" aria-hidden /><span>{l}</span></>}</li>)}
+            <ul className="mt-2 space-y-1" data-testid="event-why">
+              {lines.map((l) => <li key={l} className="flex gap-1.5 text-[13px] leading-snug">{other ? <span className="text-muted">{l}</span> : <><Check className="mt-0.5 h-3.5 w-3.5 shrink-0 text-emerald-500" aria-hidden /><span>{l}</span></>}</li>)}
             </ul>
           )}
-          <div className="mt-3.5 flex flex-wrap items-center gap-3">
-            <a href={e.url} target="_blank" rel="noreferrer" className="btn-primary !px-4 !py-2.5 text-sm" data-testid={`event-go-${e.id}`}>See the event page<ArrowUpRight className="h-4 w-4" aria-hidden /></a>
+          <div className="mt-3 flex flex-wrap items-center gap-3">
+            <a href={e.url} target="_blank" rel="noreferrer" className="btn-primary !px-4 !py-2 text-sm" data-testid={`event-go-${e.id}`}>See the event page<ArrowUpRight className="h-4 w-4" aria-hidden /></a>
             <span className="text-xs text-muted">{hostOf(e.url)}</span>
           </div>
         </div>
       </div>
     </li>
+  );
+}
+
+// A widget per stretch of time (this week, next week, a month), each holding its events.
+function WeekWidget({ g, other }) {
+  return (
+    <Widget data-testid={`events-week-${g.week.toLowerCase().replace(/\s+/g, "-")}`}>
+      <div className="flex items-baseline justify-between gap-3">
+        <h2 className="text-lg" style={heading}>{g.week}</h2>
+        <Label>{plural(g.items.length, "event")}</Label>
+      </div>
+      <ul className="mt-3 divide-y divide-line">{g.items.map((e) => <EventItem key={e.id} e={e} other={other} />)}</ul>
+    </Widget>
   );
 }
 
@@ -107,149 +137,6 @@ function SourcesPanel() {
   );
 }
 
-// ---- Calendar view: widgets (month grid, the selected day, what is coming up, this month in numbers) over the same ranked list ----
-const pad2 = (n) => String(n).padStart(2, "0");
-const isoOf = (y, m, d) => `${y}-${pad2(m + 1)}-${pad2(d)}`;
-const monthTitle = (y, m) => new Date(Date.UTC(y, m, 1, 12)).toLocaleDateString(undefined, { month: "long", year: "numeric", timeZone: "UTC" });
-const longDay = (iso) => new Date(iso + "T12:00:00Z").toLocaleDateString(undefined, { weekday: "long", month: "long", day: "numeric", timeZone: "UTC" });
-const shortDay = (iso) => new Date(iso + "T12:00:00Z").toLocaleDateString(undefined, { month: "short", day: "numeric", timeZone: "UTC" });
-const WEEK = ["S", "M", "T", "W", "T", "F", "S"];
-const plural = (n, w) => `${n} ${w}${n === 1 ? "" : "s"}`;
-const whereOf = (e) => (e.online ? "Online" : [e.venue, e.city].filter(Boolean).join(", ") || e.province || "See the event page");
-
-const CalWidget = ({ children, className = "", ...rest }) => <section className={cx("flex flex-col rounded-3xl border border-line bg-surface p-4 sm:p-5", className)} {...rest}>{children}</section>;
-const CalLabel = ({ children }) => <p className="text-[11px] font-semibold uppercase text-muted" style={{ letterSpacing: "0.12em" }}>{children}</p>;
-
-function EventRow({ e, other }) {
-  const why = other ? e.cautions?.[0] : e.reasons?.[0];
-  return (
-    <li className="rounded-2xl border border-line p-4" data-testid={`event-${e.id}`} data-fit={e.fit}>
-      <p className="text-xs font-semibold text-muted">{e.time ? clock(e.time) : "Time on the event page"}</p>
-      <h4 className="mt-0.5 text-base font-semibold leading-snug" style={{ textWrap: "balance" }}>{e.title}</h4>
-      <p className="mt-0.5 flex flex-wrap items-center gap-x-1.5 text-sm text-muted">
-        <span className="font-medium text-ink/80">{e.org}</span><span aria-hidden>·</span>
-        <span className="inline-flex items-center gap-1">{e.online ? <Video className="h-3.5 w-3.5" aria-hidden /> : <MapPin className="h-3.5 w-3.5" aria-hidden />}{whereOf(e)}</span>
-      </p>
-      <div className="mt-2 flex flex-wrap items-center gap-1.5">
-        {e.price === "free" && <Chip tone="bg-emerald-500/15 text-emerald-600 dark:text-emerald-400">Free</Chip>}
-        {e.price === "paid" && <Chip>Paid</Chip>}
-        {e.topic_labels.map((t) => <Chip key={t}>{t}</Chip>)}
-        {e.audiences.length > 0 && <Chip tone="bg-sky-500/15 text-sky-600 dark:text-sky-400">For {e.audiences.join(", ")} founders</Chip>}
-      </div>
-      {e.summary && <p className="mt-2 line-clamp-2 text-sm leading-snug text-ink/80">{e.summary}</p>}
-      {why && <p className={cx("mt-2 flex gap-1.5 text-[13px] leading-snug", other && "text-muted")}>{!other && <Check className="mt-0.5 h-3.5 w-3.5 shrink-0 text-emerald-500" aria-hidden />}<span>{why}</span></p>}
-      <div className="mt-3 flex flex-wrap items-center gap-3">
-        <a href={e.url} target="_blank" rel="noreferrer" className="btn-primary !px-4 !py-2 text-sm" data-testid={`event-go-${e.id}`}>See the event page<ArrowUpRight className="h-4 w-4" aria-hidden /></a>
-        <span className="text-xs text-muted">{hostOf(e.url)}</span>
-      </div>
-    </li>
-  );
-}
-
-function CalendarView({ list, other, today }) {
-  const byDate = useMemo(() => { const m = {}; for (const e of list) (m[e.date] = m[e.date] || []).push(e); return m; }, [list]);
-  const upcoming = useMemo(() => list.filter((e) => e.date >= today), [list, today]);
-  const first = (upcoming[0] || list[0])?.date || today;
-  const [sel, setSel] = useState(first);
-  const [cur, setCur] = useState({ y: +first.slice(0, 4), m: +first.slice(5, 7) - 1 });
-  const dayRef = React.useRef(null);
-  const pick = (iso, scroll) => {
-    setSel(iso); setCur({ y: +iso.slice(0, 4), m: +iso.slice(5, 7) - 1 });
-    if (scroll) try { dayRef.current?.scrollIntoView({ behavior: "smooth", block: "nearest" }); } catch { /* older browsers */ }
-  };
-  const go = (d) => setCur((c) => { const n = new Date(Date.UTC(c.y, c.m + d, 1)); return { y: n.getUTCFullYear(), m: n.getUTCMonth() }; });
-
-  const lead = new Date(Date.UTC(cur.y, cur.m, 1)).getUTCDay();
-  const days = new Date(Date.UTC(cur.y, cur.m + 1, 0)).getUTCDate();
-  const cells = [...Array(lead).fill(null), ...Array.from({ length: days }, (_, i) => i + 1)];
-  const inMonth = list.filter((e) => e.date.startsWith(`${cur.y}-${pad2(cur.m + 1)}`));
-  const dayEvents = byDate[sel] || [];
-  const next = upcoming.find((e) => e.date > sel);
-  const soon = upcoming.slice(0, 5);
-
-  return (
-    <div className="grid grid-cols-1 gap-4 lg:grid-cols-[minmax(0,1.4fr)_minmax(0,1fr)] lg:items-start" data-testid="cal-view">
-      <div className="space-y-4">
-        <CalWidget data-testid="cal-month">
-          <div className="flex items-center justify-between gap-2">
-            <div><CalLabel>Calendar</CalLabel><h2 className="mt-1 text-xl" style={heading} data-testid="cal-title">{monthTitle(cur.y, cur.m)}</h2></div>
-            <div className="flex items-center gap-1.5">
-              <button type="button" onClick={() => pick(today, false)} className="rounded-full border border-line px-3 py-1.5 text-[13px] font-semibold hover:border-ink/40" data-testid="cal-today">Today</button>
-              <button type="button" onClick={() => go(-1)} aria-label="Previous month" className="grid h-8 w-8 place-items-center rounded-full border border-line hover:border-ink/40" data-testid="cal-prev"><ChevronLeft className="h-4 w-4" aria-hidden /></button>
-              <button type="button" onClick={() => go(1)} aria-label="Next month" className="grid h-8 w-8 place-items-center rounded-full border border-line hover:border-ink/40" data-testid="cal-next"><ChevronRight className="h-4 w-4" aria-hidden /></button>
-            </div>
-          </div>
-          <div className="mt-4 grid grid-cols-7 gap-1 text-center" role="grid" aria-label={monthTitle(cur.y, cur.m)}>
-            {WEEK.map((w, i) => <span key={i} className="pb-1 text-[11px] font-semibold uppercase text-muted" style={{ letterSpacing: "0.08em" }} aria-hidden>{w}</span>)}
-            {cells.map((d, i) => {
-              if (!d) return <span key={`b${i}`} />;
-              const iso = isoOf(cur.y, cur.m, d); const ev = byDate[iso] || []; const on = iso === sel; const isToday = iso === today; const past = iso < today;
-              return (
-                <button key={iso} type="button" role="gridcell" onClick={() => pick(iso, true)} aria-pressed={on} aria-label={`${longDay(iso)}${ev.length ? `, ${plural(ev.length, "event")}` : ""}`} data-testid={`cal-day-${iso}`} data-events={ev.length}
-                  className={cx("flex h-12 flex-col items-center justify-center gap-1 rounded-2xl text-sm tabular-nums transition sm:h-14", on ? "font-bold" : ev.length ? "font-semibold hover:bg-ink/[.06]" : "text-muted hover:bg-ink/[.04]", past && !on && "opacity-50", isToday && !on && "ring-1 ring-ink/40")}
-                  style={on ? { background: "var(--accent)", color: "var(--on-accent)" } : undefined}>
-                  <span className="leading-none">{d}</span>
-                  <span className="flex h-1.5 items-center gap-0.5" aria-hidden>
-                    {ev.slice(0, 3).map((e) => <span key={e.id} className="h-1.5 w-1.5 rounded-full" style={{ background: on ? "var(--on-accent)" : other ? "currentColor" : "var(--accent)", opacity: on ? 0.9 : other ? 0.5 : 1 }} />)}
-                    {ev.length > 3 && <span className="text-[9px] leading-none">+</span>}
-                  </span>
-                </button>
-              );
-            })}
-          </div>
-          <p className="mt-3 text-xs text-muted">{inMonth.length ? `${plural(inMonth.length, "event")} this month. Pick a day to see them.` : "No events this month. Try the next one."}</p>
-        </CalWidget>
-
-        <div ref={dayRef}><CalWidget data-testid="cal-selected">
-          <CalLabel>{sel === today ? "Today" : sel < today ? "Earlier" : "Selected day"}</CalLabel>
-          <h2 className="mt-1 text-xl" style={heading}>{longDay(sel)}</h2>
-          <p className="mt-0.5 text-sm text-muted">{dayEvents.length ? plural(dayEvents.length, "event") : "Nothing listed"}</p>
-          {dayEvents.length > 0 ? <ul className="mt-4 space-y-3">{dayEvents.map((e) => <EventRow key={e.id} e={e} other={other} />)}</ul> : (
-            <div className="mt-4 rounded-2xl border border-dashed border-line p-5 text-center" data-testid="cal-empty-day">
-              <p className="text-sm text-muted">No events on this day.</p>
-              {next && <button type="button" onClick={() => pick(next.date, false)} className="btn-ghost mt-3 !py-2 text-sm" data-testid="cal-jump">Next event: {shortDay(next.date)}<ArrowRight className="h-4 w-4" aria-hidden /></button>}
-            </div>
-          )}
-        </CalWidget></div>
-      </div>
-
-      <div className="space-y-4">
-        <CalWidget data-testid="cal-coming">
-          <CalLabel>Coming up</CalLabel>
-          {soon.length ? (
-            <ul className="mt-3 divide-y divide-line">
-              {soon.map((e) => (
-                <li key={e.id}>
-                  <button type="button" onClick={() => pick(e.date, true)} className="flex w-full items-center gap-3 py-3 text-left first:pt-1 last:pb-0" data-testid={`cal-coming-${e.id}`}>
-                    <span className="flex h-11 w-11 shrink-0 flex-col items-center justify-center rounded-xl bg-ink/[.06] leading-none" aria-hidden>
-                      <span className="text-[10px] font-semibold uppercase text-muted" style={{ letterSpacing: "0.08em" }}>{MONTH(e.date)}</span>
-                      <span className="mt-0.5 text-base font-bold tabular-nums">{DAY(e.date)}</span>
-                    </span>
-                    <span className="min-w-0 flex-1">
-                      <span className="block text-[11px] font-semibold uppercase text-muted" style={{ letterSpacing: "0.06em" }}>{e.days_away === 0 ? "Today" : e.days_away === 1 ? "Tomorrow" : WEEKDAY(e.date)}{e.time ? ` · ${clock(e.time)}` : ""}</span>
-                      <span className="block truncate text-sm font-semibold">{e.title}</span>
-                      <span className="block truncate text-xs text-muted">{e.org} · {whereOf(e)}</span>
-                    </span>
-                  </button>
-                </li>
-              ))}
-            </ul>
-          ) : <p className="mt-3 text-sm text-muted">Nothing upcoming with these filters.</p>}
-        </CalWidget>
-
-        <CalWidget data-testid="cal-month-stats">
-          <CalLabel>{new Date(Date.UTC(cur.y, cur.m, 1, 12)).toLocaleDateString(undefined, { month: "long", timeZone: "UTC" })} in numbers</CalLabel>
-          <div className="mt-3 grid grid-cols-3 gap-2 text-center">
-            {[["Events", inMonth.length], ["Online", inMonth.filter((e) => e.online).length], ["Free", inMonth.filter((e) => e.price === "free").length]].map(([k, n]) => (
-              <div key={k} className="rounded-2xl bg-ink/[.04] px-2 py-3"><p className="text-2xl font-bold tabular-nums" style={{ letterSpacing: "-0.02em" }}>{n}</p><p className="text-xs text-muted">{k}</p></div>
-            ))}
-          </div>
-        </CalWidget>
-      </div>
-    </div>
-  );
-}
-
 export default function FounderEvents({ embedded }) {
   const { account, loading } = useAuth();
   const [data, setData] = useState(null);
@@ -260,8 +147,7 @@ export default function FounderEvents({ embedded }) {
   const [online, setOnline] = useState(false);
   const [q, setQ] = useState("");
   const [limit, setLimit] = useState(12);
-  const [mode, setModeRaw] = useState(() => { try { return localStorage.getItem("pw_events_view") === "list" ? "list" : "calendar"; } catch { return "calendar"; } });
-  const setMode = (m) => { setModeRaw(m); try { localStorage.setItem("pw_events_view", m); } catch { /* private window */ } };
+  const wide = useWide();
   useEffect(() => { document.title = "Events · Pathwai"; }, []);
 
   useEffect(() => {
@@ -287,7 +173,7 @@ export default function FounderEvents({ embedded }) {
   const filtersOn = !!(q || topic || free || online);
 
   const page = (
-    <div className={cx("mx-auto w-full", mode === "calendar" ? "max-w-6xl" : "max-w-4xl")} data-testid="events-page" data-view={mode}>
+    <div className="mx-auto w-full max-w-6xl" data-testid="events-page">
       <p className="eyebrow">Events</p>
       <h1 className="mt-2 text-3xl sm:text-4xl" style={{ textTransform: "none", letterSpacing: "-0.03em", fontWeight: 800, textWrap: "balance" }}>Events for founders</h1>
       <p className="mt-2 max-w-2xl text-sm text-muted">Upcoming networking, pitch, mentor and learning events{prov ? ` in ${prov} and online` : ""}, picked for what you asked for. Each one links to the organizer's own page.</p>
@@ -307,16 +193,8 @@ export default function FounderEvents({ embedded }) {
               className={cx("rounded-full px-4 py-1.5 text-sm font-medium transition", view === k ? "" : "text-muted hover:text-ink")} style={view === k ? { background: "var(--accent)", color: "var(--on-accent)" } : undefined}>{label}</button>
           ))}
         </div>
-        <div className="flex w-full items-center gap-2 sm:w-auto">
-        <div className="inline-flex rounded-full border border-line p-1" role="group" aria-label="View">
-          {[["calendar", "Calendar", CalendarDays], ["list", "List", ListIcon]].map(([k, label, Icon]) => (
-            <button key={k} type="button" aria-pressed={mode === k} onClick={() => setMode(k)} data-testid={`events-view-${k}`}
-              className={cx("inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-sm font-medium transition", mode === k ? "" : "text-muted hover:text-ink")} style={mode === k ? { background: "var(--accent)", color: "var(--on-accent)" } : undefined}><Icon className="h-4 w-4" aria-hidden />{label}</button>
-          ))}
-        </div>
-        <label className="relative block min-w-0 flex-1 sm:w-56 sm:flex-none"><Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted" aria-hidden />
+        <label className="relative block w-full sm:w-64"><Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted" aria-hidden />
           <input type="search" value={q} onChange={(e) => { setQ(e.target.value); setLimit(12); }} placeholder="Search events" aria-label="Search events" data-testid="events-search" className="w-full rounded-full border border-line bg-transparent py-2 pl-9 pr-3 text-sm outline-none focus:border-ink/50" /></label>
-        </div>
       </div>
 
       <div className="pw-rail -mx-4 mt-4 flex gap-2 overflow-x-auto px-4 pb-1 sm:mx-0 sm:px-0" role="group" aria-label="Filter events">
@@ -331,12 +209,12 @@ export default function FounderEvents({ embedded }) {
       {!data && !error ? <div className="mt-10"><Spinner /></div> : data && (
         <div className="mt-6 space-y-8">
           {view === "other" && <p className="text-sm text-muted">Real events too. They are outside your province or made for a group you have not said you belong to. Each card says why.</p>}
-          {mode === "calendar" && list.length > 0 && <CalendarView key={`${view}|${topic}|${free}|${online}|${q}`} list={list} other={view === "other"} today={data.as_of} />}
-          {mode === "list" && groups.map((g) => (
-            <section key={g.week} data-testid={`events-week-${g.week.toLowerCase().replace(/\s+/g, "-")}`}>
-              <h2 className="mb-3 text-base" style={heading}>{g.week}</h2>
-              <ul className="space-y-3">{g.items.map((e) => <EventCard key={e.id} e={e} other={view === "other"} />)}</ul>
-            </section>
+          {groups.length > 0 && (wide ? (
+            <div className="grid grid-cols-2 items-start gap-4">
+              {[0, 1].map((c) => <div key={c} className="space-y-4">{groups.filter((_, i) => i % 2 === c).map((g) => <WeekWidget key={g.week} g={g} other={view === "other"} />)}</div>)}
+            </div>
+          ) : (
+            <div className="space-y-4">{groups.map((g) => <WeekWidget key={g.week} g={g} other={view === "other"} />)}</div>
           ))}
           {!list.length && (
             <div className="rounded-2xl border border-dashed border-line p-8 text-center" data-testid="events-empty">
@@ -346,7 +224,7 @@ export default function FounderEvents({ embedded }) {
               {filtersOn && <button type="button" className="btn-ghost mt-4 !py-2 text-sm" onClick={() => { setQ(""); setTopic(""); setFree(false); setOnline(false); }}>Clear filters</button>}
             </div>
           )}
-          {mode === "list" && list.length > limit && <button type="button" onClick={() => setLimit((l) => l + 12)} className="btn-ghost w-full !py-3 text-sm" data-testid="events-more">Show {Math.min(12, list.length - limit)} more</button>}
+          {list.length > limit && <button type="button" onClick={() => setLimit((l) => l + 12)} className="btn-ghost w-full !py-3 text-sm" data-testid="events-more">Show {Math.min(12, list.length - limit)} more</button>}
           <p className="text-xs text-muted" data-testid="events-note">Gathered from public event pages{data.updated_at ? `, last updated ${dayLabel(data.updated_at)}` : ""}. Details change, so confirm date, price and place on the event page.</p>
           <SourcesPanel />
         </div>
