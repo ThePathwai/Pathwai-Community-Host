@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { ArrowRight, ArrowUp, CalendarClock, Compass, Plus, Rocket, Sparkles, Users } from "lucide-react";
+import { ArrowRight, ArrowUp, ArrowUpRight, Plus, Rocket, Sparkles } from "lucide-react";
 import { api } from "../lib/api";
 import { useAuth } from "../lib/auth";
 import { groupOf } from "../lib/communityGroup";
@@ -33,28 +33,74 @@ function Initials({ c, size = 44 }) {
   );
 }
 
+const H = { textTransform: "none", letterSpacing: "-0.01em", fontWeight: 700 };
+const Cap = ({ children, className = "" }) => <p className={cx("text-[11px] font-semibold uppercase text-muted", className)} style={{ letterSpacing: "0.12em" }}>{children}</p>;
+
+// Every box below the hero is the same kind of widget: a plain title, one line saying what it is, the rows, and one link pinned to the bottom.
+function HomeWidget({ title, sub, to, cta, testId, linkId, children }) {
+  return (
+    <section className="flex flex-col rounded-3xl border border-line bg-surface p-5" data-testid={testId}>
+      <h2 className="text-lg" style={H}>{title}</h2>
+      {sub && <p className="mt-1 text-xs text-muted">{sub}</p>}
+      <div className="mt-3 flex-1">{children}</div>
+      {to && <Link to={to} className="mt-4 inline-flex items-center gap-1 text-sm font-semibold hover:underline" data-testid={linkId}>{cta}<ArrowRight className="h-4 w-4" aria-hidden /></Link>}
+    </section>
+  );
+}
+const Rows = ({ children }) => <ul className="divide-y divide-line">{children}</ul>;
+const Quiet = ({ children }) => <p className="rounded-2xl bg-ink/[.04] p-4 text-sm text-muted">{children}</p>;
+
+// What you can apply to now: programs closing in the next 45 days first (soonest on top), then other open programs that fit. Tapping one opens its details.
+function ApplyNow({ soon, more, onOpen }) {
+  const rows = [...soon, ...more.filter((m) => !soon.some((x) => x.id === m.id) && m.status !== "closed" && m.status !== "paused")].slice(0, 4);
+  return (
+    <HomeWidget title="Apply now" sub="Programs open to you. The ones closing soonest are on top." to="/navigator" cta="See all programs" testId="home-soon">
+      {rows.length ? (
+        <Rows>
+          {rows.map((m) => {
+            const { color } = typeMeta(m.type); const dl = deadlineInfo(m); const timed = dl && m.days_left != null;
+            return (
+              <li key={m.id}>
+                <button type="button" onClick={() => onOpen(m)} data-testid={`soon-${m.id}`} className="flex w-full items-center gap-3 py-3 text-left first:pt-1 last:pb-0">
+                  {timed ? (
+                    <span className="flex h-12 w-12 shrink-0 flex-col items-center justify-center rounded-xl leading-none" style={{ background: tint(color, 0.14) }} aria-hidden>
+                      <span className="stat text-xl" style={{ color: m.days_left <= 14 ? "#F87171" : color }}>{m.days_left}</span>
+                      <span className="mt-0.5 text-[9px] font-semibold uppercase text-muted" style={{ letterSpacing: "0.1em" }}>{m.days_left === 1 ? "day" : "days"}</span>
+                    </span>
+                  ) : <TypeTile type={m.type} size={48} />}
+                  <span className="min-w-0 flex-1"><span className="line-clamp-2 block text-sm font-semibold leading-snug">{m.name}</span><span className="block truncate text-xs text-muted">{timed ? `${m.org} · closes ${dl.date}` : `${m.org} · ${TYPE_LABEL[m.type] || m.type}`}</span></span>
+                  <ArrowRight className="h-4 w-4 shrink-0 text-muted" aria-hidden />
+                </button>
+              </li>
+            );
+          })}
+        </Rows>
+      ) : <Quiet>Nothing open to you right now. New programs show up here as they open.</Quiet>}
+    </HomeWidget>
+  );
+}
+
 // A short version of your path: what you want next, and the best resource for each. The full path lives on /journey.
 function PathCard({ onPick }) {
   const [r, setR] = useState(null);
   useEffect(() => { api.get("/navigator/route").then((x) => setR(x.data)).catch(() => setR(false)); }, []);
-  if (!r || !r.has_profile) return null;
-  const rows = r.steps.filter((s) => s.resources.length).slice(0, 3);
+  if (r && !r.has_profile) return null;
+  const rows = r ? r.steps.filter((s) => s.resources.length).slice(0, 3) : [];
   return (
-    <section className="rounded-3xl border border-line bg-surface p-5" data-testid="home-journey">
-      <h2 className="text-lg" style={{ textTransform: "none", letterSpacing: "-0.01em", fontWeight: 700 }}>Your path</h2>
-      <p className="mb-4 mt-1 text-xs text-muted">{r.steps.length ? "The best resource for each thing you want next." : "Pick what you want next and your path appears."}</p>
-      {rows.length > 0 && (
-        <ul className="space-y-3">
+    <HomeWidget title="Your path" sub="The best resource for each thing you want next." to="/journey" cta={r && r.steps.length ? "See your whole path" : "Build your path"} testId="home-journey" linkId="home-journey-link">
+      {r === null ? <Quiet>Loading…</Quiet> : r === false ? <Quiet>Your path is not available right now.</Quiet> : rows.length ? (
+        <Rows>
           {rows.map((s) => (
             <li key={s.need}>
-              <p className="text-[11px] font-semibold uppercase text-muted" style={{ letterSpacing: "0.12em" }}>{s.title}</p>
-              <button type="button" onClick={() => onPick(s.resources[0])} className="mt-1 block w-full text-left text-sm font-semibold leading-snug hover:underline" data-testid={`home-path-${s.need}`}>{s.resources[0].name}</button>
+              <button type="button" onClick={() => onPick(s.resources[0])} className="flex w-full items-center gap-3 py-3 text-left first:pt-1 last:pb-0" data-testid={`home-path-${s.need}`}>
+                <span className="min-w-0 flex-1"><Cap>{s.title}</Cap><span className="mt-1 block text-sm font-semibold leading-snug">{s.resources[0].name}</span></span>
+                <ArrowRight className="h-4 w-4 shrink-0 text-muted" aria-hidden />
+              </button>
             </li>
           ))}
-        </ul>
-      )}
-      <Link to="/journey" className="mt-4 inline-flex items-center gap-1 text-sm font-semibold hover:underline" data-testid="home-journey-link">{r.steps.length ? "See your whole path" : "Build your path"}<ArrowRight className="h-4 w-4" aria-hidden /></Link>
-    </section>
+        </Rows>
+      ) : <Quiet>Pick what you want next and your path appears here.</Quiet>}
+    </HomeWidget>
   );
 }
 
@@ -62,25 +108,45 @@ function PathCard({ onPick }) {
 function EventsCard() {
   const [r, setR] = useState(null);
   useEffect(() => { api.get("/founder-events").then((x) => setR(x.data)).catch(() => setR(false)); }, []);
-  if (!r) return null;
-  const rows = r.events.slice(0, 3);
+  const rows = r ? r.events.slice(0, 3) : [];
   const dayOf = (e) => (e.days_away === 0 ? "Today" : e.days_away === 1 ? "Tomorrow" : new Date(e.date + "T12:00:00").toLocaleDateString(undefined, { weekday: "short", month: "short", day: "numeric" }));
   return (
-    <section className="rounded-3xl border border-line bg-surface p-5" data-testid="home-events">
-      <h2 className="text-lg" style={{ textTransform: "none", letterSpacing: "-0.01em", fontWeight: 700 }}>Events near you</h2>
-      <p className="mb-4 mt-1 text-xs text-muted">{rows.length ? "Upcoming events that fit what you asked for." : "No upcoming events yet. We check event pages twice a day."}</p>
-      {rows.length > 0 && (
-        <ul className="space-y-3">
+    <HomeWidget title="Events near you" sub="Upcoming networking and founder events that fit what you asked for." to="/founder-events" cta="See all events" testId="home-events" linkId="home-events-link">
+      {r === null ? <Quiet>Loading…</Quiet> : r === false ? <Quiet>Events are not available right now.</Quiet> : rows.length ? (
+        <Rows>
           {rows.map((e) => (
             <li key={e.id}>
-              <p className="text-[11px] font-semibold uppercase text-muted" style={{ letterSpacing: "0.12em" }}>{dayOf(e)}{e.online ? " · Online" : e.city ? ` · ${e.city}` : ""}</p>
-              <a href={e.url} target="_blank" rel="noreferrer" className="mt-1 block text-sm font-semibold leading-snug hover:underline" data-testid={`home-event-${e.id}`}>{e.title}</a>
+              <a href={e.url} target="_blank" rel="noreferrer" className="flex items-center gap-3 py-3 first:pt-1 last:pb-0" data-testid={`home-event-${e.id}`}>
+                <span className="min-w-0 flex-1"><Cap>{dayOf(e)}{e.online ? " · Online" : e.city ? ` · ${e.city}` : ""}</Cap><span className="mt-1 block text-sm font-semibold leading-snug">{e.title}</span></span>
+                <ArrowUpRight className="h-4 w-4 shrink-0 text-muted" aria-hidden />
+              </a>
             </li>
           ))}
-        </ul>
-      )}
-      <Link to="/founder-events" className="mt-4 inline-flex items-center gap-1 text-sm font-semibold hover:underline" data-testid="home-events-link">See all events<ArrowRight className="h-4 w-4" aria-hidden /></Link>
-    </section>
+        </Rows>
+      ) : <Quiet>No upcoming events yet. We check event pages twice a day.</Quiet>}
+    </HomeWidget>
+  );
+}
+
+// Communities you are in, then ones that fit you.
+function CommunitiesCard({ mine, suggested, onEnter }) {
+  const rows = [...mine.map((c) => ({ c, joined: true })), ...suggested.map((c) => ({ c, joined: false }))].slice(0, 3);
+  return (
+    <HomeWidget title="Communities" sub="The ones you are in, and others that fit your startup." to="/hub?v=innovation" cta="See all communities" testId="home-communities">
+      {rows.length ? (
+        <Rows>
+          {rows.map(({ c, joined }) => (
+            <li key={c.slug} className="flex items-center gap-3 py-3 first:pt-1 last:pb-0" data-testid={joined ? `home-joined-${c.slug}` : `home-suggest-${c.slug}`}>
+              <Initials c={c} size={40} />
+              <div className="min-w-0 flex-1"><p className="line-clamp-2 text-sm font-semibold leading-snug">{c.name}</p><p className="truncate text-xs text-muted">{joined ? `You're in · ${c.members} members` : (c.reasons || [])[0] || c.kind}</p></div>
+              {joined
+                ? <button type="button" onClick={() => onEnter(c)} className="shrink-0 rounded-lg px-3.5 py-1.5 text-sm font-semibold" style={{ background: "var(--accent)", color: "var(--on-accent)" }}>Enter</button>
+                : <Link to={`/c/${c.slug}`} className="shrink-0 rounded-lg border border-line px-3.5 py-1.5 text-sm font-semibold hover:border-ink/40">View</Link>}
+            </li>
+          ))}
+        </Rows>
+      ) : <Link to="/hub?v=innovation" className="flex items-center gap-2 rounded-2xl bg-ink/[.04] p-4 text-sm text-muted hover:text-ink"><Plus className="h-4 w-4" aria-hidden />Find a community to join</Link>}
+    </HomeWidget>
   );
 }
 
@@ -138,12 +204,11 @@ export default function Home({ items, onEnter }) {
   const heroDl = hero ? deadlineInfo(hero) : null;
   const heroColor = hero ? typeMeta(hero.type).color : "#888";
   const soonAll = d.closing_soon || [];
-  const soon = soonAll.filter((m) => !hero || m.id !== hero.id); // the hero already counts its own days down
   const comp = d.completeness || { percent: 0, missing: [] };
   return (
     <div className="mx-auto max-w-6xl space-y-6" data-testid="home">
       {head}
-      <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_340px]">
+      <div className="grid grid-cols-1 gap-6 xl:grid-cols-[minmax(0,1fr)_340px] xl:items-start">
         <div className="min-w-0 space-y-6">
           {hero && (
             <section className="relative overflow-hidden rounded-3xl border border-line p-6 sm:p-8" data-testid="home-hero"
@@ -174,42 +239,16 @@ export default function Home({ items, onEnter }) {
             <div className="mt-2 flex flex-wrap gap-2 border-t border-line pt-3">{SUGGEST.map((s) => <button key={s} type="button" onClick={() => ask(s)} className="rounded-full border border-line px-3 py-1 text-xs text-muted hover:text-ink">{s}</button>)}</div>
           </form>
 
-          {soon.length > 0 && (
-            <section data-testid="home-soon">
-              <div className="mb-3 flex items-end justify-between"><h2 className="text-lg" style={{ textTransform: "none", letterSpacing: "-0.01em", fontWeight: 700 }}>Closing soon</h2><Link to="/navigator" className="text-sm text-muted hover:text-ink">All programs</Link></div>
-              <div className="pw-rail -mx-4 flex gap-3 overflow-x-auto px-4 pb-2 sm:-mx-6 sm:px-6 xl:mx-0 xl:px-0">
-                {soon.map((m) => {
-                  const { color } = typeMeta(m.type);
-                  return (
-                    <button key={m.id} type="button" onClick={() => setOpen(m)} data-testid={`soon-${m.id}`} className="flex w-[240px] shrink-0 flex-col rounded-2xl border border-line p-4 text-left transition hover:border-ink/30" style={{ background: `linear-gradient(150deg, ${tint(color, 0.12)} 0%, transparent 60%), rgb(var(--c-surface))` }}>
-                      <span className="flex items-start justify-between"><TypeTile type={m.type} size={36} /><span className="text-right"><span className="stat block text-3xl" style={{ color: m.days_left <= 14 ? "#F87171" : color }}>{m.days_left}</span><span className="text-[10px] font-semibold uppercase text-muted" style={{ letterSpacing: "0.12em" }}>days</span></span></span>
-                      <span className="mt-3 block text-[15px] font-semibold leading-snug">{m.name}</span>
-                      <span className="mt-0.5 block truncate text-xs text-muted">{m.org}</span>
-                    </button>
-                  );
-                })}
-              </div>
-            </section>
-          )}
-
-          <section data-testid="home-communities">
-            <div className="mb-3 flex items-end justify-between"><h2 className="text-lg" style={{ textTransform: "none", letterSpacing: "-0.01em", fontWeight: 700 }}>Innovation communities</h2><Link to="/hub?v=innovation" className="text-sm text-muted hover:text-ink">See all</Link></div>
-            <div className="grid gap-3 md:grid-cols-2">
-              {mineInnovation.map((c) => (
-                <div key={c.slug} className="flex items-center gap-3 rounded-2xl border border-line bg-surface p-3.5" data-testid={`home-joined-${c.slug}`}>
-                  <Initials c={c} /><div className="min-w-0 flex-1"><p className="truncate text-sm font-semibold">{c.name}</p><p className="truncate text-xs text-muted">You're in · {c.members} members</p></div>
-                  <button type="button" onClick={() => onEnter(c)} className="rounded-lg px-3.5 py-1.5 text-sm font-semibold" style={{ background: "var(--accent)", color: "var(--on-accent)" }}>Enter</button>
-                </div>
-              ))}
-              {(d.communities || []).filter((c) => !mineInnovation.some((m) => m.slug === c.slug)).map((c) => (
-                <Link key={c.slug} to={`/c/${c.slug}`} className="flex items-center gap-3 rounded-2xl border border-dashed border-line p-3.5 transition hover:border-ink/40" data-testid={`home-suggest-${c.slug}`}>
-                  <Initials c={c} /><div className="min-w-0 flex-1"><p className="truncate text-sm font-semibold">{c.name}</p><p className="line-clamp-2 text-xs text-muted">{(c.reasons || [])[0] || c.kind}</p></div>
-                  <span className="shrink-0 rounded-lg border border-line px-3 py-1.5 text-sm font-semibold">View</span>
-                </Link>
-              ))}
-              {mineInnovation.length === 0 && !(d.communities || []).length && <Link to="/hub?v=innovation" className="flex items-center gap-3 rounded-2xl border border-dashed border-line p-4 text-sm text-muted hover:text-ink"><Plus className="h-4 w-4" />Find an innovation community to join</Link>}
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-2 md:items-start" data-testid="home-widgets">
+            <div className="space-y-4">
+              <ApplyNow soon={soonAll} more={d.top.slice(1)} onOpen={(m) => setOpen(m)} />
+              <CommunitiesCard mine={mineInnovation} suggested={(d.communities || []).filter((c) => !mineInnovation.some((m) => m.slug === c.slug))} onEnter={onEnter} />
             </div>
-          </section>
+            <div className="space-y-4">
+              <EventsCard />
+              <PathCard onPick={(r) => setOpen(r)} />
+            </div>
+          </div>
         </div>
 
         <aside className="min-w-0 space-y-4">
@@ -219,10 +258,6 @@ export default function Home({ items, onEnter }) {
             <Trajectory compact data={d.trajectory} tracked={tracked} onPick={(r) => setOpen(r)} />
             <Link to="/navigator" className="mt-4 inline-flex items-center gap-1 text-sm font-semibold hover:underline">See the full route<ArrowRight className="h-4 w-4" aria-hidden /></Link>
           </section>
-
-          <PathCard onPick={(r) => setOpen(r)} />
-
-          <EventsCard />
 
           <div className="grid grid-cols-2 gap-3">
             <Tile to="/navigator" n={d.matched ?? d.top.length} label="Programs fit" hint="matched to you" />
