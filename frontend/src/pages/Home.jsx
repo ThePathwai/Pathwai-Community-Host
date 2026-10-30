@@ -11,7 +11,7 @@ import { DeadlineChip, ProgramDrawer, TypeTile } from "../components/ProgramCard
 import Trajectory from "../components/Trajectory";
 import { useTracked } from "../lib/useTracked";
 import { useShell } from "../components/AccountShell";
-import { Spinner, cx } from "../components/ui";
+import { Avatar, Spinner, cx } from "../components/ui";
 
 // Home: where you are, and the single best thing to do next. Everything here is read from your one profile and the programs every community
 // lists (GET /navigator/home), so it changes the moment either does. Innovation only: your leisure communities live under their own heading.
@@ -128,6 +128,30 @@ function EventsCard() {
   );
 }
 
+// A few people from the talent pool, best fit first. The whole pool, with filters and message requests, lives on /talent.
+function TalentCard() {
+  const [r, setR] = useState(null);
+  useEffect(() => { api.get("/talent").then((x) => setR(x.data)).catch(() => setR(false)); }, []);
+  const rows = r ? r.results.slice(0, 3) : [];
+  return (
+    <HomeWidget title="People to meet" sub="Developers, marketers, sales people, accountants and startups who chose to be found." to="/people" cta="Browse people" testId="home-talent">
+      {r === null ? <Quiet>Loading…</Quiet> : r === false ? <Quiet>Talent is not available right now.</Quiet> : rows.length ? (
+        <Rows>
+          {rows.map((p) => (
+            <li key={p.id}>
+              <Link to={`/people/${p.id}`} className="flex items-center gap-3 py-3 first:pt-1 last:pb-0" data-testid={`home-talent-${p.id}`}>
+                <Avatar src={p.avatar_url} name={p.name} size={40} />
+                <span className="min-w-0 flex-1"><span className="block truncate text-sm font-semibold">{p.name}</span><span className="line-clamp-2 block text-xs leading-snug text-muted">{p.headline}</span></span>
+                <ArrowRight className="h-4 w-4 shrink-0 text-muted" aria-hidden />
+              </Link>
+            </li>
+          ))}
+        </Rows>
+      ) : <Quiet>No one has joined the pool yet. Add your own profile to be one of the first.</Quiet>}
+    </HomeWidget>
+  );
+}
+
 // Communities you are in, then ones that fit you.
 function CommunitiesCard({ mine, suggested, onEnter }) {
   const rows = [...mine.map((c) => ({ c, joined: true })), ...suggested.map((c) => ({ c, joined: false }))].slice(0, 3);
@@ -239,15 +263,11 @@ export default function Home({ items, onEnter }) {
             <div className="mt-2 flex flex-wrap gap-2 border-t border-line pt-3">{SUGGEST.map((s) => <button key={s} type="button" onClick={() => ask(s)} className="rounded-full border border-line px-3 py-1 text-xs text-muted hover:text-ink">{s}</button>)}</div>
           </form>
 
-          <div className="grid grid-cols-1 gap-4 md:grid-cols-2 md:items-start" data-testid="home-widgets">
-            <div className="space-y-4">
-              <ApplyNow soon={soonAll} more={d.top.slice(1)} onOpen={(m) => setOpen(m)} />
-              <CommunitiesCard mine={mineInnovation} suggested={(d.communities || []).filter((c) => !mineInnovation.some((m) => m.slug === c.slug))} onEnter={onEnter} />
-            </div>
-            <div className="space-y-4">
-              <EventsCard />
-              <PathCard onPick={(r) => setOpen(r)} />
-            </div>
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-2 md:items-stretch" data-testid="home-widgets">
+            <ApplyNow soon={soonAll} more={d.top.slice(1)} onOpen={(m) => setOpen(m)} />
+            <EventsCard />
+            <TalentCard />
+            <PathCard onPick={(r) => setOpen(r)} />
           </div>
         </div>
 
@@ -258,6 +278,8 @@ export default function Home({ items, onEnter }) {
             <Trajectory compact data={d.trajectory} tracked={tracked} onPick={(r) => setOpen(r)} />
             <Link to="/navigator" className="mt-4 inline-flex items-center gap-1 text-sm font-semibold hover:underline">See the full route<ArrowRight className="h-4 w-4" aria-hidden /></Link>
           </section>
+
+          <CommunitiesCard mine={mineInnovation} suggested={(d.communities || []).filter((c) => !mineInnovation.some((m) => m.slug === c.slug))} onEnter={onEnter} />
 
           <div className="grid grid-cols-2 gap-3">
             <Tile to="/navigator" n={d.matched ?? d.top.length} label="Programs fit" hint="matched to you" />

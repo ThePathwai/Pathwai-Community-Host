@@ -11,11 +11,11 @@ from fastapi.testclient import TestClient
 
 import server
 
-from birthday import BirthdayError, age_from, age_on, clean_birthday, parse_date, refresh_all_ages
+from birthday import BirthdayError, age_from, age_on, clean_birthday, parse_date, refresh_all_ages, today_utc
 
 
 def _iso_years_ago(years, days_off=0):
-    t = date.today()
+    t = today_utc()  # the app counts age in UTC; date.today() is local and differs in the evening
     try:
         d = t.replace(year=t.year - years)
     except ValueError:
@@ -47,7 +47,7 @@ def test_parses_common_formats():
 def test_limits():
     assert clean_birthday("") is None
     with pytest.raises(BirthdayError):
-        clean_birthday((date.today() + timedelta(days=3)).isoformat())
+        clean_birthday((today_utc() + timedelta(days=3)).isoformat())
     with pytest.raises(BirthdayError):
         clean_birthday(_iso_years_ago(10))
     with pytest.raises(BirthdayError):

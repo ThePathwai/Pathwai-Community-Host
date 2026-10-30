@@ -187,7 +187,7 @@ export default function HubPeople({ open, onClose, communities, initialThreadId,
 
   const toggleFollow = async (p, fromProfile) => {
     try {
-      const r = p.is_following ? await api.delete(`/hub/people/${encodeURIComponent(p.email)}/follow`) : await api.post(`/hub/people/${encodeURIComponent(p.email)}/follow`);
+      const r = p.is_following ? await api.delete(`/hub/people/${encodeURIComponent(p.email || p.id)}/follow`) : await api.post(`/hub/people/${encodeURIComponent(p.email || p.id)}/follow`);
       if (fromProfile) setProfile((old) => old && ({ ...old, is_following: r.data.is_following, followers: old.followers + (r.data.is_following ? 1 : -1) }));
       else setPeople((old) => (old || []).map((x) => (x.email === p.email ? { ...x, is_following: r.data.is_following } : x)));
     } catch (e) { toast.error(errMsg(e)); }
@@ -224,6 +224,14 @@ export default function HubPeople({ open, onClose, communities, initialThreadId,
     if (!reply.trim() || !thread) return;
     setBusy(true);
     try { await api.post(`/hub/messages/threads/${thread.id}/reply`, { body: reply }); setReply(""); openThread(thread.id); }
+    catch (e) { toast.error(errMsg(e)); } finally { setBusy(false); }
+  };
+
+  // A message request from the talent pool: the person it was sent to accepts or declines (replying also accepts).
+  const respond = async (accept) => {
+    if (!thread) return;
+    setBusy(true);
+    try { const r = await api.post(`/hub/messages/threads/${thread.id}/respond`, { accept }); setThread((t) => ({ ...t, request: r.data.request })); toast.success(accept ? "Accepted. You can chat now." : "Declined."); onThreadRead?.(); }
     catch (e) { toast.error(errMsg(e)); } finally { setBusy(false); }
   };
 
@@ -354,7 +362,7 @@ export default function HubPeople({ open, onClose, communities, initialThreadId,
                     <Avatar src={other?.avatar_url} name={other?.name} size={32} />
                     <p className="text-sm font-medium">{other?.name}</p>
                   </div>
-                  {thread.context && (
+                  {thread.context && thread.context.type !== "talent" && (
                     <div className="flex items-center justify-between gap-3 rounded-xl border border-dashed border-line p-3" data-testid="people-thread-context-card">
                       <div className="min-w-0">
                         <p className="text-[10px] font-semibold uppercase tracking-wide text-muted">{thread.context.type === "event" ? "Shared event" : "Community invite"}</p>
@@ -364,17 +372,28 @@ export default function HubPeople({ open, onClose, communities, initialThreadId,
                     </div>
                   )}
                   {(thread.messages || []).map((m) => (
-                    <PlatformMessageRow key={m.id} m={m} mine={m.sender_email !== other?.email}
+                    <PlatformMessageRow key={m.id} m={m} mine={m.mine ?? (m.sender_email !== other?.email)}
                       onDelete={() => deleteMessage(m.id)} onReport={(reason) => reportMessage(m.id, reason)} />
                   ))}
+                  {thread.request?.state === "pending" && thread.request.you_are_recipient && (
+                    <div className="rounded-xl border border-line bg-ink/[.04] p-4" data-testid="people-request">
+                      <p className="text-sm font-semibold">{other?.name} found you in Talent</p>
+                      <p className="mt-1 text-xs text-muted">Accept to start chatting. Declining closes the request. Replying also accepts. Your email stays private either way.</p>
+                      <div className="mt-3 flex gap-2"><Button onClick={() => respond(true)} loading={busy} data-testid="people-request-accept">Accept</Button><button type="button" onClick={() => respond(false)} disabled={busy} className="rounded-lg border border-line px-4 py-2 text-sm font-semibold hover:border-ink/40" data-testid="people-request-decline">Decline</button></div>
+                    </div>
+                  )}
+                  {thread.request?.state === "pending" && !thread.request.you_are_recipient && <p className="rounded-xl bg-ink/[.04] p-3 text-xs text-muted" data-testid="people-request-waiting">Waiting for {other?.name} to accept. You can write more once they do.</p>}
+                  {thread.request?.state === "declined" && <p className="rounded-xl bg-ink/[.04] p-3 text-xs text-muted" data-testid="people-request-declined">This request was declined.</p>}
                 </div>
               )}
             </div>
-            <div className="flex items-center gap-2 border-t border-line p-3">
-              <Input value={reply} onChange={(e) => setReply(e.target.value)} placeholder="Write a reply…" data-testid="people-thread-reply-body"
-                onKeyDown={(e) => { if (e.key === "Enter") sendReply(); }} />
-              <Button onClick={sendReply} loading={busy} data-testid="people-thread-reply-send">Send</Button>
-            </div>
+            {!(thread?.request && (thread.request.state === "declined" || (thread.request.state === "pending" && !thread.request.you_are_recipient))) && (
+              <div className="flex items-center gap-2 border-t border-line p-3">
+                <Input value={reply} onChange={(e) => setReply(e.target.value)} placeholder={thread?.request?.state === "pending" ? "Reply to accept and start chatting…" : "Write a reply…"} data-testid="people-thread-reply-body"
+                  onKeyDown={(e) => { if (e.key === "Enter") sendReply(); }} />
+                <Button onClick={sendReply} loading={busy} data-testid="people-thread-reply-send">Send</Button>
+              </div>
+            )}
           </div>
         )}
       </div>

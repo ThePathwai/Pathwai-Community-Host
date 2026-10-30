@@ -158,6 +158,9 @@ async def person_by_email(email: str) -> Optional[dict]:
         # `users` doc has no photos field today, but falling back to one costs nothing if that ever
         # changes, same precedence every other field here already uses.
         "photos": (acc or {}).get("photos") or best.get("photos") or [],
+        # What the account itself holds (a person who only joined a community has none of this). Callers decide what is public: see talent.public_extras.
+        "id": (acc or {}).get("id"), "location": (acc or {}).get("location") or best.get("location") or "",
+        "talent": (acc or {}).get("talent") or {}, "startup": (acc or {}).get("startup") or {},
         "memberships": hits,
     }
 

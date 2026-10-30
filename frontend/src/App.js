@@ -47,6 +47,10 @@ import PublicReport from "./pages/PublicReport";
 import Navigator from "./pages/Navigator";
 import Journey from "./pages/Journey";
 import FounderEvents from "./pages/FounderEvents";
+import Talent from "./pages/Talent";
+import TalentProfile from "./pages/TalentProfile";
+import People from "./pages/People";
+import PersonProfile from "./pages/PersonProfile";
 import MyProfile from "./pages/MyProfile";
 
 function Protected({ children, admin }) {
@@ -88,6 +92,30 @@ function FounderEventsRoute() {
   return user ? <Layout><FounderEvents embedded /></Layout> : <FounderEvents />;
 }
 
+// Talent is the account's own pool of people and startups, so like Events it sits inside a community's layout when one is open and on its own otherwise.
+function TalentRoute() {
+  const { user, loading } = useAuth();
+  if (loading) return <Spinner />;
+  return user ? <Layout><Talent embedded /></Layout> : <Talent />;
+}
+function TalentProfileRoute() {
+  const { user, loading } = useAuth();
+  if (loading) return <Spinner />;
+  return user ? <Layout><TalentProfile embedded /></Layout> : <TalentProfile />;
+}
+
+// People: the account's own directory, so like Talent it sits inside a community's layout when one is open and on its own otherwise.
+function PeopleRoute() {
+  const { user, loading } = useAuth();
+  if (loading) return <Spinner />;
+  return user ? <Layout><People embedded /></Layout> : <People />;
+}
+function PersonRoute() {
+  const { user, loading } = useAuth();
+  if (loading) return <Spinner />;
+  return user ? <Layout><PersonProfile embedded /></Layout> : <PersonProfile />;
+}
+
 const P = ({ children, admin }) => <Protected admin={admin}><Layout>{children}</Layout></Protected>;
 
 // Reports now live inside Admin; the old address (and anything bookmarked or shared with it) lands in the right place.
@@ -112,6 +140,10 @@ export default function App() {
         <Route path="/navigator" element={<NavigatorRoute />} />
         <Route path="/journey" element={<JourneyRoute />} />
         <Route path="/founder-events" element={<FounderEventsRoute />} />
+        <Route path="/talent" element={<TalentRoute />} />
+        <Route path="/talent/me" element={<TalentProfileRoute />} />
+        <Route path="/people" element={<PeopleRoute />} />
+        <Route path="/people/:key" element={<PersonRoute />} />
         <Route path="/me" element={<MyProfileRoute />} />
         <Route path="/humber" element={<Navigate to="/demo/humber" replace />} />
         <Route path="/install" element={<Install />} />

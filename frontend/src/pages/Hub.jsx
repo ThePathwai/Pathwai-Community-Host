@@ -173,10 +173,11 @@ function HubInbox({ open, onClose, loading, data, communities, onOpenThread }) {
                   </div>
                   <p className="truncate text-xs text-muted">{t.subject}</p>
                   <div className="mt-1 flex items-center gap-1.5">
-                    <span className="shrink-0 rounded-full px-2 py-0.5 text-[10px] font-semibold"
+                    {t.request?.state === "pending" && <span className="shrink-0 rounded-full bg-sky-500/15 px-2 py-0.5 text-[10px] font-semibold text-sky-600 dark:text-sky-400" data-testid="hub-inbox-request">{t.request.you_are_recipient ? "Request" : "Waiting"}</span>}
+                    {t.community_slug && <span className="shrink-0 rounded-full px-2 py-0.5 text-[10px] font-semibold"
                       style={{ background: com?.brand?.colors?.accent ? `${com.brand.colors.accent}26` : "rgb(var(--c-ink) / 0.08)", color: com?.brand?.colors?.accent || "inherit" }}>
                       {com?.name || t.community_slug}
-                    </span>
+                    </span>}
                     <p className="truncate text-xs text-muted">{t.last_message_preview}</p>
                   </div>
                 </div>

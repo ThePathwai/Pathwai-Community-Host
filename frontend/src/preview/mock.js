@@ -15,6 +15,7 @@ import { segments, smsBody } from "../lib/messaging";
 import { teamsHandler } from "./teams";
 import { navigatorCall, cleanStartup, DEMO_STARTUP, demoJourney } from "./navigatorMock";
 import { eventsCall } from "./eventsMock";
+import { sampleListCard, sampleProfile, talentCall } from "./talentMock";
 
 const S = { role: null, email: null, community: null, books: {}, extra: {} };
 const book = () => { const k = S.community || "playr"; return (S.books[k] = S.books[k] || JSON.parse(JSON.stringify(fixtures.communities[k]))); };
@@ -626,6 +627,7 @@ const navCtx = (config) => ({ account: S.role ? (((S.extra.acctProfile = S.extra
 function get(path, p, config) {
   if (path.startsWith("/navigator")) return navigatorCall("get", path, {}, p, navCtx(config));
   if (path.startsWith("/founder-events")) return eventsCall("get", path, p, navCtx(config));
+  if (path.startsWith("/talent")) return talentCall("get", path, null, p, navCtx(config));
   if (path.startsWith("/classes")) return classesCall("get", path, {}, p, config);
   if (path.startsWith("/teams")) return teamsCall("get", path, {}, config);
   if (/^\/(admin\/(impact|report-types|reports\/|report-shares|deck-selection|partnership-offer|quiet|instagram|tiktok)|public\/report\/)/.test(path) || path === "/community/reliability") return impactCall("get", path, {}, config);
@@ -746,8 +748,15 @@ function get(path, p, config) {
     const emails = Object.keys(follows)
       .filter((k) => (path === "/hub/following" ? k.startsWith(meEmail + "|") : k.endsWith("|" + meEmail)))
       .map((k) => (path === "/hub/following" ? k.slice(meEmail.length + 1) : k.slice(0, k.length - meEmail.length - 1)));
-    const people = emails.map(personByEmail).filter(Boolean).map((p) => ({ email: p.email, name: p.name, avatar_url: p.avatar_url || null, title: p.title || null, company: p.company || null, photos: (p.photos || []).slice(0, 9) }));
+    const samples = emails.filter((e) => /^t[ps]-/.test(e)).map(sampleListCard).filter(Boolean);
+    const people = samples.concat(emails.filter((e) => !/^t[ps]-/.test(e)).map(personByEmail).filter(Boolean).map((p) => ({ email: p.email, name: p.name, avatar_url: p.avatar_url || null, title: p.title || null, company: p.company || null, photos: (p.photos || []).slice(0, 9) })));
     return ok(config, { people });
+  }
+  const spm = path.match(/^\/hub\/people\/((?:tp|ts)-[^/]+)$/);
+  if (spm) {
+    if (!S.role) return fail(config, 401, "Not authenticated");
+    const prof = sampleProfile(spm[1], !!(S.extra.follows || {})[followKey(S.email, spm[1])]);
+    return prof ? ok(config, prof) : fail(config, 404, "Person not found");
   }
   const ppm = path.match(/^\/hub\/people\/([^/]+)$/);
   if (ppm) {
@@ -1031,6 +1040,7 @@ function get(path, p, config) {
 function write(method, path, body, config) {
   if (path.startsWith("/navigator")) return navigatorCall(method, path, body, config.params || {}, navCtx(config));
   if (path.startsWith("/founder-events")) return eventsCall(method, path, config.params || {}, navCtx(config));
+  if (path.startsWith("/talent")) return talentCall(method, path, body, config.params || {}, navCtx(config));
   if (path.startsWith("/classes")) return classesCall(method, path, body, config.params || {}, config);
   if (path.startsWith("/teams")) return teamsCall(method, path, body, config);
   if (/^\/admin\/(report-shares|deck-selection|partnership-offer|quiet)/.test(path)) return impactCall(method, path, body, config);
@@ -1203,7 +1213,7 @@ function write(method, path, body, config) {
     S.extra.follows = S.extra.follows || {};
     if (method === "delete") { delete S.extra.follows[followKey(meEmail, email)]; return ok(config, { ok: true, is_following: false }); }
     if (email === meEmail) return fail(config, 400, "You can't follow yourself");
-    if (!personByEmail(email)) return fail(config, 404, "Person not found");
+    if (!/^t[ps]-/.test(email) && !personByEmail(email)) return fail(config, 404, "Person not found");
     S.extra.follows[followKey(meEmail, email)] = true;
     return ok(config, { ok: true, is_following: true }, 201);
   }

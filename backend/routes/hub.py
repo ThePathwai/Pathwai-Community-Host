@@ -24,6 +24,7 @@ from directory import find_all_for_email, find_by_id, list_all_people, person_by
 from .community_config import DEFAULT_CONFIG, THEME_PRESETS
 from .messages import _preview, _thread_out
 from navigator import clean_startup as _clean_startup
+import talent as tl
 from community_group import community_group
 from birthday import BirthdayError, age_from, clean_birthday
 from ._common import TERMS_REQUIRED_MSG, audit, audit_platform, terms_stamp
@@ -463,8 +464,11 @@ def _public_person(p: Optional[Dict[str, Any]]) -> Dict[str, Any]:
     # thread's "other") so the People panel can render a feed/profile of actual photos instead of
     # just a name and a bio -- not just on the full profile detail, which would mean a second round
     # trip per card.
-    return {"email": p.get("email"), "name": p.get("name"), "avatar_url": p.get("avatar_url"), "title": p.get("title"), "company": p.get("company"),
-            "photos": (p.get("photos") or [])[:MAX_PROFILE_PHOTOS]}
+    ex = tl.public_extras(p)
+    # Someone who listed themselves in the talent pool is addressed by their opaque id; their email is not handed out.
+    listed = bool(ex["talent"] or ex["startup"])
+    return {"email": None if listed else p.get("email"), "name": p.get("name"), "avatar_url": p.get("avatar_url"), "title": p.get("title"), "company": p.get("company"),
+            "photos": (p.get("photos") or [])[:MAX_PROFILE_PHOTOS], "id": ex["id"], "location": ex["location"], "talent": ex["talent"], "startup": ex["startup"]}
 
 
 async def _public_communities(memberships) -> List[Dict[str, Any]]:
@@ -479,6 +483,17 @@ async def _public_communities(memberships) -> List[Dict[str, Any]]:
         return {"slug": slug, "name": cfg.get("community_name") or slug, "logo_url": brand.get("logo_url"), "colors": brand.get("colors") or {}}
 
     return list(await asyncio.gather(*(_one(slug) for slug, _ in approved)))
+
+
+async def _email_for(key: str) -> str:
+    """People are addressed by email (everyone has one) or, where the person has a Pathwai account, by its opaque id, which keeps emails out of page addresses."""
+    key = (key or "").strip()
+    if "@" in key:
+        return key.lower()
+    a = await hub_db().accounts.find_one({"id": key}, {"email": 1})
+    if not a:
+        raise HTTPException(status_code=404, detail="Person not found")
+    return a["email"].strip().lower()
 
 
 @router.get("/hub/people")
@@ -503,7 +518,7 @@ async def hub_people(q: str = "", acc: dict = Depends(require_account)):
 
 @router.get("/hub/people/{email}")
 async def hub_person(email: str, acc: dict = Depends(require_account)):
-    email = email.strip().lower()
+    email = await _email_for(email)
     p = await person_by_email(email)
     if not p:
         raise HTTPException(status_code=404, detail="Person not found")
@@ -519,7 +534,7 @@ async def hub_person(email: str, acc: dict = Depends(require_account)):
 
 @router.post("/hub/people/{email}/follow", status_code=201)
 async def follow_person(email: str, acc: dict = Depends(require_account)):
-    email = email.strip().lower()
+    email = await _email_for(email)
     me_email = acc["email"].strip().lower()
     if email == me_email:
         raise HTTPException(status_code=400, detail="You can't follow yourself")
@@ -532,7 +547,7 @@ async def follow_person(email: str, acc: dict = Depends(require_account)):
 
 @router.delete("/hub/people/{email}/follow")
 async def unfollow_person(email: str, acc: dict = Depends(require_account)):
-    await hub_db().follows.delete_one({"follower_email": acc["email"].strip().lower(), "followee_email": email.strip().lower()})
+    await hub_db().follows.delete_one({"follower_email": acc["email"].strip().lower(), "followee_email": await _email_for(email)})
     return {"ok": True, "is_following": False}
 
 
@@ -564,14 +579,38 @@ async def _platform_thread_out(t: Dict[str, Any], me_email: str) -> Dict[str, An
     for e in other_emails:
         p = await person_by_email(e)
         others.append(_public_person(p) if p else {"email": e, "name": e, "avatar_url": None, "title": None, "company": None})
+    if (t.get("request") or {}).get("state") in ("pending", "declined"):
+        others = [{**o, "email": None} for o in others]  # a message request does not reveal either person's email until it is accepted
     my_read_at = (t.get("read_at") or {}).get(me_email)
     unread = bool(t.get("last_message_at") and t.get("last_sender_email") != me_email and (not my_read_at or my_read_at < t["last_message_at"]))
     return {
         "id": t["id"], "subject": t.get("subject"), "context": t.get("context"), "created_at": t["created_at"],
         "last_message_at": t.get("last_message_at") or t["created_at"], "last_message_preview": t.get("last_message_preview") or "",
         "last_sender_email": t.get("last_sender_email"), "others": others, "other": others[0] if others else None,
-        "unread": unread, "community_slug": None,
+        "unread": unread, "community_slug": None, "request": _request_out(t, me_email),
     }
+
+
+def _request_out(t: Dict[str, Any], me_email: str) -> Optional[Dict[str, Any]]:
+    """A thread that began as a message request (from the talent pool) carries its state: pending until the person it was sent to accepts or declines."""
+    r = t.get("request")
+    if not r:
+        return None
+    return {"state": r.get("state"), "from_email": r.get("from_email"), "you_are_recipient": r.get("from_email") != me_email, "kind": r.get("kind") or "talent"}
+
+
+async def request_gate(t: Dict[str, Any], me_email: str) -> None:
+    """Called before anyone adds to a thread. A pending request lets only the person it was sent to write back (which accepts it); the sender waits.
+    A declined one is closed to both."""
+    r = t.get("request")
+    if not r:
+        return
+    if r.get("state") == "declined":
+        raise HTTPException(status_code=403, detail="This message request was declined.")
+    if r.get("state") == "pending":
+        if r.get("from_email") == me_email:
+            raise HTTPException(status_code=403, detail="Your request is waiting. You can write more once they accept.")
+        await hub_db().platform_threads.update_one({"id": t["id"]}, {"$set": {"request.state": "accepted", "request.responded_at": _now()}})
 
 
 class PlatformThreadIn(BaseModel):
@@ -605,7 +644,9 @@ async def hub_platform_thread_detail(thread_id: str, acc: dict = Depends(require
     await _mark_platform_read(t, me_email, _now())
     t = await hub_db().platform_threads.find_one({"id": thread_id})
     out = await _platform_thread_out(t, me_email)
-    out["messages"] = [{"id": m["id"], "sender_email": m["sender_email"], "body": m["body"], "created_at": m["created_at"]}
+    hide = (t.get("request") or {}).get("state") in ("pending", "declined")
+    out["messages"] = [{"id": m["id"], "sender_email": "" if hide and m["sender_email"] != me_email else m["sender_email"], "mine": m["sender_email"] == me_email,
+                        "body": m["body"], "created_at": m["created_at"]}
                         async for m in hub_db().platform_messages.find({"thread_id": thread_id}, {"_id": 0}).sort("created_at", 1)]
     return out
 
@@ -625,6 +666,7 @@ async def start_platform_thread(body: PlatformThreadIn, acc: dict = Depends(requ
     now = _now()
     existing = await hub_db().platform_threads.find_one({"participant_emails": participant_emails})
     if existing:
+        await request_gate(existing, me_email)
         thread_id = existing["id"]
     else:
         thread_id = str(uuid.uuid4())
@@ -650,6 +692,7 @@ async def reply_platform_thread(thread_id: str, body: PlatformReplyIn, acc: dict
     t = await hub_db().platform_threads.find_one({"id": thread_id})
     if not t or me_email not in t["participant_emails"]:
         raise HTTPException(status_code=404, detail="Conversation not found")
+    await request_gate(t, me_email)
     now = _now()
     await hub_db().platform_messages.insert_one({"id": str(uuid.uuid4()), "thread_id": thread_id, "sender_email": me_email, "body": body.body.strip(), "created_at": now})
     await hub_db().platform_threads.update_one({"id": thread_id}, {"$set": {
