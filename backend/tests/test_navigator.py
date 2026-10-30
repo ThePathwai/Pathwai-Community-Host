@@ -1,6 +1,8 @@
 """Navigator: the program catalog, the matching rules (reasons, cautions, hard exclusions), the public API,
 and the community admin's own programs and opt-in profile."""
 import json
+import shutil
+import subprocess
 import os
 import sys
 from datetime import date
@@ -26,7 +28,7 @@ def by_id(pid):
 
 # --------------------------------------------------------------------------- catalog hygiene
 # Entries whose link is knowingly not an exact program page; each says so to the founder (link_exact false), so the list stays short and visible.
-CLOSEST_PAGE_ONLY = {"wef", "bmo-launch-me", "alberta-catalyzer", "liftoff-black", "garage-capital", "inovia-capital", "naco-angels"}
+CLOSEST_PAGE_ONLY = {"wef", "bmo-launch-me", "liftoff-black", "garage-capital", "inovia-capital", "naco-angels"}
 
 
 def test_every_link_goes_to_a_specific_page_and_says_why():
@@ -267,7 +269,7 @@ def test_navigator_profile_merges_age_and_city_back_in():
 
 def test_account_startup_profile_round_trips_and_prefills_the_navigator():
     with TestClient(server.app) as c:
-        assert c.get("/api/navigator/me").json() == {"signed_in": False, "profile": {}, "startup": {}, "tracked": []}
+        assert c.get("/api/navigator/me").json() == {"signed_in": False, "profile": {}, "startup": {}, "tracked": [], "interest": []}
         r = c.post("/api/hub/signup", json={"accepted_terms": True, "email": "founder-nav@example.com", "password": "Sup3rSecret!", "name": "Ada Founder"})
         assert r.status_code == 201, r.text
         r = c.patch("/api/hub/profile", json={"location": "Toronto, ON", "startup": {"name": "Lumen", "one_liner": "Solar for condos", "stage": "revenue", "sectors": ["cleantech", "zzz"],
@@ -477,3 +479,70 @@ def test_the_counts_add_up_and_nothing_is_capped():
     assert t["fit"] == len(res["matches"]) + len(res["more"]) and t["later"] == len(res["later"]) and t["others"] == len(res["others"])
     assert t["all"] == len(PROGRAMS)
     assert t["fit"] > 16, "the For you count used to stop at 16"
+
+
+# ---- interested / not interested ---------------------------------------------------------------------------------------------
+
+def test_interest_rules():
+    rows = nav.update_interest([], {"id": "irap", "name": "NRC IRAP", "org": "NRC", "type": "grant", "state": "yes"}, TODAY)
+    assert rows == [{"id": "irap", "name": "NRC IRAP", "org": "NRC", "type": "grant", "state": "yes", "at": "2026-10-27"}]
+    rows = nav.update_interest(rows, {"id": "irap", "state": "no"}, TODAY)  # changing your mind replaces, never duplicates
+    assert len(rows) == 1 and rows[0]["state"] == "no" and nav.hidden_ids(rows) == {"irap"}
+    assert nav.update_interest(rows, {"id": "irap", "state": "none"}, TODAY) == []
+    for bad in ({"id": "irap", "state": "maybe"}, {"id": "", "state": "yes"}):
+        with pytest.raises(ValueError):
+            nav.update_interest([], bad, TODAY)
+    progs = nav.load_catalog()["programs"]
+    left = nav.without_hidden(progs, [{"id": progs[0]["id"], "state": "no"}, {"id": progs[1]["id"], "state": "yes"}])
+    assert progs[0]["id"] not in {p["id"] for p in left} and progs[1]["id"] in {p["id"] for p in left}
+    assert nav.without_hidden(progs, []) is progs
+
+
+def test_not_interested_programs_leave_every_suggestion_and_come_back_when_you_change_your_mind():
+    with TestClient(server.app) as c:
+        assert c.post("/api/navigator/interest", json={"id": "irap", "state": "no"}).status_code in (401, 403)
+        r = c.post("/api/hub/signup", json={"accepted_terms": True, "email": "interest-nav@example.com", "password": "Sup3rSecret!", "name": "Interest"})
+        assert r.status_code == 201, r.text
+        c.patch("/api/hub/profile", json={"startup": {"name": "I", "stage": "launched", "province": "ON", "needs": ["funding", "mentorship"], "incorporated": True}})
+        ids = lambda d: {m["id"] for m in d["matches"]}  # noqa: E731
+        route_ids = lambda d: {x["id"] for s in d["steps"] for x in s["resources"]}  # noqa: E731
+        before = c.get("/api/navigator/route").json()
+        victim = sorted(route_ids(before))[0]
+        r = c.post("/api/navigator/interest", json={"id": victim, "name": "Victim", "state": "no"})
+        assert r.status_code == 200 and r.json()["interest"][0]["state"] == "no"
+        assert victim not in route_ids(c.get("/api/navigator/route").json())
+        assert victim not in {m["id"] for m in c.get("/api/navigator/home").json()["top"]}
+        assert [i["id"] for i in c.get("/api/navigator/me").json()["interest"]] == [victim]
+        assert [i["state"] for i in c.get("/api/navigator/home").json()["interest"]] == ["no"]
+        # the full list still shows it, so a change of mind is always possible
+        assert victim in {p["id"] for p in c.get("/api/navigator/programs").json()["programs"]}
+        assert c.post("/api/navigator/interest", json={"id": victim, "state": "yes"}).json()["interest"][0]["state"] == "yes"
+        assert victim in route_ids(c.get("/api/navigator/route").json())
+        assert c.post("/api/navigator/interest", json={"id": victim, "state": "wat"}).status_code == 400
+        assert c.post("/api/navigator/interest", json={"id": victim, "state": "none"}).json()["interest"] == []
+
+
+@pytest.mark.skipif(not shutil.which("node"), reason="node is not installed")
+def test_python_and_javascript_interest_rules_agree():
+    import tempfile
+    from pathlib import Path
+    steps = [{"id": "irap", "name": "NRC  IRAP", "org": "NRC", "type": "grant", "state": "yes"}, {"id": "sred", "name": "SR&ED", "state": "no"},
+             {"id": "irap", "state": "no"}, {"id": "sred", "state": "none"}, {"id": "x", "state": "maybe"}, {"id": "", "state": "yes"}]
+    want = []
+    items = []
+    for b in steps:
+        try:
+            items = nav.update_interest(items, b, TODAY)
+            want.append(items)
+        except ValueError as e:
+            want.append(str(e))
+    js_dir = Path(__file__).resolve().parents[2] / "frontend" / "src" / "lib"
+    with tempfile.TemporaryDirectory() as tmp:
+        shutil.copy(js_dir / "navigator.js", Path(tmp) / "navigator.mjs")
+        (Path(tmp) / "run.mjs").write_text(
+            "import * as n from './navigator.mjs';\nconst steps = JSON.parse(process.argv[2]);\nlet items = []; const out = [];\n"
+            "for (const b of steps) { try { items = n.updateInterest(items, b, '2026-10-27'); out.push(items); } catch (e) { out.push(e.message); } }\n"
+            "console.log(JSON.stringify(out));\n")
+        res = subprocess.run(["node", str(Path(tmp) / "run.mjs"), json.dumps(steps)], capture_output=True, text=True, timeout=60)
+    assert res.returncode == 0, res.stderr
+    assert json.loads(res.stdout) == want

@@ -254,8 +254,8 @@ def test_the_endpoint_ranks_for_the_signed_in_founder_and_hides_admin_tools():
         c.cookies.clear()
         db = server.hub_db()
         events = [e for e in (ef.normalize(r, ORG, datetime.now(timezone.utc)) for r in ef.parse_jsonld(ld(
-            {**ev("Founder funding mixer", 0), "startDate": (datetime.now(timezone.utc) + timedelta(days=3)).strftime("%Y-%m-%dT%H:%M:%S+00:00")},
-            {**ev("Startup pitch night in Calgary", 0, city="Calgary", region="AB"), "startDate": (datetime.now(timezone.utc) + timedelta(days=4)).strftime("%Y-%m-%dT%H:%M:%S+00:00")}), "https://example.org")) if e]
+            {**ev("Founder funding mixer", 0), "startDate": (datetime.now(timezone.utc) + timedelta(days=3)).strftime("%Y-%m-%dT%H:%M:%S+00:00"), "endDate": (datetime.now(timezone.utc) + timedelta(days=3, hours=2)).strftime("%Y-%m-%dT%H:%M:%S+00:00")},
+            {**ev("Startup pitch night in Calgary", 0, city="Calgary", region="AB"), "startDate": (datetime.now(timezone.utc) + timedelta(days=4)).strftime("%Y-%m-%dT%H:%M:%S+00:00"), "endDate": (datetime.now(timezone.utc) + timedelta(days=4, hours=2)).strftime("%Y-%m-%dT%H:%M:%S+00:00")}), "https://example.org")) if e]
         assert len(events) == 2
         run(db.founder_events.delete_many({}))
         for e in events:

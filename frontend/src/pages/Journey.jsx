@@ -5,6 +5,7 @@ import { ArrowRight, ArrowUpRight, Check, CheckCircle2, Flag, HelpCircle, ListCh
 import { api } from "../lib/api";
 import { useAuth } from "../lib/auth";
 import { useTracked } from "../lib/useTracked";
+import { useInterest } from "../lib/useInterest";
 import { isStageLine, STAGE_LABEL } from "../lib/navigator";
 import AccountShell from "../components/AccountShell";
 import { Status } from "../components/NavBits";
@@ -166,6 +167,7 @@ function NextMove({ r, step, then, onOpen, onTrack }) {
 export default function Journey({ embedded }) {
   const { account, loading, refresh } = useAuth();
   const { tracked, setTracked, track } = useTracked();
+  const itc = useInterest();
   const [data, setData] = useState(null);
   const [error, setError] = useState("");
   const [saving, setSaving] = useState(false);
@@ -175,10 +177,10 @@ export default function Journey({ embedded }) {
   useEffect(() => { document.title = "Your path · Pathwai"; }, []);
 
   const load = useCallback(async () => {
-    try { const r = await api.get("/navigator/route"); setData(r.data); setTracked(r.data.tracked || []); setError(""); }
+    try { const r = await api.get("/navigator/route"); setData(r.data); setTracked(r.data.tracked || []); itc.setInterest(r.data.interest || []); setError(""); }
     catch (e) { setError(e?.response?.data?.detail || "Could not load your path. Please try again."); }
-  }, [setTracked]);
-  useEffect(() => { if (account) load(); }, [account, load]);
+  }, [setTracked]); // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => { if (account) load(); }, [account, load, itc.sig]);
 
   if (loading) return <Spinner />;
   if (!account) return <Navigate to="/login" replace />;
@@ -298,7 +300,7 @@ export default function Journey({ embedded }) {
         {wide
           ? <div className="grid grid-cols-2 items-start gap-4"><div className="flex flex-col gap-4">{items.filter((_, i) => i % 2 === 0)}</div><div className="flex flex-col gap-4">{items.filter((_, i) => i % 2 === 1)}</div></div>
           : <div className="flex flex-col gap-4">{items}</div>}
-        <ProgramDrawer p={open} onClose={() => setOpen(null)} tracked={tracked} onTrack={onTrack} stage={data.stage} />
+        <ProgramDrawer p={open} onClose={() => setOpen(null)} tracked={tracked} onTrack={onTrack} interest={itc} stage={data.stage} />
       </div>
     );
   }

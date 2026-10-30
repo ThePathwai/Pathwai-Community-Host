@@ -686,6 +686,42 @@ def update_tracked(items: Optional[List[Dict[str, Any]]], body: Dict[str, Any], 
     return out
 
 
+# ---------- interest: "yes, I want this" / "no, not for me" ----------
+INTEREST_STATES = ("yes", "no", "none")
+MAX_INTEREST = 300
+
+
+def update_interest(items: Optional[List[Dict[str, Any]]], body: Dict[str, Any], today: Optional[date] = None) -> List[Dict[str, Any]]:
+    """Set whether the person is interested in one program. "yes" saves it to their shortlist, "no" hides it from what we suggest,
+    "none" clears the choice. The name is kept so the lists can still show it if the catalog changes. Raises ValueError with a readable message."""
+    today = today or date.today()
+    rows = [i for i in (items or []) if isinstance(i, dict) and i.get("id")]
+    state = str(body.get("state") or "")
+    if state not in INTEREST_STATES:
+        raise ValueError("Choose yes, no or none")
+    pid = str(body.get("id") or "").strip()[:80]
+    if not pid:
+        raise ValueError("Which program?")
+    if state == "none":
+        return [i for i in rows if i["id"] != pid]
+    row = {"id": pid, "name": " ".join(str(body.get("name") or "").split())[:120], "org": " ".join(str(body.get("org") or "").split())[:120],
+           "type": str(body.get("type") or "")[:30], "state": state, "at": today.isoformat()}
+    out = [i for i in rows if i["id"] != pid] + [row]
+    if len(out) > MAX_INTEREST:
+        raise ValueError("That is a lot of choices. Clear a few first.")
+    return out
+
+
+def hidden_ids(items: Optional[List[Dict[str, Any]]]) -> set:
+    return {i["id"] for i in (items or []) if isinstance(i, dict) and i.get("state") == "no"}
+
+
+def without_hidden(programs: List[Dict[str, Any]], items: Optional[List[Dict[str, Any]]]) -> List[Dict[str, Any]]:
+    """The catalog minus everything the person said they are not interested in. Used before any matching, so they never reappear as suggestions."""
+    hid = hidden_ids(items)
+    return [p for p in programs if p.get("id") not in hid] if hid else programs
+
+
 # ---------- communities ----------
 def evaluate_community(com: Dict[str, Any], profile: Dict[str, Any]) -> Dict[str, Any]:
     """Score a community's own navigator profile (stages it serves, who it is for, what it provides)."""

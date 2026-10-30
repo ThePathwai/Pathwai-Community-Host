@@ -1270,15 +1270,15 @@
       },
       "status": "check",
       "phase": "learn",
-      "apply_url": "https://www.platformcalgary.com/programs",
+      "apply_url": "https://www.platformcalgary.com/programs/alberta-catalyzer",
       "source_url": "https://www.platformcalgary.com/programs",
       "verified": "unconfirmed",
-      "last_checked": "2026-10-28",
+      "last_checked": "2026-10-30",
       "restricted_to": [],
-      "link_label": "Platform Calgary: programs",
-      "link_kind": "directory",
-      "link_note": "Platform has reshuffled its programs. Open the list to see what is running now and which fits your stage.",
-      "link_exact": false
+      "link_label": "Platform Calgary: Alberta Catalyzer",
+      "link_kind": "program",
+      "link_note": "Describes the program and how to join the next cohort. Cohorts run year round and the page lists no fixed dates.",
+      "link_exact": true
     },
     {
       "id": "platform-incubator",

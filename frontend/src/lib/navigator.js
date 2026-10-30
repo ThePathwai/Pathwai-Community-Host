@@ -437,6 +437,27 @@ export function updateTracked(items, body, defaultStage = "idea", today = todayI
   return out;
 }
 
+// Interested / not interested (twin of update_interest, hidden_ids, without_hidden in backend/navigator.py).
+export const MAX_INTEREST = 300;
+export function updateInterest(items, body, today = todayIso()) {
+  const rows = (items || []).filter((i) => i && i.id);
+  const state = String(body.state || "");
+  if (!["yes", "no", "none"].includes(state)) throw new Error("Choose yes, no or none");
+  const pid = String(body.id || "").trim().slice(0, 80);
+  if (!pid) throw new Error("Which program?");
+  if (state === "none") return rows.filter((i) => i.id !== pid);
+  const clean = (v, n) => String(v || "").split(/\s+/).filter(Boolean).join(" ").slice(0, n);
+  const row = { id: pid, name: clean(body.name, 120), org: clean(body.org, 120), type: String(body.type || "").slice(0, 30), state, at: today };
+  const out = [...rows.filter((i) => i.id !== pid), row];
+  if (out.length > MAX_INTEREST) throw new Error("That is a lot of choices. Clear a few first.");
+  return out;
+}
+export const hiddenIds = (items) => new Set((items || []).filter((i) => i && i.state === "no").map((i) => i.id));
+export function withoutHidden(programs, items) {
+  const hid = hiddenIds(items);
+  return hid.size ? programs.filter((p) => !hid.has(p.id)) : programs;
+}
+
 export function evaluateCommunity(com, profile) {
   const nav = com.navigator || {};
   const reasons = []; let score = 0;

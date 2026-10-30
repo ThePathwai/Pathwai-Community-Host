@@ -83,6 +83,9 @@ export function demoJourney(today) {
 
 const pick = (arr, allowed) => arr.filter((x, i) => allowed.includes(x) && arr.indexOf(x) === i);
 
+// The catalog minus what the signed-in person said they are not interested in (twin of _mine_programs in routes/navigator.py).
+const mineProgs = (ctx) => nav.withoutHidden(allPrograms(ctx), ctx.account && ctx.account.interest);
+
 export function navigatorCall(method, path, body, params, ctx) {
   const { ok, fail, config } = ctx;
   const today = nav.todayIso();
@@ -100,9 +103,14 @@ export function navigatorCall(method, path, body, params, ctx) {
     const a = ctx.account;
     const st = (a && a.startup) || {};
     const profile = Object.keys(st).length ? { ...st, age: a.age || null, city: String(a.location || "").split(",")[0].trim() } : {};
-    return ok(config, { signed_in: !!a, profile, startup: st, tracked: (a && a.tracked) || [] });
+    return ok(config, { signed_in: !!a, profile, startup: st, tracked: (a && a.tracked) || [], interest: (a && a.interest) || [] });
   }
-  if (path === "/navigator/home") return ok(config, guide.homeFeed(allPrograms(ctx), optedIn(ctx), ctx.account, today));
+  if (path === "/navigator/home") return ok(config, guide.homeFeed(mineProgs(ctx), optedIn(ctx), ctx.account, today));
+  if (path === "/navigator/interest" && method === "post") {
+    if (!ctx.account) return fail(config, 401, "Not authenticated");
+    try { ctx.account.interest = nav.updateInterest(ctx.account.interest, body || {}, today); } catch (e) { return fail(config, 400, e.message); }
+    return ok(config, { interest: ctx.account.interest });
+  }
   if (path === "/navigator/track" && method === "post") {
     if (!ctx.account) return fail(config, 401, "Not authenticated");
     try { ctx.account.tracked = nav.updateTracked(ctx.account.tracked, body || {}, (ctx.account.startup || {}).stage || "idea", today); } catch (e) { return fail(config, 400, e.message); }
@@ -111,7 +119,7 @@ export function navigatorCall(method, path, body, params, ctx) {
   if (path === "/navigator/route" && method === "get") {
     const a = ctx.account;
     if (!a) return fail(config, 401, "Not authenticated");
-    return ok(config, { has_profile: !!(a.startup || {}).stage, ...nav.routePlan(allPrograms(ctx), guide.navigatorProfile(a), a.tracked || [], today), tracked: a.tracked || [] });
+    return ok(config, { has_profile: !!(a.startup || {}).stage, ...nav.routePlan(mineProgs(ctx), guide.navigatorProfile(a), a.tracked || [], today), tracked: a.tracked || [], interest: a.interest || [] });
   }
   if (path === "/navigator/journey" && (method === "get" || method === "post")) {
     const a = ctx.account;
@@ -123,24 +131,24 @@ export function navigatorCall(method, path, body, params, ctx) {
       has_profile: !!(a.startup || {}).stage, current: stage, milestones: items,
       stages: nav.STAGES.map((k) => ({ stage: k, name: jny.STAGE_NAME[k], label: nav.STAGE_LABEL[k], hint: nav.STAGE_HINT[k] })),
       summary: jny.journeySummary(items, stage, today),
-      suggestions: jny.journeySuggestions(guide.navigatorProfile(a), items, allPrograms(ctx), today, journeyTemplates.templates),
+      suggestions: jny.journeySuggestions(guide.navigatorProfile(a), items, mineProgs(ctx), today, journeyTemplates.templates),
     });
   }
   if (path === "/navigator/seen" && method === "post") {
     if (!ctx.account) return fail(config, 401, "Not authenticated");
-    ctx.account.nav_seen = guide.homeFeed(allPrograms(ctx), optedIn(ctx), ctx.account, today).live_ids || [];
+    ctx.account.nav_seen = guide.homeFeed(mineProgs(ctx), optedIn(ctx), ctx.account, today).live_ids || [];
     return ok(config, { ok: true, count: ctx.account.nav_seen.length });
   }
   if (path === "/navigator/chat" && method === "post") {
     const a = ctx.account;
     const st = (a && a.startup) || {};
     const raw = st.stage ? guide.navigatorProfile(a) : (body.profile || {});
-    const out = guide.answer(String(body.message || "").slice(0, 500), allPrograms(ctx), optedIn(ctx), raw, today, body.focus || null, st, a);
+    const out = guide.answer(String(body.message || "").slice(0, 500), mineProgs(ctx), optedIn(ctx), raw, today, body.focus || null, st, a);
     return ok(config, { ...out, by: "rules", signed_in: !!a, has_profile: !!st.stage });
   }
   if (path === "/navigator/suggest" && method === "post") {
     const raw = body.profile || {};
-    const res = nav.suggest(allPrograms(ctx), raw, today);
+    const res = nav.suggest(mineProgs(ctx), raw, today);
     res.communities = nav.rankCommunities(optedIn(ctx), raw);
     return ok(config, { ...res, narrative: res.summary, narrative_by: "rules" });
   }

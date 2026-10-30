@@ -10,6 +10,7 @@ import { Ring, Status } from "../components/NavBits";
 import { DeadlineChip, ProgramDrawer, TypeTile } from "../components/ProgramCards";
 import Trajectory from "../components/Trajectory";
 import { useTracked } from "../lib/useTracked";
+import { useInterest } from "../lib/useInterest";
 import { useShell } from "../components/AccountShell";
 import { Avatar, Spinner, cx } from "../components/ui";
 
@@ -182,7 +183,8 @@ export default function Home({ items, onEnter }) {
   const [open, setOpen] = useState(null);
   const [q, setQ] = useState("");
   const { tracked, setTracked, track } = useTracked();
-  useEffect(() => { api.get("/navigator/home").then((r) => { setD(r.data); setTracked(r.data.tracked || []); }).catch(() => setD({ has_profile: false, completeness: { percent: 0, missing: [] } })); }, [account?.startup, setTracked]);
+  const itc = useInterest();
+  useEffect(() => { api.get("/navigator/home").then((r) => { setD(r.data); setTracked(r.data.tracked || []); itc.setInterest(r.data.interest || []); }).catch(() => setD({ has_profile: false, completeness: { percent: 0, missing: [] } })); }, [account?.startup, setTracked, itc.sig]); // eslint-disable-line react-hooks/exhaustive-deps
   const mineInnovation = useMemo(() => (items || []).filter((c) => c.my?.status === "approved" && groupOf(c) === "innovation"), [items]);
   const first = (account?.name || "").split(/\s+/)[0];
   const ask = (text) => shell?.openGuide(text);
@@ -294,7 +296,7 @@ export default function Home({ items, onEnter }) {
           </section>
         </aside>
       </div>
-      <ProgramDrawer p={open} onClose={() => setOpen(null)} tracked={tracked} onTrack={track} stage={d.trajectory?.current || d.startup?.stage || "idea"} />
+      <ProgramDrawer p={open} onClose={() => setOpen(null)} tracked={tracked} onTrack={track} interest={itc} stage={d.trajectory?.current || d.startup?.stage || "idea"} />
     </div>
   );
 }

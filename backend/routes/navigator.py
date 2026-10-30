@@ -107,6 +107,11 @@ async def navigator_program(program_id: str) -> Dict[str, Any]:
     raise HTTPException(status_code=404, detail="Program not found")
 
 
+async def _mine_programs(acc: Optional[Dict[str, Any]]) -> List[Dict[str, Any]]:
+    """The catalog for this person: everything, minus the programs they said they are not interested in."""
+    return nav.without_hidden(await _all_programs(), (acc or {}).get("interest"))
+
+
 async def _polish(summary: str, result: Dict[str, Any]) -> Optional[str]:
     """Optionally rewrite the rule-based summary in a warmer voice. The model only sees the matched facts,
     never the whole directory, and any failure just means the plain summary is used."""
@@ -133,7 +138,7 @@ async def navigator_me(request: Request) -> Dict[str, Any]:
     """The signed-in person's startup profile, shaped for the Navigator form. Signed out (or nothing filled in yet)
     returns an empty profile -- the Navigator works the same either way, this only saves them retyping."""
     acc = await account_from_request(request)
-    return {"signed_in": bool(acc), "profile": nav.navigator_profile(acc), "startup": (acc or {}).get("startup") or {}, "tracked": (acc or {}).get("tracked") or []}
+    return {"signed_in": bool(acc), "profile": nav.navigator_profile(acc), "startup": (acc or {}).get("startup") or {}, "tracked": (acc or {}).get("tracked") or [], "interest": (acc or {}).get("interest") or []}
 
 
 @router.get("/navigator/home")
@@ -141,13 +146,13 @@ async def navigator_home(request: Request) -> Dict[str, Any]:
     """The Hub's "Your next steps" card. Worked out fresh from the account's one startup profile and from what every
     opted-in community lists right now, so editing the profile (or a community editing its programs) changes it at once."""
     acc = await account_from_request(request)
-    return guide.home_feed(await _all_programs(), await _opted_in(), acc)
+    return guide.home_feed(await _mine_programs(acc), await _opted_in(), acc)
 
 
 @router.post("/navigator/seen")
 async def navigator_seen(acc: dict = Depends(require_account)) -> Dict[str, Any]:
     """Remember which programs the person has now looked at, so the next visit can say how many are new."""
-    feed = guide.home_feed(await _all_programs(), await _opted_in(), acc)
+    feed = guide.home_feed(await _mine_programs(acc), await _opted_in(), acc)
     ids = feed.get("live_ids") or []
     await hub_db().accounts.update_one({"id": acc["id"]}, {"$set": {"nav_seen": ids}})
     return {"ok": True, "count": len(ids)}
@@ -175,6 +180,26 @@ async def navigator_track(body: TrackIn, acc: dict = Depends(require_account)) -
     return {"tracked": items}
 
 
+class InterestIn(BaseModel):
+    id: str = Field(max_length=80)
+    name: str = Field(default="", max_length=120)
+    org: str = Field(default="", max_length=120)
+    type: str = Field(default="", max_length=30)
+    state: str = Field(max_length=10)
+
+
+@router.post("/navigator/interest")
+async def navigator_interest(body: InterestIn, acc: dict = Depends(require_account)) -> Dict[str, Any]:
+    """Say whether you are interested in a program. Yes puts it on your shortlist; no stops it being suggested to you
+    (it stays in the full list, and you can change your mind). Kept on the account, so every page agrees."""
+    try:
+        items = nav.update_interest(acc.get("interest"), body.model_dump())
+    except ValueError as exc:
+        raise HTTPException(400, str(exc))
+    await hub_db().accounts.update_one({"id": acc["id"]}, {"$set": {"interest": items}})
+    return {"interest": items}
+
+
 class JourneyIn(BaseModel):
     op: str = Field(max_length=20)
     id: Optional[str] = Field(default=None, max_length=40)
@@ -199,7 +224,7 @@ async def _journey_payload(acc: Dict[str, Any], items: List[Dict[str, Any]]) -> 
         "has_profile": bool(st.get("stage")), "current": stage, "milestones": items,
         "stages": [{"stage": k, "name": jny.STAGE_NAME[k], "label": nav.STAGE_LABEL[k], "hint": nav.STAGE_HINT[k]} for k in nav.STAGES],
         "summary": jny.summary(items, stage, today),
-        "suggestions": jny.suggestions(nav.navigator_profile(acc), items, await _all_programs(), today),
+        "suggestions": jny.suggestions(nav.navigator_profile(acc), items, await _mine_programs(acc), today),
     }
 
 
@@ -207,7 +232,7 @@ async def _journey_payload(acc: Dict[str, Any], items: List[Dict[str, Any]]) -> 
 async def navigator_route(acc: dict = Depends(require_account)) -> Dict[str, Any]:
     """Your path: for each thing the founder wants next, the resources worth using, why, and the exact page. Plus what opens up next stage."""
     st = acc.get("startup") or {}
-    return {"has_profile": bool(st.get("stage")), **nav.route_plan(await _all_programs(), nav.navigator_profile(acc), acc.get("tracked") or [], date.today()), "tracked": acc.get("tracked") or []}
+    return {"has_profile": bool(st.get("stage")), **nav.route_plan(await _mine_programs(acc), nav.navigator_profile(acc), acc.get("tracked") or [], date.today()), "tracked": acc.get("tracked") or [], "interest": acc.get("interest") or []}
 
 
 @router.get("/navigator/journey")
@@ -253,7 +278,7 @@ async def navigator_chat(body: ChatIn, request: Request) -> Dict[str, Any]:
     acc = await account_from_request(request)
     st = (acc or {}).get("startup") or {}
     raw = nav.navigator_profile(acc) if st.get("stage") else body.profile.model_dump()
-    out = guide.answer(body.message, await _all_programs(), await _opted_in(), raw, focus=body.focus, startup=st, account=acc)
+    out = guide.answer(body.message, await _mine_programs(acc), await _opted_in(), raw, focus=body.focus, startup=st, account=acc)
     worded = await _reword(body.message, out["reply"])
     out["by"] = "model" if worded else "rules"
     out["reply"] = worded or out["reply"]
@@ -266,7 +291,8 @@ async def navigator_chat(body: ChatIn, request: Request) -> Dict[str, Any]:
 async def navigator_suggest(body: SuggestIn, request: Request) -> Dict[str, Any]:
     await rate_limit("navigator_suggest", client_ip(request), 120, 3600, "That's a lot of searches for now. Try again in a little while.")
     raw = body.profile.model_dump()
-    result = nav.suggest(await _all_programs(), raw)
+    acc = await account_from_request(request)  # signed in: what they said no to stays out of the suggestions
+    result = nav.suggest(await _mine_programs(acc), raw)
     result["communities"] = nav.rank_communities(await _opted_in(), raw)
     polished = await _polish(result["summary"], result)
     result["narrative"] = polished or result["summary"]

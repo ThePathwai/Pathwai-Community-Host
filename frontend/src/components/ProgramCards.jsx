@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import { ArrowRight, ArrowUpRight, BadgeCheck, Check, Circle, CircleCheck, CircleHelp, CircleX, Clock, Hourglass, Info, MessageCircle, TriangleAlert, X } from "lucide-react";
+import { ArrowRight, ArrowUpRight, BadgeCheck, Bookmark, Check, Circle, CircleCheck, CircleHelp, CircleX, Clock, Hourglass, Info, EyeOff, MessageCircle, TriangleAlert, X } from "lucide-react";
 import { Status } from "./NavBits";
 import ScrollLock from "./ScrollLock";
 import { useShell } from "./AccountShell";
@@ -125,7 +125,7 @@ export function DeadlineChip({ p, className }) {
 }
 
 // A program as a card to scan. Tapping it opens the drawer.
-export function ProgramCard({ p, onOpen }) {
+export function ProgramCard({ p, onOpen, mark }) {
   const { color } = typeMeta(p.type);
   const lead = leadReason(p);
   const unmatched = p.fit === "skip" ? (p.cautions || [])[0] : "";
@@ -151,6 +151,8 @@ export function ProgramCard({ p, onOpen }) {
       <span className="mt-auto flex items-center gap-2 pt-4">
         <Status status={p.status} />
         <DeadlineChip p={p} />
+        {mark === "yes" && <span className="inline-flex items-center gap-1 rounded-full bg-sky-500/15 px-2.5 py-0.5 text-xs font-semibold text-sky-600 dark:text-sky-400" data-testid={`mark-${p.id}`}><Bookmark className="h-3 w-3" aria-hidden />Interested</span>}
+        {mark === "no" && <span className="inline-flex items-center gap-1 rounded-full bg-ink/10 px-2.5 py-0.5 text-xs font-semibold text-muted" data-testid={`mark-${p.id}`}><EyeOff className="h-3 w-3" aria-hidden />Not interested</span>}
         <ArrowRight className="ml-auto h-4 w-4 text-muted transition group-hover:translate-x-0.5 group-hover:text-ink" aria-hidden />
       </span>
     </button>
@@ -162,7 +164,7 @@ function Section({ title, children }) {
 }
 
 // The detail: a right-hand panel on a computer, a bottom sheet on a phone. Everything about one program, with the way to apply pinned at the bottom.
-export function ProgramDrawer({ p, onClose, meta, tracked, onTrack, stage }) {
+export function ProgramDrawer({ p, onClose, meta, tracked, onTrack, stage, interest }) {
   const shell = useShell();
   useEffect(() => {
     if (!p) return undefined;
@@ -211,6 +213,25 @@ export function ProgramDrawer({ p, onClose, meta, tracked, onTrack, stage }) {
           )}
           {p.amount && <div className="rounded-2xl p-4" style={{ background: tint(color, 0.12), border: `1px solid ${tint(color, 0.3)}` }}><p className="text-[11px] font-semibold uppercase" style={{ letterSpacing: "0.12em", color }}>What you get</p><p className="mt-1.5 text-[15px] leading-snug">{p.amount}</p></div>}
           {p.summary && <p className="text-[15px] leading-relaxed text-ink/90">{p.summary}</p>}
+
+          {interest && (
+            <div data-testid="drawer-interest">
+              <p className="eyebrow">Are you interested?</p>
+              <div className="mt-3 grid grid-cols-2 gap-2">
+                {[["yes", "Interested", Bookmark], ["no", "Not interested", EyeOff]].map(([k, label, Icon]) => {
+                  const on = interest.byId[p.id] === k;
+                  return (
+                    <button key={k} type="button" aria-pressed={on} data-testid={`interest-${k}`} onClick={async () => { const r = await interest.mark(p, k); if (r === "no") onClose(); }}
+                      className={cx("flex items-center justify-center gap-2 rounded-2xl border px-3 py-3 text-sm font-semibold transition", on ? "border-transparent" : "border-line hover:border-ink/40")}
+                      style={on ? { background: k === "yes" ? "var(--accent)" : "rgb(var(--c-ink) / 0.12)", color: k === "yes" ? "var(--on-accent)" : undefined } : undefined}>
+                      <Icon className="h-4 w-4" aria-hidden />{label}
+                    </button>
+                  );
+                })}
+              </div>
+              <p className="mt-2 text-xs text-muted">{interest.byId[p.id] === "no" ? "Hidden from your suggestions. Press it again to bring it back." : interest.byId[p.id] === "yes" ? "On your interested list, under Programs." : "Interested saves it to a list. Not interested stops it being suggested to you."}</p>
+            </div>
+          )}
 
           {p.checks?.length > 0 ? (
             <Section title={unmatched ? "Why it is not matched to you" : "Is it right for you?"}>

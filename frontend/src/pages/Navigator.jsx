@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { Link } from "react-router-dom";
-import { ArrowRight, Check, ChevronDown, Compass, Flag, Pencil, Rocket, Search, Users } from "lucide-react";
+import { ArrowRight, Bookmark, Check, ChevronDown, Compass, EyeOff, Flag, Pencil, Rocket, Search, Users } from "lucide-react";
 import { api } from "../lib/api";
 import { useAuth } from "../lib/auth";
 import { Wordmark, PoweredBy, Spinner, cx } from "../components/ui";
@@ -10,6 +10,7 @@ import { tint, typeMeta } from "../lib/programStyle";
 import { FitMeter, ProgramCard, ProgramDrawer, TypeTile } from "../components/ProgramCards";
 import { Status } from "../components/NavBits";
 import { useTracked } from "../lib/useTracked";
+import { useInterest } from "../lib/useInterest";
 import Trajectory from "../components/Trajectory";
 import AccountShell from "../components/AccountShell";
 import GuideChat from "../components/GuideChat";
@@ -34,10 +35,10 @@ function Pill({ on, onClick, children, testId, color }) {
 
 function Segmented({ items, value, onChange }) {
   return (
-    <div className="inline-flex rounded-full border border-line p-1" role="tablist">
+    <div className="pw-rail inline-flex max-w-full overflow-x-auto rounded-full border border-line p-1" role="tablist">
       {items.map(([k, label]) => (
         <button key={k} role="tab" aria-selected={value === k} onClick={() => onChange(k)} data-testid={`nav-tab-${k}`}
-          className={cx("rounded-full px-4 py-1.5 text-sm font-medium transition", value === k ? "" : "text-muted hover:text-ink")}
+          className={cx("shrink-0 whitespace-nowrap rounded-full px-3 py-1.5 text-sm font-medium transition sm:px-4", value === k ? "" : "text-muted hover:text-ink")}
           style={value === k ? { background: "var(--accent)", color: "var(--on-accent)" } : undefined}>{label}</button>
       ))}
     </div>
@@ -130,7 +131,7 @@ function HowWeDecide() {
 
 const LEGEND = [["open", "taking applications now"], ["rolling", "no deadline, apply whenever"], ["check", "dates not published"]];
 
-function Results({ res, meta, loading, generic, onOpen, tracked, onTrack }) {
+function Results({ res, meta, loading, generic, onOpen, tracked, onTrack, imap }) {
   const [view, setView] = useState("fit");
   const [type, setType] = useState("");
   const [showAll, setShowAll] = useState(false);
@@ -181,11 +182,11 @@ function Results({ res, meta, loading, generic, onOpen, tracked, onTrack }) {
         )}
         {view === "fit" ? (
           <>
-            {best.length > 0 && <div className="mt-6"><p className="mb-1 text-sm font-semibold">Good matches</p><p className="mb-3 text-xs text-muted">Nothing in your profile rules it out, it is for your stage, and it gives you what you asked for. Confirm what each one asks for on its page.</p><div className={grid}>{best.map((p) => <ProgramCard key={p.id} p={p} onOpen={onOpen} />)}</div></div>}
-            {worth.length > 0 && <div className="mt-8"><p className="mb-1 text-sm font-semibold">Worth a look</p><p className="mb-3 text-xs text-muted">Not ruled out, but one answer is a no or missing. The card says which.</p><div className={grid}>{worth.map((p) => <ProgramCard key={p.id} p={p} onOpen={onOpen} />)}</div></div>}
+            {best.length > 0 && <div className="mt-6"><p className="mb-1 text-sm font-semibold">Good matches</p><p className="mb-3 text-xs text-muted">Nothing in your profile rules it out, it is for your stage, and it gives you what you asked for. Confirm what each one asks for on its page.</p><div className={grid}>{best.map((p) => <ProgramCard key={p.id} p={p} onOpen={onOpen} mark={imap?.[p.id]} />)}</div></div>}
+            {worth.length > 0 && <div className="mt-8"><p className="mb-1 text-sm font-semibold">Worth a look</p><p className="mb-3 text-xs text-muted">Not ruled out, but one answer is a no or missing. The card says which.</p><div className={grid}>{worth.map((p) => <ProgramCard key={p.id} p={p} onOpen={onOpen} mark={imap?.[p.id]} />)}</div></div>}
           </>
         ) : (
-          <div className={cx("mt-6", grid)} data-testid="nav-others">{visible.map((p) => <ProgramCard key={p.id} p={p} onOpen={onOpen} />)}</div>
+          <div className={cx("mt-6", grid)} data-testid="nav-others">{visible.map((p) => <ProgramCard key={p.id} p={p} onOpen={onOpen} mark={imap?.[p.id]} />)}</div>
         )}
         {!showAll && !type && shown.length > LIMIT && <button type="button" onClick={() => setShowAll(true)} className="btn-ghost mt-5 w-full !py-3 text-sm" data-testid="nav-show-all">Show {shown.length - LIMIT} more</button>}
       </section>
@@ -217,7 +218,7 @@ function Results({ res, meta, loading, generic, onOpen, tracked, onTrack }) {
   );
 }
 
-function Directory({ meta, onOpen }) {
+function Directory({ meta, onOpen, imap }) {
   const [f, setF] = useState({ q: "", type: "", status: "", province: "", need: "" });
   const [rows, setRows] = useState(null);
   useEffect(() => {
@@ -242,7 +243,42 @@ function Directory({ meta, onOpen }) {
       </div>
       <p className="mb-3 mt-5 text-sm text-muted">{rows ? `${rows.length} program${rows.length === 1 ? "" : "s"}` : ""}</p>
       {!rows ? <Spinner /> : rows.length === 0 ? <p className="rounded-2xl border border-dashed border-line p-8 text-center text-muted">Nothing matches. Try clearing a filter.</p>
-        : <div className="grid grid-cols-[minmax(0,1fr)] gap-3 md:grid-cols-[repeat(2,minmax(0,1fr))] 2xl:grid-cols-[repeat(3,minmax(0,1fr))]">{rows.map((p) => <ProgramCard key={p.id} p={p} onOpen={onOpen} />)}</div>}
+        : <div className="grid grid-cols-[minmax(0,1fr)] gap-3 md:grid-cols-[repeat(2,minmax(0,1fr))] 2xl:grid-cols-[repeat(3,minmax(0,1fr))]">{rows.map((p) => <ProgramCard key={p.id} p={p} onOpen={onOpen} mark={imap?.[p.id]} />)}</div>}
+    </div>
+  );
+}
+
+// The programs you said yes or no to. Interested ones read like a shortlist; the ones you hid wait here with a way back.
+function InterestedTab({ itc, onOpen }) {
+  const [all, setAll] = useState(null);
+  useEffect(() => { api.get("/navigator/programs").then((r) => setAll(r.data.programs || [])).catch(() => setAll([])); }, []);
+  const rows = (state) => itc.interest.filter((i) => i.state === state).sort((a, b) => (b.at || "").localeCompare(a.at || ""));
+  // Prefer the live catalog entry (so dates and links are current); fall back to the name we saved.
+  const full = (i) => (all || []).find((p) => p.id === i.id) || { id: i.id, name: i.name || "A program", org: i.org, type: i.type, summary: "", status: "check" };
+  const yes = rows("yes"); const no = rows("no");
+  if (!all) return <Spinner />;
+  return (
+    <div className="space-y-8" data-testid="nav-interested">
+      <section>
+        <h2 className="text-xl" style={{ textTransform: "none", letterSpacing: "-0.01em", fontWeight: 700 }}>{yes.length ? `${yes.length} you are interested in` : "Nothing saved yet"}</h2>
+        <p className="mt-1 text-sm text-muted">Open any program and press Interested. It lands here, with its dates and its official page.</p>
+        {yes.length > 0
+          ? <div className="mt-4 grid grid-cols-[minmax(0,1fr)] gap-3 md:grid-cols-[repeat(2,minmax(0,1fr))]">{yes.map((i) => <ProgramCard key={i.id} p={full(i)} onOpen={onOpen} mark="yes" />)}</div>
+          : <p className="mt-4 rounded-2xl border border-dashed border-line p-8 text-center text-sm text-muted" data-testid="nav-interested-empty">Your shortlist is empty. Look through Programs that fit you and press Interested on the ones worth a second look.</p>}
+      </section>
+      {no.length > 0 && (
+        <details className="group rounded-2xl border border-dashed border-line" data-testid="nav-hidden">
+          <summary className="flex cursor-pointer items-center justify-between gap-2 p-4 text-sm font-semibold"><span className="flex items-center gap-2"><EyeOff className="h-4 w-4" aria-hidden />Not interested: {no.length} hidden from your suggestions</span><ChevronDown className="h-4 w-4 transition group-open:rotate-180" aria-hidden /></summary>
+          <ul className="divide-y divide-line border-t border-dashed border-line">
+            {no.map((i) => (
+              <li key={i.id} className="flex items-center gap-3 p-4" data-testid={`hidden-${i.id}`}>
+                <span className="min-w-0 flex-1"><span className="block truncate text-sm font-semibold">{full(i).name}</span><span className="block truncate text-xs text-muted">{full(i).org}</span></span>
+                <button type="button" onClick={() => itc.mark(full(i), "no")} className="btn-ghost !px-3 !py-1.5 text-sm" data-testid={`unhide-${i.id}`}>Bring back</button>
+              </li>
+            ))}
+          </ul>
+        </details>
+      )}
     </div>
   );
 }
@@ -258,6 +294,7 @@ export default function Navigator({ embedded }) {
   const [err, setErr] = useState("");
   const [open, setOpen] = useState(null);
   const { tracked, setTracked, track } = useTracked();
+  const itc = useInterest();
   const seq = useRef(0);
   const ready = !account || mine !== null;       // signed in: wait for the profile so we never flash results for someone else's answers
   const generic = !!account && ready && !mine?.stage;
@@ -270,6 +307,7 @@ export default function Navigator({ embedded }) {
     api.get("/navigator/me").then((r) => {
       setMine(r.data.startup || {});
       setTracked(r.data.tracked || []);
+      itc.setInterest(r.data.interest || []);
       setProfile(r.data.profile && r.data.profile.stage ? fromAccount(r.data.profile) : DEFAULT);
     }).catch(() => setMine({}));
   }, [account?.id]); // eslint-disable-line react-hooks/exhaustive-deps
@@ -290,7 +328,7 @@ export default function Navigator({ embedded }) {
         .finally(() => { if (seq.current === my) setLoading(false); });
     }, 200);
     return () => clearTimeout(t);
-  }, [apiProfile, meta, ready, account?.id]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [apiProfile, meta, ready, account?.id, itc.sig]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const body = (
     <div className="mx-auto w-full max-w-6xl">
@@ -300,19 +338,19 @@ export default function Navigator({ embedded }) {
           <h1 className="mt-2 text-3xl sm:text-4xl" style={{ textTransform: "none", letterSpacing: "-0.03em", fontWeight: 800, textWrap: "balance" }}>{account ? "Programs that fit you" : "Canadian programs that fit you"}</h1>
           <p className="mt-2 text-sm text-muted">{meta ? `${meta.count} grants, loans, accelerators and mentors, hand-checked. Communities you join add their own on top.` : "Loading"}</p>
         </div>
-        <Segmented items={[["path", "For you"], ["all", "Browse all"], ["ask", "Ask the guide"]]} value={tab} onChange={setTab} />
+        <Segmented items={[["path", "For you"], ["all", "Browse all"], ...(account ? [["saved", itc.interest.some((i) => i.state === "yes") ? `Interested · ${itc.interest.filter((i) => i.state === "yes").length}` : "Interested"]] : []), ["ask", <><span className="sm:hidden">Guide</span><span className="hidden sm:inline">Ask the guide</span></>]]} value={tab} onChange={setTab} />
       </div>
 
       {err && <p className="mb-4 rounded-xl border border-red-500/40 p-3 text-sm text-red-500" role="alert">{err}</p>}
-      {!meta ? <Spinner /> : tab === "all" ? <Directory meta={meta} onOpen={setOpen} /> : tab === "ask" ? (
+      {!meta ? <Spinner /> : tab === "all" ? <Directory meta={meta} onOpen={setOpen} imap={itc.byId} /> : tab === "saved" && account ? <InterestedTab itc={itc} onOpen={setOpen} /> : tab === "ask" ? (
         <div className="mx-auto w-full max-w-3xl"><GuideChat className="h-[min(72dvh,680px)]" signedIn={!!account} hasProfile={!!mine?.stage} startupName={mine?.name} formProfile={account ? apiProfile : undefined} /></div>
       ) : account ? (
         <div className="space-y-6">
           {mine === null ? <Spinner /> : <ProfileBar mine={mine} meta={meta} />}
-          {ready && <Results res={res} meta={meta} loading={loading} generic={generic} onOpen={setOpen} tracked={tracked} onTrack={track} />}
+          {ready && <Results res={res} meta={meta} loading={loading} generic={generic} onOpen={setOpen} tracked={tracked} onTrack={track} imap={itc.byId} />}
         </div>
       ) : <SignedOutGate />}
-      <ProgramDrawer p={open} onClose={() => setOpen(null)} meta={meta} tracked={tracked} onTrack={account ? track : undefined} stage={res?.trajectory?.current || mine?.stage || "idea"} />
+      <ProgramDrawer p={open} onClose={() => setOpen(null)} meta={meta} tracked={tracked} onTrack={account ? track : undefined} interest={account ? itc : undefined} stage={res?.trajectory?.current || mine?.stage || "idea"} />
     </div>
   );
 
