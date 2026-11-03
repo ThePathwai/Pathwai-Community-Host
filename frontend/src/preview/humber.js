@@ -265,8 +265,6 @@ const RESOURCES = [
   ["hm-r7", "Early-stage funding calendar for the GTA", "A running list of grants, competitions, accelerators and angel groups, with deadlines and who each is for. Updated monthly by the programs team.", "guide", "Guide", "Dana Whitfield", DANA, null, "Open the calendar and add the two deadlines that fit your stage.", ["funding", "grants", "calendar"], false, "gold"],
   ["hm-r8", "Customer interview script & tracker", "Twenty questions that don't lead the witness, plus a spreadsheet to track what each conversation changed about your problem statement.", "template", "Template", "Samira Haddad", "u-hm-samira", null, "Copy the sheet, do ten interviews, then rewrite your problem slide.", ["customer-discovery", "research", "template"], false, "coral"],
   ["hm-r9", "Your first grant application: a step-by-step kit", "An eligibility checklist, a budget table that funders accept and a plain-English way to write the outcomes section. Built from what reviewers say they actually read.", "guide", "Funding", "Dana Whitfield", DANA, null, "Run the eligibility checklist first. If you fail one line, pick a different program before you write a word.", ["grants", "funding", "application"], true, "gold"],
-  ["hm-r10", "SR&ED for student ventures, in plain English", "What counts as eligible research and development, what to keep as you build, and how the refundable credit shows up on a first tax return.", "guide", "Funding", "Helen Okafor", "u-hm-helen", null, "Start keeping a build log this week. It is the evidence a claim stands on.", ["sred", "tax", "grants", "funding"], false, "slate"],
-  ["hm-r11", "Before you fill in the IRAP form: the call to make first", "IRAP starts with a conversation with an Industrial Technology Advisor. This guide shows what to prepare so that first call turns into a real application.", "guide", "Funding", "Dana Whitfield", DANA, null, "Write your project in three sentences before the call.", ["irap", "grants", "funding", "rd"], false, "blue"],
 ];
 
 const ANNOUNCEMENTS = [
@@ -433,27 +431,11 @@ export function buildHumber(fixtures, deps) {
 // The ecosystem lens: this hub is the first place a founder looks. It lists its own programs, and "picks" are the national and provincial programs
 // the hub's team points its founders to (so a grant or loan can sit beside a Humber program). Everything else in the catalog is one tap away.
 // (The notes are demo copy. In a live hub the programs team writes them.)
+// Humber's own view of the ecosystem lens: only what Humber runs. Set `wider` (e.g. "All of Canada") and `picks` to point founders beyond the hub.
 export const HUMBER_ECOSYSTEM = {
-  hub: "Humber", wider: "All of Canada", city: "Toronto", home_title: "Your next moves at Humber",
-  home_sub: "Programs, grants, events, people and resources from Humber and beyond, ranked for your startup.",
-  picks: {
-    "futurpreneur-core": "Pick for founders under 40: a startup loan with a mentor attached.",
-    "summer-company": "Pick for students: a grant to run your venture over the summer.",
-    "bmo-launch-me": "Pick for students and alumni: a pitch competition with prize money.",
-    irap: "Pick once you have a prototype: funding and an advisor for R&D.",
-    sred: "Pick once you are building: a tax credit on the R&D you already do.",
-    oitc: "Pick for Ontario startups: a tax credit on Ontario R&D spend.",
-    "ovin-rd": "Pick for research-heavy startups: R&D funding with an Ontario partner.",
-    swpp: "Pick when you hire: wage support for student placements.",
-    "mitacs-accelerate": "Pick if your work needs a research partner at a polytechnic or university.",
-    isc: "Pick for tech startups: government buys your prototype.",
-    "dmz-incubator": "Pick after you launch: a Toronto incubator with customers and capital.",
-    "cdl-prime": "Pick for ambitious tech ideas: an accelerator with a decision every term.",
-    "tbdc-business-inc": "Pick at idea stage: free mentoring from a Toronto business centre.",
-    "panache-ventures": "Pick when you are raising: an early-stage fund that takes cold pitches.",
-    "ip-village": "Pick before you share your idea: free intellectual property help.",
-    "business-benefits-finder": "Pick to check yourself: a federal tool that lists what you may qualify for.",
-  },
+  hub: "Humber", wider: null, city: "Toronto", home_title: "Your next moves at Humber",
+  home_sub: "Humber's programs, grants, events, people and resources, ranked for your startup.",
+  picks: {},
 };
 
 // What Humber lists in the Navigator: its profile (who it serves and what it gives founders) and the programs it runs.
@@ -476,7 +458,7 @@ export function humberNavigator() {
         { requirements: ["Book a 30-minute slot"], deadline: { kind: "rolling", date: null, note: "Book any week" } }),
       P("hm-p3", "Pitch Practice Lab", "accelerator", "Rehearse your pitch with coaches and get feedback before the real thing.", ["idea", "prototype"], ["training", "mentorship"],
         { requirements: ["Bring your deck and a printed one-liner"], deadline: { kind: "rolling", date: null, note: "Runs every other week" } }),
-      P("hm-p4", "Founder Micro-Grant", "grant", "Up to $5,000 to build a prototype or run customer tests. Awarded each term to Humber founders.", ["idea", "prototype"], ["funding"],
+      P("hm-p4", "Founder Micro-Grant", "grant", "Up to $5,000 to build a prototype, run customer tests or land your first customers. Awarded each term to Humber founders.", ["idea", "prototype", "launched"], ["funding", "customers"],
         { amount: "Up to $5,000", requirements: ["Humber student or alum", "A one-page plan and budget"], deadline: { kind: "fixed", date: day(35), note: "Applications close on the date shown" } }),
       P("hm-p5", "Grant Writing Clinic", "mentorship", "Bring a draft application. A programs coach reads it with you and fixes the parts reviewers skim past.", ["prototype", "launched"], ["funding", "training"],
         { requirements: ["A draft or an outline", "Book a 45-minute slot"], deadline: { kind: "rolling", date: null, note: "Book any week" } }),

@@ -44,7 +44,7 @@ export const DEMO_COMMUNITIES = [
   { slug: "humber-innovation-network", short: "humber", featured: true, name: "Humber Innovation Network", accent: "#0B4EA2", blurb: "An innovation navigator for one hub: programs, grants, events, people and resources, matched to your startup.",
     eyebrow: "Innovation navigator \u00b7 hub demo",
     tagline: "Every program, grant, event, person and resource in the Humber ecosystem, ranked for your startup.",
-    memberTitle: "As a founder", adminTitle: "As the hub team", scale: true,
+    memberTitle: "As a founder", adminTitle: "As the hub team",
     member: ["Next moves", "Programs & grants", "Events", "People", "Resources"], admin: ["Founder needs", "Applications", "Events", "Resources", "Impact reports"] },
   { slug: "grace", short: "c3", name: "C3 Film Team", blurb: "A church's creative team: skills, shoots, onboarding and project teams anyone can start." },
   { slug: "club-pto", short: "club-pto", name: "Club PTO", blurb: "A padel club: Skill Lab coaching, sponsors and a member skill exchange." },

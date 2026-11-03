@@ -230,7 +230,7 @@ function Results({ res, meta, loading, generic, onOpen, tracked, onTrack, imap, 
         </details>
       )}
 
-      {eco && scope === "hub" && onWiden && (
+      {eco?.wider && scope === "hub" && onWiden && (
         <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-dashed border-line bg-card p-4" data-testid="nav-widen">
           <p className="text-sm text-muted"><span className="font-semibold text-ink">Showing {eco.hub} programs and the picks we shortlisted.</span> {res?.catalog_total ? `${res.catalog_total} programs and grants exist across Canada.` : "More exist across Canada."}</p>
           <button type="button" onClick={onWiden} className="rounded-full border border-line px-4 py-2 text-sm font-semibold hover:bg-bg" data-testid="nav-widen-btn">Widen to {eco.wider}</button>
@@ -362,13 +362,13 @@ export default function Navigator({ embedded }) {
       <div className="mb-6 flex flex-wrap items-end justify-between gap-4">
         <div>
           <p className="eyebrow">Programs</p>
-          <h1 className="mt-2 text-3xl sm:text-4xl" style={{ textTransform: "none", letterSpacing: "-0.03em", fontWeight: 800, textWrap: "balance" }}>{eco ? (scope === "hub" ? `Programs & grants at ${eco.hub}` : "Programs & grants across Canada") : account ? "Programs that fit you" : "Canadian programs that fit you"}</h1>
-          <p className="mt-2 text-sm text-muted">{eco ? (scope === "hub" ? `What ${eco.hub} runs, plus the grants, loans and programs its team points founders to. Each one is checked against your startup.` : `Every grant, loan, accelerator and mentor we track, with ${eco.hub} programs first.`) : meta ? `${meta.count} grants, loans, accelerators and mentors, hand-checked. Communities you join add their own on top.` : "Loading"}</p>
+          <h1 className="mt-2 text-3xl sm:text-4xl" style={{ textTransform: "none", letterSpacing: "-0.03em", fontWeight: 800, textWrap: "balance" }}>{eco ? (scope === "hub" ? `Programs & grants at ${eco.hub}` : `Programs & grants across ${eco.wider}`) : account ? "Programs that fit you" : "Canadian programs that fit you"}</h1>
+          <p className="mt-2 text-sm text-muted">{eco ? (scope === "hub" ? (eco.wider ? `What ${eco.hub} runs, plus the grants, loans and programs its team points founders to. Each one is checked against your startup.` : `What ${eco.hub} runs for founders. Each one is checked against your startup.`) : `Every grant, loan, accelerator and mentor we track, with ${eco.hub} programs first.`) : meta ? `${meta.count} grants, loans, accelerators and mentors, hand-checked. Communities you join add their own on top.` : "Loading"}</p>
         </div>
         <Segmented items={[["path", "For you"], ["all", "Browse all"], ...(account ? [["saved", itc.interest.some((i) => i.state === "yes") ? `Interested · ${itc.interest.filter((i) => i.state === "yes").length}` : "Interested"]] : []), ["ask", <><span className="sm:hidden">Guide</span><span className="hidden sm:inline">Ask the guide</span></>]]} value={tab} onChange={setTab} />
       </div>
 
-      {eco && account && tab === "path" && <div className="mb-5"><ScopeSwitch eco={eco} scope={scope} onChange={setScope} total={res?.catalog_total} here={scope === "hub" ? (res ? (res.totals?.fit ?? null) : null) : null} /></div>}
+      {eco?.wider && account && tab === "path" && <div className="mb-5"><ScopeSwitch eco={eco} scope={scope} onChange={setScope} total={res?.catalog_total} here={scope === "hub" ? (res ? (res.totals?.fit ?? null) : null) : null} /></div>}
       {err && <p className="mb-4 rounded-xl border border-red-500/40 p-3 text-sm text-red-500" role="alert">{err}</p>}
       {!meta ? <Spinner /> : tab === "all" ? <Directory meta={meta} onOpen={setOpen} imap={itc.byId} eco={eco} /> : tab === "saved" && account ? <InterestedTab itc={itc} onOpen={setOpen} /> : tab === "ask" ? (
         <div className="mx-auto w-full max-w-3xl"><GuideChat className="h-[min(72dvh,680px)]" signedIn={!!account} hasProfile={!!mine?.stage} startupName={mine?.name} formProfile={account ? apiProfile : undefined} /></div>

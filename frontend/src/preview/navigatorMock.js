@@ -34,7 +34,12 @@ function optedIn(ctx) {
   }
   return out;
 }
-const allPrograms = (ctx) => [...catalog.programs, ...optedIn(ctx).flatMap((c) => c.programs)];
+// A hub that does not set `wider` shows only what it runs itself (its community programs); the national catalog stays out of that view.
+const allPrograms = (ctx) => {
+  const eco = ECOSYSTEMS[ctx.slug];
+  const own = optedIn(ctx).flatMap((c) => c.programs);
+  return eco && !eco.wider ? own.filter((p) => p.community && p.community.slug === ctx.slug) : [...catalog.programs, ...own];
+};
 
 const meta = () => ({
   version: catalog.version, notes: catalog.notes, count: catalog.programs.length,

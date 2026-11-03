@@ -45,9 +45,9 @@ function Row({ m, today, onOpen, hub }) {
   const left = m.deadline ? daysFromNow(m.deadline, today) : null;
   return (
     <li>
-      <button type="button" onClick={go} data-testid={`move-${m.kind}-${m.id}`} className="flex w-full flex-wrap items-start gap-x-3 gap-y-1 py-3.5 text-left first:pt-1 last:pb-1 sm:flex-nowrap">
+      <button type="button" onClick={go} data-testid={`move-${m.kind}-${m.id}`} className="grid w-full grid-cols-[44px_minmax(0,1fr)] items-start gap-x-3 gap-y-1.5 py-3.5 text-left first:pt-1 last:pb-1 sm:grid-cols-[44px_minmax(0,1fr)_auto]">
         {m.kind === "person" ? <Avatar name={m.title} size={44} /> : <KindTile kind={m.kind} />}
-        <span className="min-w-0 flex-1">
+        <span className="min-w-0">
           <span className="flex flex-wrap items-center gap-x-2 gap-y-0.5">
             <span className="text-[10px] font-semibold uppercase" style={{ letterSpacing: "0.14em", color: k.color }}>{k.label}</span>
             {m.badge && <span className="rounded-full bg-ink/[.07] px-2 py-0.5 text-[10px] font-semibold text-muted">{m.badge === "Humber" ? `At ${hub}` : m.badge.replace("Humber", hub)}</span>}
@@ -56,7 +56,7 @@ function Row({ m, today, onOpen, hub }) {
           {m.sub && <span className="block truncate text-xs text-muted">{m.sub}</span>}
           {m.reason && <span className="mt-1.5 flex items-start gap-1.5 text-[13px] leading-snug text-ink/80"><Check className="mt-0.5 h-3.5 w-3.5 shrink-0 text-emerald-500" aria-hidden /><span>{m.reason}</span></span>}
         </span>
-        <span className="ml-[56px] flex shrink-0 flex-row items-center gap-3 pt-0.5 sm:ml-0 sm:flex-col sm:items-end sm:gap-1.5 sm:text-right">
+        <span className="col-start-2 flex flex-row flex-wrap items-center gap-x-3 gap-y-1 sm:col-start-3 sm:row-start-1 sm:flex-col sm:items-end sm:gap-1.5 sm:pt-0.5 sm:text-right">
           {when && <span className={cx("rounded-full px-2.5 py-0.5 text-[11px] font-semibold", left != null && left <= 14 ? "bg-red-500/15 text-red-600" : "bg-ink/[.07] text-ink/80")}>{when}</span>}
           <span className="inline-flex items-center gap-1 text-xs font-semibold" style={{ color: k.color }}>{m.action}<ArrowRight className="h-3.5 w-3.5" aria-hidden /></span>
         </span>
@@ -148,19 +148,19 @@ export default function EcosystemHome() {
         {tab === "all" && <p className="mt-4 border-t border-line pt-4 text-xs text-muted">Pick a type above to see all of it, or <Link to="/navigator" className="font-semibold text-ink underline underline-offset-2">open Programs &amp; grants</Link> for the full list.</p>}
       </section>
 
-      <div className="grid gap-4 lg:grid-cols-[1.4fr_1fr]">
+      <div className={cx("grid gap-4", eco.wider && "lg:grid-cols-[1.4fr_1fr]")}>
         <section className="card" data-testid="eco-news">
           <div className="mb-3 flex items-center justify-between"><h2 className="text-lg" style={heading}>News from {hub}</h2><Link to="/updates" className="text-xs text-muted hover:text-ink">All ›</Link></div>
           {news.length ? <ul className="divide-y divide-line">{news.map((a) => <li key={a.id} className="py-3 first:pt-0 last:pb-0"><p className="text-sm font-semibold">{a.title}</p><p className="mt-0.5 line-clamp-2 text-xs text-muted">{a.body}</p><p className="mt-1 text-[11px] text-muted">{timeAgo(a.published_at || a.created_at)}</p></li>)}</ul> : <p className="text-sm text-muted">No news right now.</p>}
         </section>
-        <section className="card flex flex-col" data-testid="eco-zoom">
+        {eco.wider && <section className="card flex flex-col" data-testid="eco-zoom">
           <h2 className="text-lg" style={heading}>Beyond {hub}</h2>
           <p className="mt-1 text-sm text-muted">This is {hub}&rsquo;s slice of one navigator. The same view works for a region or the whole country.</p>
           <div className="mt-auto flex flex-wrap gap-2 pt-4">
             <Link to="/navigator?scope=all" className="btn-ghost !py-2 text-sm" data-testid="eco-widen">Programs across Canada<ArrowRight className="h-4 w-4" /></Link>
             <Link to="/founder-events" className="btn-ghost !py-2 text-sm">Events nearby<ArrowRight className="h-4 w-4" /></Link>
           </div>
-        </section>
+        </section>}
       </div>
 
       <ProgramDrawer p={open} onClose={() => setOpen(null)} tracked={tracked} onTrack={track} interest={itc} stage={st.stage || "idea"} eco={eco} />

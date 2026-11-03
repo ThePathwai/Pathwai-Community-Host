@@ -6,7 +6,7 @@ import { useEcosystem } from "../lib/ecosystem";
 // In a hub's ecosystem lens, a quiet card at the foot of Events / People: "this is the hub; here is the wider country". Renders nothing elsewhere.
 export default function WiderLink({ kind }) {
   const eco = useEcosystem();
-  if (!eco) return null;
+  if (!eco?.wider) return null;
   const copy = kind === "events"
     ? { to: "/founder-events", title: `More founder events across ${eco.wider}`, sub: "Demo days, pitch nights and conferences beyond the hub, ranked for your startup.", cta: "Browse events" }
     : { to: "/talent", title: `Looking beyond ${eco.hub}?`, sub: "Search the wider founder and talent pool: co-founders, first hires and advisors.", cta: "Search the talent pool" };
