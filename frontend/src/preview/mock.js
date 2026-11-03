@@ -623,7 +623,21 @@ function computePeople(limit = 8) {
 }
 
 const seedDemoStartup = (email) => { const m = (S.extra.acctProfile = S.extra.acctProfile || {}); if ((email === "demo@yourcommunity.app" || email === "founder@yourcommunity.app") && !("startup" in (m[email] || {}))) m[email] = { title: "Co-founder", company: "Bright Court", location: "Toronto, ON", age: 31, bio: "Building booking and league tools for community sports groups. Previously ran club nights and leagues across the GTA.", skill_set: ["Community building", "Product", "Partnerships"], interests_hobbies: ["Padel", "Running", "Live music"], goals: ["Launch in a second city", "Find a marketplace mentor"], support_needs: ["Seed funding intros", "Pilot partners"], ...(m[email] || {}), startup: DEMO_STARTUP, journey: demoJourney(new Date().toISOString().slice(0, 10)) }; };
-const navCtx = (config) => ({ account: S.role ? (((S.extra.acctProfile = S.extra.acctProfile || {})[S.email] = S.extra.acctProfile[S.email] || {})) : null, config, ok, fail, slug: slugOf(), signedIn: !!S.role, isAdmin: !!S.role && isAdminHere(), store: (S.extra.nav = S.extra.nav || {}), communityInfo: communityPublicInfo });
+const navCtx = (config) => ({ account: S.role ? (((S.extra.acctProfile = S.extra.acctProfile || {})[S.email] = S.extra.acctProfile[S.email] || {})) : null, config, ok, fail, slug: slugOf(), signedIn: !!S.role, isAdmin: !!S.role && isAdminHere(), store: (S.extra.nav = S.extra.nav || {}), communityInfo: communityPublicInfo, feeds: hubFeeds });
+
+// What the open community knows that a founder can act on, for "Your next moves" (see lib/moves.js): upcoming events, recommended people and
+// the resources list, plus the one-line reasons the matches endpoint already gives for events and resources.
+function hubFeeds() {
+  const rec = view()["/matches"] || {};
+  const acts = S.extra.acts || {};
+  const events = mergedList(view()["/events"] || [], "events").map(withRsvpFields).filter((e) => !e.is_past);
+  const people = (rec.people && rec.people.length ? rec.people : computePeople()).filter((x) => acts["person:" + x.user.id] !== "dismiss");
+  const resources = mergedList(view()["/resources"] || [], "resources");
+  const why = { event: {}, resource: {} };
+  for (const e of rec.events || []) why.event[e.id] = e.why;
+  for (const r of rec.resources || []) why.resource[r.id] = r.why;
+  return { events, people, resources, why };
+}
 function get(path, p, config) {
   if (path.startsWith("/navigator")) return navigatorCall("get", path, {}, p, navCtx(config));
   if (path.startsWith("/founder-events")) return eventsCall("get", path, p, navCtx(config));

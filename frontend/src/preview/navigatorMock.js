@@ -2,13 +2,15 @@
 // See lib/navigator.js (the rules) and backend/routes/navigator.py (the real API this stands in for).
 import catalog from "./programs_ca.json";
 import * as nav from "../lib/navigator";
-import { humberNavigator } from "./humber";
+import { humberNavigator, HUMBER_ECOSYSTEM } from "./humber";
+import { buildMoves } from "../lib/moves";
 import * as guide from "../lib/navigatorGuide";
 import * as jny from "../lib/journey";
 import journeyTemplates from "./journey_templates.json";
 
 const BLANK_PROFILE = { public: false, blurb: "", stages: [], provides: [], audiences: [], sectors: [], city: "", provinces: [] };
 const SEEDED = { "humber-innovation-network": humberNavigator };
+const ECOSYSTEMS = { "humber-innovation-network": HUMBER_ECOSYSTEM };   // hubs that describe themselves as an ecosystem (see lib/ecosystem.js)
 
 function bucket(ctx, slug) {
   const st = ctx.store;
@@ -85,6 +87,12 @@ const pick = (arr, allowed) => arr.filter((x, i) => allowed.includes(x) && arr.i
 
 // The catalog minus what the signed-in person said they are not interested in (twin of _mine_programs in routes/navigator.py).
 const mineProgs = (ctx) => nav.withoutHidden(allPrograms(ctx), ctx.account && ctx.account.interest);
+// The hub's slice of the catalog: what it runs itself plus the programs it points founders to. Anything else is one tap away ("All of Canada").
+const scopedProgs = (ctx, scope) => {
+  const eco = ECOSYSTEMS[ctx.slug];
+  const all = mineProgs(ctx);
+  return eco && scope === "hub" ? all.filter((p) => (p.community && p.community.slug === ctx.slug) || eco.picks[p.id]) : all;
+};
 
 export function navigatorCall(method, path, body, params, ctx) {
   const { ok, fail, config } = ctx;
@@ -115,6 +123,15 @@ export function navigatorCall(method, path, body, params, ctx) {
     if (!ctx.account) return fail(config, 401, "Not authenticated");
     try { ctx.account.tracked = nav.updateTracked(ctx.account.tracked, body || {}, (ctx.account.startup || {}).stage || "idea", today); } catch (e) { return fail(config, 400, e.message); }
     return ok(config, { tracked: ctx.account.tracked });
+  }
+  if (path === "/navigator/moves" && method === "get") {
+    const eco = ECOSYSTEMS[ctx.slug];
+    if (!eco || !ctx.account) return fail(config, eco ? 401 : 404, eco ? "Not authenticated" : "Not found");
+    const raw = guide.navigatorProfile(ctx.account);
+    const res = nav.suggest(scopedProgs(ctx, "hub"), raw, today, 80);
+    const f = ctx.feeds();
+    const out = buildMoves({ programs: [...res.matches, ...(res.more || [])], events: f.events, people: f.people, resources: f.resources, why: f.why, profile: nav.normalizeProfile(raw), picks: eco.picks, today, hubSlug: ctx.slug });
+    return ok(config, { hub: eco.hub, has_profile: !!(ctx.account.startup || {}).stage, as_of: today, ...out });
   }
   if (path === "/navigator/route" && method === "get") {
     const a = ctx.account;
@@ -148,9 +165,9 @@ export function navigatorCall(method, path, body, params, ctx) {
   }
   if (path === "/navigator/suggest" && method === "post") {
     const raw = body.profile || {};
-    const res = nav.suggest(mineProgs(ctx), raw, today);
+    const res = nav.suggest(scopedProgs(ctx, body.scope), raw, today);
     res.communities = nav.rankCommunities(optedIn(ctx), raw);
-    return ok(config, { ...res, narrative: res.summary, narrative_by: "rules" });
+    return ok(config, { ...res, narrative: res.summary, narrative_by: "rules", scope: ECOSYSTEMS[ctx.slug] && body.scope === "hub" ? "hub" : "all", catalog_total: mineProgs(ctx).length });
   }
 
   // ---- community admin ----

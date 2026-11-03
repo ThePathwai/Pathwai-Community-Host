@@ -5,6 +5,7 @@ import { toast } from "sonner";
 import { api, errMsg } from "../lib/api";
 import { useLive } from "../lib/live";
 import { useAuth } from "../lib/auth";
+import WiderLink from "../components/WiderLink";
 import { fieldLabel, fieldOn, typeLabel } from "../lib/profile";
 import { Chip, Empty, Input, PageHeader, Select, Spinner, hueFromName } from "../components/ui";
 
@@ -95,6 +96,7 @@ export default function Members() {
           </div>
         </>
       )}
+      <WiderLink kind="people" />
     </div>
   );
 }

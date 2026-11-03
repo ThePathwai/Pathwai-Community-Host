@@ -125,7 +125,7 @@ export function DeadlineChip({ p, className }) {
 }
 
 // A program as a card to scan. Tapping it opens the drawer.
-export function ProgramCard({ p, onOpen, mark }) {
+export function ProgramCard({ p, onOpen, mark, badge }) {
   const { color } = typeMeta(p.type);
   const lead = leadReason(p);
   const unmatched = p.fit === "skip" ? (p.cautions || [])[0] : "";
@@ -151,6 +151,7 @@ export function ProgramCard({ p, onOpen, mark }) {
       <span className="mt-auto flex items-center gap-2 pt-4">
         <Status status={p.status} />
         <DeadlineChip p={p} />
+        {badge && <span className="inline-flex items-center rounded-full bg-ink/[.07] px-2.5 py-0.5 text-xs font-semibold text-ink/80" data-testid={`badge-${p.id}`}>{badge}</span>}
         {mark === "yes" && <span className="inline-flex items-center gap-1 rounded-full bg-sky-500/15 px-2.5 py-0.5 text-xs font-semibold text-sky-600 dark:text-sky-400" data-testid={`mark-${p.id}`}><Bookmark className="h-3 w-3" aria-hidden />Interested</span>}
         {mark === "no" && <span className="inline-flex items-center gap-1 rounded-full bg-ink/10 px-2.5 py-0.5 text-xs font-semibold text-muted" data-testid={`mark-${p.id}`}><EyeOff className="h-3 w-3" aria-hidden />Not interested</span>}
         <ArrowRight className="ml-auto h-4 w-4 text-muted transition group-hover:translate-x-0.5 group-hover:text-ink" aria-hidden />
@@ -164,7 +165,7 @@ function Section({ title, children }) {
 }
 
 // The detail: a right-hand panel on a computer, a bottom sheet on a phone. Everything about one program, with the way to apply pinned at the bottom.
-export function ProgramDrawer({ p, onClose, meta, tracked, onTrack, stage, interest }) {
+export function ProgramDrawer({ p, onClose, meta, tracked, onTrack, stage, interest, eco }) {
   const shell = useShell();
   useEffect(() => {
     if (!p) return undefined;
@@ -213,6 +214,13 @@ export function ProgramDrawer({ p, onClose, meta, tracked, onTrack, stage, inter
           )}
           {p.amount && <div className="rounded-2xl p-4" style={{ background: tint(color, 0.12), border: `1px solid ${tint(color, 0.3)}` }}><p className="text-[11px] font-semibold uppercase" style={{ letterSpacing: "0.12em", color }}>What you get</p><p className="mt-1.5 text-[15px] leading-snug">{p.amount}</p></div>}
           {p.summary && <p className="text-[15px] leading-relaxed text-ink/90">{p.summary}</p>}
+
+          {eco && (p.community || eco.picks?.[p.id]) && (
+            <div className="rounded-2xl border border-line bg-ink/[.04] p-4" data-testid="drawer-hub-note">
+              <p className="text-[11px] font-semibold uppercase text-muted" style={{ letterSpacing: "0.12em" }}>{p.community ? `Run by ${eco.hub}` : `${eco.hub} pick`}</p>
+              <p className="mt-1.5 text-sm text-ink/90">{p.community ? `One of ${eco.hub}'s own programs, so the team can help you with it directly.` : eco.picks[p.id]}</p>
+            </div>
+          )}
 
           {interest && (
             <div data-testid="drawer-interest">

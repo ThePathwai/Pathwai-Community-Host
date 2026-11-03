@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
-import { Check, Copy, Laptop, ShieldCheck, Smartphone, Users } from "lucide-react";
+import { ArrowRight, Check, Copy, Compass, Laptop, ShieldCheck, Smartphone, Users } from "lucide-react";
 import { toast } from "sonner";
 import { Wordmark, PoweredBy, cx } from "../components/ui";
 import { demoCommunity, demoLink, startDemo } from "../lib/demo";
@@ -52,7 +52,7 @@ export default function DemoLanding() {
       </header>
 
       <main className="flex flex-1 flex-col justify-center py-10 sm:py-14">
-        <p className="eyebrow">Try the demo</p>
+        <p className="eyebrow">{c.eyebrow || "Try the demo"}</p>
         <h1 className="mt-3 text-4xl sm:text-6xl" style={{ textWrap: "balance" }}>{c.name}</h1>
         {c.tagline && <p className="mt-3 text-lg text-muted sm:text-xl">{c.tagline}</p>}
         <div className="mt-4 flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-muted">
@@ -61,9 +61,18 @@ export default function DemoLanding() {
         </div>
 
         <div className="mt-8 grid gap-4 sm:grid-cols-2">
-          <Side role="member" Icon={Users} title="As a member" chips={c.member || ["Directory", "Events", "Perks", "Intros"]} slug={c.slug} accent={accent} />
-          <Side role="admin" Icon={ShieldCheck} title="As the admin" chips={c.admin || ["Members", "Events", "Reports"]} slug={c.slug} accent={accent} />
+          <Side role="member" Icon={Users} title={c.memberTitle || "As a member"} chips={c.member || ["Directory", "Events", "Perks", "Intros"]} slug={c.slug} accent={accent} />
+          <Side role="admin" Icon={ShieldCheck} title={c.adminTitle || "As the admin"} chips={c.admin || ["Members", "Events", "Reports"]} slug={c.slug} accent={accent} />
         </div>
+        {c.scale && (
+          <div className="mt-5 flex flex-col gap-3 rounded-2xl border border-dashed border-line p-4 sm:flex-row sm:items-center sm:justify-between" data-testid="demo-scale">
+            <div className="flex items-start gap-3">
+              <Compass className="mt-0.5 h-5 w-5 shrink-0 text-muted" aria-hidden />
+              <p className="text-sm"><span className="font-semibold">Same engine, any scale.</span> <span className="text-muted">This is one hub. The same navigator runs across a city, a province or all of Canada.</span></p>
+            </div>
+            <button type="button" onClick={() => startDemo("founder")} className="btn-ghost shrink-0 border border-line !py-2 text-sm" data-testid="demo-scale-national">See it across Canada<ArrowRight className="h-4 w-4" aria-hidden /></button>
+          </div>
+        )}
         <p className="mt-5 text-xs text-muted">Made-up people and events. Nothing you do is saved. Switch sides any time from the bar at the top.</p>
       </main>
       <PoweredBy className="pb-2 text-center" />

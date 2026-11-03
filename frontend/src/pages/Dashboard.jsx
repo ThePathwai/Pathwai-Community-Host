@@ -19,6 +19,7 @@ import { LearningList, useMyLearning } from "../components/Learning";
 import { CustomizeHome, hiddenFor } from "../components/HomeWidgets";
 import AdminStrip from "../components/AdminStrip";
 import Scorecard from "../components/Scorecard";
+import EcosystemHome from "../components/EcosystemHome";
 
 // Below `lg` these become horizontally swipeable card rows instead of full vertical lists —
 // everything stays on one continuous scroll (nothing hidden behind a tab), it just takes a
@@ -27,7 +28,14 @@ import Scorecard from "../components/Scorecard";
 const ROW = "-mx-0.5 flex snap-x snap-mandatory gap-2 overflow-x-auto px-0.5 pb-1 lg:mx-0 lg:flex-col lg:gap-2 lg:overflow-visible lg:px-0 lg:pb-0";
 const CARD = "w-[13.5rem] shrink-0 snap-start lg:w-auto lg:shrink";
 
+// A hub that works as an ecosystem (config.ecosystem) gives founders "your next moves" as their home; admins and every other community keep the dashboard below.
 export default function Dashboard() {
+  const { user, config } = useAuth();
+  if (config?.ecosystem && user?.role !== "admin") return <EcosystemHome />;
+  return <CommunityDashboard />;
+}
+
+function CommunityDashboard() {
   const { user, config } = useAuth();
   const { editing } = useEdit();
   const [d, setD] = useState(null);

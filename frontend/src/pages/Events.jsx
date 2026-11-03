@@ -7,6 +7,7 @@ import CalendarSubscribe from "../components/CalendarSubscribe";
 import { useLive } from "../lib/live";
 import { Avatar, Button, Chip, Empty, Field, Input, Modal, PageHeader, PhotoField, Select, Spinner, Tabs, TagInput, Textarea, cx } from "../components/ui";
 import { useAuth } from "../lib/auth";
+import WiderLink from "../components/WiderLink";
 import { ItemTools, TierEditor } from "../components/EditKit";
 
 // "This week" is a rolling 7-day window from right now, not the Mon-Sun calendar week -- simplest
@@ -177,6 +178,7 @@ export default function Events() {
           </div>
         </Modal>
       )}
+      <WiderLink kind="events" />
     </div>
   );
 }

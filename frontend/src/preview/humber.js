@@ -16,7 +16,7 @@ const BRAND = {
   preset: "custom", mode: "light", colors: COLORS, font: "Manrope", heading_font: "Plus Jakarta Sans", heading_style: "normal",
   radius: "soft", button_shape: "rounded", logo_url: null, logo_mark_url: null, logo_adapts: true, show_name_with_logo: true,
   login_headline: "Where founders meet capital.", login_subhead: "Pitch to investors, get advice from people who've built it, and find your next customer.",
-  welcome_message: "Pitch Day applications are open. Here's who's in the room and what's coming up.", footer_text: "Humber Innovation Network · demo community", support_email: "",
+  welcome_message: "Here is what to do next at Humber: the programs, grants, events and people that fit your startup.", footer_text: "Humber Innovation Network · demo community", support_email: "",
 };
 const COVERS = {
   blue: cover("#E8EEF8", "#0B4EA2", "#F2B33D"), gold: cover("#FBF3E2", "#F2B33D", "#0B4EA2"), teal: cover("#E6F3F1", "#1B9C8E", "#0B4EA2"),
@@ -264,6 +264,9 @@ const RESOURCES = [
   ["hm-r6", "SAFEs and cap tables, explained", "A plain-English guide to SAFEs, convertible notes, caps and discounts, with a cap-table template that shows dilution round by round.", "guide", "Guide", "Priyanka Desai", "u-hm-priyanka", null, "Read the guide before your first investor meeting.", ["safe", "equity", "cap-table"], true, "slate"],
   ["hm-r7", "Early-stage funding calendar for the GTA", "A running list of grants, competitions, accelerators and angel groups, with deadlines and who each is for. Updated monthly by the programs team.", "guide", "Guide", "Dana Whitfield", DANA, null, "Open the calendar and add the two deadlines that fit your stage.", ["funding", "grants", "calendar"], false, "gold"],
   ["hm-r8", "Customer interview script & tracker", "Twenty questions that don't lead the witness, plus a spreadsheet to track what each conversation changed about your problem statement.", "template", "Template", "Samira Haddad", "u-hm-samira", null, "Copy the sheet, do ten interviews, then rewrite your problem slide.", ["customer-discovery", "research", "template"], false, "coral"],
+  ["hm-r9", "Your first grant application: a step-by-step kit", "An eligibility checklist, a budget table that funders accept and a plain-English way to write the outcomes section. Built from what reviewers say they actually read.", "guide", "Funding", "Dana Whitfield", DANA, null, "Run the eligibility checklist first. If you fail one line, pick a different program before you write a word.", ["grants", "funding", "application"], true, "gold"],
+  ["hm-r10", "SR&ED for student ventures, in plain English", "What counts as eligible research and development, what to keep as you build, and how the refundable credit shows up on a first tax return.", "guide", "Funding", "Helen Okafor", "u-hm-helen", null, "Start keeping a build log this week. It is the evidence a claim stands on.", ["sred", "tax", "grants", "funding"], false, "slate"],
+  ["hm-r11", "Before you fill in the IRAP form: the call to make first", "IRAP starts with a conversation with an Industrial Technology Advisor. This guide shows what to prepare so that first call turns into a real application.", "guide", "Funding", "Dana Whitfield", DANA, null, "Write your project in three sentences before the call.", ["irap", "grants", "funding", "rd"], false, "blue"],
 ];
 
 const ANNOUNCEMENTS = [
@@ -388,7 +391,7 @@ export function buildHumber(fixtures, deps) {
     completion: { percent: 100, missing: [], missing_keys: [], sections: { "About you": { done: 5, total: 5 }, "Skills & interests": { done: 2, total: 2 }, "Goals & support": { done: 2, total: 2 } } },
     config: {
       blast_example: { subject: "Pitch Practice Lab is tonight", message: "Pitch Practice Lab is tonight at 5:30 PM, North Campus. Bring your deck and a printed one-liner." },
-      community_kind: "Innovation & entrepreneurship network", community_type: "professional", interest_tags: ["Startups", "Innovation"],
+      community_kind: "Innovation & entrepreneurship network", community_type: "professional", interest_tags: ["Startups", "Innovation"], ecosystem: HUMBER_ECOSYSTEM,
       about: "A network that connects student and alumni founders from Humber Polytechnic with investors, industry leaders and innovation partners. Founders put their pitch on their profile and meet the people who can fund, advise or become their first customer. Pitch days, office hours, mixers and mentor matching run all term. This is a demo community: every person, venture and number is made up.",
       about_url: "", about_cta: "",
       member_label_singular: "Member", member_label_plural: "Members",
@@ -408,9 +411,9 @@ export function buildHumber(fixtures, deps) {
         { key: "why", label: "What would you like from the network?", placeholder: "Feedback on my pitch, deal flow, pilot customers..." },
       ],
       page_text: {
-        members_title: "The network", members_subtitle: "Founders with their pitch, investors, industry leaders and innovation partners: what they do, what they offer and what they're looking for.",
-        events_title: "Pitch days & events", events_subtitle: "Pitch Day, office hours, practice labs, mixers and demo nights.",
-        resources_title: "Perks & resources", resources_subtitle: "Legal hours, credits, pitch templates and funding guides from the network.",
+        members_title: "People", members_subtitle: "Founders, mentors, investors and partners at Humber: what they do, what they offer and what they're looking for.",
+        events_title: "Events", events_subtitle: "Pitch Day, office hours, workshops, mixers and demo nights, with the ones that fit you first.",
+        resources_title: "Resources", resources_subtitle: "Grant guides, legal hours, credits and templates, from the people who have done it.",
         support_title: "Asks", support_subtitle: "Need an intro, feedback on a deck or a pilot customer? Ask here. Offer a hand when you can.",
         requests_title: "Your to-do", requests_subtitle: "Forms and updates the programs team has asked you for.",
         matches_title: "Intros for you", matches_subtitle: "Investors, mentors, customers and events picked for your stage and what you're looking for.",
@@ -418,14 +421,40 @@ export function buildHumber(fixtures, deps) {
         ask_title: "Ask the network", ask_subtitle: "Find an investor, a mentor or a first customer.",
       },
       nav: [
-        { key: "members", label: "People", enabled: true }, { key: "matches", label: "Intros", enabled: true }, { key: "events", label: "Events", enabled: true },
-        { key: "resources", label: "Perks", enabled: true }, { key: "updates", label: "News", enabled: true }, { key: "requests", label: "To-do", enabled: false },
-        { key: "support", label: "Asks", enabled: true }, { key: "inbox", label: "Inbox", enabled: true }, { key: "learning", label: "Academy", enabled: true },
+        { key: "programs", label: "Programs & grants", enabled: true }, { key: "events", label: "Events", enabled: true }, { key: "members", label: "People", enabled: true },
+        { key: "resources", label: "Resources", enabled: true }, { key: "matches", label: "Intros", enabled: true },
+        { key: "requests", label: "To-do", enabled: false }, { key: "support", label: "Asks", enabled: false }, { key: "inbox", label: "Inbox", enabled: true }, { key: "learning", label: "Academy", enabled: true },
       ],
       custom_links: [],
     },
   });
 }
+
+// The ecosystem lens: this hub is the first place a founder looks. It lists its own programs, and "picks" are the national and provincial programs
+// the hub's team points its founders to (so a grant or loan can sit beside a Humber program). Everything else in the catalog is one tap away.
+// (The notes are demo copy. In a live hub the programs team writes them.)
+export const HUMBER_ECOSYSTEM = {
+  hub: "Humber", wider: "All of Canada", city: "Toronto", home_title: "Your next moves at Humber",
+  home_sub: "Programs, grants, events, people and resources from Humber and beyond, ranked for your startup.",
+  picks: {
+    "futurpreneur-core": "Pick for founders under 40: a startup loan with a mentor attached.",
+    "summer-company": "Pick for students: a grant to run your venture over the summer.",
+    "bmo-launch-me": "Pick for students and alumni: a pitch competition with prize money.",
+    irap: "Pick once you have a prototype: funding and an advisor for R&D.",
+    sred: "Pick once you are building: a tax credit on the R&D you already do.",
+    oitc: "Pick for Ontario startups: a tax credit on Ontario R&D spend.",
+    "ovin-rd": "Pick for research-heavy startups: R&D funding with an Ontario partner.",
+    swpp: "Pick when you hire: wage support for student placements.",
+    "mitacs-accelerate": "Pick if your work needs a research partner at a polytechnic or university.",
+    isc: "Pick for tech startups: government buys your prototype.",
+    "dmz-incubator": "Pick after you launch: a Toronto incubator with customers and capital.",
+    "cdl-prime": "Pick for ambitious tech ideas: an accelerator with a decision every term.",
+    "tbdc-business-inc": "Pick at idea stage: free mentoring from a Toronto business centre.",
+    "panache-ventures": "Pick when you are raising: an early-stage fund that takes cold pitches.",
+    "ip-village": "Pick before you share your idea: free intellectual property help.",
+    "business-benefits-finder": "Pick to check yourself: a federal tool that lists what you may qualify for.",
+  },
+};
 
 // What Humber lists in the Navigator: its profile (who it serves and what it gives founders) and the programs it runs.
 // Made up for the demo, like everything else in this community. Dates are relative to today.
@@ -447,6 +476,10 @@ export function humberNavigator() {
         { requirements: ["Book a 30-minute slot"], deadline: { kind: "rolling", date: null, note: "Book any week" } }),
       P("hm-p3", "Pitch Practice Lab", "accelerator", "Rehearse your pitch with coaches and get feedback before the real thing.", ["idea", "prototype"], ["training", "mentorship"],
         { requirements: ["Bring your deck and a printed one-liner"], deadline: { kind: "rolling", date: null, note: "Runs every other week" } }),
+      P("hm-p4", "Founder Micro-Grant", "grant", "Up to $5,000 to build a prototype or run customer tests. Awarded each term to Humber founders.", ["idea", "prototype"], ["funding"],
+        { amount: "Up to $5,000", requirements: ["Humber student or alum", "A one-page plan and budget"], deadline: { kind: "fixed", date: day(35), note: "Applications close on the date shown" } }),
+      P("hm-p5", "Grant Writing Clinic", "mentorship", "Bring a draft application. A programs coach reads it with you and fixes the parts reviewers skim past.", ["prototype", "launched"], ["funding", "training"],
+        { requirements: ["A draft or an outline", "Book a 45-minute slot"], deadline: { kind: "rolling", date: null, note: "Book any week" } }),
     ],
     member_needs: [{ key: "funding", label: "funding", members: 14 }, { key: "mentorship", label: "mentors", members: 11 }, { key: "customers", label: "first customers", members: 9 }, { key: "network", label: "a network", members: 7 }],
   };

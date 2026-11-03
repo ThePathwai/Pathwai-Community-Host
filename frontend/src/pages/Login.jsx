@@ -216,12 +216,12 @@ export default function Login() {
                 <p className="eyebrow">Innovation &amp; business</p>
                 {DEMO_COMMUNITIES.filter((c) => c.featured).map((c) => (
                   <div key={c.slug} className="rounded-xl border-2 bg-surface p-4" style={{ borderColor: c.accent }} data-testid={`demo-featured-${c.slug}`}>
-                    <p className="eyebrow">Featured demo</p>
+                    <p className="eyebrow">{c.eyebrow || "Featured demo"}</p>
                     <p className="mt-1 text-lg font-semibold leading-tight">{c.name}</p>
                     {c.tagline && <p className="mt-0.5 text-xs text-muted">{c.tagline}</p>}
                     <div className="mt-3 grid grid-cols-2 gap-2">
-                      <button type="button" className="rounded-lg px-3 py-2.5 text-sm font-semibold" style={{ background: c.accent, color: "#fff" }} data-testid={`demo-${c.slug}-member`} onClick={() => startDemo("member", c.slug)}>As a member</button>
-                      <button type="button" className="rounded-lg border px-3 py-2.5 text-sm font-semibold" style={{ borderColor: c.accent }} data-testid={`demo-${c.slug}-admin`} onClick={() => startDemo("admin", c.slug)}>As the admin</button>
+                      <button type="button" className="rounded-lg px-3 py-2.5 text-sm font-semibold" style={{ background: c.accent, color: "#fff" }} data-testid={`demo-${c.slug}-member`} onClick={() => startDemo("member", c.slug)}>{c.memberTitle || "As a member"}</button>
+                      <button type="button" className="rounded-lg border px-3 py-2.5 text-sm font-semibold" style={{ borderColor: c.accent }} data-testid={`demo-${c.slug}-admin`} onClick={() => startDemo("admin", c.slug)}>{c.adminTitle || "As the admin"}</button>
                     </div>
                     <Link to={`/demo/${c.short}`} className="mt-2 block text-center text-xs text-muted underline" data-testid={`demo-${c.slug}-page`}>Open its demo page (to share a link)</Link>
                   </div>))}
