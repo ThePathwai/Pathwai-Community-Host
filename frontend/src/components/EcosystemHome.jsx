@@ -7,9 +7,10 @@ import { useEcosystem } from "../lib/ecosystem";
 import { useTracked } from "../lib/useTracked";
 import { useInterest } from "../lib/useInterest";
 import { STAGE_LABEL, NEED_LABEL } from "../lib/navigator";
-import { Avatar, Spinner } from "./ui";
+import { Avatar, Spinner, cx } from "./ui";
 import { ProgramDrawer } from "./ProgramCards";
-import { FitPill, KIND, KindTile, Why, daysFromNow, dayShort, heading } from "./hub/HubKit";
+import { CheckStrip, KIND, KindTile, V, VerdictBadge, daysFromNow, dayShort, heading } from "./hub/HubKit";
+import { VERDICT, VERDICTS, VRANK } from "../lib/explain";
 
 // Home for a hub that works as an ecosystem (config.ecosystem, see lib/ecosystem.js): not a feed of what happened, but "where to start".
 // One top pick, then the best few of each kind with a way to the full page. Ranking rules are in lib/moves.js (GET /navigator/moves).
@@ -22,60 +23,74 @@ function openMove(m, nav, onOpen) {
 }
 const whenOf = (m) => (m.at ? fmtDate(m.at, { weekday: "short", month: "short", day: "numeric", hour: "numeric", minute: "2-digit" }) : m.deadline ? `Closes ${dayShort(m.deadline)}` : "");
 
-// The one thing to do first: big, plain, one button.
+// The one thing to do first: big, plain, one button, and why.
 function TopPick({ m, today, onOpen }) {
   const nav = useNavigate();
   const k = KIND[m.kind];
   const left = m.deadline ? daysFromNow(m.deadline, today) : null;
   return (
-    <section className="card overflow-hidden !p-0" data-testid="eco-top">
-      <div className="flex flex-col gap-4 p-5 sm:flex-row sm:items-center sm:gap-6 sm:p-7" style={{ borderLeft: `4px solid ${k.color}` }}>
-        <KindTile kind={m.kind} size={56} />
+    <section className="relative overflow-hidden rounded-3xl border border-line bg-surface shadow-sm" data-testid="eco-top" data-verdict={m.verdict}>
+      <span aria-hidden className={cx("absolute inset-y-0 left-0 w-2", V[m.verdict].bar)} />
+      <div className="flex flex-col gap-5 p-5 pl-7 sm:flex-row sm:items-center sm:gap-7 sm:p-8 sm:pl-10">
         <div className="min-w-0 flex-1">
-          <p className="eyebrow">Start here</p>
-          <h2 className="mt-1 text-2xl leading-tight sm:text-3xl" style={{ ...heading, letterSpacing: "-0.03em", textWrap: "balance" }}>{m.title}</h2>
-          <p className="mt-1 text-sm text-muted">{[k.label, m.sub].filter(Boolean).join(" · ")}{whenOf(m) ? ` · ${whenOf(m)}` : ""}</p>
-          <Why text={m.reason} />
+          <div className="flex flex-wrap items-center gap-x-3 gap-y-1.5">
+            <VerdictBadge verdict={m.verdict} size="lg" />
+            <span className="text-xs font-semibold uppercase text-muted" style={{ letterSpacing: "0.12em" }}>Start here · {k.label}</span>
+          </div>
+          <h2 className="mt-3 text-3xl font-bold leading-tight sm:text-4xl" style={{ ...heading, letterSpacing: "-0.03em", textWrap: "balance" }}>{m.title}</h2>
+          <p className="mt-1.5 text-sm text-muted">{[m.sub, whenOf(m)].filter(Boolean).join(" · ")}</p>
+          <div className="mt-4"><CheckStrip checks={m.checks} /></div>
+          {m.why && <p className="mt-3 max-w-2xl text-[15px] leading-snug text-ink/90">{m.why}</p>}
+          {left != null && left <= 14 && <p className="mt-3 inline-flex rounded-full bg-red-500/15 px-3 py-1 text-xs font-semibold text-red-600">Closes in {left} day{left === 1 ? "" : "s"}</p>}
         </div>
-        <button type="button" onClick={() => openMove(m, nav, onOpen)} data-testid="eco-top-cta" className="inline-flex shrink-0 items-center justify-center gap-2 rounded-full px-6 py-3 text-base font-semibold" style={{ background: "var(--accent)", color: "var(--on-accent)" }}>
+        <button type="button" onClick={() => openMove(m, nav, onOpen)} data-testid="eco-top-cta" className="inline-flex shrink-0 items-center justify-center gap-2 rounded-full px-7 py-3.5 text-base font-semibold" style={{ background: "var(--accent)", color: "var(--on-accent)" }}>
           {m.action}<ArrowRight className="h-4 w-4" aria-hidden />
         </button>
       </div>
-      {left != null && left <= 14 && <p className="border-t border-line bg-red-500/10 px-5 py-2 text-xs font-semibold text-red-600 sm:px-7">Closes in {left} day{left === 1 ? "" : "s"}.</p>}
     </section>
   );
 }
 
-// A short list for one kind, with a clear way to the full page.
-function Section({ id, title, to, total, items, today, onOpen }) {
+// A short list for one kind: how it breaks down at a glance, then the best few, each with its verdict.
+function Section({ id, title, to, counts, items, today, onOpen }) {
   const nav = useNavigate();
+  const vs = VERDICTS.filter((v) => counts[v] > 0);
+  const total = vs.reduce((n, v) => n + counts[v], 0);
   return (
     <section className="card !p-0" data-testid={`eco-sec-${id}`}>
-      <div className="flex items-center justify-between gap-3 border-b border-line px-5 py-4">
-        <h2 className="text-lg" style={heading}>{title}</h2>
-        <Link to={to} className="inline-flex items-center gap-1 text-sm font-semibold" style={{ color: "var(--accent)" }} data-testid={`eco-all-${id}`}>See all {total}<ArrowRight className="h-3.5 w-3.5" aria-hidden /></Link>
+      <div className="px-5 pb-4 pt-5">
+        <div className="flex items-center justify-between gap-3">
+          <h2 className="text-lg" style={heading}>{title}</h2>
+          <Link to={to} className="inline-flex items-center gap-1 text-sm font-semibold" style={{ color: "var(--accent)" }} data-testid={`eco-all-${id}`}>See all {total}<ArrowRight className="h-3.5 w-3.5" aria-hidden /></Link>
+        </div>
+        <div className="mt-3 flex h-2 gap-0.5 overflow-hidden rounded-full" role="img" aria-label={vs.map((v) => `${counts[v]} ${VERDICT[v].short}`).join(", ")}>
+          {vs.map((v) => <span key={v} style={{ flexGrow: counts[v] }} className={cx("min-w-[8px]", V[v].bar)} />)}
+        </div>
+        <p className="mt-2 flex flex-wrap gap-x-3 gap-y-0.5 text-xs text-muted">{vs.map((v) => <span key={v} className="inline-flex items-center gap-1"><span className={cx("h-2 w-2 rounded-full", V[v].bar)} aria-hidden /><span className="tabular-nums font-semibold text-ink/80">{counts[v]}</span> {VERDICT[v].short.toLowerCase()}</span>)}</p>
       </div>
       {items.length ? (
-        <ul className="divide-y divide-line">
+        <ul className="divide-y divide-line border-t border-line">
           {items.map((m) => {
             const when = whenOf(m);
             const left = m.deadline ? daysFromNow(m.deadline, today) : null;
             return (
               <li key={`${m.kind}-${m.id}`}>
-                <button type="button" onClick={() => openMove(m, nav, onOpen)} data-testid={`move-${m.kind}-${m.id}`} className="flex w-full items-center gap-3 px-5 py-3 text-left hover:bg-ink/[.03]">
+                <button type="button" onClick={() => openMove(m, nav, onOpen)} data-testid={`move-${m.kind}-${m.id}`} className="flex w-full items-center gap-3 px-5 py-3.5 text-left hover:bg-ink/[.03]">
                   {m.kind === "person" ? <Avatar src={m.avatar} name={m.title} size={40} /> : <KindTile kind={m.kind} size={40} />}
                   <span className="min-w-0 flex-1">
-                    <span className="flex items-center gap-2"><span className="truncate text-sm font-semibold">{m.title}</span><FitPill fit={m.fit} /></span>
-                    <span className="block truncate text-xs text-muted">{when || m.sub}{when && m.sub ? ` · ${m.sub}` : ""}</span>
+                    <span className="block truncate text-sm font-semibold">{m.title}</span>
+                    <span className="block truncate text-xs text-muted">{when && m.kind !== "person" ? `${when} · ` : ""}{m.why}</span>
                   </span>
-                  {left != null && left <= 14 && <span className="shrink-0 rounded-full bg-red-500/15 px-2 py-0.5 text-[11px] font-semibold text-red-600">{left}d left</span>}
-                  <ArrowRight className="h-4 w-4 shrink-0 text-muted" aria-hidden />
+                  <span className="flex shrink-0 flex-col items-end gap-1">
+                    <VerdictBadge verdict={m.verdict} short />
+                    {left != null && left <= 14 && <span className="text-[11px] font-semibold text-red-600">{left}d left</span>}
+                  </span>
                 </button>
               </li>
             );
           })}
         </ul>
-      ) : <p className="p-5 text-sm text-muted">Nothing here yet.</p>}
+      ) : <p className="border-t border-line p-5 text-sm text-muted">Nothing is a good match right now. Open the page to see why.</p>}
     </section>
   );
 }
@@ -104,6 +119,7 @@ export default function EcosystemHome() {
   const L = d.lists;
   const progs = [...(L.program || []), ...(L.grant || [])].sort((a, b) => b.score - a.score);
   const top = d.moves[0];
+  const live = (l) => (l || []).filter((m) => m.verdict === "now" || m.verdict === "close").sort((a, b) => VRANK[a.verdict] - VRANK[b.verdict] || b.score - a.score).slice(0, 3);
   return (
     <div className="space-y-5" data-testid="eco-home">
       <header className="flex flex-wrap items-end justify-between gap-4">
@@ -124,10 +140,10 @@ export default function EcosystemHome() {
       {top && <TopPick m={top} today={d.as_of} onOpen={setOpen} />}
 
       <div className="grid grid-cols-1 gap-5 lg:grid-cols-2" data-testid="eco-sections">
-        <Section id="programs" title="Programs & grants" to="/navigator" total={progs.length} items={progs.slice(0, 3)} today={d.as_of} onOpen={setOpen} />
-        <Section id="events" title="Events coming up" to="/events" total={(L.event || []).length} items={[...(L.event || [])].sort((a, b) => String(a.at).localeCompare(String(b.at))).slice(0, 3)} today={d.as_of} onOpen={setOpen} />
-        <Section id="people" title="People to meet" to="/members" total={(L.person || []).length} items={(L.person || []).slice(0, 3)} today={d.as_of} onOpen={setOpen} />
-        <Section id="resources" title="Resources" to="/resources" total={(L.resource || []).length} items={(L.resource || []).slice(0, 3)} today={d.as_of} onOpen={setOpen} />
+        <Section id="programs" title="Programs & grants" to="/navigator" counts={d.verdicts.program} items={live(progs)} today={d.as_of} onOpen={setOpen} />
+        <Section id="events" title="Events" to="/events" counts={d.verdicts.event} items={live(L.event).sort((a, b) => String(a.at).localeCompare(String(b.at)))} today={d.as_of} onOpen={setOpen} />
+        <Section id="people" title="People" to="/members" counts={d.verdicts.person} items={live(L.person)} today={d.as_of} onOpen={setOpen} />
+        <Section id="resources" title="Resources" to="/resources" counts={d.verdicts.resource} items={live(L.resource)} today={d.as_of} onOpen={setOpen} />
       </div>
 
       {news.length > 0 && (

@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
-import { ArrowRight, BookOpen, Calendar, Check, Landmark, Rocket, Search, Users } from "lucide-react";
+import { ArrowRight, BookOpen, Calendar, Check, CheckCircle2, ChevronDown, CircleAlert, Clock, Landmark, MinusCircle, Rocket, Search, Users, X } from "lucide-react";
+import { VERDICT, VERDICTS } from "../../lib/explain";
 import { api, fmtDate } from "../../lib/api";
 import { useAuth } from "../../lib/auth";
 import { Avatar, cx } from "../ui";
@@ -33,16 +34,142 @@ export function KindTile({ kind, size = 44 }) {
   return <span className="flex shrink-0 items-center justify-center rounded-xl" style={{ width: size, height: size, background: `color-mix(in srgb, ${color} 14%, transparent)`, color }} aria-hidden><Icon className="h-5 w-5" strokeWidth={2.1} /></span>;
 }
 
-// "Strong match" / "Good match": the answer to "is this for me?" before reading anything. Weak matches stay quiet.
-export function FitPill({ fit }) {
-  if (fit !== "strong" && fit !== "good") return null;
-  const strong = fit === "strong";
-  return <span className={cx("inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-semibold", strong ? "bg-emerald-500/15 text-emerald-700 dark:text-emerald-300" : "bg-ink/[.07] text-ink/80")}>{strong && <Check className="h-3 w-3" aria-hidden />}{strong ? "Strong match" : "Good match"}</span>;
+// ---- the verdict system: one look for "is this for me, right now?" on every kind of thing ----
+export const V = {
+  now: { Icon: CheckCircle2, text: "text-emerald-700 dark:text-emerald-300", tint: "bg-emerald-500/15", bar: "bg-emerald-500", ring: "border-emerald-500/40", label: "Next step" },
+  close: { Icon: CircleAlert, text: "text-amber-700 dark:text-amber-300", tint: "bg-amber-500/15", bar: "bg-amber-500", ring: "border-amber-500/40", label: "What it takes" },
+  later: { Icon: Clock, text: "text-indigo-700 dark:text-indigo-300", tint: "bg-indigo-500/15", bar: "bg-indigo-500", ring: "border-indigo-500/40", label: "What it takes" },
+  no: { Icon: MinusCircle, text: "text-slate-600 dark:text-slate-300", tint: "bg-slate-500/15", bar: "bg-slate-400", ring: "border-slate-400/40", label: "What it would take" },
+};
+const CS = {
+  yes: { Icon: Check, cls: "bg-ink/[.06] text-ink/75", icon: "text-emerald-600 dark:text-emerald-400" },
+  maybe: { Icon: CircleAlert, cls: "bg-amber-500/15 text-amber-700 dark:text-amber-300" },
+  later: { Icon: Clock, cls: "bg-indigo-500/15 text-indigo-700 dark:text-indigo-300" },
+  no: { Icon: X, cls: "bg-rose-500/15 text-rose-700 dark:text-rose-300" },
+};
+
+export function VerdictBadge({ verdict, short = false, size = "md" }) {
+  const v = V[verdict], Icon = v.Icon;
+  return <span className={cx("inline-flex items-center gap-1.5 rounded-full font-semibold", v.tint, v.text, size === "lg" ? "px-3.5 py-1.5 text-sm" : "px-2.5 py-1 text-xs")} data-testid={`verdict-${verdict}`}><Icon className={size === "lg" ? "h-4 w-4" : "h-3.5 w-3.5"} aria-hidden />{short ? VERDICT[verdict].short : VERDICT[verdict].label}</span>;
 }
 
-export function Why({ text }) {
-  if (!text) return null;
-  return <p className="mt-1.5 flex items-start gap-1.5 text-[13px] leading-snug text-ink/80"><Check className="mt-0.5 h-3.5 w-3.5 shrink-0 text-emerald-500" aria-hidden /><span>{text}</span></p>;
+// The checks we ran, as small coloured chips: green tick = fine, amber = check this, blue clock = not yet, red cross = doesn't line up.
+export function CheckStrip({ checks }) {
+  return (
+    <ul className="flex flex-wrap gap-1.5" aria-label="What we checked">
+      {checks.map((c) => { const s = CS[c.state] || CS.maybe, Icon = s.Icon; return <li key={c.key} className={cx("inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-semibold", s.cls)} data-state={c.state}><Icon className={cx("h-3 w-3", s.icon)} strokeWidth={3} aria-hidden />{c.label}</li>; })}
+    </ul>
+  );
+}
+
+function CheckList({ checks }) {
+  return (
+    <ul className="space-y-2" data-testid="check-list">
+      {checks.map((c) => { const s = CS[c.state] || CS.maybe, Icon = s.Icon; return (
+        <li key={c.key} className="flex items-start gap-2.5 text-sm">
+          <span className={cx("mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full", s.cls)}><Icon className={cx("h-3 w-3", s.icon)} strokeWidth={3} aria-hidden /></span>
+          <span><span className="font-semibold">{c.label}.</span> <span className="text-ink/80">{c.text}</span></span>
+        </li>); })}
+    </ul>
+  );
+}
+
+// The card every kind of thing uses: verdict first, then what it is, the checks, why, what it takes, and the action.
+export function MatchCard({ m, lead, kicker, title, sub, actions, extra, testid }) {
+  const [open, setOpen] = useState(false);
+  const v = V[m.verdict];
+  const calm = m.verdict === "no" || m.verdict === "later";
+  return (
+    <article className={cx("relative flex h-full flex-col overflow-hidden rounded-2xl border border-line bg-surface shadow-sm transition hover:shadow-md", m.verdict === "no" && "bg-ink/[.025]")} data-testid={testid} data-verdict={m.verdict}>
+      <span aria-hidden className={cx("absolute inset-y-0 left-0 w-1.5", v.bar)} />
+      <div className="flex flex-1 flex-col gap-3.5 p-4 pl-5 sm:p-5 sm:pl-6">
+        <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-1">
+          <VerdictBadge verdict={m.verdict} />
+          {kicker && <span className="text-[11px] font-semibold uppercase text-muted" style={{ letterSpacing: "0.12em" }}>{kicker}</span>}
+        </div>
+        <div className="flex items-start gap-3.5">
+          {lead}
+          <div className="min-w-0 flex-1">
+            <h3 className={cx("text-lg font-bold leading-snug", calm && "text-ink/85")} style={{ letterSpacing: "-0.015em" }}>{title}</h3>
+            {sub && <div className="mt-0.5 text-[13px] text-muted">{sub}</div>}
+          </div>
+        </div>
+        <CheckStrip checks={m.checks} />
+        {m.why && <p className="text-sm leading-snug text-ink/85">{m.why}</p>}
+        {m.gap && m.verdict === "now" && (
+          <p className={cx("flex items-start gap-2 text-sm font-medium", v.text)} data-testid="gap"><ArrowRight className="mt-0.5 h-4 w-4 shrink-0" aria-hidden /><span>{m.gap}</span></p>
+        )}
+        {m.gap && m.verdict !== "now" && (
+          <div className={cx("rounded-xl border px-3.5 py-2.5 text-sm leading-snug", v.tint, v.ring)} data-testid="gap">
+            <span className={cx("mr-1.5 text-[11px] font-bold uppercase", v.text)} style={{ letterSpacing: "0.1em" }}>{v.label}</span>
+            <span className="text-ink/90">{m.gap}</span>
+          </div>
+        )}
+        <div className="mt-auto flex flex-wrap items-center gap-2 pt-1">
+          {actions}
+          <button type="button" onClick={() => setOpen(!open)} aria-expanded={open} data-testid="why-toggle" className="ml-auto inline-flex items-center gap-1 rounded-full px-2.5 py-1.5 text-xs font-semibold text-muted hover:text-ink">
+            {open ? "Hide" : "How we checked"}<ChevronDown className={cx("h-3.5 w-3.5 transition", open && "rotate-180")} aria-hidden />
+          </button>
+        </div>
+        {open && (
+          <div className="space-y-3 border-t border-line pt-3.5" data-testid="details">
+            <CheckList checks={m.checks} />
+            {extra}
+          </div>
+        )}
+      </div>
+    </article>
+  );
+}
+
+// The at-a-glance bar at the top of a page: how many are good now, almost, not yet, not for you. Also the filter.
+export function SummaryBar({ counts, value, onChange, children }) {
+  const vs = VERDICTS.filter((v) => counts[v] > 0);
+  const total = vs.reduce((n, v) => n + counts[v], 0);
+  return (
+    <div className="mb-6 space-y-3" data-testid="summary">
+      <div className="flex h-3 gap-0.5 overflow-hidden rounded-full" role="img" aria-label={vs.map((v) => `${counts[v]} ${VERDICT[v].short}`).join(", ")}>
+        {vs.map((v) => <span key={v} style={{ flexGrow: counts[v] }} className={cx("min-w-[10px]", V[v].bar)} />)}
+      </div>
+      <div className="flex flex-wrap items-center gap-2">
+        <button type="button" onClick={() => onChange("all")} aria-pressed={value === "all"} data-testid="sum-all" className={cx("rounded-full border px-3.5 py-1.5 text-sm transition", value === "all" ? "border-transparent font-semibold" : "border-line text-muted hover:text-ink")} style={value === "all" ? { background: "var(--accent)", color: "var(--on-accent)" } : undefined}>All {total}</button>
+        {vs.map((v) => {
+          const on = value === v, Icon = V[v].Icon;
+          return (
+            <button key={v} type="button" onClick={() => onChange(on ? "all" : v)} aria-pressed={on} data-testid={`sum-${v}`}
+              className={cx("inline-flex items-center gap-1.5 rounded-full border px-3.5 py-1.5 text-sm transition", on ? cx("font-semibold", V[v].tint, V[v].text, V[v].ring) : "border-line text-muted hover:text-ink")}>
+              <Icon className={cx("h-4 w-4", V[v].text)} aria-hidden /><span className="tabular-nums">{counts[v]}</span> {VERDICT[v].short}
+            </button>
+          );
+        })}
+        {children}
+      </div>
+    </div>
+  );
+}
+
+// Items grouped by verdict, each group with a plain heading saying what the colour means.
+export function VerdictSections({ items, filter, render, perGroup = 6 }) {
+  const [openMore, setOpenMore] = useState({});
+  return (
+    <div className="space-y-9">
+      {VERDICTS.filter((v) => (filter === "all" || filter === v) && items.some((m) => m.verdict === v)).map((v) => {
+        const list = items.filter((m) => m.verdict === v);
+        const shown = openMore[v] || filter === v ? list : list.slice(0, perGroup);
+        const Icon = V[v].Icon;
+        return (
+          <section key={v} data-testid={`group-${v}`} aria-label={VERDICT[v].group}>
+            <div className="mb-3.5 flex flex-wrap items-baseline gap-x-3 gap-y-0.5">
+              <h2 className="inline-flex items-center gap-2 text-xl font-bold" style={{ ...heading, letterSpacing: "-0.02em" }}><Icon className={cx("h-5 w-5 self-center", V[v].text)} aria-hidden />{VERDICT[v].group}<span className="text-base font-semibold text-muted tabular-nums">{list.length}</span></h2>
+              <p className="text-sm text-muted">{VERDICT[v].blurb}</p>
+            </div>
+            <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">{shown.map(render)}</div>
+            {list.length > shown.length && <button type="button" onClick={() => setOpenMore({ ...openMore, [v]: true })} className="btn-ghost mx-auto mt-4 flex !py-2 text-sm" data-testid={`more-${v}`}>Show {list.length - shown.length} more</button>}
+          </section>
+        );
+      })}
+    </div>
+  );
 }
 
 export function PageHead({ eyebrow, title, sub, right }) {

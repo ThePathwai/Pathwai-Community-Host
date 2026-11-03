@@ -135,7 +135,7 @@ export function navigatorCall(method, path, body, params, ctx) {
     const raw = guide.navigatorProfile(ctx.account);
     const res = nav.suggest(scopedProgs(ctx, "hub"), raw, today, 80);
     const f = ctx.feeds();
-    const out = buildMoves({ programs: [...res.matches, ...(res.more || [])], events: f.events, people: f.people, resources: f.resources, why: f.why, profile: nav.normalizeProfile(raw), picks: eco.picks, today, hubSlug: ctx.slug });
+    const out = buildMoves({ programs: [...res.matches, ...(res.more || []), ...(res.later || []), ...(res.others || [])], events: f.events, people: f.people, resources: f.resources, why: f.why, profile: nav.normalizeProfile(raw), picks: eco.picks, today, hubSlug: ctx.slug });
     return ok(config, { hub: eco.hub, has_profile: !!(ctx.account.startup || {}).stage, as_of: today, ...out });
   }
   if (path === "/navigator/route" && method === "get") {

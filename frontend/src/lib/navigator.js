@@ -522,7 +522,7 @@ export function cleanListing(body) {
 export function communityProgram(row, slug, communityName) {
   return {
     id: `c-${slug}-${row.id}`, name: row.name, org: row.org || communityName, level: "community", type: row.type || "mentorship", summary: row.summary || "", amount: row.amount || "",
-    stages: row.stages || [...STAGES], audiences: row.audiences || [], needs: row.needs || [], sectors: row.sectors || ["any"], provinces: ["any"], restricted_to: [], requires: {},
+    stages: row.stages || [...STAGES], audiences: row.audiences || [], needs: row.needs || [], sectors: row.sectors || ["any"], provinces: ["any"], restricted_to: [], requires: row.requires || {},
     requirements: row.requirements || [], deadline: row.deadline || { kind: "rolling", date: null, note: "" }, status: row.status || "open", phase: "learn",
     apply_url: row.apply_url || `/c/${slug}`, source_url: `/c/${slug}`, verified: "official", last_checked: (row.updated_at || "").slice(0, 10), community: { slug, name: communityName },
   };
