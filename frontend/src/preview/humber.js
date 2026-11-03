@@ -418,10 +418,12 @@ export function buildHumber(fixtures, deps) {
         updates_title: "Network news", updates_subtitle: "Pitch Day dates, new investors and partner challenges.",
         ask_title: "Ask the network", ask_subtitle: "Find an investor, a mentor or a first customer.",
       },
+      // Five main pages, the same five a founder asks about; everything else lives in the account menu (`menu: true`).
       nav: [
-        { key: "programs", label: "Programs & grants", enabled: true }, { key: "events", label: "Events", enabled: true }, { key: "members", label: "People", enabled: true },
-        { key: "resources", label: "Resources", enabled: true }, { key: "matches", label: "Intros", enabled: true },
-        { key: "requests", label: "To-do", enabled: false }, { key: "support", label: "Asks", enabled: false }, { key: "inbox", label: "Inbox", enabled: true }, { key: "learning", label: "Academy", enabled: true },
+        { key: "programs", label: "Programs", enabled: true }, { key: "events", label: "Events", enabled: true }, { key: "members", label: "People", enabled: true },
+        { key: "resources", label: "Resources", enabled: true },
+        { key: "matches", label: "Intros", enabled: true, menu: true }, { key: "inbox", label: "Inbox", enabled: true, menu: true }, { key: "learning", label: "Academy", enabled: true, menu: true },
+        { key: "requests", label: "To-do", enabled: false }, { key: "support", label: "Asks", enabled: false },
       ],
       custom_links: [],
     },

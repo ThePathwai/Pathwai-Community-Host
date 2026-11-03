@@ -1,4 +1,6 @@
 import React, { useCallback, useEffect, useMemo, useState } from "react";
+import HubEvents from "../components/hub/HubEvents";
+import { useEcosystem } from "../lib/ecosystem";
 import { Link } from "react-router-dom";
 import { Bookmark } from "lucide-react";
 import { toast } from "sonner";
@@ -7,7 +9,6 @@ import CalendarSubscribe from "../components/CalendarSubscribe";
 import { useLive } from "../lib/live";
 import { Avatar, Button, Chip, Empty, Field, Input, Modal, PageHeader, PhotoField, Select, Spinner, Tabs, TagInput, Textarea, cx } from "../components/ui";
 import { useAuth } from "../lib/auth";
-import WiderLink from "../components/WiderLink";
 import { ItemTools, TierEditor } from "../components/EditKit";
 
 // "This week" is a rolling 7-day window from right now, not the Mon-Sun calendar week -- simplest
@@ -21,7 +22,7 @@ const WEEK_MS = 7 * 24 * 60 * 60 * 1000;
 // you can RSVP, not just worded the same.
 import { RsvpButtons } from "./EventDetail";
 
-export default function Events() {
+function CommunityEvents() {
   const [tab, setTab] = useState("upcoming");
   const [items, setItems] = useState(null);
   const load = useCallback(() => api.get("/events", { params: { upcoming: tab === "upcoming" } }).then((r) => setItems(r.data)), [tab]);
@@ -178,7 +179,13 @@ export default function Events() {
           </div>
         </Modal>
       )}
-      <WiderLink kind="events" />
     </div>
   );
+}
+
+// A hub that describes itself as an ecosystem (config.ecosystem) gives founders the ranked, fit-first page; admins (who add and edit things here) and every other community keep this one.
+export default function Events() {
+  const eco = useEcosystem();
+  const { user } = useAuth();
+  return eco && user?.role !== "admin" ? <HubEvents /> : <CommunityEvents />;
 }

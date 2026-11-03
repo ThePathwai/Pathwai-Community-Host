@@ -81,7 +81,10 @@ export default function Layout({ children }) {
   // Programs & grants is opt-in per community (config.nav), so the default nav leaves it out.
   const items = (config?.nav?.length ? config.nav : Object.keys(ROUTES).filter((k) => k !== "programs").map((k) => ({ key: k, label: DEFAULT_LABELS[k], enabled: true })))
     .filter((n) => n.enabled !== false && ROUTES[n.key]);
-  const NAV = [["/", "Home"], ...items.map((n) => [ROUTES[n.key], n.label])];
+  // `menu: true` keeps a section out of the main bar and the phone tab bar and lists it in the account menu instead, so a hub can show its four or five main pages and nothing else.
+  const menuOnly = items.filter((n) => n.menu);
+  const mainItems = items.filter((n) => !n.menu);
+  const NAV = [["/", "Home"], ...mainItems.map((n) => [ROUTES[n.key], n.label])];
   const custom = config?.custom_links || [];
   // The bottom tab bar (below `xl`) only has room for Home + 4 sections, so anything past that --
   // by default News, To-do, Help board and Messages -- has no icon in the tab bar. Without this,
@@ -91,16 +94,16 @@ export default function Layout({ children }) {
   // An admin's tab bar gives the fifth slot to Admin (their main toolkit), so the last section moves into the account menu.
   // Messages always gets a tab on a phone (it takes the spot Connections/Intros would have had, and Connections moves into the menu).
   const tabOrder = (() => {
-    const inbox = items.find((n) => n.key === "inbox");
-    if (!inbox) return items;
-    const rest = items.filter((n) => n.key !== "inbox");
+    const inbox = mainItems.find((n) => n.key === "inbox");
+    if (!inbox) return mainItems;
+    const rest = mainItems.filter((n) => n.key !== "inbox");
     const mi = rest.findIndex((n) => n.key === "matches");
     if (mi >= 0) { const m = rest[mi]; rest.splice(mi, 1); rest.splice(Math.min(mi, rest.length), 0, inbox); return [...rest, m]; }
     rest.splice(Math.min(1, rest.length), 0, inbox);
     return rest;
   })();
   const tabItems = isAdmin ? tabOrder.slice(0, 3) : tabOrder.slice(0, 4);
-  const overflowNav = tabOrder.slice(tabItems.length);
+  const overflowNav = [...tabOrder.slice(tabItems.length), ...menuOnly];
 
   return (
     <div className="min-h-screen">

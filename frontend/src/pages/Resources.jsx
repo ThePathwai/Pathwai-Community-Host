@@ -1,4 +1,6 @@
 import React, { useEffect, useState } from "react";
+import HubResources from "../components/hub/HubResources";
+import { useEcosystem } from "../lib/ecosystem";
 import { Bookmark, Trash2 } from "lucide-react";
 import { Link } from "react-router-dom";
 import { toast } from "sonner";
@@ -11,7 +13,7 @@ import { teamOf } from "../lib/names";
 
 const CATS = ["Discount", "Free access", "Insight", "Template", "Intro", "Service swap"];
 
-export default function Resources() {
+function CommunityResources() {
   const [items, setItems] = useState(null);
   const [q, setQ] = useState("");
   const [cat, setCat] = useState("all");
@@ -143,4 +145,11 @@ export default function Resources() {
       </Modal>
     </div>
   );
+}
+
+// A hub that describes itself as an ecosystem (config.ecosystem) gives founders the ranked, fit-first page; admins (who add and edit things here) and every other community keep this one.
+export default function Resources() {
+  const eco = useEcosystem();
+  const { user } = useAuth();
+  return eco && user?.role !== "admin" ? <HubResources /> : <CommunityResources />;
 }

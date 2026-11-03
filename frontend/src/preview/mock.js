@@ -612,9 +612,9 @@ function explainMatch(me, u) {
   if (sameSport && parts.length < 2) parts.push("Same " + u.industry);
   return { give, get, shared, score, reasons, headline: parts.join(" · ") };
 }
-function computePeople(limit = 8) {
+function computePeople(limit = 8, everyone = false) {
   const me = view()["/auth/me"] || {};
-  return communityRoster(slugOf()).filter((u) => u.id !== me.id).map((u) => ({ u, x: explainMatch(me, u) })).filter(({ x }) => x.score > 0)
+  return communityRoster(slugOf()).filter((u) => u.id !== me.id).map((u) => ({ u, x: explainMatch(me, u) })).filter(({ x }) => everyone || x.score > 0)
     .sort((a, b) => b.x.score - a.x.score).slice(0, limit).map(({ u, x }) => ({
       why: x.headline, headline: x.headline, reasons: x.reasons, match_type: "Recommended connection", next_action: "Say hi",
       user: { id: u.id, name: u.name, avatar_url: u.avatar_url || null, role: u.role, title: u.title, company: u.company, industry: u.industry, location: u.location, member_type: u.member_type },
@@ -631,7 +631,15 @@ function hubFeeds() {
   const rec = view()["/matches"] || {};
   const acts = S.extra.acts || {};
   const events = mergedList(view()["/events"] || [], "events").map(withRsvpFields).filter((e) => !e.is_past);
-  const people = (rec.people && rec.people.length ? rec.people : computePeople()).filter((x) => acts["person:" + x.user.id] !== "dismiss");
+  // Everyone in the hub: the recommended people first (they carry the reason), then the rest of the roster, so the People page can list them all.
+  const me = view()["/auth/me"] || {};
+  const recPeople = (rec.people && rec.people.length ? rec.people : computePeople());
+  const seenIds = new Set(recPeople.map((x) => x.user.id));
+  const restPeople = mergedList(view()["/users"] || [], "users", false).filter((u) => u.id !== me.id && !seenIds.has(u.id)).map((u) => ({
+    why: "", headline: "", reasons: [], score: 0, can_help_you: (u.skill_set || []).slice(0, 3), you_can_help: (u.support_needs || u.needs_seeking || []).slice(0, 3),
+    user: { id: u.id, name: u.name, avatar_url: u.avatar_url || null, role: u.role, title: u.title, company: u.company, member_type: u.member_type },
+  }));
+  const people = [...recPeople, ...restPeople].filter((x) => acts["person:" + x.user.id] !== "dismiss");
   const resources = mergedList(view()["/resources"] || [], "resources");
   const why = { event: {}, resource: {} };
   for (const e of rec.events || []) why.event[e.id] = e.why;

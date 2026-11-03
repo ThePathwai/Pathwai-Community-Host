@@ -15,6 +15,7 @@ import { useEcosystem } from "../lib/ecosystem";
 import Trajectory from "../components/Trajectory";
 import AccountShell from "../components/AccountShell";
 import GuideChat from "../components/GuideChat";
+import HubPrograms from "../components/hub/HubPrograms";
 
 // /navigator ("Programs"): the Canadian programs that fit YOU. Signed in, everything here is read from the one startup profile on your
 // account (edit it in your profile, never here), so it is always in step with Home and the guide. Signed out there is no profile to
@@ -357,7 +358,13 @@ export default function Navigator({ embedded }) {
     return () => clearTimeout(t);
   }, [apiProfile, meta, ready, account?.id, itc.sig, scope]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  const body = (
+  // A hub's ecosystem lens (config.ecosystem) gets its own, simpler page: one ranked list, same shape as Events, People and Resources.
+  const ecoBody = eco && account ? (
+    <HubPrograms itc={itc} tracked={tracked} onTrack={track} stage={mine?.stage || "idea"}
+      loadMine={() => api.get("/navigator/me").then((r) => { setTracked(r.data.tracked || []); itc.setInterest(r.data.interest || []); }).catch(() => {})}
+      guide={<GuideChat className="h-[min(72dvh,680px)]" signedIn hasProfile={!!mine?.stage} startupName={mine?.name} formProfile={apiProfile} />} />
+  ) : null;
+  const body = ecoBody || (
     <div className="mx-auto w-full max-w-6xl">
       <div className="mb-6 flex flex-wrap items-end justify-between gap-4">
         <div>

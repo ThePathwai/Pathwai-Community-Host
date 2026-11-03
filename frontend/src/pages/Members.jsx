@@ -1,15 +1,16 @@
 import React, { useEffect, useState } from "react";
+import HubPeople from "../components/hub/HubPeople";
+import { useEcosystem } from "../lib/ecosystem";
 import { Link } from "react-router-dom";
 import { Bookmark } from "lucide-react";
 import { toast } from "sonner";
 import { api, errMsg } from "../lib/api";
 import { useLive } from "../lib/live";
 import { useAuth } from "../lib/auth";
-import WiderLink from "../components/WiderLink";
 import { fieldLabel, fieldOn, typeLabel } from "../lib/profile";
 import { Chip, Empty, Input, PageHeader, Select, Spinner, hueFromName } from "../components/ui";
 
-export default function Members() {
+function CommunityMembers() {
   const { config } = useAuth();
   const [users, setUsers] = useState(null);
   const [filters, setFilters] = useState({ offers: [], looking_for: [], interests: [], industries: [] });
@@ -96,7 +97,13 @@ export default function Members() {
           </div>
         </>
       )}
-      <WiderLink kind="people" />
     </div>
   );
+}
+
+// A hub that describes itself as an ecosystem (config.ecosystem) gives founders the ranked, fit-first page; admins (who add and edit things here) and every other community keep this one.
+export default function Members() {
+  const eco = useEcosystem();
+  const { user } = useAuth();
+  return eco && user?.role !== "admin" ? <HubPeople /> : <CommunityMembers />;
 }
