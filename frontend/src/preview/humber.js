@@ -418,9 +418,9 @@ export function buildHumber(fixtures, deps) {
         updates_title: "Network news", updates_subtitle: "Pitch Day dates, new investors and partner challenges.",
         ask_title: "Ask the network", ask_subtitle: "Find an investor, a mentor or a first customer.",
       },
-      // Five main pages, the same five a founder asks about; everything else lives in the account menu (`menu: true`).
+      // Main pages: the planner first, then the four places it draws from; everything else lives in the account menu (`menu: true`).
       nav: [
-        { key: "programs", label: "Programs", enabled: true }, { key: "events", label: "Events", enabled: true }, { key: "members", label: "People", enabled: true },
+        { key: "plan", label: "My plan", enabled: true }, { key: "programs", label: "Programs", enabled: true }, { key: "events", label: "Events", enabled: true }, { key: "members", label: "People", enabled: true },
         { key: "resources", label: "Resources", enabled: true },
         { key: "matches", label: "Intros", enabled: true, menu: true }, { key: "inbox", label: "Inbox", enabled: true, menu: true }, { key: "learning", label: "Academy", enabled: true, menu: true },
         { key: "requests", label: "To-do", enabled: false }, { key: "support", label: "Asks", enabled: false },
@@ -436,7 +436,7 @@ export function buildHumber(fixtures, deps) {
 // Humber's own view of the ecosystem lens: only what Humber runs. Set `wider` (e.g. "All of Canada") and `picks` to point founders beyond the hub.
 export const HUMBER_ECOSYSTEM = {
   hub: "Humber", wider: null, city: "Toronto", home_title: "Your next moves at Humber",
-  home_sub: "Humber's programs, grants, events, people and resources, ranked for your startup.",
+  home_sub: "Work out your next stage, then use Humber's programs, events, people and resources to get there.",
   picks: {},
 };
 

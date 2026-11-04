@@ -6,6 +6,7 @@ import { humberNavigator, HUMBER_ECOSYSTEM } from "./humber";
 import { buildMoves } from "../lib/moves";
 import * as guide from "../lib/navigatorGuide";
 import * as jny from "../lib/journey";
+import { updatePlan } from "../lib/planner";
 import journeyTemplates from "./journey_templates.json";
 
 const BLANK_PROFILE = { public: false, blurb: "", stages: [], provides: [], audiences: [], sectors: [], city: "", provinces: [] };
@@ -142,6 +143,13 @@ export function navigatorCall(method, path, body, params, ctx) {
     const a = ctx.account;
     if (!a) return fail(config, 401, "Not authenticated");
     return ok(config, { has_profile: !!(a.startup || {}).stage, ...nav.routePlan(mineProgs(ctx), guide.navigatorProfile(a), a.tracked || [], today), tracked: a.tracked || [], interest: a.interest || [] });
+  }
+  // The venture planner: what the founder has chosen, ticked and shared. Demo only; the real endpoint is not built yet (see lib/planner.js).
+  if (path === "/navigator/plan" && (method === "get" || method === "post")) {
+    const a = ctx.account;
+    if (!a) return fail(config, 401, "Not authenticated");
+    if (method === "post") { try { a.plan = updatePlan(a.plan, { ...(body || {}), ...(body && body.share ? { share: { ...body.share, at: today } } : {}) }); } catch (e) { return fail(config, 400, e.message); } }
+    return ok(config, { plan: a.plan || updatePlan(null, {}), startup: a.startup || {}, has_profile: !!(a.startup || {}).stage, today });
   }
   if (path === "/navigator/journey" && (method === "get" || method === "post")) {
     const a = ctx.account;

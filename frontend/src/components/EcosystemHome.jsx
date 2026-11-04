@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { ArrowRight, Rocket } from "lucide-react";
+import { ArrowRight, Check, Rocket } from "lucide-react";
 import { api, fmtDate, timeAgo } from "../lib/api";
 import { useAuth } from "../lib/auth";
 import { useEcosystem } from "../lib/ecosystem";
@@ -11,6 +11,7 @@ import { Avatar, Spinner, cx } from "./ui";
 import { ProgramDrawer } from "./ProgramCards";
 import { CheckStrip, KIND, KindTile, V, VerdictBadge, daysFromNow, dayShort, heading } from "./hub/HubKit";
 import { VERDICT, VERDICTS, VRANK } from "../lib/explain";
+import { buildPlan, stepStates } from "../lib/planner";
 
 // Home for a hub that works as an ecosystem (config.ecosystem, see lib/ecosystem.js): not a feed of what happened, but "where to start".
 // One top pick, then the best few of each kind with a way to the full page. Ranking rules are in lib/moves.js (GET /navigator/moves).
@@ -35,7 +36,7 @@ function TopPick({ m, today, onOpen }) {
         <div className="min-w-0 flex-1">
           <div className="flex flex-wrap items-center gap-x-3 gap-y-1.5">
             <VerdictBadge verdict={m.verdict} size="lg" />
-            <span className="text-xs font-semibold uppercase text-muted" style={{ letterSpacing: "0.12em" }}>Start here · {k.label}</span>
+            <span className="text-xs font-semibold uppercase text-muted" style={{ letterSpacing: "0.12em" }}>Best next move · {k.label}</span>
           </div>
           <h2 className="mt-3 text-3xl font-bold leading-tight sm:text-4xl" style={{ ...heading, letterSpacing: "-0.03em", textWrap: "balance" }}>{m.title}</h2>
           <p className="mt-1.5 text-sm text-muted">{[m.sub, whenOf(m)].filter(Boolean).join(" · ")}</p>
@@ -47,6 +48,35 @@ function TopPick({ m, today, onOpen }) {
           {m.action}<ArrowRight className="h-4 w-4" aria-hidden />
         </button>
       </div>
+    </section>
+  );
+}
+
+// Where the founder is in the planner (My plan): four steps, the one to do next highlighted, one button to carry on.
+function PlanCard({ states }) {
+  const next = states.find((s) => s.current) || states[0];
+  const done = states.filter((s) => s.done).length;
+  return (
+    <section className="card !p-5 sm:!p-6" data-testid="eco-plan">
+      <div className="flex flex-wrap items-center justify-between gap-x-6 gap-y-3">
+        <div className="min-w-0">
+          <p className="eyebrow">Your plan</p>
+          <h2 className="mt-1 text-xl sm:text-2xl" style={{ ...heading, letterSpacing: "-0.025em" }}>{done === 4 ? "You're ready for your advisor" : done === 0 ? "Get ready to talk to an advisor" : `${done} of 4 steps done`}</h2>
+        </div>
+        <Link to={next.to} data-testid="eco-plan-cta" className="inline-flex shrink-0 items-center justify-center gap-2 rounded-full px-6 py-3 text-sm font-semibold" style={{ background: "var(--accent)", color: "var(--on-accent)" }}>
+          {done === 4 ? "Open my plan" : `Continue: ${next.label}`}<ArrowRight className="h-4 w-4" aria-hidden />
+        </Link>
+      </div>
+      <ol className="mt-4 grid grid-cols-2 gap-2 sm:grid-cols-4">
+        {states.map((s) => (
+          <li key={s.key}>
+            <Link to={s.to} data-testid={`eco-step-${s.key}`} data-done={s.done ? "1" : "0"} className={cx("flex h-full items-start gap-2.5 rounded-xl border p-3 transition hover:bg-ink/[.03]", s.current ? "border-ink/40" : "border-line")}>
+              <span className={cx("mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-xs font-bold", s.done ? "bg-emerald-500 text-white" : s.current ? "bg-ink text-paper" : "bg-ink/10 text-ink/70")}>{s.done ? <Check className="h-3.5 w-3.5" strokeWidth={3} aria-hidden /> : s.n}</span>
+              <span className="min-w-0"><span className="block text-sm font-bold">{s.label}</span><span className="block text-xs leading-snug text-muted">{s.detail}</span></span>
+            </Link>
+          </li>
+        ))}
+      </ol>
     </section>
   );
 }
@@ -104,11 +134,13 @@ export default function EcosystemHome() {
   const [err, setErr] = useState(false);
   const [open, setOpen] = useState(null);
   const [news, setNews] = useState([]);
+  const [planState, setPlanState] = useState(null);
   const { tracked, setTracked, track } = useTracked();
   const itc = useInterest();
   useEffect(() => {
     document.title = `Home · ${hub}`;
     api.get("/navigator/moves").then((r) => { setD(r.data); }).catch(() => setErr(true));
+    api.get("/navigator/plan").then((r) => setPlanState(r.data)).catch(() => {});
     api.get("/announcements").then((r) => setNews((r.data || []).slice(0, 2))).catch(() => {});
     api.get("/navigator/me").then((r) => { setTracked(r.data.tracked || []); itc.setInterest(r.data.interest || []); }).catch(() => {});
   }, [account?.startup]); // eslint-disable-line react-hooks/exhaustive-deps
@@ -119,6 +151,8 @@ export default function EcosystemHome() {
   const L = d.lists;
   const progs = [...(L.program || []), ...(L.grant || [])].sort((a, b) => b.score - a.score);
   const top = d.moves[0];
+  const plan = (planState && planState.plan) || {};
+  const states = stepStates({ startup: st, plan, steps: buildPlan({ direction: plan.direction, lists: L, plan, today: d.as_of }) });
   const live = (l) => (l || []).filter((m) => m.verdict === "now" || m.verdict === "close").sort((a, b) => VRANK[a.verdict] - VRANK[b.verdict] || b.score - a.score).slice(0, 3);
   return (
     <div className="space-y-5" data-testid="eco-home">
@@ -136,6 +170,8 @@ export default function EcosystemHome() {
           </Link>
         )}
       </header>
+
+      {planState && <PlanCard states={states} />}
 
       {top && <TopPick m={top} today={d.as_of} onOpen={setOpen} />}
 

@@ -7,6 +7,7 @@ import { EditProvider } from "./components/EditKit";
 import Layout from "./components/Layout";
 import { Spinner } from "./components/ui";
 import Login from "./pages/Login";
+import Planner from "./pages/Planner";
 import DemoLanding from "./pages/DemoLanding";
 import Signup from "./pages/Signup";
 import ForgotPassword from "./pages/ForgotPassword";
@@ -156,6 +157,7 @@ export default function App() {
         <Route path="/c/:slug" element={<CommunityLanding />} />
         <Route path="/setup" element={<Protected admin><SetupWizard /></Protected>} />
         <Route path="/" element={<P><Dashboard /></P>} />
+        <Route path="/plan" element={<P><Planner /></P>} />
         <Route path="/members" element={<P><Members /></P>} />
         <Route path="/members/:id" element={<P><MemberProfile /></P>} />
         <Route path="/events" element={<P><Events /></P>} />
