@@ -1,6 +1,6 @@
 import React, { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { ArrowRight, ArrowUp, Check, MessageCircle, Rocket } from "lucide-react";
+import { ArrowRight, ArrowUp, Check, MessageCircle, Plus, Rocket } from "lucide-react";
 import { api, fmtDate, timeAgo } from "../lib/api";
 import { useAuth } from "../lib/auth";
 import { useEcosystem } from "../lib/ecosystem";
@@ -84,9 +84,10 @@ function PlanCard({ states, mobile = false }) {
     return (
       <section className="card flex flex-none items-center gap-3 !p-3 lg:hidden" data-testid="eco-plan-m">
         <div className="min-w-0 flex-1 space-y-1.5">
-          <div className="flex items-baseline justify-between gap-2"><h2 className="text-base font-bold" style={heading}>Your plan</h2><span className="truncate text-xs text-muted">{done === 4 ? "Ready" : `Next: ${next.label}`}</span></div>
+          <div className="flex items-baseline justify-between gap-2"><h2 className="whitespace-nowrap text-base font-bold" style={heading}>Your plan</h2><span className="hidden truncate text-xs text-muted min-[400px]:inline">{done === 4 ? "Ready" : `Next: ${next.label}`}</span></div>
           {bar}
         </div>
+        <Link to="/plan?update=1" aria-label="Log an update" title="Log an update" data-testid="eco-update-m" className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-line transition hover:bg-ink/5"><Plus className="h-5 w-5" aria-hidden /></Link>
         <Link to={next.to} data-testid="eco-plan-cta-m" className={cx(SOLID, "px-4 py-2.5 text-sm")} style={ACCENT}>{done === 4 ? "Open" : "Continue"}<ArrowRight className="h-4 w-4" aria-hidden /></Link>
       </section>
     );
@@ -109,6 +110,7 @@ function PlanCard({ states, mobile = false }) {
         ))}
       </ol>
       <Link to={next.to} data-testid="eco-plan-cta" className={cx(SOLID, "mt-3 w-full px-5 py-3 text-sm")} style={ACCENT}>{done === 4 ? "Open my plan" : `Continue: ${next.label}`}<ArrowRight className="h-4 w-4" aria-hidden /></Link>
+      <Link to="/plan?update=1" data-testid="eco-update" className="mt-2 inline-flex items-center justify-center gap-1.5 rounded-full border border-line px-5 py-2.5 text-sm font-semibold transition hover:bg-ink/5"><Plus className="h-4 w-4" aria-hidden />Log an update</Link>
     </section>
   );
 }

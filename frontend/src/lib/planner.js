@@ -4,7 +4,7 @@
 //   startup: the founder's saved startup profile (name, one_liner, stage, needs, goal, pitch{...}, documents[])
 //   lists:   everything the hub knows, already judged against the founder (lib/moves.js buildMoves().lists): {program, grant, event, person, resource}
 //   plan:    what the founder has chosen and ticked: {direction, status{id: todo|doing|done}, custom[], hidden[], shared, include{}, notes}
-import { NEED_LABEL, STAGE_LABEL, STAGE_NOW, needsFromText } from "./navigator";
+import { NEED_LABEL, STAGES, STAGE_LABEL, STAGE_NOW, needsFromText } from "./navigator";
 import { daysBetween, joinList, labels } from "./explain";
 
 export const STEPS = [
@@ -15,8 +15,55 @@ export const STEPS = [
 ];
 export const HORIZONS = [["soon", "Next 2 weeks"], ["month", "Next 30 days"], ["quarter", "Next 90 days"]];
 export const STATUS_LABEL = { todo: "To do", doing: "In progress", done: "Done" };
-export const BRIEF_SECTIONS = [["story", "Your story"], ["direction", "Direction you are leaning toward"], ["plan", "Where your plan stands"], ["lined", "Support lined up"], ["questions", "Questions for your advisor"]];
+export const BRIEF_SECTIONS = [["story", "Your story"], ["direction", "Direction you are leaning toward"], ["plan", "Where your plan stands"], ["progress", "What has happened lately"], ["lined", "Support lined up"], ["questions", "Questions for your advisor"]];
 const MAX_CUSTOM = 20;
+const MAX_LOG = 30;
+
+// ---- progress updates ---------------------------------------------------------------------------------------------------------------------
+// "Something happened": one tap and a line of detail. Each kind says what it changes on the founder's profile (stage, what they still need,
+// the traction line) so the directions and matches re-rank on their own, and it is added to a dated log that the advisor brief can include.
+//   ask: the question for the note   need: true when the note is required   needs: what stops being a need   stage: the earliest stage it implies
+export const UPDATES = [
+  { key: "customer", label: "Got a customer", ask: "Who, or how many?", stage: "launched", meets: "customers", traction: true },
+  { key: "revenue", label: "Earned revenue", ask: "How much, or what kind?", stage: "revenue", traction: true },
+  { key: "funding", label: "Got funding", ask: "From where, and how much?", meets: "funding", traction: true },
+  { key: "program", label: "Joined a program", ask: "Which one?", traction: true },
+  { key: "mentor", label: "Found a mentor", ask: "Who?", meets: "mentorship" },
+  { key: "hire", label: "Made a hire", ask: "Who or what role?", meets: "talent", hire: true },
+  { key: "launch", label: "Launched", ask: "What did you launch?", stage: "launched", traction: true },
+  { key: "pivot", label: "Changed direction", ask: "What changed?", need: true, resets: true },
+  { key: "blocked", label: "Hit a snag", ask: "What is in the way?", need: true, step: true },
+  { key: "other", label: "Something else", ask: "What happened?", need: true },
+];
+const UPDATE = Object.fromEntries(UPDATES.map((u) => [u.key, u]));
+const clipNote = (t, n = 200) => String(t || "").replace(/\s+/g, " ").trim().slice(0, n);
+
+// What an update would change, worked out before it is saved so the founder sees it first. Pure: returns the new startup (or null if it
+// is unchanged), the plan changes to send with it, and the plain-language list of effects.
+export function applyUpdate({ type, note = "", startup = {}, today = "" }) {
+  const u = UPDATE[type];
+  if (!u) throw new Error("Pick what happened first");
+  const n = clipNote(note);
+  if (u.need && !n) throw new Error("Add a line about it");
+  const next = { ...startup, pitch: { ...(startup.pitch || {}) } };
+  const effects = [];
+  let changed = false;
+  if (u.stage && STAGES.indexOf(u.stage) > STAGES.indexOf(startup.stage || "idea")) { next.stage = u.stage; effects.push(`Your stage becomes ${STAGE_LABEL[u.stage]}.`); changed = true; }
+  if (u.meets && (startup.needs || []).includes(u.meets)) { next.needs = startup.needs.filter((x) => x !== u.meets); effects.push(`${NEED_LABEL[u.meets][0].toUpperCase() + NEED_LABEL[u.meets].slice(1)} comes off what you need, so matches re-rank.`); changed = true; }
+  if (u.hire) { const e = Number(startup.employees) || 0; next.employees = e + 1; effects.push(`Team size goes to ${e + 1}.`); changed = true; }
+  if (u.traction && n) {
+    const line = `${dateWord(today)}: ${u.label.toLowerCase()}, ${n}`;
+    next.pitch.traction = [(startup.pitch || {}).traction, line].filter(Boolean).join(" · ").slice(0, 600);
+    effects.push("It is added to your traction.");
+    changed = true;
+  }
+  const body = { log: { type, label: u.label, note: n, at: today, effects } };
+  if (u.resets) { body.direction = ""; effects.push("Your direction is cleared so you can pick again."); }
+  if (u.step) { body.add = { title: `Unblock: ${n}`.slice(0, 140), horizon: "soon" }; effects.push("A step to fix it is added to the next two weeks."); }
+  if (!effects.length) effects.push("It is saved to your progress log.");
+  return { startup: changed ? next : null, body, effects };
+}
+
 
 // ---- directions -------------------------------------------------------------------------------------------------------------------------
 // Each direction is a plain-language bet, with the honest cost of making it. `moves` are the first three steps, as [horizon, step, why].
@@ -175,7 +222,7 @@ export function adviceQuestions({ startup = {}, direction, lists = {}, steps = [
 export function advisorBrief({ startup = {}, direction, lists = {}, plan = {}, steps = [], today, hub = "" }) {
   const dir = DIRECTION[direction];
   const st = startup;
-  const inc = { story: true, direction: true, plan: true, lined: true, questions: true, ...(plan.include || {}) };
+  const inc = { story: true, direction: true, plan: true, progress: true, lined: true, questions: true, ...(plan.include || {}) };
   const sections = [];
   const pitch = st.pitch || {};
   const need = joinList((st.needs || []).map((n) => NEED_LABEL[n] || n));
@@ -199,6 +246,8 @@ export function advisorBrief({ startup = {}, direction, lists = {}, plan = {}, s
   const nextUp = steps.filter((x) => x.status === "todo" && x.kind !== "advisor").slice(0, 3).map((x) => x.title);
   if (nextUp.length) planRows.push(["Up next", nextUp.join("; ")]);
   sections.push({ key: "plan", title: "Where your plan stands", rows: planRows, on: inc.plan });
+  const log = (plan.log || []).slice(0, 5);
+  if (log.length) sections.push({ key: "progress", title: "What has happened lately", rows: log.map((l) => [dateWord(l.at), `${l.label}${l.note ? `: ${l.note}` : ""}`]), on: inc.progress });
   const lined = [...(lists.program || []), ...(lists.grant || [])].filter((x) => x.verdict === "now").slice(0, 3).map((x) => `${x.title}${x.deadline ? ` (closes ${dateWord(x.deadline)})` : ""}`);
   const evs = (lists.event || []).filter((e) => e.rsvp).slice(0, 2).map((e) => e.title);
   const lrows = [];
@@ -227,6 +276,13 @@ export function updatePlan(planIn, body = {}, newId = () => Math.random().toStri
     if (!title) throw new Error("Write the step first");
     if (plan.custom.length >= MAX_CUSTOM) throw new Error(`You can add up to ${MAX_CUSTOM} steps of your own`);
     plan.custom.push({ id: "c:" + newId(), title, horizon: HORIZONS.some(([k]) => k === body.add.horizon) ? body.add.horizon : "month" });
+  }
+  plan.log = [...(plan.log || [])];
+  if (body.log) {
+    const l = body.log;
+    if (!UPDATE[l.type]) throw new Error("Unknown update");
+    plan.log.unshift({ id: "l:" + newId(), type: l.type, label: UPDATE[l.type].label, note: clipNote(l.note), at: String(l.at || "").slice(0, 10), effects: (l.effects || []).slice(0, 6).map((e) => clipNote(e, 140)) });
+    plan.log = plan.log.slice(0, MAX_LOG);
   }
   if (body.remove) { const id = cleanId(body.remove); if (id.startsWith("c:")) plan.custom = plan.custom.filter((c) => c.id !== id); else if (id !== "final" && !plan.hidden.includes(id)) plan.hidden.push(id); }
   if (body.restore) plan.hidden = [];
