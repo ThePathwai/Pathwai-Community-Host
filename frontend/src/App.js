@@ -158,7 +158,7 @@ export default function App() {
         <Route path="/c/:slug" element={<CommunityLanding />} />
         <Route path="/setup" element={<Protected admin><SetupWizard /></Protected>} />
         <Route path="/" element={<P><Dashboard /></P>} />
-        <Route path="/ask" element={<P><Ask /></P>} />
+        <Route path="/assistant" element={<P><Ask /></P>} />
         <Route path="/plan" element={<P><Planner /></P>} />
         <Route path="/members" element={<P><Members /></P>} />
         <Route path="/members/:id" element={<P><MemberProfile /></P>} />

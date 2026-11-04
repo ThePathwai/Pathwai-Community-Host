@@ -11,11 +11,11 @@ import AlertsPrompt from "./AlertsPrompt";
 import { Avatar, BackButton, PoweredBy, Wordmark, cx } from "./ui";
 import { BrandDrawer, EditBar, Inline, useEdit } from "./EditKit";
 
-const ROUTES = { ask: "/ask", plan: "/plan", programs: "/navigator", members: "/members", matches: "/matches", events: "/events", classes: "/classes", learning: "/learning", teams: "/teams", resources: "/resources", updates: "/updates", requests: "/requests", support: "/support", inbox: "/inbox" };
-const DEFAULT_LABELS = { ask: "Ask", plan: "My plan", programs: "Programs & grants", members: "Members", matches: "Connections", events: "Events", classes: "Classes", learning: "Learning", teams: "Teams", resources: "Perks", updates: "News", requests: "To-do", support: "Help board", inbox: "Messages" };
+const ROUTES = { assistant: "/assistant", plan: "/plan", programs: "/navigator", members: "/members", matches: "/matches", events: "/events", classes: "/classes", learning: "/learning", teams: "/teams", resources: "/resources", updates: "/updates", requests: "/requests", support: "/support", inbox: "/inbox" };
+const DEFAULT_LABELS = { assistant: "Ask", plan: "My plan", programs: "Programs & grants", members: "Members", matches: "Connections", events: "Events", classes: "Classes", learning: "Learning", teams: "Teams", resources: "Perks", updates: "News", requests: "To-do", support: "Help board", inbox: "Messages" };
 // Icon-forward tab bar (mirrors Instagram / Strava / ClassPass-style bottom nav) — each primary
 // section gets a fixed glyph so the bar reads at a glance instead of by label text alone.
-const TAB_ICONS = { "/": HomeIcon, ask: MessageCircle, plan: Target, programs: Compass, members: Users, matches: UserPlus, events: Calendar, classes: Dumbbell, learning: GraduationCap, teams: UsersRound, resources: Gift, updates: Megaphone, requests: CheckSquare, support: LifeBuoy, inbox: MessageSquare };
+const TAB_ICONS = { "/": HomeIcon, assistant: MessageCircle, plan: Target, programs: Compass, members: Users, matches: UserPlus, events: Calendar, classes: Dumbbell, learning: GraduationCap, teams: UsersRound, resources: Gift, updates: Megaphone, requests: CheckSquare, support: LifeBuoy, inbox: MessageSquare };
 
 export default function Layout({ children }) {
   const { user, config, logout } = useAuth();
@@ -79,8 +79,8 @@ export default function Layout({ children }) {
   const backTo = detail ? { members: ["/members", "members"], events: ["/events", "events"], organizations: ["/organizations", "event series"] }[detail[1]] : null;
 
   // Programs & grants, My plan and Ask are opt-in per community (config.nav), so the default nav leaves them out.
-  const items = (config?.nav?.length ? config.nav : Object.keys(ROUTES).filter((k) => k !== "programs" && k !== "plan" && k !== "ask").map((k) => ({ key: k, label: DEFAULT_LABELS[k], enabled: true })))
-    .filter((n) => n.enabled !== false && ROUTES[n.key] && !((n.key === "plan" || n.key === "ask") && isAdmin)); // the planner is a founder's own page, and opt-in per community (config.nav)
+  const items = (config?.nav?.length ? config.nav : Object.keys(ROUTES).filter((k) => k !== "programs" && k !== "plan" && k !== "assistant").map((k) => ({ key: k, label: DEFAULT_LABELS[k], enabled: true })))
+    .filter((n) => n.enabled !== false && ROUTES[n.key] && !((n.key === "plan" || n.key === "assistant") && isAdmin)); // the planner is a founder's own page, and opt-in per community (config.nav)
   // `menu: true` keeps a section out of the main bar and the phone tab bar and lists it in the account menu instead, so a hub can show its four or five main pages and nothing else.
   const menuOnly = items.filter((n) => n.menu);
   const mainItems = items.filter((n) => !n.menu);

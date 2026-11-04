@@ -144,3 +144,10 @@ html { -webkit-text-size-adjust: 100%; }
 .pw-rail > * { scroll-snap-align: start; }
 .pw-surface { background: linear-gradient(180deg, rgb(var(--c-surface)) 0%, rgb(var(--c-surface) / 0.7) 100%); }
 @media (prefers-reduced-motion: reduce) { .pw-in-up, .pw-fade, .pw-drawer { animation: none !important; } }
+
+/* A page that is sized to the screen (the ecosystem Home sets body[data-fit]) has no footer and no extra height, so it never scrolls. */
+body[data-fit] footer { display: none; }
+body[data-fit] .min-h-screen { min-height: 0; }
+
+/* very short phones: drop secondary lines so the lists keep room */
+@media (max-height: 700px) and (max-width: 1023px) { .short-hide { display: none; } }

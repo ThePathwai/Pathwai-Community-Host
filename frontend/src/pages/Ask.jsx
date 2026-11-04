@@ -10,7 +10,7 @@ import { buildPlan } from "../lib/planner";
 import { Avatar, Spinner, cx } from "../components/ui";
 import { KindTile, VerdictBadge, V, KIND, dayShort, heading } from "../components/hub/HubKit";
 
-// Ask (/ask): say what you are trying to make happen, in your own words. The chat answers in a sentence, and the screen shows the person or
+// Ask (/assistant), not to be confused with the Copilot at /ask: say what you are trying to make happen, in your own words. The chat answers in a sentence, and the screen shows the person or
 // resource at the hub who can help most, with why and what it takes. Rules in lib/ask.js, matches from GET /navigator/moves.
 
 const ACCENT = { background: "var(--accent)", color: "var(--on-accent)" };
