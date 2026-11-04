@@ -102,7 +102,10 @@ const ho = (h) => ["soon", "month", "quarter"].indexOf(h);
 // "almost there" ones, then the advisor meeting itself. Ids are stable so ticks survive a refresh.
 export function buildPlan({ direction, lists = {}, plan = {}, today }) {
   const dir = DIRECTION[direction];
-  if (!dir) return [];
+  if (!dir) {   // no direction yet: only what the founder added themselves (for example from Ask)
+    const hid = new Set(plan.hidden || []);
+    return (plan.custom || []).filter((c) => !hid.has(c.id)).map((c, i) => ({ id: c.id, kind: "custom", horizon: c.horizon, title: c.title, why: "Added by you.", status: (plan.status || {})[c.id] || "todo", order: i }));
+  }
   const steps = dir.moves.map(([h, title, why], i) => ({ id: `m:${dir.key}:${i}`, kind: "move", horizon: h, title, why }));
   const fit = fitsDirection(dir);
   const programs = [...(lists.program || []), ...(lists.grant || [])].filter(fit).slice(0, 2);

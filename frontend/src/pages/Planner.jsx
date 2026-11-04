@@ -182,7 +182,7 @@ function Plan({ dir, steps, onStatus, onAdd, onRemove, onRestore, hidden, onPick
   const [text, setText] = useState("");
   const [hz, setHz] = useState("month");
   const p = planProgress(steps);
-  if (!dir) {
+  if (!dir && !steps.length) {
     return (
       <section data-testid="plan-step"><StepHead n={3} title="Your plan" sub="Your plan is built from the direction you pick." />
         <div className="card flex flex-wrap items-center justify-between gap-4"><p className="text-sm">Pick a direction first, and the steps appear here.</p>
@@ -192,7 +192,7 @@ function Plan({ dir, steps, onStatus, onAdd, onRemove, onRestore, hidden, onPick
   const pct = p.total ? Math.round((100 * p.done) / p.total) : 0;
   return (
     <section data-testid="plan-step">
-      <StepHead n={3} title="Your plan" sub={`For the direction you picked: ${dir.title.toLowerCase()}. Tap the circle to mark a step in progress, then done.`} />
+      <StepHead n={3} title="Your plan" sub={dir ? `For the direction you picked: ${dir.title.toLowerCase()}. Tap the circle to mark a step in progress, then done.` : "These are the steps you have added so far. Pick a direction and we will build the rest around them."} />
       <div className="mb-6 card flex flex-wrap items-center gap-x-6 gap-y-3">
         <div className="min-w-0 flex-1" style={{ minWidth: "14rem" }}>
           <div className="flex items-baseline justify-between text-sm"><span className="font-semibold" data-testid="plan-progress">{p.done} of {p.total} steps done</span><span className="tabular-nums text-muted">{pct}%</span></div>
@@ -200,7 +200,7 @@ function Plan({ dir, steps, onStatus, onAdd, onRemove, onRestore, hidden, onPick
             <span className="bg-emerald-500" style={{ flexGrow: p.done }} /><span className="bg-amber-500" style={{ flexGrow: p.doing }} />
           </div>
         </div>
-        <button type="button" onClick={onPickDirection} className="btn-ghost !py-2 text-sm" data-testid="plan-change">Change direction</button>
+        <button type="button" onClick={onPickDirection} className="btn-ghost !py-2 text-sm" data-testid="plan-change">{dir ? "Change direction" : "Pick a direction"}</button>
       </div>
       <div className="space-y-8">
         {HORIZONS.map(([k, label]) => {
@@ -371,7 +371,7 @@ export default function Planner() {
       {step === "brief" && <Brief brief={brief} plan={plan} advisors={advisors} busy={busy}
         onInclude={(k, v) => (k ? post({ include: { [k]: v } }) : post({ brief_ready: true }))}
         onShare={(a) => post({ share: { id: a.id, name: a.title, title: a.sub } }, `Shared with ${a.title}`)} onUnshare={() => post({ share: null }, "Sharing stopped")} />}
-      {step !== "brief" && step === "plan" && dir && (
+      {step === "plan" && dir && (
         <div className="flex justify-end"><button type="button" className={PRIMARY} style={ACCENT} onClick={() => go("brief")} data-testid="to-brief">Prepare my advisor brief<ArrowRight className="h-4 w-4" aria-hidden /></button></div>
       )}
       <p className="sr-only" aria-live="polite">{busy ? "Saving" : ""}</p>

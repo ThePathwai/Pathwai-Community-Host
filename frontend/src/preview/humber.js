@@ -420,8 +420,8 @@ export function buildHumber(fixtures, deps) {
       },
       // Main pages: the planner first, then the four places it draws from; everything else lives in the account menu (`menu: true`).
       nav: [
-        { key: "plan", label: "My plan", enabled: true }, { key: "programs", label: "Programs", enabled: true }, { key: "events", label: "Events", enabled: true }, { key: "members", label: "People", enabled: true },
-        { key: "resources", label: "Resources", enabled: true },
+        { key: "ask", label: "Ask", enabled: true }, { key: "plan", label: "My plan", enabled: true }, { key: "programs", label: "Programs", enabled: true }, { key: "members", label: "People", enabled: true },
+        { key: "resources", label: "Resources", enabled: true }, { key: "events", label: "Events", enabled: true },
         { key: "matches", label: "Intros", enabled: true, menu: true }, { key: "inbox", label: "Inbox", enabled: true, menu: true }, { key: "learning", label: "Academy", enabled: true, menu: true },
         { key: "requests", label: "To-do", enabled: false }, { key: "support", label: "Asks", enabled: false },
       ],

@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { ArrowRight, Check, Rocket } from "lucide-react";
+import { ArrowRight, ArrowUp, Check, MessageCircle, Rocket } from "lucide-react";
 import { api, fmtDate, timeAgo } from "../lib/api";
 import { useAuth } from "../lib/auth";
 import { useEcosystem } from "../lib/ecosystem";
@@ -12,6 +12,7 @@ import { ProgramDrawer } from "./ProgramCards";
 import { CheckStrip, KIND, KindTile, V, VerdictBadge, daysFromNow, dayShort, heading } from "./hub/HubKit";
 import { VERDICT, VERDICTS, VRANK } from "../lib/explain";
 import { buildPlan, stepStates } from "../lib/planner";
+import { SUGGESTIONS } from "../lib/ask";
 
 // Home for a hub that works as an ecosystem (config.ecosystem, see lib/ecosystem.js): not a feed of what happened, but "where to start".
 // One top pick, then the best few of each kind with a way to the full page. Ranking rules are in lib/moves.js (GET /navigator/moves).
@@ -47,6 +48,27 @@ function TopPick({ m, today, onOpen }) {
         <button type="button" onClick={() => openMove(m, nav, onOpen)} data-testid="eco-top-cta" className="inline-flex shrink-0 items-center justify-center gap-2 rounded-full px-7 py-3.5 text-base font-semibold" style={{ background: "var(--accent)", color: "var(--on-accent)" }}>
           {m.action}<ArrowRight className="h-4 w-4" aria-hidden />
         </button>
+      </div>
+    </section>
+  );
+}
+
+// The first thing on Home: say what you want to make happen. It opens Ask (/ask) with the question already answered.
+function AskBar() {
+  const nav = useNavigate();
+  const [q, setQ] = useState("");
+  const go = (t) => { const v = String(t ?? q).trim(); nav(v ? `/ask?q=${encodeURIComponent(v)}` : "/ask"); };
+  return (
+    <section className="rounded-3xl border border-line bg-surface p-4 shadow-sm sm:p-6" data-testid="eco-ask">
+      <form onSubmit={(e) => { e.preventDefault(); go(); }}>
+        <label className="flex items-center gap-3 rounded-full border border-line bg-paper py-2 pl-5 pr-2 transition focus-within:border-ink/40 focus-within:shadow-sm">
+          <MessageCircle className="h-5 w-5 shrink-0 text-muted" aria-hidden />
+          <input className="min-w-0 flex-1 bg-transparent py-2 text-base outline-none placeholder:text-muted" value={q} onChange={(e) => setQ(e.target.value)} placeholder="e.g. I need my first paying customers" aria-label="What do you want to make happen?" data-testid="eco-ask-input" maxLength={300} />
+          <button type="submit" aria-label="Ask" data-testid="eco-ask-go" className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full" style={{ background: "var(--accent)", color: "var(--on-accent)" }}><ArrowUp className="h-5 w-5" aria-hidden /></button>
+        </label>
+      </form>
+      <div className="mt-3.5 flex flex-wrap gap-2">
+        {SUGGESTIONS.slice(0, 4).map((s) => <button key={s} type="button" onClick={() => go(s)} data-testid="eco-ask-chip" className="rounded-full border border-line px-3.5 py-1.5 text-sm text-ink/80 transition hover:bg-ink/5">{s}</button>)}
       </div>
     </section>
   );
@@ -159,7 +181,7 @@ export default function EcosystemHome() {
       <header className="flex flex-wrap items-end justify-between gap-4">
         <div className="min-w-0">
           <p className="eyebrow">{hub} · {eco.city}</p>
-          <h1 className="mt-2 text-3xl sm:text-4xl" style={{ ...heading, letterSpacing: "-0.03em", textWrap: "balance" }}>{first ? `Hi ${first}, ` : ""}here's where to start</h1>
+          <h1 className="mt-2 text-3xl sm:text-4xl" style={{ ...heading, letterSpacing: "-0.03em", textWrap: "balance" }}>{first ? `Hi ${first}, w` : "W"}hat do you want to make happen?</h1>
           <p className="mt-2 max-w-2xl text-sm text-muted">{eco.home_sub}</p>
         </div>
         {st.stage && (
@@ -170,6 +192,8 @@ export default function EcosystemHome() {
           </Link>
         )}
       </header>
+
+      <AskBar />
 
       {planState && <PlanCard states={states} />}
 

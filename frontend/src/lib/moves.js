@@ -16,6 +16,9 @@ const FIT_BASE = { strong: 70, possible: 50, later: 30, skip: 15 };
 // Kept for the few callers that still ask "how strong is it" in a word.
 export const fitOf = (score) => (score >= 75 ? "strong" : score >= 56 ? "good" : "some");
 
+// Everything a search might match on, in one lowercase string (used by the Ask page, lib/ask.js).
+const hay = (...xs) => xs.filter(Boolean).join(" ").toLowerCase();
+
 function collect({ programs, events, people, resources, needs, picks, today, hubSlug }) {
   const pool = [];
   for (const p of programs) {
@@ -28,14 +31,14 @@ function collect({ programs, events, people, resources, needs, picks, today, hub
     if (own) score += 8; else if (picks[p.id]) score += 5;
     const kind = GRANTY.has(p.type) ? "grant" : "program";
     pool.push({ kind, id: p.id, title: p.name, sub: p.org, ...x, badge: own ? "Humber" : picks[p.id] ? "Humber pick" : "", amount: p.amount || "", needs: p.needs || [],
-      deadline: dl != null && dl >= 0 ? p.deadline.date : null, action: dl != null && dl >= 0 ? "Apply" : p.status === "rolling" ? "Apply anytime" : "See details", score, ref: p });
+      text: hay(p.name, p.org, p.type, p.summary, p.description, ...(p.needs || []), ...(p.tags || [])), deadline: dl != null && dl >= 0 ? p.deadline.date : null, action: dl != null && dl >= 0 ? "Apply" : p.status === "rolling" ? "Apply anytime" : "See details", score, ref: p });
   }
   for (const e of events) {
     const d = daysBetween(today, e.starts_at);
     if (d < 0) continue;
     const x = explainEvent(e, { needs, today });
     pool.push({ kind: "event", id: e.id, title: e.title, sub: [e.category, e.is_attending ? "You're going" : ""].filter(Boolean).join(" · "), at: e.starts_at, ...x,
-      place: String(e.location || "").split(" (")[0], going: e.attendee_count || 0, capacity: e.capacity || null, rsvp: e.my_rsvp || null, paid: !!e.price_cents, category: e.category || "", days: d,
+      place: String(e.location || "").split(" (")[0], going: e.attendee_count || 0, capacity: e.capacity || null, text: hay(e.title, e.category, e.description, e.location, ...(e.tags || [])), rsvp: e.my_rsvp || null, paid: !!e.price_cents, category: e.category || "", days: d,
       needs: needsOf([...(e.tags || []), String(e.category || "").toLowerCase()]), action: e.is_attending ? "You're going" : "RSVP", score: 60 - VRANK[x.verdict] * 12 + Math.max(0, 14 - d), ref: e });
   }
   for (const m of people) {
@@ -43,7 +46,7 @@ function collect({ programs, events, people, resources, needs, picks, today, hub
     const offers = (m.can_help_you || []).slice(0, 3), wants = (m.you_can_help || []).slice(0, 3);
     const base = { offers, wants, reasonScore: m.score || 0 };
     const x = explainPerson(base, { needs });
-    pool.push({ kind: "person", id: u.id, title: u.name, sub: [u.title, u.company].filter(Boolean).join(", "), type: u.member_type || "", avatar: u.avatar_url || null, offers, wants, ...x,
+    pool.push({ kind: "person", id: u.id, title: u.name, sub: [u.title, u.company].filter(Boolean).join(", "), type: u.member_type || "", avatar: u.avatar_url || null, offers, wants, text: hay(u.name, u.title, u.company, u.member_type, u.bio, m.headline, ...offers, ...wants), ...x,
       action: "Say hi", score: 60 - VRANK[x.verdict] * 12 + Math.min(10, (m.score || 0) * 1.2), ref: m });
   }
   for (const r of resources) {
@@ -51,7 +54,7 @@ function collect({ programs, events, people, resources, needs, picks, today, hub
     const x = explainResource(res, { needs });
     pool.push({ kind: "resource", id: r.id, title: r.title, sub: [r.category, r.perk_value].filter(Boolean).join(" · "), category: r.category || "", value: r.perk_value || "",
       by: r.shared_by ? { id: r.shared_by.id, name: r.shared_by.name, title: r.shared_by.title || "" } : null, how: r.how_to_claim || "", desc: r.description || "", url: r.external_url || r.url || "",
-      needs: needsOf(r.tags), ...x, action: r.category === "Perk" || r.perk_value ? "Get it" : "Read", score: 60 - VRANK[x.verdict] * 12 + (r.is_featured ? 3 : 0), ref: r });
+      needs: needsOf(r.tags), text: hay(r.title, r.category, r.description, r.perk_value, ...(r.tags || [])), ...x, action: r.category === "Perk" || r.perk_value ? "Get it" : "Read", score: 60 - VRANK[x.verdict] * 12 + (r.is_featured ? 3 : 0), ref: r });
   }
   // verdict first (good now, then almost, then not yet, then not for you), best score within each
   return pool.sort((a, b) => (VRANK[a.verdict] - VRANK[b.verdict]) || (b.score - a.score));
