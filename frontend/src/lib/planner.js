@@ -15,7 +15,7 @@ export const STEPS = [
 ];
 export const HORIZONS = [["soon", "Next 2 weeks"], ["month", "Next 30 days"], ["quarter", "Next 90 days"]];
 export const STATUS_LABEL = { todo: "To do", doing: "In progress", done: "Done" };
-export const BRIEF_SECTIONS = [["story", "Your story"], ["direction", "Direction you are leaning toward"], ["plan", "Where your plan stands"], ["progress", "What has happened lately"], ["lined", "Support lined up"], ["questions", "Questions for your advisor"]];
+export const BRIEF_SECTIONS = [["story", "Your story"], ["direction", "Direction you are leaning toward"], ["plan", "Where your plan stands"], ["progress", "What has happened lately"], ["chapters", "How the business has changed"], ["lined", "Support lined up"], ["questions", "Questions for your advisor"]];
 const MAX_CUSTOM = 20;
 const MAX_LOG = 30;
 
@@ -31,7 +31,8 @@ export const UPDATES = [
   { key: "mentor", label: "Found a mentor", ask: "Who?", meets: "mentorship" },
   { key: "hire", label: "Made a hire", ask: "Who or what role?", meets: "talent", hire: true },
   { key: "launch", label: "Launched", ask: "What did you launch?", stage: "launched", traction: true },
-  { key: "pivot", label: "Changed direction", ask: "What changed?", need: true, resets: true },
+  { key: "pivot", label: "Switched direction", hint: "Same business, a different route. Your story stays; you pick a direction again.", ask: "What changed?", need: true, resets: true },
+  { key: "reset", label: "Pivoted the business", hint: "A new product, customer or market. Your old story and plan are saved as an earlier chapter, and you start fresh.", ask: "What changed, and what did you learn?", need: true, pivot: true },
   { key: "blocked", label: "Hit a snag", ask: "What is in the way?", need: true, step: true },
   { key: "other", label: "Something else", ask: "What happened?", need: true },
 ];
@@ -40,11 +41,12 @@ const clipNote = (t, n = 200) => String(t || "").replace(/\s+/g, " ").trim().sli
 
 // What an update would change, worked out before it is saved so the founder sees it first. Pure: returns the new startup (or null if it
 // is unchanged), the plan changes to send with it, and the plain-language list of effects.
-export function applyUpdate({ type, note = "", startup = {}, today = "" }) {
+export function applyUpdate({ type, note = "", startup = {}, today = "", extra = {}, plan = {}, steps = [] }) {
   const u = UPDATE[type];
   if (!u) throw new Error("Pick what happened first");
   const n = clipNote(note);
   if (u.need && !n) throw new Error("Add a line about it");
+  if (u.pivot) return applyPivot({ n, startup, today, extra, plan, steps });
   const next = { ...startup, pitch: { ...(startup.pitch || {}) } };
   const effects = [];
   let changed = false;
@@ -64,6 +66,31 @@ export function applyUpdate({ type, note = "", startup = {}, today = "" }) {
   return { startup: changed ? next : null, body, effects };
 }
 
+
+// ---- pivots ----------------------------------------------------------------------------------------------------------------------------------
+// A pivot does not delete anything. The old story, direction, decision and plan are saved as an earlier chapter, what the founder keeps
+// (team, sector, documents, needs) carries over, and what belonged to the old idea is cleared. The progress log and the lesson stay, and the
+// advisor brief can show how the business changed.
+export const KEEP = [["team", "Team size, province and incorporation", "team size, province and incorporation"], ["sector", "Sector and who I am", "sector and audiences"], ["docs", "Documents and links", "documents and links"], ["needs", "What I need next", "what you need next"]];
+function applyPivot({ n, startup, today, extra, plan, steps }) {
+  const line = clipNote(extra.one_liner, 200);
+  if (!line) throw new Error("Describe the new idea in one line");
+  const keep = { team: true, sector: true, docs: true, needs: true, ...(extra.keep || {}) };
+  const next = { ...startup, one_liner: line, stage: STAGES.includes(extra.stage) ? extra.stage : startup.stage, pitch: {}, goal: "" };
+  if (!keep.team) { next.employees = null; next.incorporated = null; }
+  if (!keep.sector) { next.sectors = []; next.audiences = []; }
+  if (!keep.docs) next.documents = [];
+  if (!keep.needs) next.needs = [];
+  const done = steps.filter((x) => x.status === "done");
+  const chapter = {
+    at: today, name: startup.name || "", one_liner: startup.one_liner || "", stage: startup.stage || "", goal: startup.goal || "", needs: startup.needs || [],
+    pitch: startup.pitch || {}, direction: plan.direction || "", decision: (plan.decision && plan.decision.text) || "", done: done.length, total: steps.length,
+    done_titles: done.slice(0, 6).map((x) => clipNote(x.title, 100)), lesson: n,
+  };
+  const kept = KEEP.filter(([k]) => keep[k]).map(([, , l]) => l);
+  const effects = [`Your old story, direction and plan (${done.length} of ${steps.length} steps done) are saved as an earlier chapter.`, "Your plan starts fresh from the new idea.", kept.length ? `Kept: ${joinList(kept)}.` : "Nothing else is carried over."];
+  return { startup: next, body: { log: { type: "reset", label: UPDATE.reset.label, note: n, at: today, effects }, pivot: chapter }, effects };
+}
 
 // ---- directions -------------------------------------------------------------------------------------------------------------------------
 // Each direction is a plain-language bet, with the honest cost of making it. `moves` are the first three steps, as [horizon, step, why].
@@ -339,7 +366,7 @@ export function adviceQuestions({ startup = {}, direction, lists = {}, steps = [
 export function advisorBrief({ startup = {}, direction, lists = {}, plan = {}, steps = [], today, hub = "" }) {
   const dir = DIRECTION[direction];
   const st = startup;
-  const inc = { story: true, direction: true, plan: true, progress: true, lined: true, questions: true, ...(plan.include || {}) };
+  const inc = { story: true, direction: true, plan: true, progress: true, chapters: true, lined: true, questions: true, ...(plan.include || {}) };
   const sections = [];
   const pitch = st.pitch || {};
   const need = joinList((st.needs || []).map((n) => NEED_LABEL[n] || n));
@@ -365,6 +392,8 @@ export function advisorBrief({ startup = {}, direction, lists = {}, plan = {}, s
   sections.push({ key: "plan", title: "Where your plan stands", rows: planRows, on: inc.plan });
   const log = (plan.log || []).slice(0, 5);
   if (log.length) sections.push({ key: "progress", title: "What has happened lately", rows: log.map((l) => [dateWord(l.at), `${l.label}${l.note ? `: ${l.note}` : ""}`]), on: inc.progress });
+  const chapters = (plan.chapters || []).slice(0, 3);
+  if (chapters.length) sections.push({ key: "chapters", title: "How the business has changed", rows: chapters.map((c) => [dateWord(c.at), `Pivoted from "${c.one_liner || c.name || "the earlier idea"}"${c.lesson ? `. What we learned: ${c.lesson}` : ""}`]), on: inc.chapters });
   const lined = [...(lists.program || []), ...(lists.grant || [])].filter((x) => x.verdict === "now").slice(0, 3).map((x) => `${x.title}${x.deadline ? ` (closes ${dateWord(x.deadline)})` : ""}`);
   const evs = (lists.event || []).filter((e) => e.rsvp).slice(0, 2).map((e) => e.title);
   const lrows = [];
@@ -400,6 +429,16 @@ export function updatePlan(planIn, body = {}, newId = () => Math.random().toStri
     if (!UPDATE[l.type]) throw new Error("Unknown update");
     plan.log.unshift({ id: "l:" + newId(), type: l.type, label: UPDATE[l.type].label, note: clipNote(l.note), at: String(l.at || "").slice(0, 10), effects: (l.effects || []).slice(0, 6).map((e) => clipNote(e, 140)) });
     plan.log = plan.log.slice(0, MAX_LOG);
+  }
+  plan.chapters = [...(plan.chapters || [])];
+  if (body.pivot) {
+    const c = body.pivot;
+    plan.chapters.unshift({ id: "ch:" + newId(), at: String(c.at || "").slice(0, 10), name: clipNote(c.name, 80), one_liner: clipNote(c.one_liner, 200), stage: String(c.stage || "").slice(0, 20),
+      goal: clipNote(c.goal, 300), needs: (c.needs || []).slice(0, 12).map((x) => String(x).slice(0, 30)), pitch: Object.fromEntries(Object.entries(c.pitch || {}).slice(0, 6).map(([k, v]) => [String(k).slice(0, 20), clipNote(v, 600)])),
+      direction: DIRECTION[c.direction] ? c.direction : "", decision: clipNote(c.decision, 300), done: Math.max(0, +c.done || 0), total: Math.max(0, +c.total || 0),
+      done_titles: (c.done_titles || []).slice(0, 6).map((x) => clipNote(x, 100)), lesson: clipNote(c.lesson) });
+    plan.chapters = plan.chapters.slice(0, 10);
+    Object.assign(plan, { direction: "", status: {}, custom: [], hidden: [], arrange: [], decision: null, shared: null, brief_ready: false });
   }
   if ("arrange" in body) {
     const a = body.arrange;

@@ -5,8 +5,8 @@ import { ArrowRight, Check, CheckCircle2, Circle, Clock, Copy, Eye, EyeOff, Grip
 import { api, errMsg } from "../lib/api";
 import { useAuth } from "../lib/auth";
 import { useEcosystem } from "../lib/ecosystem";
-import { NEED_LABEL, needsFromText } from "../lib/navigator";
-import { BRIEF_SECTIONS, HORIZONS, STATUS_LABEL, STEPS, UPDATES, advisorBrief, applyUpdate, buildPlan, decide, directions, moveStep, planProgress, stepStates } from "../lib/planner";
+import { NEED_LABEL, STAGES, STAGE_LABEL, needsFromText } from "../lib/navigator";
+import { BRIEF_SECTIONS, HORIZONS, STATUS_LABEL, STEPS, UPDATES, advisorBrief, applyUpdate, KEEP, buildPlan, decide, directions, moveStep, planProgress, stepStates } from "../lib/planner";
 import { Avatar, Spinner, cx } from "../components/ui";
 import StartupFields, { BLANK_STARTUP, startupToApi, startupToForm } from "../components/StartupFields";
 import { KindTile, VerdictBadge, dayShort, heading } from "../components/hub/HubKit";
@@ -366,18 +366,23 @@ function Plan({ dir, steps, log, decision, arranged, onStatus, onAdd, onRemove, 
 
 // ---- log an update ----
 // "Something happened." One tap on what it was, a line about it, and it updates the profile and the plan. Sits above the steps on every tab.
-function UpdateBar({ startup, today, open, setOpen, onSave, busy, last }) {
+function UpdateBar({ startup, today, open, setOpen, onSave, busy, last, plan, steps }) {
   const [type, setType] = useState("");
   const [note, setNote] = useState("");
+  const [line, setLine] = useState("");        // a pivot: the new idea in one line
+  const [stage, setStage] = useState("");
+  const [keep, setKeep] = useState({ team: true, sector: true, docs: true, needs: true });
   const u = UPDATES.find((x) => x.key === type);
+  const extra = { one_liner: line, stage: stage || startup.stage, keep };
+  const ready = u && (!u.need || note.trim()) && (!u.pivot || line.trim());
   let preview = null;
-  if (u && (!u.need || note.trim())) { try { preview = applyUpdate({ type, note, startup, today }); } catch { preview = null; } }
-  const close = () => { setOpen(false); setType(""); setNote(""); };
-  const save = async () => { if (await onSave(applyUpdate({ type, note, startup, today }))) close(); };
+  if (ready) { try { preview = applyUpdate({ type, note, startup, today, extra, plan, steps }); } catch { preview = null; } }
+  const close = () => { setOpen(false); setType(""); setNote(""); setLine(""); setStage(""); };
+  const save = async () => { if (await onSave(applyUpdate({ type, note, startup, today, extra, plan, steps }))) close(); };
   if (!open) {
     return (
       <div className="card flex flex-wrap items-center justify-between gap-x-4 gap-y-2 !p-3 sm:!px-5" data-testid="update-closed">
-        <p className="min-w-0 text-sm"><span className="font-semibold">Something happened?</span> <span className="text-muted">{last ? `Last update: ${last.label.toLowerCase()}, ${dayShort(last.at)}.` : "Log a customer, funding, a snag. Your plan keeps up."}</span></p>
+        <p className="min-w-0 text-sm"><span className="font-semibold">Something happened?</span> <span className="text-muted">{last ? `Last update: ${last.label.toLowerCase()}, ${dayShort(last.at)}.` : "Log a customer, funding, a snag, a pivot. Your plan keeps up."}</span></p>
         <button type="button" className={cx(PRIMARY, "!px-5 !py-2.5")} style={ACCENT} onClick={() => setOpen(true)} data-testid="update-open"><Plus className="h-4 w-4" aria-hidden />Log an update</button>
       </div>
     );
@@ -395,14 +400,47 @@ function UpdateBar({ startup, today, open, setOpen, onSave, busy, last }) {
         ))}
       </div>
       {u && (
-        <form className="space-y-3" onSubmit={(e) => { e.preventDefault(); if (!busy && (!u.need || note.trim())) save(); }}>
+        <form className="space-y-3" onSubmit={(e) => { e.preventDefault(); if (!busy && ready) save(); }}>
+          {u.hint && <p className="text-sm text-muted" data-testid="update-hint">{u.hint}</p>}
           <label className="block"><span className="mb-1.5 block text-sm font-semibold">{u.ask}{!u.need && <span className="font-normal text-muted"> Optional.</span>}</span>
             <input className="input" value={note} maxLength={200} onChange={(e) => setNote(e.target.value)} autoFocus data-testid="update-note" /></label>
+          {u.pivot && (
+            <>
+              <label className="block"><span className="mb-1.5 block text-sm font-semibold">What is the new idea, in one line?</span>
+                <input className="input" value={line} maxLength={200} onChange={(e) => setLine(e.target.value)} placeholder="e.g. Scheduling software for physiotherapy clinics" data-testid="update-newline" /></label>
+              <div><span className="mb-1.5 block text-sm font-semibold">Where are you with it?</span>
+                <div className="flex flex-wrap gap-2" role="radiogroup" aria-label="Stage">{STAGES.map((st) => { const on = (stage || startup.stage) === st; return (
+                  <button key={st} type="button" role="radio" aria-checked={on} onClick={() => setStage(st)} className={cx("rounded-full border px-3 py-1 text-sm", on ? "border-transparent font-semibold" : "border-line text-muted hover:text-ink")} style={on ? ACCENT : undefined}>{STAGE_LABEL[st]}</button>); })}</div></div>
+              <div><span className="mb-1.5 block text-sm font-semibold">What carries over?</span>
+                <div className="flex flex-wrap gap-2">{KEEP.map(([k, label]) => (
+                  <button key={k} type="button" aria-pressed={keep[k]} onClick={() => setKeep({ ...keep, [k]: !keep[k] })} data-testid={`keep-${k}`} className={cx("inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-sm", keep[k] ? "border-emerald-500/50 bg-emerald-500/10 font-semibold" : "border-line text-muted")}>{keep[k] && <Check className="h-3.5 w-3.5" aria-hidden />}{label}</button>))}</div></div>
+            </>
+          )}
           {preview && <p className="rounded-xl bg-ink/[.04] px-3.5 py-2.5 text-sm" data-testid="update-effects"><span className="font-semibold">This will: </span>{preview.effects.join(" ")}</p>}
-          <button type="submit" className={PRIMARY} style={ACCENT} disabled={busy || (u.need && !note.trim())} data-testid="update-save">Save update<ArrowRight className="h-4 w-4" aria-hidden /></button>
+          <button type="submit" className={PRIMARY} style={ACCENT} disabled={busy || !ready} data-testid="update-save">{u.pivot ? "Save and start fresh" : "Save update"}<ArrowRight className="h-4 w-4" aria-hidden /></button>
         </form>
       )}
     </section>
+  );
+}
+
+// Earlier chapters: what the business was before each pivot. Read-only; nothing here is lost when the business changes.
+function Chapters({ chapters, hub }) {
+  if (!chapters.length) return null;
+  return (
+    <details className="card !p-0" data-testid="chapters">
+      <summary className="flex cursor-pointer list-none items-center justify-between gap-3 px-4 py-3 text-sm font-semibold sm:px-5">Before the pivot<span className="font-normal text-muted">{chapters.length} earlier chapter{chapters.length === 1 ? "" : "s"}</span></summary>
+      <ol className="divide-y divide-line border-t border-line">
+        {chapters.map((c) => (
+          <li key={c.id} className="space-y-1.5 px-4 py-4 text-sm sm:px-5" data-testid="chapter">
+            <p className="flex flex-wrap items-baseline justify-between gap-x-3"><span className="font-semibold">{c.one_liner || c.name || "Earlier idea"}</span><span className="text-xs text-muted">until {dayShort(c.at)}</span></p>
+            <p className="text-muted">{[c.stage && STAGE_LABEL[c.stage], c.direction && `direction: ${c.direction}`, c.total ? `${c.done} of ${c.total} plan steps done` : ""].filter(Boolean).join(" · ")}</p>
+            {c.lesson && <p><span className="font-semibold">What we learned: </span>{c.lesson}</p>}
+            {c.done_titles && c.done_titles.length > 0 && <p className="text-xs text-muted">Done: {c.done_titles.join("; ")}</p>}
+          </li>
+        ))}
+      </ol>
+    </details>
   );
 }
 
@@ -543,6 +581,7 @@ export default function Planner() {
       const r = await api.post("/navigator/plan", body);
       setState((x) => ({ ...x, ...r.data, startup: next || x.startup }));
       toast.success("Saved. " + effects[0]);
+      if (body.pivot) go("story");
       return true;
     } catch (e) { toast.error(errMsg(e)); return false; } finally { setBusy(false); }
   };
@@ -564,7 +603,8 @@ export default function Planner() {
         <h1 className="mt-2 text-3xl sm:text-4xl" style={{ ...heading, letterSpacing: "-0.03em", textWrap: "balance" }}>{first ? `${first}, ` : ""}get ready for your advisor</h1>
         <p className="mt-2 max-w-2xl text-sm text-muted">Work out where you are and where to go, then walk into the conversation knowing what to ask. Everything here is yours.</p>
       </header>
-      <UpdateBar startup={startup} today={today} open={updating} setOpen={setUpdating} onSave={logUpdate} busy={busy} last={(plan.log || [])[0]} />
+      <UpdateBar startup={startup} today={today} open={updating} setOpen={setUpdating} onSave={logUpdate} busy={busy} last={(plan.log || [])[0]} plan={plan} steps={steps} />
+      <Chapters chapters={plan.chapters || []} hub={hub} />
       <Stepper states={states} step={step} onGo={go} />
       {step === "story" && <Story key={JSON.stringify(startup).length} startup={startup} onSave={saveStory} busy={busy} />}
       {step === "directions" && (startup.stage ? <Directions list={dirs} chosen={plan.direction} onChoose={choose} busy={busy} hub={hub} decideProps={{ startup, lists, hub, today, saved: plan.decision, onUse: useDecision }} />
