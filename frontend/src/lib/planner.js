@@ -190,6 +190,38 @@ export function stepStates({ startup = {}, plan = {}, steps = [] }) {
   return STEPS.map((s, i) => ({ ...s, ...list[i], current: s.key === next.key, n: i + 1 }));
 }
 
+
+// ---- what to do next ---------------------------------------------------------------------------------------------------------------------
+// For a founder who does not know where to start: up to three moves, in the order to do them, each with one line on why. A deadline this
+// week comes first; then the next unfinished planner step; then the best program, event and person from the hub's own ranked moves; then a
+// nudge to log what has happened if nothing has been logged for two weeks.
+const STEP_TITLE = { story: "Tell us about your startup", directions: "Pick a direction to lean toward", plan: "Work through your plan", brief: "Prepare your advisor brief" };
+const MOVE_VERB = { program: "Apply to", grant: "Apply to", event: "Go to", person: "Meet", resource: "Use" };
+export function suggestNext({ states = [], moves = [], lists = {}, plan = {}, today = "", limit = 3 }) {
+  const out = [];
+  const has = (k) => out.some((o) => o.key === k);
+  const add = (x) => { if (out.length < limit && !has(x.key)) out.push(x); };
+  const mv = (m) => ({ key: `m:${m.kind}:${m.id}`, kind: "move", title: `${MOVE_VERB[m.kind] || "Open"} ${m.title}`, move: m, button: m.action || "Open" });
+  const days = (m) => (m.deadline ? daysBetween(today, m.deadline) : null);
+  const urgent = moves.find((m) => (m.kind === "program" || m.kind === "grant") && m.verdict === "now" && days(m) !== null && days(m) >= 0 && days(m) <= 7);
+  if (urgent) add(mv(urgent));
+  const step = states.find((x) => x.current && !x.done);
+  if (step) add({ key: `s:${step.key}`, kind: "step", title: STEP_TITLE[step.key] || step.label, why: step.detail, to: step.to, button: "Continue" });
+  // one of each kind, so the three moves are different things to do: the best program, the soonest good event, the best person
+  const ok = (l) => (l || []).filter((m) => m.verdict !== "no");
+  const ev = ok(lists.event).filter((e) => !e.at || String(e.at).slice(0, 10) >= today).sort((a, b) => String(a.at).localeCompare(String(b.at)))[0];
+  const pe = ok(lists.person)[0];
+  moves = [...moves, ...[ev, pe].filter(Boolean)];
+  const seen = new Set(out.map((o) => (o.move ? o.move.kind : "")));
+  const byKind = [...moves.filter((m) => m.kind === "program" || m.kind === "grant").slice(0, 1), ...moves.filter((m) => m.kind === "event").slice(0, 1), ...moves.filter((m) => m.kind === "person").slice(0, 1)];
+  moves = [...byKind, ...moves];
+  for (const m of moves) { if (out.length >= limit) break; if (m.verdict === "no" || seen.has(m.kind) || has(mv(m).key)) continue; seen.add(m.kind); add(mv(m)); }
+  for (const m of moves) { if (out.length >= limit) break; if (m.verdict !== "no") add(mv(m)); }
+  const last = (plan.log || [])[0];
+  if (out.length < limit && (!last || daysBetween(last.at, today) > 14)) add({ key: "u", kind: "update", title: "Log anything new", why: last ? "It has been a while since your last update." : "Tell your plan what has happened so far.", to: "/plan?update=1", button: "Log" });
+  return out;
+}
+
 // ---- the advisor brief --------------------------------------------------------------------------------------------------------------------
 const clip = (s, n = 160) => { const t = String(s || "").replace(/\s+/g, " ").trim(); return t.length > n ? t.slice(0, n - 1).trimEnd() + "…" : t; };
 const dateWord = (iso) => { const d = new Date(String(iso).slice(0, 10) + "T12:00:00Z"); return isNaN(d) ? "" : d.toLocaleDateString("en-CA", { month: "short", day: "numeric", timeZone: "UTC" }); };

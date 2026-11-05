@@ -11,12 +11,12 @@ import { Avatar, Spinner, cx } from "./ui";
 import { ProgramDrawer } from "./ProgramCards";
 import { CheckStrip, KIND, KindTile, V, VerdictBadge, daysFromNow, dayShort, heading } from "./hub/HubKit";
 import { VERDICT, VERDICTS, VRANK } from "../lib/explain";
-import { buildPlan, stepStates } from "../lib/planner";
+import { buildPlan, stepStates, suggestNext } from "../lib/planner";
 import { SUGGESTIONS } from "../lib/ask";
 
 // Home for a hub that works as an ecosystem (config.ecosystem, see lib/ecosystem.js). It is sized to the screen: on a laptop or a phone the
 // whole page is visible at once, with nothing to scroll. Whatever room is left goes to the list of matches, which shows as many rows as fit.
-//   left   ask bar, the one best next move, then the matches (a tab per kind)
+//   left   ask bar, three moves to do next (for people who just want to see what Pathwai suggests), then the matches (a tab per kind)
 //   right  your plan (the four steps), and the latest news.  On a phone the plan shrinks to one row.
 // Ranking rules are in lib/moves.js (GET /navigator/moves). Each kind's full list is one tap away ("See all").
 
@@ -41,57 +41,61 @@ function AskBar() {
       <form onSubmit={(e) => { e.preventDefault(); go(); }}>
         <label className="flex items-center gap-3 rounded-full border border-line bg-paper py-1 pl-4 pr-1 transition focus-within:border-ink/40 focus-within:shadow-sm">
           <MessageCircle className="h-5 w-5 shrink-0 text-muted" aria-hidden />
-          <input className="min-w-0 flex-1 bg-transparent py-1.5 text-base outline-none placeholder:text-muted" value={q} onChange={(e) => setQ(e.target.value)} placeholder="Ask anything, e.g. I need my first customers" aria-label="What do you want to make happen?" data-testid="eco-ask-input" maxLength={300} />
+          <input className="min-w-0 flex-1 bg-transparent py-1.5 text-base outline-none placeholder:text-muted" value={q} onChange={(e) => setQ(e.target.value)} placeholder="Know what you need? Just ask" aria-label="What do you want to make happen?" data-testid="eco-ask-input" maxLength={300} />
           <button type="submit" aria-label="Ask" data-testid="eco-ask-go" className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full" style={ACCENT}><ArrowUp className="h-5 w-5" aria-hidden /></button>
         </label>
       </form>
-      <div className="short-hide mt-2 flex gap-1.5 overflow-hidden">
+      <div className="tight-hide mt-2 flex gap-1.5 overflow-hidden">
         {SUGGESTIONS.slice(0, 3).map((s, i) => <button key={s} type="button" onClick={() => go(s)} data-testid="eco-ask-chip" className={cx("shrink-0 whitespace-nowrap rounded-full border border-line px-3 py-1 text-[13px] text-ink/80 transition hover:bg-ink/5", i === 1 && "hidden min-[430px]:inline-block", i === 2 && "hidden sm:inline-block")}>{s}</button>)}
       </div>
     </section>
   );
 }
 
-// The one thing to do first: what it is, why, and one button.
-function NextMove({ m, today, onOpen }) {
+// For someone who just wants to see what Pathwai suggests: three moves in the order to do them, each with one line on why. The first has the button.
+function NextMoves({ items, states, today, onOpen }) {
   const nav = useNavigate();
-  const left = m.deadline ? daysFromNow(m.deadline, today) : null;
+  const done = states.filter((s) => s.done).length;
+  const go = (it) => (it.kind === "move" ? openMove(it.move, nav, onOpen) : nav(it.to));
+  const meta = (it) => (it.kind === "move" ? [whenOf(it.move), it.move.why].filter(Boolean).join(" · ") : it.why);
   return (
-    <section className="short-hide relative flex-none overflow-hidden rounded-2xl border border-line bg-surface shadow-sm" data-testid="eco-top" data-verdict={m.verdict}>
-      <span aria-hidden className={cx("absolute inset-y-0 left-0 w-1.5", V[m.verdict].bar)} />
-      <div className="flex items-center gap-3 p-3 pl-4 sm:gap-5 sm:p-4 sm:pl-5">
-        <div className="min-w-0 flex-1">
-          <div className="flex flex-wrap items-center gap-x-2.5 gap-y-1">
-            <VerdictBadge verdict={m.verdict} />
-            <span className="text-[11px] font-semibold uppercase text-muted" style={{ letterSpacing: "0.12em" }}>Best next move</span>
-            {left != null && left <= 14 && <span className="rounded-full bg-red-500/15 px-2 py-0.5 text-[11px] font-semibold text-red-600">{left} day{left === 1 ? "" : "s"} left</span>}
-          </div>
-          <h2 className="mt-1.5 truncate text-lg font-bold leading-tight sm:text-xl" style={{ ...heading, letterSpacing: "-0.02em" }}>{m.title}</h2>
-          <p className="short-hide mt-0.5 line-clamp-1 text-[13px] text-muted sm:line-clamp-2">{[m.sub, whenOf(m)].filter(Boolean).join(" · ")}{m.why ? ` · ${m.why}` : ""}</p>
+    <section className="flex-none rounded-2xl border border-line bg-surface shadow-sm" data-testid="eco-moves">
+      <div className="flex items-center justify-between gap-3 px-3 pt-3 sm:px-4 sm:pt-4">
+        <div className="min-w-0"><p className="hidden text-[11px] font-semibold uppercase text-muted sm:block" style={{ letterSpacing: "0.12em" }}>Not sure where to start?</p>
+          <h2 className="text-base font-bold sm:text-lg" style={heading}>Do these next</h2></div>
+        <div className="flex shrink-0 items-center gap-3">
+          <div className="flex w-14 gap-1 lg:hidden" role="img" aria-label={`${done} of 4 plan steps done`}>{states.map((s) => <span key={s.key} className={cx("h-1.5 flex-1 rounded-full", s.done ? "bg-emerald-500" : s.current ? "bg-ink/40" : "bg-ink/10")} />)}</div>
+          <Link to="/plan?update=1" data-testid="eco-update-m" className="inline-flex items-center gap-1 rounded-full border border-line px-3 py-1.5 text-xs font-semibold transition hover:bg-ink/5 lg:hidden"><Plus className="h-3.5 w-3.5" aria-hidden />Log update</Link>
         </div>
-        <button type="button" onClick={() => openMove(m, nav, onOpen)} data-testid="eco-top-cta" className={cx(SOLID, "px-4 py-2.5 text-sm sm:px-6 sm:py-3")} style={ACCENT}>{m.action}<ArrowRight className="h-4 w-4" aria-hidden /></button>
       </div>
+      <ol className="p-2 sm:p-3">
+        {items.map((it, i) => {
+          const v = it.move ? it.move.verdict : null;
+          return (
+            <li key={it.key} className={cx(i >= 1 && "short-hide", i === 2 && "tight-hide")}>
+              <div className={cx("flex items-center gap-3 rounded-xl px-2 py-2 sm:px-3", i === 0 ? "bg-ink/[.05]" : "hover:bg-ink/[.04]")} data-testid={i === 0 ? "eco-top" : "eco-next"} data-verdict={v || ""}>
+                <span className={cx("flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-xs font-bold", i === 0 ? "bg-ink text-paper" : "bg-ink/10 text-ink/70")}>{i + 1}</span>
+                <button type="button" onClick={() => go(it)} className="min-w-0 flex-1 text-left">
+                  <span className="block text-sm font-semibold leading-snug line-clamp-2 sm:truncate sm:text-[15px]">{it.title}</span>
+                  <span className={cx("block truncate text-xs text-muted", i > 0 && "hidden sm:block")}>{meta(it)}</span>
+                </button>
+                {i === 0
+                  ? <button type="button" onClick={() => go(it)} data-testid="eco-top-cta" aria-label={it.button} className={cx(SOLID, "h-9 w-9 !gap-0 sm:h-auto sm:w-auto sm:!gap-2 sm:px-4 sm:py-2 text-sm")} style={ACCENT}><span className="hidden sm:inline">{it.button}</span><ArrowRight className="h-4 w-4" aria-hidden /></button>
+                  : <button type="button" onClick={() => go(it)} aria-label={it.title} className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-line text-ink/70 transition hover:bg-ink/5"><ArrowRight className="h-4 w-4" aria-hidden /></button>}
+              </div>
+            </li>
+          );
+        })}
+      </ol>
     </section>
   );
 }
 
 // The four planner steps. Wide screens get the list and it stretches to fill its column; on a phone it is one row: progress and a button.
-function PlanCard({ states, mobile = false }) {
+function PlanCard({ states }) {
   const next = states.find((s) => s.current) || states[0];
   const done = states.filter((s) => s.done).length;
   const bar = <div className="flex gap-1" role="img" aria-label={`${done} of 4 steps done`}>{states.map((s) => <span key={s.key} className={cx("h-1.5 flex-1 rounded-full", s.done ? "bg-emerald-500" : s.current ? "bg-ink/40" : "bg-ink/10")} />)}</div>;
-  if (mobile) {
-    return (
-      <section className="card flex flex-none items-center gap-3 !p-3 lg:hidden" data-testid="eco-plan-m">
-        <div className="min-w-0 flex-1 space-y-1.5">
-          <div className="flex items-baseline justify-between gap-2"><h2 className="whitespace-nowrap text-base font-bold" style={heading}>Your plan</h2><span className="hidden truncate text-xs text-muted min-[400px]:inline">{done === 4 ? "Ready" : `Next: ${next.label}`}</span></div>
-          {bar}
-        </div>
-        <Link to="/plan?update=1" aria-label="Log an update" title="Log an update" data-testid="eco-update-m" className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-line transition hover:bg-ink/5"><Plus className="h-5 w-5" aria-hidden /></Link>
-        <Link to={next.to} data-testid="eco-plan-cta-m" className={cx(SOLID, "px-4 py-2.5 text-sm")} style={ACCENT}>{done === 4 ? "Open" : "Continue"}<ArrowRight className="h-4 w-4" aria-hidden /></Link>
-      </section>
-    );
-  }
   return (
     <section className="card hidden flex-none flex-col !p-5 lg:flex" data-testid="eco-plan">
       <div className="flex items-baseline justify-between gap-3">
@@ -194,7 +198,7 @@ function Matches({ tabs, today, onOpen }) {
         </ul>
       </div>
       <div className="flex flex-none items-center justify-between gap-3 border-t border-line px-3 py-2 sm:px-4">
-        <p className="flex min-w-0 flex-wrap gap-x-3 gap-y-0.5 text-xs text-muted">{vs.map((v) => <span key={v} className="inline-flex items-center gap-1"><span className={cx("h-2 w-2 rounded-full", V[v].bar)} aria-hidden /><span className="font-semibold tabular-nums text-ink/80">{tab.counts[v]}</span> {VERDICT[v].short.toLowerCase()}</span>)}</p>
+        <p className="short-hide flex min-w-0 flex-wrap gap-x-3 gap-y-0.5 text-xs text-muted">{vs.map((v) => <span key={v} className="inline-flex items-center gap-1"><span className={cx("h-2 w-2 rounded-full", V[v].bar)} aria-hidden /><span className="font-semibold tabular-nums text-ink/80">{tab.counts[v]}</span> {VERDICT[v].short.toLowerCase()}</span>)}</p>
         <Link to={tab.to} className="inline-flex shrink-0 items-center gap-1 text-sm font-semibold sm:hidden" style={{ color: "var(--accent)" }}>See all {total}<ArrowRight className="h-3.5 w-3.5" aria-hidden /></Link>
       </div>
     </section>
@@ -275,9 +279,9 @@ export default function EcosystemHome() {
   const L = d.lists;
   const rank = (a, b) => VRANK[a.verdict] - VRANK[b.verdict] || b.score - a.score;
   const progs = [...(L.program || []), ...(L.grant || [])].sort(rank);
-  const top = d.moves[0];
   const plan = (planState && planState.plan) || {};
   const states = stepStates({ startup: st, plan, steps: buildPlan({ direction: plan.direction, lists: L, plan, today: d.as_of }) });
+  const next = suggestNext({ states, moves: d.moves, lists: L, plan, today: d.as_of });
   // good matches first, then almost, then the rest; events in date order within each group
   const byDate = (a, b) => VRANK[a.verdict] - VRANK[b.verdict] || String(a.at).localeCompare(String(b.at));
   const tabs = [
@@ -305,8 +309,7 @@ export default function EcosystemHome() {
       <div className="grid min-h-0 flex-1 grid-cols-1 gap-3 lg:grid-cols-12 lg:gap-4">
         <div className="flex min-h-0 min-w-0 flex-col gap-3 lg:col-span-8 lg:gap-4">
           <AskBar />
-          {planState && <PlanCard states={states} mobile />}
-          {top && <NextMove m={top} today={d.as_of} onOpen={setOpen} />}
+          {next.length > 0 && <NextMoves items={next} states={states} today={d.as_of} onOpen={setOpen} />}
           <Matches tabs={tabs} today={d.as_of} onOpen={setOpen} />
         </div>
         <div className="hidden min-h-0 flex-col gap-4 lg:col-span-4 lg:flex">

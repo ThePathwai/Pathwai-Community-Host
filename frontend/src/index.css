@@ -151,3 +151,4 @@ body[data-fit] .min-h-screen { min-height: 0; }
 
 /* very short phones: drop secondary lines so the lists keep room */
 @media (max-height: 700px) and (max-width: 1023px) { .short-hide { display: none; } }
+@media (max-height: 780px) { .tight-hide { display: none; } }
