@@ -6,9 +6,9 @@ import { api, errMsg } from "../lib/api";
 import { useAuth } from "../lib/auth";
 import { useEcosystem } from "../lib/ecosystem";
 import { NEEDS, NEED_LABEL, STAGES, STAGE_HINT, STAGE_LABEL, needsFromText } from "../lib/navigator";
-import { BRIEF_SECTIONS, HORIZONS, STATUS_LABEL, STEPS, UPDATES, advisorBrief, applyUpdate, buildPlan, directions, planProgress, stepStates } from "../lib/planner";
+import { BRIEF_SECTIONS, HORIZONS, STATUS_LABEL, STEPS, UPDATES, advisorBrief, applyUpdate, buildPlan, decide, directions, planProgress, stepStates } from "../lib/planner";
 import { Avatar, Spinner, cx } from "../components/ui";
-import { KindTile, dayShort, heading } from "../components/hub/HubKit";
+import { KindTile, VerdictBadge, dayShort, heading } from "../components/hub/HubKit";
 
 // The venture planner (/plan): four steps that take a founder from "here is my idea" to "here is my brief and my questions for an advisor".
 //   1 Your story      what you are building, where you are, what you want  (saved to your startup profile, the same one the Navigator reads)
@@ -121,13 +121,73 @@ function Story({ startup, onSave, busy }) {
   );
 }
 
+// ---- state a decision ----
+// Say what you have decided in your own words. We show what Pathwai would build from it (the direction, the first steps, what is lined up)
+// before anything is saved.
+const DECIDE_EXAMPLES = ["Apply for grants this month and find my first 10 customers", "Find a mentor who has scaled a startup, in the next 3 months", "Go to Pitch Day and get feedback on my pitch"];
+function Decide({ startup, lists, hub, today, saved, onUse, busy }) {
+  const [text, setText] = useState("");
+  const [res, setRes] = useState(null);
+  const [err, setErr] = useState("");
+  const run = (t) => {
+    try { setRes(decide({ text: t ?? text, startup, lists, hub, today })); setErr(""); }
+    catch (e) { setRes(null); setErr(e.message); }
+  };
+  const hz = Object.fromEntries(HORIZONS);
+  return (
+    <section className="mb-6 card space-y-4" data-testid="decide">
+      <div>
+        <h3 className="text-lg font-bold" style={heading}>Already decided? Say it in your own words</h3>
+        <p className="text-sm text-muted">{saved ? `Your decision so far: "${saved.text}". Write a new one to change it.` : "We turn it into a plan and show you what is lined up for it, before you save anything."}</p>
+      </div>
+      <form className="flex flex-wrap items-start gap-3" onSubmit={(e) => { e.preventDefault(); run(); }}>
+        <textarea rows={2} className="input min-w-0 flex-1" style={{ minWidth: "14rem" }} value={text} maxLength={300} onChange={(e) => setText(e.target.value)} placeholder="e.g. I want to apply for grants this month and get my first 10 customers" aria-label="Your decision" data-testid="decide-text" />
+        <button type="submit" className={PRIMARY} style={ACCENT} disabled={text.trim().length < 6} data-testid="decide-go"><Sparkles className="h-4 w-4" aria-hidden />See what this builds</button>
+      </form>
+      {!res && <div className="flex flex-wrap gap-2">{DECIDE_EXAMPLES.map((x) => <button key={x} type="button" onClick={() => { setText(x); run(x); }} data-testid="decide-example" className="rounded-full border border-line px-3 py-1 text-[13px] text-ink/80 hover:bg-ink/5">{x}</button>)}</div>}
+      {err && <p className="text-sm text-red-600">{err}</p>}
+      {res && (
+        <div className="space-y-4 rounded-2xl border border-emerald-500/40 bg-emerald-500/[.06] p-4 sm:p-5" data-testid="decide-result">
+          <div>
+            <Eyebrow>{res.clear ? "How we read it" : "We were not sure, so this is our best guess"}</Eyebrow>
+            <p className="mt-1 text-lg font-bold leading-snug" style={{ ...heading }} data-testid="decide-dir">{res.title}</p>
+            <p className="text-sm text-ink/85">{res.promise}</p>
+            {res.read.length > 0 && <p className="mt-1.5 text-sm text-muted">{res.read.join(" ")}</p>}
+            {!res.clear && res.other && <p className="mt-1 text-xs text-muted">Not right? Try adding words like "grants", "customers" or "mentor", or pick a direction below.</p>}
+          </div>
+          <div>
+            <Eyebrow>Your first steps</Eyebrow>
+            <ol className="mt-2 space-y-2">{res.steps.slice(0, 5).map((x, i) => (
+              <li key={x.id || i} className="flex items-start gap-3 text-sm"><span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-ink/10 text-xs font-bold">{i + 1}</span>
+                <span className="min-w-0 flex-1"><span className="block font-medium leading-snug">{x.title}</span><span className="block text-xs text-muted">{hz[x.horizon]}{x.why ? ` · ${x.why}` : ""}</span></span></li>))}</ol>
+          </div>
+          {res.lined.length > 0 && (
+            <div>
+              <Eyebrow>Lined up for it</Eyebrow>
+              <ul className="mt-2 grid gap-2 sm:grid-cols-3">{res.lined.map((m) => (
+                <li key={m.kind + m.id} className="flex items-start gap-2.5 rounded-xl border border-line bg-surface p-3" data-testid="decide-lined">
+                  <KindTile kind={m.kind} size={32} /><span className="min-w-0"><span className="block truncate text-sm font-semibold">{m.title}</span><span className="mt-0.5 block"><VerdictBadge verdict={m.verdict} short size="sm" /></span></span></li>))}</ul>
+            </div>
+          )}
+          <div className="flex flex-wrap items-center gap-3">
+            <button type="button" className={PRIMARY} style={ACCENT} disabled={busy} data-testid="decide-use" onClick={() => onUse(res)}>Use this plan<ArrowRight className="h-4 w-4" aria-hidden /></button>
+            <button type="button" className="btn-ghost !py-2 text-sm" onClick={() => setRes(null)} data-testid="decide-edit">Change my words</button>
+            <span className="text-xs text-muted">Nothing is saved until you use it.</span>
+          </div>
+        </div>
+      )}
+    </section>
+  );
+}
+
 // ---- 2. directions ----
-function Directions({ list, chosen, onChoose, busy, hub }) {
+function Directions({ list, chosen, onChoose, busy, hub, decideProps }) {
   const [more, setMore] = useState(false);
   const shown = more ? list : list.slice(0, 3);
   return (
     <section data-testid="directions-step">
       <StepHead n={2} title="Pick a direction to lean toward" sub="These are the routes your business could take next, best fit first. You are not locked in: you can switch later and your plan changes with it." />
+      <Decide {...decideProps} busy={busy} />
       <div className="grid gap-4 lg:grid-cols-3">
         {shown.map((d) => {
           const on = chosen === d.key;
@@ -178,7 +238,7 @@ function StatusButton({ s, onChange }) {
   );
 }
 
-function Plan({ dir, steps, log, onStatus, onAdd, onRemove, onRestore, hidden, onPickDirection, busy }) {
+function Plan({ dir, steps, log, decision, onStatus, onAdd, onRemove, onRestore, hidden, onPickDirection, busy }) {
   const [text, setText] = useState("");
   const [hz, setHz] = useState("month");
   const p = planProgress(steps);
@@ -193,6 +253,7 @@ function Plan({ dir, steps, log, onStatus, onAdd, onRemove, onRestore, hidden, o
   return (
     <section data-testid="plan-step">
       <StepHead n={3} title="Your plan" sub={dir ? `For the direction you picked: ${dir.title.toLowerCase()}. Tap the circle to mark a step in progress, then done.` : "These are the steps you have added so far. Pick a direction and we will build the rest around them."} />
+      {decision && <p className="mb-4 rounded-2xl border border-emerald-500/40 bg-emerald-500/[.06] px-4 py-3 text-sm" data-testid="plan-decision"><span className="mr-2 text-[11px] font-bold uppercase text-emerald-700 dark:text-emerald-300" style={{ letterSpacing: "0.1em" }}>Your decision</span>{decision.text}</p>}
       <div className="mb-6 card flex flex-wrap items-center gap-x-6 gap-y-3">
         <div className="min-w-0 flex-1" style={{ minWidth: "14rem" }}>
           <div className="flex items-baseline justify-between text-sm"><span className="font-semibold" data-testid="plan-progress">{p.done} of {p.total} steps done</span><span className="tabular-nums text-muted">{pct}%</span></div>
@@ -423,7 +484,8 @@ export default function Planner() {
       return true;
     } catch (e) { toast.error(errMsg(e)); return false; } finally { setBusy(false); }
   };
-  const choose = async (key) => { if (await post({ direction: key })) go("plan"); };
+  const choose = async (key) => { if (await post({ direction: key, ...(plan.decision && plan.decision.direction !== key ? { decision: null } : {}) })) go("plan"); };
+  const useDecision = async (r) => { if (await post({ decision: { text: r.text, direction: r.direction, at: today, steps: r.ownSteps } }, "Plan built from your decision")) go("plan"); };
 
   if (err) return <p className="card text-sm text-muted">Your planner could not load. Please try again in a moment.</p>;
   if (!state || !moves) return <Spinner />;
@@ -438,9 +500,9 @@ export default function Planner() {
       <UpdateBar startup={startup} today={today} open={updating} setOpen={setUpdating} onSave={logUpdate} busy={busy} last={(plan.log || [])[0]} />
       <Stepper states={states} step={step} onGo={go} />
       {step === "story" && <Story key={JSON.stringify(startup).length} startup={startup} onSave={saveStory} busy={busy} />}
-      {step === "directions" && (startup.stage ? <Directions list={dirs} chosen={plan.direction} onChoose={choose} busy={busy} hub={hub} />
+      {step === "directions" && (startup.stage ? <Directions list={dirs} chosen={plan.direction} onChoose={choose} busy={busy} hub={hub} decideProps={{ startup, lists, hub, today, saved: plan.decision, onUse: useDecision }} />
         : <div className="card flex flex-wrap items-center justify-between gap-4"><p className="text-sm">Tell us about your startup first, so the directions fit you.</p><button type="button" className={PRIMARY} style={ACCENT} onClick={() => go("story")}>Start with your story</button></div>)}
-      {step === "plan" && <Plan dir={dir} steps={steps} log={plan.log || []} hidden={(plan.hidden || []).length} busy={busy} onPickDirection={() => go("directions")}
+      {step === "plan" && <Plan dir={dir} steps={steps} log={plan.log || []} decision={plan.decision} hidden={(plan.hidden || []).length} busy={busy} onPickDirection={() => go("directions")}
         onStatus={(id, status) => post({ status: { id, status } })} onAdd={(title, horizon) => post({ add: { title, horizon } })} onRemove={(id) => post({ remove: id })} onRestore={() => post({ restore: true })} />}
       {step === "brief" && <Brief brief={brief} plan={plan} advisors={advisors} busy={busy}
         onInclude={(k, v) => (k ? post({ include: { [k]: v } }) : post({ brief_ready: true }))}

@@ -138,6 +138,72 @@ export function directions({ startup = {}, lists = {}, hub = "" }) {
   return out.sort((a, b) => b.score - a.score).map((d, i) => ({ ...d, best: i === 0 }));
 }
 
+
+// ---- stating a decision -------------------------------------------------------------------------------------------------------------------
+// The founder says what they have decided, in their own words ("I want to apply for grants this month and get ten customers"). We read it:
+// which direction it is, when they want it done, and any program, event or person they named. Then we show what would be built from it.
+// Nothing is saved until the founder says "use this plan".
+const NUM = { a: 1, an: 1, one: 1, two: 2, three: 3, four: 4, five: 5, six: 6, nine: 9, twelve: 12 };
+const WHEN_WORDS = ["today", "tomorrow", "this week", "next week", "this month", "next month", "this quarter", "this year"];
+export function whenIn(text) {
+  const t = String(text || "").toLowerCase();
+  const m = t.match(/\b(?:in|within|over|next)\s+(\d+|a|an|one|two|three|four|five|six|nine|twelve)\s+(day|week|month|year)s?\b/);
+  if (m) {
+    const n = /^\d+$/.test(m[1]) ? +m[1] : NUM[m[1]] || 1;
+    const days = n * { day: 1, week: 7, month: 30, year: 365 }[m[2]];
+    return { horizon: horizonFor(days), said: `${m[1]} ${m[2]}${n === 1 ? "" : "s"}` };
+  }
+  const w = WHEN_WORDS.find((x) => t.includes(x));
+  if (w) return { horizon: { today: "soon", tomorrow: "soon", "this week": "soon", "next week": "soon", "this month": "month", "next month": "month", "this quarter": "quarter", "this year": "quarter" }[w], said: w };
+  return { horizon: "month", said: "" };
+}
+const TOKEN_STOP = new Set(["the", "and", "for", "with", "from", "your", "our", "about", "program", "event", "grant", "network", "founders", "startup"]);
+const tokens = (s) => String(s || "").toLowerCase().match(/[a-z][a-z'-]{3,}/g)?.filter((w) => !TOKEN_STOP.has(w)) || [];
+const VERB = { program: "Apply to", grant: "Apply to", event: "Go to", person: "Reach out to", resource: "Use" };
+
+export function decide({ text = "", startup = {}, lists = {}, hub = "", today = "" }) {
+  const t = String(text).replace(/\s+/g, " ").trim().slice(0, 300);
+  if (t.length < 6) throw new Error("Write a sentence or two about what you have decided");
+  const low = t.toLowerCase();
+  const base = directions({ startup, lists, hub });
+  const said = needsFromText(low);
+  const scored = base.map((d) => {
+    const wordHit = d.words.filter((w) => low.includes(w));
+    const needHit = said.filter((n) => d.needs.includes(n));
+    return { d, wordHit, needHit, score: wordHit.length * 3 + needHit.length * 2 + d.score * 0.1 };
+  }).sort((a, b) => b.score - a.score);
+  const top = scored[0];
+  const clear = top.wordHit.length + top.needHit.length > 0;
+  const when = whenIn(t);
+  // anything they named: a program, event, person or resource, by its title
+  const named = allItems(lists).filter((it) => it.verdict !== "no").filter((it) => {
+    const title = String(it.title || "").toLowerCase();
+    if (title.length >= 4 && low.includes(title)) return true;
+    const tk = tokens(it.title);
+    return tk.length >= 2 && tk.filter((w) => low.includes(w)).length >= 2;
+  }).slice(0, 3);
+  const dirAll = buildPlan({ direction: top.d.key, lists, plan: {}, today }).filter((x) => x.kind !== "advisor");
+  const inPlan = (it) => dirAll.find((x) => x.link && x.link.id === it.id && x.link.kind === it.kind);
+  // a named item the direction's plan already has moves to the front; one it does not have becomes a step of the founder's own
+  const promoted = named.map(inPlan).filter(Boolean).map((x) => ({ ...x, why: "You named it." }));
+  const ownSteps = named.filter((it) => !inPlan(it)).map((it) => {
+    const days = it.deadline ? daysBetween(today, it.deadline) : it.at ? daysBetween(today, it.at) : null;
+    return { title: `${VERB[it.kind] || "Open"} ${it.title}`, horizon: days == null ? when.horizon : horizonFor(days), item: it };
+  });
+  const dirSteps = dirAll.filter((x) => !promoted.some((q) => q.id === x.id));
+  const steps = [...promoted, ...ownSteps.map((x) => ({ id: "n:" + x.item.id, title: x.title, horizon: x.horizon, why: "You named it.", link: linkOf(x.item) })), ...dirSteps].slice(0, 6);
+  const fit = fitsDirection(top.d);
+  const pick = (kinds) => allItems(lists).filter((it) => kinds.includes(it.kind) && (fit(it) || named.includes(it)))[0];
+  const lined = [pick(["program", "grant"]), pick(["event"]), pick(["person"]), pick(["resource"])].filter(Boolean).slice(0, 3);
+  const read = [];
+  if (top.wordHit.length) read.push(`You said "${top.wordHit[0]}".`);
+  if (top.needHit.length) read.push(`That points to ${labels(top.needHit)}.`);
+  if (when.said) read.push(`You want it done in ${when.said === "today" || /^this|^next|tomorrow/.test(when.said) ? when.said : "about " + when.said}.`);
+  if (named.length) read.push(`You named ${joinList(named.map((n) => n.title))}.`);
+  const other = scored.find((x) => x.d.key !== top.d.key);
+  return { text: t, direction: top.d.key, title: top.d.title, promise: top.d.promise, cost: top.d.cost, clear, read, when, steps, lined, ownSteps: ownSteps.map((x) => ({ title: x.title, horizon: x.horizon })), other: other ? { key: other.d.key, title: other.d.title } : null };
+}
+
 // ---- the plan -----------------------------------------------------------------------------------------------------------------------------
 const horizonFor = (days) => (days == null ? "month" : days <= 14 ? "soon" : days <= 45 ? "month" : "quarter");
 const LINK = { program: "/navigator", grant: "/navigator", event: "/events", person: "/members", resource: "/resources" };
@@ -227,9 +293,10 @@ const clip = (s, n = 160) => { const t = String(s || "").replace(/\s+/g, " ").tr
 const dateWord = (iso) => { const d = new Date(String(iso).slice(0, 10) + "T12:00:00Z"); return isNaN(d) ? "" : d.toLocaleDateString("en-CA", { month: "short", day: "numeric", timeZone: "UTC" }); };
 
 // Specific questions, built from the gaps in this founder's own plan, most useful first.
-export function adviceQuestions({ startup = {}, direction, lists = {}, steps = [], today, limit = 6 }) {
+export function adviceQuestions({ startup = {}, direction, lists = {}, steps = [], plan = {}, today, limit = 6 }) {
   const dir = DIRECTION[direction];
   const qs = [];
+  if (plan.decision && plan.decision.text) qs.push({ q: `I've decided: "${clip(plan.decision.text, 140)}" What would you check before I commit to it?`, why: "It is the choice you made, in your own words." });
   if (dir) qs.push({ q: `I'm leaning toward "${dir.title.toLowerCase()}". What would make you pick a different route for a company like mine?`, why: "Tests the choice you made before you commit time to it." });
   const programs = [...(lists.program || []), ...(lists.grant || [])];
   const soon = programs.filter((p) => live(p) && p.deadline && daysBetween(today, p.deadline) >= 0 && daysBetween(today, p.deadline) <= 45).sort((a, b) => a.deadline.localeCompare(b.deadline))[0];
@@ -268,7 +335,7 @@ export function advisorBrief({ startup = {}, direction, lists = {}, plan = {}, s
   sections.push({ key: "story", title: "Your story", rows: story, on: inc.story });
   if (dir) {
     const top = directions({ startup: st, lists, hub }).find((d) => d.key === dir.key);
-    sections.push({ key: "direction", title: "Direction you are leaning toward", rows: [[dir.title, dir.promise], ["Why it fits", (top ? top.reasons : []).join(" ")], ["What it costs", dir.cost]], on: inc.direction });
+    sections.push({ key: "direction", title: "Direction you are leaning toward", rows: [...(plan.decision ? [["My decision", plan.decision.text]] : []), [dir.title, dir.promise], ["Why it fits", (top ? top.reasons : []).join(" ")], ["What it costs", dir.cost]], on: inc.direction });
   }
   const p = planProgress(steps);
   const names = (s) => steps.filter((x) => x.status === s).map((x) => x.title);
@@ -287,7 +354,7 @@ export function advisorBrief({ startup = {}, direction, lists = {}, plan = {}, s
   if (evs.length) lrows.push(["Events I'm going to", evs.join("; ")]);
   if (!lrows.length) lrows.push(["Nothing lined up yet", "Nothing matched strongly yet."]);
   sections.push({ key: "lined", title: "Support lined up", rows: lrows, on: inc.lined });
-  const qs = adviceQuestions({ startup: st, direction, lists, steps, today });
+  const qs = adviceQuestions({ startup: st, direction, lists, steps, plan, today });
   sections.push({ key: "questions", title: "Questions for your advisor", questions: qs, on: inc.questions });
   const title = `${st.name || "My startup"}: advisor brief`;
   const text = [title, `Prepared ${dateWord(today)}`, "", ...sections.filter((s) => s.on).flatMap((s) => [
@@ -315,6 +382,19 @@ export function updatePlan(planIn, body = {}, newId = () => Math.random().toStri
     if (!UPDATE[l.type]) throw new Error("Unknown update");
     plan.log.unshift({ id: "l:" + newId(), type: l.type, label: UPDATE[l.type].label, note: clipNote(l.note), at: String(l.at || "").slice(0, 10), effects: (l.effects || []).slice(0, 6).map((e) => clipNote(e, 140)) });
     plan.log = plan.log.slice(0, MAX_LOG);
+  }
+  if ("decision" in body) {
+    const d = body.decision;
+    if (!d) plan.decision = null;
+    else {
+      if (!DIRECTION[d.direction]) throw new Error("Unknown direction");
+      plan.direction = d.direction;
+      plan.decision = { text: clipNote(d.text, 300), direction: d.direction, at: String(d.at || "").slice(0, 10) };
+      for (const st of (d.steps || []).slice(0, 4)) {
+        const title = clipNote(st.title, 140);
+        if (title && plan.custom.length < MAX_CUSTOM && !plan.custom.some((c) => c.title === title)) plan.custom.push({ id: "c:" + newId(), title, horizon: HORIZONS.some(([k]) => k === st.horizon) ? st.horizon : "month" });
+      }
+    }
   }
   if (body.remove) { const id = cleanId(body.remove); if (id.startsWith("c:")) plan.custom = plan.custom.filter((c) => c.id !== id); else if (id !== "final" && !plan.hidden.includes(id)) plan.hidden.push(id); }
   if (body.restore) plan.hidden = [];
