@@ -1,12 +1,12 @@
-import React, { useCallback, useEffect, useMemo, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { toast } from "sonner";
-import { ArrowRight, Check, CheckCircle2, ChevronDown, Circle, Clock, Copy, Eye, EyeOff, Lock, Plus, Send, Share2, Sparkles, Target, X } from "lucide-react";
+import { ArrowRight, Check, CheckCircle2, ChevronDown, Circle, Clock, Copy, Eye, EyeOff, GripVertical, Lock, Plus, Send, Share2, Sparkles, Target, X } from "lucide-react";
 import { api, errMsg } from "../lib/api";
 import { useAuth } from "../lib/auth";
 import { useEcosystem } from "../lib/ecosystem";
 import { NEEDS, NEED_LABEL, STAGES, STAGE_HINT, STAGE_LABEL, needsFromText } from "../lib/navigator";
-import { BRIEF_SECTIONS, HORIZONS, STATUS_LABEL, STEPS, UPDATES, advisorBrief, applyUpdate, buildPlan, decide, directions, planProgress, stepStates } from "../lib/planner";
+import { BRIEF_SECTIONS, HORIZONS, STATUS_LABEL, STEPS, UPDATES, advisorBrief, applyUpdate, buildPlan, decide, directions, moveStep, planProgress, stepStates } from "../lib/planner";
 import { Avatar, Spinner, cx } from "../components/ui";
 import { KindTile, VerdictBadge, dayShort, heading } from "../components/hub/HubKit";
 
@@ -238,9 +238,79 @@ function StatusButton({ s, onChange }) {
   );
 }
 
-function Plan({ dir, steps, log, decision, onStatus, onAdd, onRemove, onRestore, hidden, onPickDirection, busy }) {
+// Drag a step to reorder it or move it to another window (next 2 weeks, 30 days, 90 days). Pointer events, so one code path covers mouse, pen and
+// touch; the grip has touch-action none so the rest of the page still scrolls. The up and down arrow keys on the grip do the same for keyboards.
+function useDragSteps(steps, onArrange) {
+  const [d, setD] = useState(null);          // {id, title, x, y}
+  const [target, setTarget] = useState(null); // {horizon, index}
+  const zones = useRef({});
+  const live = useRef({ y: 0, id: null, target: null });
+  const raf = useRef(0);
+  const zone = useCallback((k, el) => { zones.current[k] = el; }, []);
+  const where = (x, y, id) => {
+    let best = null, gap = Infinity;
+    for (const [k, el] of Object.entries(zones.current)) {
+      if (!el) continue;
+      const r = el.getBoundingClientRect();
+      const g = y < r.top ? r.top - y : y > r.bottom ? y - r.bottom : 0;
+      if (g < gap) { gap = g; best = { k, el }; }
+    }
+    if (!best) return null;
+    const rows = [...best.el.querySelectorAll("[data-step-id]")].filter((r) => r.dataset.stepId !== id);
+    return { horizon: best.k, index: rows.filter((r) => { const b = r.getBoundingClientRect(); return y > b.top + b.height / 2; }).length };
+  };
+  const end = (commit) => {
+    cancelAnimationFrame(raf.current);
+    window.removeEventListener("pointermove", move); window.removeEventListener("pointerup", up); window.removeEventListener("pointercancel", cancel);
+    const { id, target: t } = live.current;
+    live.current = { y: 0, id: null, target: null };
+    setD(null); setTarget(null);
+    if (commit && id && t) { const next = moveStep(steps, id, t.horizon, t.index); if (next) onArrange(next); }
+  };
+  const move = (e) => {
+    live.current.y = e.clientY;
+    const t = where(e.clientX, e.clientY, live.current.id);
+    live.current.target = t; setTarget(t);
+    setD((x) => (x ? { ...x, x: e.clientX, y: e.clientY } : x));
+  };
+  const up = () => end(true);
+  const cancel = () => end(false);
+  const scroll = () => {   // keep a long plan reachable while dragging: scroll when the pointer is near the top or bottom edge
+    const y = live.current.y, h = window.innerHeight;
+    if (live.current.id) {
+      if (y < 90) window.scrollBy(0, -14); else if (y > h - 150) window.scrollBy(0, 14);
+      const t = where(0, y, live.current.id); if (t) { live.current.target = t; setTarget(t); }
+      raf.current = requestAnimationFrame(scroll);
+    }
+  };
+  const start = (e, s) => {
+    if (e.button != null && e.button !== 0) return;
+    e.preventDefault();
+    live.current = { y: e.clientY, id: s.id, target: where(e.clientX, e.clientY, s.id) };
+    setD({ id: s.id, title: s.title, x: e.clientX, y: e.clientY }); setTarget(live.current.target);
+    window.addEventListener("pointermove", move); window.addEventListener("pointerup", up); window.addEventListener("pointercancel", cancel);
+    raf.current = requestAnimationFrame(scroll);
+  };
+  useEffect(() => () => { cancelAnimationFrame(raf.current); }, []);
+  const key = (e, s) => {
+    if (e.key !== "ArrowUp" && e.key !== "ArrowDown") return;
+    e.preventDefault();
+    const hs = HORIZONS.map(([k]) => k);
+    const col = steps.filter((x) => x.horizon === s.horizon);
+    const i = col.findIndex((x) => x.id === s.id);
+    let h = s.horizon, at = i;
+    if (e.key === "ArrowUp") { if (i > 0) at = i - 1; else if (hs.indexOf(h) > 0) { h = hs[hs.indexOf(h) - 1]; at = 1e3; } else return; }
+    else { if (i < col.length - 1) at = i + 1; else if (hs.indexOf(h) < hs.length - 1) { h = hs[hs.indexOf(h) + 1]; at = 0; } else return; }
+    const next = moveStep(steps, s.id, h, at); if (next) onArrange(next);
+  };
+  const ghost = d ? <div aria-hidden data-testid="drag-ghost" className="pointer-events-none fixed z-50 max-w-[80vw] truncate rounded-xl border border-line bg-surface px-3.5 py-2 text-sm font-semibold shadow-xl" style={{ left: Math.min(d.x + 12, window.innerWidth - 40), top: d.y - 18 }}>{d.title}</div> : null;
+  return { id: d ? d.id : null, target, zone, start, key, ghost };
+}
+
+function Plan({ dir, steps, log, decision, arranged, onStatus, onAdd, onRemove, onRestore, onArrange, hidden, onPickDirection, busy }) {
   const [text, setText] = useState("");
   const [hz, setHz] = useState("month");
+  const drag = useDragSteps(steps, onArrange);
   const p = planProgress(steps);
   if (!dir && !steps.length) {
     return (
@@ -252,7 +322,7 @@ function Plan({ dir, steps, log, decision, onStatus, onAdd, onRemove, onRestore,
   const pct = p.total ? Math.round((100 * p.done) / p.total) : 0;
   return (
     <section data-testid="plan-step">
-      <StepHead n={3} title="Your plan" sub={dir ? `For the direction you picked: ${dir.title.toLowerCase()}. Tap the circle to mark a step in progress, then done.` : "These are the steps you have added so far. Pick a direction and we will build the rest around them."} />
+      <StepHead n={3} title="Your plan" sub={dir ? `For the direction you picked: ${dir.title.toLowerCase()}. Tap the circle to mark a step in progress, then done. Drag the grip to reorder or move a step.` : "These are the steps you have added so far. Pick a direction and we will build the rest around them."} />
       {decision && <p className="mb-4 rounded-2xl border border-emerald-500/40 bg-emerald-500/[.06] px-4 py-3 text-sm" data-testid="plan-decision"><span className="mr-2 text-[11px] font-bold uppercase text-emerald-700 dark:text-emerald-300" style={{ letterSpacing: "0.1em" }}>Your decision</span>{decision.text}</p>}
       <div className="mb-6 card flex flex-wrap items-center gap-x-6 gap-y-3">
         <div className="min-w-0 flex-1" style={{ minWidth: "14rem" }}>
@@ -263,34 +333,54 @@ function Plan({ dir, steps, log, decision, onStatus, onAdd, onRemove, onRestore,
         </div>
         <button type="button" onClick={onPickDirection} className="btn-ghost !py-2 text-sm" data-testid="plan-change">{dir ? "Change direction" : "Pick a direction"}</button>
       </div>
-      <div className="space-y-8">
+      <div className="space-y-8" data-testid="plan-board">
         {HORIZONS.map(([k, label]) => {
           const list = steps.filter((s) => s.horizon === k);
-          if (!list.length) return null;
+          let slot = -1;   // position among the rows that are not being dragged, to place the drop marker
+          const marker = (i) => <li key={"m" + i} aria-hidden data-testid="drop-marker" className="mx-3 my-0.5 h-1 rounded-full" style={{ background: "var(--accent)" }} />;
+          const over = drag.target && drag.target.horizon === k;
           return (
-            <div key={k} data-testid={`hz-${k}`}>
+            <div key={k} data-testid={`hz-${k}`} data-zone={k} ref={(el) => drag.zone(k, el)}>
               <h3 className="mb-3 flex items-center gap-2 text-lg font-bold" style={{ ...heading }}>{label}<span className="text-sm font-normal text-muted">{list.length}</span></h3>
-              <ul className="card divide-y divide-line !p-0">
-                {list.map((s) => (
-                  <li key={s.id} className={cx("group flex items-start gap-3.5 p-4", s.status === "done" && "bg-ink/[.025]")} data-testid={`step-row-${s.id}`}>
-                    <StatusButton s={s.status} onChange={(v) => onStatus(s.id, v)} />
-                    <div className="min-w-0 flex-1">
-                      <p className={cx("text-[15px] font-semibold leading-snug", s.status === "done" && "text-muted line-through")}>{s.title}</p>
-                      {s.why && <p className="mt-0.5 text-sm leading-snug text-muted">{s.why}</p>}
-                      <div className="mt-2 flex flex-wrap items-center gap-2">
-                        {s.status === "doing" && <span className="rounded-full bg-amber-500/15 px-2.5 py-0.5 text-xs font-semibold text-amber-700 dark:text-amber-300">In progress</span>}
-                        {s.when && <span className="text-xs text-muted">{dayShort(s.when)}</span>}
-                        {s.link && <Link to={s.link.to} className="inline-flex items-center gap-1.5 rounded-full border border-line px-2.5 py-1 text-xs font-semibold hover:bg-ink/5" data-testid={`step-link-${s.id}`}><KindTile kind={s.link.kind} size={18} />Open<ArrowRight className="h-3 w-3" aria-hidden /></Link>}
-                      </div>
-                    </div>
-                    {s.kind !== "advisor" && <button type="button" onClick={() => onRemove(s.id)} aria-label={`Remove ${s.title}`} className="shrink-0 rounded-full p-1.5 text-muted opacity-60 hover:bg-ink/5 hover:opacity-100 sm:opacity-0 sm:group-hover:opacity-100"><X className="h-4 w-4" aria-hidden /></button>}
-                  </li>
-                ))}
+              {list.length === 0 && !drag.id ? (
+                <p className="rounded-2xl border border-dashed border-line px-4 py-5 text-center text-sm text-muted">Nothing here yet. Drag a step into this window.</p>
+              ) : (
+              <ul className={cx("card divide-y divide-line !p-0", over && list.filter((s) => s.id !== drag.id).length === 0 && "ring-2")} style={over && list.filter((s) => s.id !== drag.id).length === 0 ? { "--tw-ring-color": "var(--accent)" } : undefined}>
+                {over && list.filter((s) => s.id !== drag.id).length === 0 && marker(0)}
+                {list.length === 0 && !over && <li className="px-4 py-5 text-center text-sm text-muted">Drop it here</li>}
+                {list.map((s) => {
+                  const mine = drag.id === s.id;
+                  if (!mine) slot += 1;
+                  return (
+                    <React.Fragment key={s.id}>
+                      {over && !mine && drag.target.index === slot && marker(slot)}
+                      <li data-step-id={s.id} className={cx("group flex items-start gap-2 p-4 pl-2 sm:gap-3", s.status === "done" && "bg-ink/[.025]", mine && "opacity-40")} data-testid={`step-row-${s.id}`}>
+                        <button type="button" onPointerDown={(e) => drag.start(e, s)} onKeyDown={(e) => drag.key(e, s)} data-testid={`grip-${s.id}`} aria-label={`Move ${s.title}. Drag it, or use the up and down arrow keys.`} title="Drag to reorder or move to another window"
+                          className="mt-0.5 flex h-6 w-6 shrink-0 cursor-grab touch-none select-none items-center justify-center rounded text-ink/35 hover:bg-ink/5 hover:text-ink active:cursor-grabbing"><GripVertical className="h-5 w-5" aria-hidden /></button>
+                        <StatusButton s={s.status} onChange={(v) => onStatus(s.id, v)} />
+                        <div className="min-w-0 flex-1">
+                          <p className={cx("text-[15px] font-semibold leading-snug", s.status === "done" && "text-muted line-through")}>{s.title}</p>
+                          {s.why && <p className="mt-0.5 text-sm leading-snug text-muted">{s.why}</p>}
+                          <div className="mt-2 flex flex-wrap items-center gap-2">
+                            {s.status === "doing" && <span className="rounded-full bg-amber-500/15 px-2.5 py-0.5 text-xs font-semibold text-amber-700 dark:text-amber-300">In progress</span>}
+                            {s.when && <span className="text-xs text-muted">{dayShort(s.when)}</span>}
+                            {s.link && <Link to={s.link.to} className="inline-flex items-center gap-1.5 rounded-full border border-line px-2.5 py-1 text-xs font-semibold hover:bg-ink/5" data-testid={`step-link-${s.id}`}><KindTile kind={s.link.kind} size={18} />Open<ArrowRight className="h-3 w-3" aria-hidden /></Link>}
+                          </div>
+                        </div>
+                        {s.kind !== "advisor" && <button type="button" onClick={() => onRemove(s.id)} aria-label={`Remove ${s.title}`} className="shrink-0 rounded-full p-1.5 text-muted opacity-60 hover:bg-ink/5 hover:opacity-100 sm:opacity-0 sm:group-hover:opacity-100"><X className="h-4 w-4" aria-hidden /></button>}
+                      </li>
+                    </React.Fragment>
+                  );
+                })}
+                {over && list.filter((s) => s.id !== drag.id).length > 0 && drag.target.index >= slot + 1 && marker(slot + 1)}
               </ul>
+              )}
             </div>
           );
         })}
       </div>
+      {drag.ghost}
+      <p className="mt-4 text-center text-xs text-muted">Drag the grip on any step to reorder it or move it to another window.{arranged && <> <button type="button" className="underline underline-offset-2" onClick={() => onArrange(null)} data-testid="reset-order">Reset order</button></>}</p>
       <form className="card mt-8 flex flex-wrap items-center gap-3" onSubmit={(e) => { e.preventDefault(); if (text.trim()) { onAdd(text.trim(), hz); setText(""); } }} data-testid="plan-add">
         <input className="input min-w-0 flex-1" style={{ minWidth: "12rem" }} value={text} onChange={(e) => setText(e.target.value)} placeholder="Add a step of your own" aria-label="Add a step of your own" data-testid="plan-add-text" maxLength={140} />
         <select className="input !w-auto" value={hz} onChange={(e) => setHz(e.target.value)} aria-label="When">{HORIZONS.map(([k, l]) => <option key={k} value={k}>{l}</option>)}</select>
@@ -485,6 +575,11 @@ export default function Planner() {
     } catch (e) { toast.error(errMsg(e)); return false; } finally { setBusy(false); }
   };
   const choose = async (key) => { if (await post({ direction: key, ...(plan.decision && plan.decision.direction !== key ? { decision: null } : {}) })) go("plan"); };
+  const arrange = async (next) => {
+    setState((x) => ({ ...x, plan: { ...x.plan, arrange: next || [] } }));   // show it at once, then save
+    try { const r = await api.post("/navigator/plan", { arrange: next || [] }); setState((x) => ({ ...x, ...r.data })); }
+    catch (e) { toast.error(errMsg(e)); api.get("/navigator/plan").then((r) => setState(r.data)).catch(() => {}); }
+  };
   const useDecision = async (r) => { if (await post({ decision: { text: r.text, direction: r.direction, at: today, steps: r.ownSteps } }, "Plan built from your decision")) go("plan"); };
 
   if (err) return <p className="card text-sm text-muted">Your planner could not load. Please try again in a moment.</p>;
@@ -502,7 +597,7 @@ export default function Planner() {
       {step === "story" && <Story key={JSON.stringify(startup).length} startup={startup} onSave={saveStory} busy={busy} />}
       {step === "directions" && (startup.stage ? <Directions list={dirs} chosen={plan.direction} onChoose={choose} busy={busy} hub={hub} decideProps={{ startup, lists, hub, today, saved: plan.decision, onUse: useDecision }} />
         : <div className="card flex flex-wrap items-center justify-between gap-4"><p className="text-sm">Tell us about your startup first, so the directions fit you.</p><button type="button" className={PRIMARY} style={ACCENT} onClick={() => go("story")}>Start with your story</button></div>)}
-      {step === "plan" && <Plan dir={dir} steps={steps} log={plan.log || []} decision={plan.decision} hidden={(plan.hidden || []).length} busy={busy} onPickDirection={() => go("directions")}
+      {step === "plan" && <Plan dir={dir} steps={steps} log={plan.log || []} decision={plan.decision} arranged={(plan.arrange || []).length > 0} onArrange={arrange} hidden={(plan.hidden || []).length} busy={busy} onPickDirection={() => go("directions")}
         onStatus={(id, status) => post({ status: { id, status } })} onAdd={(title, horizon) => post({ add: { title, horizon } })} onRemove={(id) => post({ remove: id })} onRestore={() => post({ restore: true })} />}
       {step === "brief" && <Brief brief={brief} plan={plan} advisors={advisors} busy={busy}
         onInclude={(k, v) => (k ? post({ include: { [k]: v } }) : post({ brief_ready: true }))}

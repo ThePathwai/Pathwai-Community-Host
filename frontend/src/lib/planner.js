@@ -211,13 +211,31 @@ const linkOf = (it) => ({ kind: it.kind, id: it.id, to: it.kind === "person" ? `
 const fitsDirection = (dir) => (it) => live(it) && itemNeeds(it).some((n) => dir.needs.includes(n));
 const ho = (h) => ["soon", "month", "quarter"].indexOf(h);
 
+// The founder's own arrangement (drag and drop): plan.arrange is every step in the order they want it, with the window it sits in. Steps that
+// came after they last arranged (new matches, steps they added) keep their usual place after the ones they placed. The advisor meeting is
+// always last inside its window.
+function applyArrange(steps, plan) {
+  const at = new Map((plan.arrange || []).map((a, i) => [a.id, { h: a.horizon, i }]));
+  if (!at.size) return steps;
+  return steps.map((s) => { const a = at.get(s.id); return a ? { ...s, horizon: a.h, placed: a.i } : s; })
+    .sort((a, b) => ho(a.horizon) - ho(b.horizon) || (a.kind === "advisor") - (b.kind === "advisor") || (a.placed ?? 1e6 + a.order) - (b.placed ?? 1e6 + b.order));
+}
+// Where a dragged step lands: move `id` into window `horizon` at position `index` (counted among the steps already in that window, without it).
+// Returns the new arrangement to save.
+export function moveStep(steps, id, horizon, index) {
+  const cols = Object.fromEntries(HORIZONS.map(([k]) => [k, steps.filter((s) => s.horizon === k && s.id !== id).map((s) => s.id)]));
+  if (!steps.some((s) => s.id === id) || !cols[horizon]) return null;
+  cols[horizon].splice(Math.max(0, Math.min(index, cols[horizon].length)), 0, id);
+  return HORIZONS.flatMap(([k]) => cols[k].map((sid) => ({ id: sid, horizon: k })));
+}
+
 // Steps for the chosen direction: its own first moves, then the best things around the founder that serve it, then what to do to unlock the
 // "almost there" ones, then the advisor meeting itself. Ids are stable so ticks survive a refresh.
 export function buildPlan({ direction, lists = {}, plan = {}, today }) {
   const dir = DIRECTION[direction];
   if (!dir) {   // no direction yet: only what the founder added themselves (for example from Ask)
     const hid = new Set(plan.hidden || []);
-    return (plan.custom || []).filter((c) => !hid.has(c.id)).map((c, i) => ({ id: c.id, kind: "custom", horizon: c.horizon, title: c.title, why: "Added by you.", status: (plan.status || {})[c.id] || "todo", order: i }));
+    return applyArrange((plan.custom || []).filter((c) => !hid.has(c.id)).map((c, i) => ({ id: c.id, kind: "custom", horizon: c.horizon, title: c.title, why: "Added by you.", status: (plan.status || {})[c.id] || "todo", order: i })), plan);
   }
   const steps = dir.moves.map(([h, title, why], i) => ({ id: `m:${dir.key}:${i}`, kind: "move", horizon: h, title, why }));
   const fit = fitsDirection(dir);
@@ -234,8 +252,8 @@ export function buildPlan({ direction, lists = {}, plan = {}, today }) {
   steps.push({ id: "final", kind: "advisor", horizon: "month", title: "Meet your advisor, with your brief", why: "Bring your direction, your plan and your questions so the time goes to advice." });
   for (const c of plan.custom || []) steps.push({ id: c.id, kind: "custom", horizon: c.horizon, title: c.title, why: "Added by you." });
   const hidden = new Set(plan.hidden || []);
-  return steps.filter((s) => !hidden.has(s.id)).map((s, i) => ({ ...s, status: (plan.status || {})[s.id] || "todo", order: i }))
-    .sort((a, b) => ho(a.horizon) - ho(b.horizon) || (a.kind === "advisor") - (b.kind === "advisor") || a.order - b.order);
+  return applyArrange(steps.filter((s) => !hidden.has(s.id)).map((s, i) => ({ ...s, status: (plan.status || {})[s.id] || "todo", order: i }))
+    .sort((a, b) => ho(a.horizon) - ho(b.horizon) || (a.kind === "advisor") - (b.kind === "advisor") || a.order - b.order), plan);
 }
 
 export const planProgress = (steps) => ({ done: steps.filter((s) => s.status === "done").length, doing: steps.filter((s) => s.status === "doing").length, total: steps.length });
@@ -382,6 +400,10 @@ export function updatePlan(planIn, body = {}, newId = () => Math.random().toStri
     if (!UPDATE[l.type]) throw new Error("Unknown update");
     plan.log.unshift({ id: "l:" + newId(), type: l.type, label: UPDATE[l.type].label, note: clipNote(l.note), at: String(l.at || "").slice(0, 10), effects: (l.effects || []).slice(0, 6).map((e) => clipNote(e, 140)) });
     plan.log = plan.log.slice(0, MAX_LOG);
+  }
+  if ("arrange" in body) {
+    const a = body.arrange;
+    plan.arrange = Array.isArray(a) ? a.slice(0, 80).filter((x) => x && x.id && HORIZONS.some(([k]) => k === x.horizon)).map((x) => ({ id: cleanId(x.id), horizon: x.horizon })) : [];
   }
   if ("decision" in body) {
     const d = body.decision;
