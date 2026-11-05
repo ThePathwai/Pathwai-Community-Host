@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import { Link, NavLink, useLocation, useNavigate } from "react-router-dom";
-import { Compass, MessageCircle, Rocket, ShieldCheck, Target, Bell, Bookmark, Calendar, CheckSquare, ChevronDown, Dumbbell, GraduationCap, Gift, Info, Home as HomeIcon, Layers, LifeBuoy, LogOut, Megaphone, MessageSquare, Moon, Settings, Sparkles, Sun, User, UserPlus, Users, UsersRound } from "lucide-react";
+import { Compass, MessageCircle, Rocket, ShieldCheck, Target, Bell, Bookmark, Calendar, CheckSquare, ChevronDown, Dumbbell, GraduationCap, Gift, Info, Home as HomeIcon, Layers, LifeBuoy, LogOut, Megaphone, MessageSquare, Moon, Settings, Sparkles, Sun, User, UserPlus, Users, UsersRound, CircleUser, FileText, Handshake, Search } from "lucide-react";
 import { applyBrand, effectiveMode, setModePref } from "../lib/theme";
 import { AI_CHAT_ENABLED } from "../lib/features";
 import { useAuth } from "../lib/auth";
@@ -16,6 +16,24 @@ const DEFAULT_LABELS = { assistant: "Ask", plan: "My plan", programs: "Programs 
 // Icon-forward tab bar (mirrors Instagram / Strava / ClassPass-style bottom nav) — each primary
 // section gets a fixed glyph so the bar reads at a glance instead of by label text alone.
 const TAB_ICONS = { "/": HomeIcon, assistant: MessageCircle, plan: Target, programs: Compass, members: Users, matches: UserPlus, events: Calendar, classes: Dumbbell, learning: GraduationCap, teams: UsersRound, resources: Gift, updates: Megaphone, requests: CheckSquare, support: LifeBuoy, inbox: MessageSquare };
+
+// The account menu is grouped so it can be scanned: this community, you, communities and tools, then admin. One row per place.
+function MenuGroup({ label, children }) {
+  return (
+    <div className="border-t border-line pb-1 pt-1.5" role="group" aria-label={label}>
+      <p className="px-2.5 pb-1 pt-1 text-[10px] font-semibold uppercase text-muted" style={{ letterSpacing: "0.12em" }}>{label}</p>
+      {children}
+    </div>
+  );
+}
+function MenuRow({ to, icon: Icon, children, badge = 0, badgeText, testid, className = "" }) {
+  return (
+    <Link to={to} data-testid={testid} className={cx("flex items-center gap-2.5 rounded-lg px-2.5 py-2 text-sm hover:bg-ink/5", className)}>
+      {Icon ? <Icon className="h-4 w-4 shrink-0 text-muted" aria-hidden /> : <span className="w-4" />}{children}
+      {badge > 0 && <span className="ml-auto rounded-full bg-red-600 px-1.5 text-[10px] font-bold leading-[16px] text-white">{badgeText || badge}</span>}
+    </Link>
+  );
+}
 
 export default function Layout({ children }) {
   const { user, config, logout } = useAuth();
@@ -138,31 +156,42 @@ export default function Layout({ children }) {
                 <span className="relative"><Avatar src={user.avatar_url} name={user.name} size={32} />{adminAttn > 0 && <span className="absolute -right-1 -top-1 h-3 w-3 rounded-full border-2 border-[rgb(var(--c-bg))] bg-red-600" data-testid="join-dot" />}</span><ChevronDown className="h-3 w-3" />
               </button>
               {menu && (
-                <div className="absolute right-0 z-50 mt-2 w-52 overflow-y-auto overscroll-contain rounded-xl border border-line bg-surface p-1 shadow-lg" style={{ maxHeight: menuMax || "70vh" }}>
-                  <p className="px-3 py-2 text-xs text-muted">{user.name}<br />{user.email}<br /><span className="font-semibold text-ink">{config?.community_name}</span></p>
-                  {overflowNav.map((n) => {
-                    const to = ROUTES[n.key];
-                    const Icon = TAB_ICONS[n.key];
-                    const badge = to === "/requests" ? openReqs : to === "/inbox" ? inboxUnread : 0;
-                    return (
-                      <Link key={to} className="flex items-center gap-2 rounded-lg px-3 py-2 text-sm hover:bg-ink/5" to={to} data-testid={`user-menu-${n.key}`}>
-                        {Icon && <Icon className="h-4 w-4" />}{n.label}
-                        {badge > 0 && <span className={"ml-auto rounded-full bg-red-600 px-1.5 text-[10px] font-bold text-white"}>{badge}</span>}
-                      </Link>
-                    );
-                  })}
-                  <Link className="flex items-center gap-2 rounded-lg px-3 py-2 text-sm hover:bg-ink/5" to="/hub" data-testid="user-menu-communities"><Layers className="h-4 w-4" />Switch community</Link>
-                  <Link className="flex items-center gap-2 rounded-lg px-3 py-2 text-sm hover:bg-ink/5" to="/profile" data-testid="user-menu-profile"><User className="h-4 w-4" />My community card</Link>
-                  <Link className="flex items-center gap-2 rounded-lg px-3 py-2 text-sm hover:bg-ink/5" to="/me" data-testid="user-menu-account-profile"><Rocket className="h-4 w-4" />My Pathwai profile</Link>
-                  <Link className="flex items-center gap-2 rounded-lg px-3 py-2 text-sm hover:bg-ink/5" to="/saved" data-testid="user-menu-saved"><Bookmark className="h-4 w-4" />Saved</Link>
-                  <Link className="flex items-center gap-2 rounded-lg px-3 py-2 text-sm hover:bg-ink/5" to="/about" data-testid="user-menu-about"><Info className="h-4 w-4" />About Pathwai</Link>
-                  <Link className="flex items-center gap-2 rounded-lg px-3 py-2 text-sm hover:bg-ink/5" to="/settings" data-testid="user-menu-settings"><Settings className="h-4 w-4" />Settings</Link>
-                  <Link className="flex items-center gap-2 rounded-lg px-3 py-2 text-sm hover:bg-ink/5" to="/applications">My applications</Link>
-                  <Link className="flex items-center gap-2 rounded-lg px-3 py-2 text-sm hover:bg-ink/5" to="/organizations">Event series &amp; partners</Link>
-                  <Link className="flex items-center gap-2 rounded-lg px-3 py-2 text-sm hover:bg-ink/5" to="/navigator" data-testid="user-menu-navigator"><Compass className="h-4 w-4" />Navigator</Link>
-                  <Link className="flex items-center gap-2 rounded-lg px-3 py-2 text-sm hover:bg-ink/5" to="/discover">Find a community</Link>
-                  {user.role === "admin" && <Link className="flex items-center gap-2 rounded-lg px-3 py-2 text-sm hover:bg-ink/5" to="/admin" data-testid="user-menu-admin">Admin{adminAttn > 0 && <span className="ml-auto rounded-md bg-red-600 px-1.5 text-[10px] text-white">{adminAttn} new</span>}</Link>}
-                  <button className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-sm hover:bg-ink/5" data-testid="user-menu-logout" onClick={async () => { nav("/login", { replace: true }); await logout(); }}><LogOut className="h-4 w-4" />Sign out</button>
+                <div className="absolute right-0 z-50 mt-2 w-64 overflow-y-auto overscroll-contain rounded-2xl border border-line bg-surface p-1.5 shadow-lg" style={{ maxHeight: menuMax || "70vh" }} data-testid="user-menu">
+                  <div className="flex items-center gap-3 px-2.5 py-2.5">
+                    <Avatar src={user.avatar_url} name={user.name} size={40} />
+                    <div className="min-w-0"><p className="truncate text-sm font-semibold">{user.name}</p><p className="truncate text-xs text-muted">{user.email}</p>{config?.community_name && <p className="truncate text-xs font-semibold">{config.community_name}</p>}</div>
+                  </div>
+                  {/* In this community: the sections that did not fit in the tab bar. On a wide screen the top bar already has them, so only the menu-only ones show. */}
+                  {overflowNav.length > 0 && (
+                    <MenuGroup label={config?.community_name ? `In ${config.community_name}` : "In this community"}>
+                      {overflowNav.map((n) => {
+                        const to = ROUTES[n.key];
+                        const Icon = TAB_ICONS[n.key];
+                        const badge = to === "/requests" ? openReqs : to === "/inbox" ? inboxUnread : 0;
+                        return <MenuRow key={to} to={to} icon={Icon} badge={badge} testid={`user-menu-${n.key}`} className={menuOnly.includes(n) ? "" : "xl:hidden"}>{n.label}</MenuRow>;
+                      })}
+                    </MenuGroup>
+                  )}
+                  <MenuGroup label="You">
+                    <MenuRow to={config?.ecosystem ? "/me" : "/profile"} icon={CircleUser} testid="user-menu-profile">My profile</MenuRow>
+                    <MenuRow to="/saved" icon={Bookmark} testid="user-menu-saved">Saved</MenuRow>
+                    <MenuRow to="/applications" icon={FileText}>My applications</MenuRow>
+                    <MenuRow to="/settings" icon={Settings} testid="user-menu-settings">Settings</MenuRow>
+                  </MenuGroup>
+                  <MenuGroup label="Communities and tools">
+                    <MenuRow to="/hub" icon={Layers} testid="user-menu-communities">Switch community</MenuRow>
+                    <MenuRow to="/discover" icon={Search}>Find a community</MenuRow>
+                    <MenuRow to="/navigator" icon={Compass} testid="user-menu-navigator">Navigator</MenuRow>
+                    <MenuRow to="/organizations" icon={Handshake}>Event series &amp; partners</MenuRow>
+                  </MenuGroup>
+                  {isAdmin && (
+                    <MenuGroup label="Manage">
+                      <MenuRow to="/admin" icon={ShieldCheck} testid="user-menu-admin" badge={adminAttn} badgeText={`${adminAttn} new`}>Admin</MenuRow>
+                    </MenuGroup>
+                  )}
+                  <div className="mt-1 border-t border-line pt-1">
+                    <button className="flex w-full items-center gap-2.5 rounded-lg px-2.5 py-2 text-sm hover:bg-ink/5" data-testid="user-menu-logout" onClick={async () => { nav("/login", { replace: true }); await logout(); }}><LogOut className="h-4 w-4 text-muted" />Sign out</button>
+                  </div>
                 </div>
               )}
             </div>

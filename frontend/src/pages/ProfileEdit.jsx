@@ -6,6 +6,7 @@ import { Link, useSearchParams } from "react-router-dom";
 import { Check, Circle } from "lucide-react";
 import { Ring, OPTIONAL_NOTE } from "../components/ProfileNudge";
 import { AvatarUpload, Button, Card, Field, Input, PageHeader, SectionCard, Select, Spinner, StatusBadge, TagInput, Textarea } from "../components/ui";
+import ProfileTabs from "../components/ProfileTabs";
 import { fieldLabel, fieldOn, prettyDate, SUGGEST, oldestISO, todayISO } from "../lib/profile";
 
 const ARR = ["expertise", "services_offered", "topics_can_advise_on", "needs_seeking", "interests_hobbies"];
@@ -162,6 +163,7 @@ export default function ProfileEdit() {
   };
   return (
     <div className="space-y-5">
+      <ProfileTabs />
       <PageHeader title="My profile" subtitle="This is your profile. It's what everyone in the community sees, and how we recommend connections." />
       <Card className="flex flex-wrap items-center gap-5" data-testid="photo-card">
         <div className="min-w-[11rem] flex-1">

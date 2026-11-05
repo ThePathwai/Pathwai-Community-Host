@@ -11,6 +11,7 @@ import GuideChat from "../components/GuideChat";
 import NextSteps from "../components/NextSteps";
 import PitchCard from "../components/PitchCard";
 import AccountShell from "../components/AccountShell";
+import ProfileTabs from "../components/ProfileTabs";
 import { ContactCard, List } from "./MemberProfile";
 
 // "Your profile": the one profile on your Pathwai account (outside any community), laid out exactly like a member's card inside a
@@ -82,6 +83,7 @@ export default function MyProfile({ embedded }) {
     </div>
   ) : (
     <div className="mx-auto w-full max-w-5xl space-y-5" data-testid="my-profile">
+      <ProfileTabs />
       <Card className="!p-0 overflow-hidden" data-testid="member-card">
         <div className="grid gap-0 md:grid-cols-[260px_1fr]">
           <div className="relative min-h-[260px] bg-ink/5">
