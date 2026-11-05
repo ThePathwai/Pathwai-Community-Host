@@ -8,6 +8,7 @@ import { useEcosystem } from "../lib/ecosystem";
 import { NEED_LABEL, STAGES, STAGE_LABEL, needsFromText } from "../lib/navigator";
 import { BRIEF_SECTIONS, HORIZONS, STATUS_LABEL, STEPS, UPDATES, advisorBrief, applyUpdate, KEEP, buildPlan, decide, directions, moveStep, planProgress, stepStates } from "../lib/planner";
 import { Avatar, Spinner, cx } from "../components/ui";
+import Journey from "../components/Journey";
 import StartupFields, { BLANK_STARTUP, startupToApi, startupToForm } from "../components/StartupFields";
 import { KindTile, VerdictBadge, dayShort, heading } from "../components/hub/HubKit";
 
@@ -59,7 +60,7 @@ function StepHead({ n, title, sub }) {
 // ---- 1. your story ----
 // Your story is the startup section of your Pathwai profile: the same fields, the same words, the same saved data. Change it here or on your
 // profile and both show it. (It is the component the profile editor uses, so the two cannot drift apart.)
-function Story({ startup, onSave, busy }) {
+function Story({ startup, plan, onSave, busy }) {
   const [v, setV] = useState(() => startupToForm(startup) || { ...BLANK_STARTUP, needs: [] });
   const set = (patch) => setV((x) => ({ ...x, ...patch }));
   const toggle = (n) => set({ needs: v.needs.includes(n) ? v.needs.filter((x) => x !== n) : [...v.needs, n] });
@@ -70,6 +71,7 @@ function Story({ startup, onSave, busy }) {
       <StepHead n={1} title="Your story" sub="This is the startup section of your Pathwai profile. Anything you change here changes there, and the other way round. Everything on the next steps is built from it." />
       <div className="grid gap-5 lg:grid-cols-[1fr_20rem]">
         <div className="space-y-4">
+          <Journey plan={plan} empty limit={3} testid="story-journey-m" className="lg:hidden" />
           <StartupFields value={v} onChange={(x) => setV(x || { ...BLANK_STARTUP, needs: [] })} testPrefix="story" canRemove={false} />
           {heard.length > 0 && (
             <p className="flex flex-wrap items-center gap-2 text-sm text-muted" data-testid="story-heard"><Sparkles className="h-4 w-4" aria-hidden />You might also need
@@ -81,6 +83,8 @@ function Story({ startup, onSave, busy }) {
             {!ready && <span className="text-xs text-muted">Add a one-line description, your stage, what you need next and what you are trying to do next.</span>}
           </div>
         </div>
+        <div className="space-y-5 lg:sticky lg:top-24 lg:self-start">
+        <Journey plan={plan} empty limit={6} testid="story-journey" className="hidden lg:block" />
         <aside className="card h-fit space-y-3 text-sm">
           <Eyebrow>What happens next</Eyebrow>
           <p className="flex gap-2.5"><span className="font-bold">2</span><span>We show a few directions the business could take, and why each fits.</span></p>
@@ -88,6 +92,7 @@ function Story({ startup, onSave, busy }) {
           <p className="flex gap-2.5"><span className="font-bold">4</span><span>You get a one-page brief and questions to take to an advisor.</span></p>
           <p className="flex items-start gap-2 border-t border-line pt-3 text-xs text-muted"><Lock className="mt-0.5 h-3.5 w-3.5 shrink-0" aria-hidden />This is yours. Nobody sees it until you choose to share the brief.</p>
         </aside>
+        </div>
       </div>
     </section>
   );
@@ -606,7 +611,7 @@ export default function Planner() {
       <UpdateBar startup={startup} today={today} open={updating} setOpen={setUpdating} onSave={logUpdate} busy={busy} last={(plan.log || [])[0]} plan={plan} steps={steps} />
       <Chapters chapters={plan.chapters || []} hub={hub} />
       <Stepper states={states} step={step} onGo={go} />
-      {step === "story" && <Story key={JSON.stringify(startup).length} startup={startup} onSave={saveStory} busy={busy} />}
+      {step === "story" && <Story key={JSON.stringify(startup).length + ":" + (plan.log || []).length} startup={startup} plan={plan} onSave={saveStory} busy={busy} />}
       {step === "directions" && (startup.stage ? <Directions list={dirs} chosen={plan.direction} onChoose={choose} busy={busy} hub={hub} decideProps={{ startup, lists, hub, today, saved: plan.decision, onUse: useDecision }} />
         : <div className="card flex flex-wrap items-center justify-between gap-4"><p className="text-sm">Tell us about your startup first, so the directions fit you.</p><button type="button" className={PRIMARY} style={ACCENT} onClick={() => go("story")}>Start with your story</button></div>)}
       {step === "plan" && <Plan dir={dir} steps={steps} log={plan.log || []} decision={plan.decision} arranged={(plan.arrange || []).length > 0} onArrange={arrange} hidden={(plan.hidden || []).length} busy={busy} onPickDirection={() => go("directions")}

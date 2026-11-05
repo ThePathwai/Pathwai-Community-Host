@@ -12,6 +12,7 @@ import NextSteps from "../components/NextSteps";
 import PitchCard from "../components/PitchCard";
 import AccountShell from "../components/AccountShell";
 import ProfileTabs from "../components/ProfileTabs";
+import Journey from "../components/Journey";
 import { ContactCard, List } from "./MemberProfile";
 
 // "Your profile": the one profile on your Pathwai account (outside any community), laid out exactly like a member's card inside a
@@ -47,6 +48,8 @@ export default function MyProfile({ embedded }) {
     const want = params.get("edit");
     if (want) { startEdit(want === "startup"); setParams({}, { replace: true }); }
   }, [account?.id, params]); // eslint-disable-line react-hooks/exhaustive-deps
+  const [plan, setPlan] = useState(null);   // the progress log, shown under the startup card (only where the planner exists)
+  useEffect(() => { if (account?.startup) api.get("/navigator/plan").then((r) => setPlan(r.data.plan)).catch(() => {}); }, [account?.startup]); // eslint-disable-line react-hooks/exhaustive-deps
   useEffect(() => { document.title = "Your profile · Pathwai"; }, []);
   useEffect(() => { if (editing) window.scrollTo({ top: 0 }); }, [editing]);
 
@@ -116,6 +119,7 @@ export default function MyProfile({ embedded }) {
           {/* On a phone the button sits above the card, so it never covers the startup's name. */}
           <div className="mb-2 flex justify-end sm:absolute sm:right-3 sm:top-3 sm:z-10 sm:mb-0"><button type="button" onClick={() => startEdit(false)} className="btn-ghost !px-3 !py-1.5 text-sm" aria-label="Edit your startup" data-testid="my-profile-edit-startup"><Pencil className="h-4 w-4" />Edit</button></div>
           <PitchCard u={u} />
+          {plan && <Journey plan={plan} testid="profile-journey" className="mt-5" />}
         </div>
       ) : (
         <button type="button" onClick={() => startEdit(true)} data-testid="my-profile-add-startup" className="card flex w-full items-center gap-4 !border-dashed text-left transition hover:border-ink/40">
