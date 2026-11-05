@@ -57,7 +57,7 @@ function PitchFields({ value, set, testPrefix }) {
   );
 }
 
-export default function StartupFields({ value, onChange, testPrefix = "su" }) {
+export default function StartupFields({ value, onChange, testPrefix = "su", canRemove = true }) {
   if (!value) {
     return (
       <button type="button" onClick={() => onChange({ ...BLANK_STARTUP })} data-testid={`${testPrefix}-add`}
@@ -73,7 +73,7 @@ export default function StartupFields({ value, onChange, testPrefix = "su" }) {
     <div className="space-y-4 rounded-2xl border border-line p-4" data-testid={`${testPrefix}-form`}>
       <div className="flex items-center justify-between gap-3">
         <p className="flex items-center gap-2 font-semibold"><Rocket className="h-4 w-4" aria-hidden />Your startup</p>
-        <button type="button" onClick={() => onChange(null)} className="text-sm text-muted hover:text-ink" data-testid={`${testPrefix}-remove`}>Remove</button>
+        {canRemove && <button type="button" onClick={() => onChange(null)} className="text-sm text-muted hover:text-ink" data-testid={`${testPrefix}-remove`}>Remove</button>}
       </div>
       <div className="grid gap-3 sm:grid-cols-2">
         <Field label="Name"><Input value={value.name} onChange={(e) => set({ name: e.target.value })} maxLength={80} placeholder="Lumen Solar" data-testid={`${testPrefix}-name`} /></Field>

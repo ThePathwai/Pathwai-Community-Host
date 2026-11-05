@@ -1,6 +1,7 @@
 import React from "react";
 import { AlertCircle, ExternalLink, FileText, Lightbulb, Rocket, TrendingUp, Users2, Wallet } from "lucide-react";
 import { Card, Chip } from "./ui";
+import { NEED_LABEL } from "../lib/navigator";
 
 // A founder's pitch, shown right under their profile card: the one-liner, then the same five "slides" an
 // investor expects (problem, solution, traction, market, the ask) and a link to the full deck.
@@ -27,7 +28,7 @@ export function DocumentsCard({ docs = [], className = "" }) {
 
 export default function PitchCard({ u }) {
   const p = u.pitch || {};
-  const hasPitch = u.startup_name || u.startup_one_liner || Object.values(p).some(Boolean);
+  const hasPitch = u.startup_name || u.startup_one_liner || u.goal || Object.values(p).some(Boolean);
   const docs = (u.documents || []).filter((d) => d && d.url);
   if (!hasPitch && !docs.length) return null;
   if (!hasPitch) return <Card data-testid="documents-card"><h3 className="label">Documents & links</h3><DocumentsCard docs={docs} /></Card>;
@@ -44,6 +45,12 @@ export default function PitchCard({ u }) {
           {u.startup_one_liner && <p className="mt-1 text-sm leading-relaxed text-ink/90" data-testid="pitch-oneliner">{u.startup_one_liner}</p>}
         </div>
       </div>
+      {(u.goal || (u.needs || []).length > 0) && (
+        <div className="rounded-xl border border-line p-4" data-testid="pitch-next">
+          <div className="mb-1.5 text-xs font-semibold uppercase tracking-wider text-muted">What you are trying to do next</div>
+          {u.goal && <p className="text-sm leading-relaxed">{u.goal}</p>}
+          {(u.needs || []).length > 0 && <div className="mt-2 flex flex-wrap gap-1.5">{u.needs.map((n) => <Chip key={n}>{NEED_LABEL[n] || n}</Chip>)}</div>}
+        </div>)}
       {Object.values(p).some(Boolean) && (
         <ol className="grid gap-3 sm:grid-cols-2" data-testid="pitch-slides">
           {SLIDES.filter(([k]) => p[k]).map(([k, label, Icon], i) => (

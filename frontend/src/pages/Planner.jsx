@@ -1,13 +1,14 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { toast } from "sonner";
-import { ArrowRight, Check, CheckCircle2, ChevronDown, Circle, Clock, Copy, Eye, EyeOff, GripVertical, Lock, Plus, Send, Share2, Sparkles, Target, X } from "lucide-react";
+import { ArrowRight, Check, CheckCircle2, Circle, Clock, Copy, Eye, EyeOff, GripVertical, Lock, Plus, Send, Share2, Sparkles, Target, X } from "lucide-react";
 import { api, errMsg } from "../lib/api";
 import { useAuth } from "../lib/auth";
 import { useEcosystem } from "../lib/ecosystem";
-import { NEEDS, NEED_LABEL, STAGES, STAGE_HINT, STAGE_LABEL, needsFromText } from "../lib/navigator";
+import { NEED_LABEL, needsFromText } from "../lib/navigator";
 import { BRIEF_SECTIONS, HORIZONS, STATUS_LABEL, STEPS, UPDATES, advisorBrief, applyUpdate, buildPlan, decide, directions, moveStep, planProgress, stepStates } from "../lib/planner";
 import { Avatar, Spinner, cx } from "../components/ui";
+import StartupFields, { BLANK_STARTUP, startupToApi, startupToForm } from "../components/StartupFields";
 import { KindTile, VerdictBadge, dayShort, heading } from "../components/hub/HubKit";
 
 // The venture planner (/plan): four steps that take a founder from "here is my idea" to "here is my brief and my questions for an advisor".
@@ -56,57 +57,28 @@ function StepHead({ n, title, sub }) {
 }
 
 // ---- 1. your story ----
+// Your story is the startup section of your Pathwai profile: the same fields, the same words, the same saved data. Change it here or on your
+// profile and both show it. (It is the component the profile editor uses, so the two cannot drift apart.)
 function Story({ startup, onSave, busy }) {
-  const [f, setF] = useState(() => ({ one_liner: startup.one_liner || "", traction: (startup.pitch || {}).traction || "", goal: startup.goal || "", stage: startup.stage || "", needs: startup.needs || [],
-    problem: (startup.pitch || {}).problem || "", solution: (startup.pitch || {}).solution || "", market: (startup.pitch || {}).market || "", ask: (startup.pitch || {}).ask || "" }));
-  const set = (k, v) => setF((x) => ({ ...x, [k]: v }));
-  const toggle = (n) => set("needs", f.needs.includes(n) ? f.needs.filter((x) => x !== n) : [...f.needs, n]);
-  const heard = needsFromText([f.goal, f.traction, f.ask, f.one_liner].join(" ")).filter((n) => !f.needs.includes(n) && NEED_LABEL[n]).slice(0, 3);
-  const ready = f.one_liner.trim() && f.stage && f.needs.length && f.goal.trim();
-  const save = () => onSave({ ...startup, one_liner: f.one_liner.trim(), goal: f.goal.trim(), stage: f.stage, needs: f.needs,
-    pitch: { ...(startup.pitch || {}), ...Object.fromEntries(["traction", "problem", "solution", "market", "ask"].map((k) => [k, f[k].trim()])) } });
-  const lab = "mb-1.5 block text-sm font-semibold";
+  const [v, setV] = useState(() => startupToForm(startup) || { ...BLANK_STARTUP, needs: [] });
+  const set = (patch) => setV((x) => ({ ...x, ...patch }));
+  const toggle = (n) => set({ needs: v.needs.includes(n) ? v.needs.filter((x) => x !== n) : [...v.needs, n] });
+  const heard = needsFromText([v.goal, (v.pitch || {}).traction, (v.pitch || {}).ask, v.one_liner].join(" ")).filter((n) => !v.needs.includes(n) && NEED_LABEL[n]).slice(0, 3);
+  const ready = v.one_liner.trim() && v.stage && v.needs.length && v.goal.trim();
   return (
     <section data-testid="story-step">
-      <StepHead n={1} title="Tell us about your startup" sub="Plain words are fine. Everything on the next steps is built from this, and you can change it any time." />
+      <StepHead n={1} title="Your story" sub="This is the startup section of your Pathwai profile. Anything you change here changes there, and the other way round. Everything on the next steps is built from it." />
       <div className="grid gap-5 lg:grid-cols-[1fr_20rem]">
-        <div className="card space-y-5">
-          <label className="block"><span className={lab}>What are you building, and for whom?</span>
-            <textarea rows={2} className="input" value={f.one_liner} maxLength={200} onChange={(e) => set("one_liner", e.target.value)} data-testid="story-idea" placeholder="e.g. Booking tools for community sports groups" /></label>
-          <label className="block"><span className={lab}>Where are you today?</span>
-            <textarea rows={2} className="input" value={f.traction} onChange={(e) => set("traction", e.target.value)} data-testid="story-position" placeholder="Customers, users, revenue, a prototype, nothing yet: whatever is true" /></label>
-          <label className="block"><span className={lab}>What do you want to be true six months from now?</span>
-            <textarea rows={2} className="input" value={f.goal} onChange={(e) => set("goal", e.target.value)} data-testid="story-goal" placeholder="e.g. Launch in a second city and find a mentor" /></label>
-          <div><span className={lab}>Your stage</span>
-            <div className="flex flex-wrap gap-2" role="radiogroup" aria-label="Your stage">
-              {STAGES.map((s) => (
-                <button key={s} type="button" role="radio" aria-checked={f.stage === s} onClick={() => set("stage", s)} data-testid={`story-stage-${s}`} title={STAGE_HINT[s]}
-                  className={cx("rounded-full border px-3.5 py-1.5 text-sm transition", f.stage === s ? "border-transparent font-semibold" : "border-line text-muted hover:text-ink")} style={f.stage === s ? ACCENT : undefined}>{STAGE_LABEL[s]}</button>
-              ))}
-            </div></div>
-          <div><span className={lab}>What would help most right now? <span className="font-normal text-muted">Pick any.</span></span>
-            <div className="flex flex-wrap gap-2">
-              {NEEDS.filter((n) => !["export", "tax", "visa"].includes(n)).map((n) => (
-                <button key={n} type="button" aria-pressed={f.needs.includes(n)} onClick={() => toggle(n)} data-testid={`story-need-${n}`}
-                  className={cx("rounded-full border px-3.5 py-1.5 text-sm transition", f.needs.includes(n) ? "border-transparent font-semibold" : "border-line text-muted hover:text-ink")} style={f.needs.includes(n) ? ACCENT : undefined}>{NEED_LABEL[n]}</button>
-              ))}
-            </div>
-            {heard.length > 0 && (
-              <p className="mt-2.5 flex flex-wrap items-center gap-2 text-sm text-muted" data-testid="story-heard"><Sparkles className="h-4 w-4" aria-hidden />You might also need
-                {heard.map((n) => <button key={n} type="button" onClick={() => toggle(n)} className="rounded-full border border-dashed border-ink/30 px-3 py-1 text-xs font-semibold text-ink hover:bg-ink/5">+ Add {NEED_LABEL[n]}</button>)}</p>
-            )}
-          </div>
-          <details className="group rounded-xl border border-line px-4 py-3" data-testid="story-more">
-            <summary className="flex cursor-pointer list-none items-center justify-between text-sm font-semibold">Add more for your advisor, if you like<ChevronDown className="h-4 w-4 transition group-open:rotate-180" aria-hidden /></summary>
-            <div className="mt-4 space-y-4">
-              {[["problem", "The problem you solve"], ["solution", "How you solve it"], ["market", "Who the market is"], ["ask", "What you are asking for"]].map(([k, l]) => (
-                <label key={k} className="block"><span className={lab}>{l}</span><textarea rows={2} className="input" value={f[k]} onChange={(e) => set(k, e.target.value)} /></label>
-              ))}
-            </div>
-          </details>
+        <div className="space-y-4">
+          <StartupFields value={v} onChange={(x) => setV(x || { ...BLANK_STARTUP, needs: [] })} testPrefix="story" canRemove={false} />
+          {heard.length > 0 && (
+            <p className="flex flex-wrap items-center gap-2 text-sm text-muted" data-testid="story-heard"><Sparkles className="h-4 w-4" aria-hidden />You might also need
+              {heard.map((n) => <button key={n} type="button" onClick={() => toggle(n)} className="rounded-full border border-dashed border-ink/30 px-3 py-1 text-xs font-semibold text-ink hover:bg-ink/5">+ Add {NEED_LABEL[n]}</button>)}</p>
+          )}
           <div className="flex flex-wrap items-center gap-3">
-            <button type="button" className={PRIMARY} style={ACCENT} disabled={!ready || busy} onClick={save} data-testid="story-save">Save and see directions<ArrowRight className="h-4 w-4" aria-hidden /></button>
-            {!ready && <span className="text-xs text-muted">Fill in the first three questions, your stage and one need to continue.</span>}
+            <button type="button" className={PRIMARY} style={ACCENT} disabled={!ready || busy} onClick={() => onSave(startupToApi(v))} data-testid="story-save">Save and see directions<ArrowRight className="h-4 w-4" aria-hidden /></button>
+            <Link to="/me" className="text-sm text-muted underline underline-offset-2" data-testid="story-profile-link">See it on your profile</Link>
+            {!ready && <span className="text-xs text-muted">Add a one-line description, your stage, what you need next and what you are trying to do next.</span>}
           </div>
         </div>
         <aside className="card h-fit space-y-3 text-sm">

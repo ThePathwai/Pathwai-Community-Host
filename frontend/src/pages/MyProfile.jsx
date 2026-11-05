@@ -62,7 +62,7 @@ export default function MyProfile({ embedded }) {
   };
 
   const st = account.startup || {};
-  const u = { startup_name: st.name, startup_one_liner: st.one_liner, stage: st.stage ? cap(STAGE_LABEL[st.stage] || st.stage) : "", industry: (st.sectors || []).map(cap).join(" · "), pitch: st.pitch || {}, documents: st.documents || [], company: account.company };
+  const u = { startup_name: st.name, startup_one_liner: st.one_liner, stage: st.stage ? cap(STAGE_LABEL[st.stage] || st.stage) : "", industry: (st.sectors || []).map(cap).join(" · "), pitch: st.pitch || {}, documents: st.documents || [], company: account.company, goal: st.goal, needs: st.needs };
   const hasPitch = !!(st.name || st.one_liner || Object.keys(st.pitch || {}).length || (st.documents || []).length);
   const stats = [["Age", account.age], ["Stage", u.stage], ["Role", account.title]].filter(([, v]) => v);
   const contact = { contact: { email: account.email, ...(account.contact || {}) } };
