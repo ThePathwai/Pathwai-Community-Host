@@ -218,7 +218,7 @@ export default function About() {
           <h1 className="mt-4 max-w-4xl text-5xl sm:text-6xl lg:text-7xl" style={{ textWrap: "balance" }}>Your whole community. One app.</h1>
           <p className="mt-5 max-w-xl text-lg text-muted sm:text-xl">Members, events, tickets, texts and email. All built in.</p>
           <div className="mt-8 flex flex-wrap items-center gap-3">
-            <button type="button" onClick={() => startAdminDemo()} className="btn-primary" data-testid="about-demo">Try the admin demo</button>
+            <button type="button" onClick={() => startAdminDemo()} className="btn-primary" data-testid="about-demo">Try the demo</button>
             <Link to="/signup" className="btn-ghost border border-line" data-testid="about-signup">Get started</Link>
             <Link to="/hub" className="btn-ghost" data-testid="about-hub">Browse communities</Link>
           </div>
@@ -313,7 +313,7 @@ export default function About() {
                 <ReportView report={sample} config={demoConfig} />
               </div>
             )}
-            <div className="mt-5"><button type="button" onClick={() => startAdminDemo()} className="btn-primary" data-testid="about-sample-demo">Open it in the admin demo</button></div>
+            <div className="mt-5"><button type="button" onClick={() => startAdminDemo()} className="btn-primary" data-testid="about-sample-demo">Try the demo</button></div>
           </div>
         </Section>
 
@@ -386,7 +386,7 @@ export default function About() {
         <div className="border-t border-line py-16 text-center sm:py-24">
           <h2 className="mx-auto max-w-2xl text-4xl sm:text-6xl" style={{ textWrap: "balance" }}>See it the way you'd run it.</h2>
           <div className="mt-8 flex flex-wrap justify-center gap-3">
-            <button type="button" onClick={() => startAdminDemo()} className="btn-primary" data-testid="about-cta">Try the admin demo</button>
+            <button type="button" onClick={() => startAdminDemo()} className="btn-primary" data-testid="about-cta">Try the demo</button>
             <Link to="/signup" className="btn-ghost border border-line">Get started</Link>
           </div>
         </div>

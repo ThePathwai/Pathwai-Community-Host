@@ -35,18 +35,18 @@ export const inDemoTab = () => get() === "1";
 export const leaveDemo = (to = "/login") => { set(null); setDemoRole(null); if (PREVIEW) { goTo(to); return; } window.location.replace(to); };
 export const exitDemo = () => leaveDemo("/login");
 
-// The practice community the "admin demo" buttons open straight into: sponsors, funders and mentors make the Impact view and the reports easy to picture.
-export const startAdminDemo = () => startDemo("admin", "humber-innovation-network");
+// The "Try the demo" buttons open the founder walkthrough in the Humber hub. The demo is for founders only; there is no admin side to open.
+export const startAdminDemo = () => startDemo("member", "humber-innovation-network", { fresh: true });
 
 // Practice communities worth walking through, each open from both the member side and the admin side.
 // `featured` ones are shown first and big. Each opens at /demo/<short> (a page with a Member button and an Admin button that
 // works the same on a phone and a desktop), so a link can be sent to someone as it is.
 export const DEMO_COMMUNITIES = [
-  { slug: "humber-innovation-network", short: "humber", featured: true, walkthrough: true, name: "Humber Innovation Network", accent: "#0B4EA2", blurb: "An innovation navigator for one hub: programs, grants, events, people and resources, matched to your startup.",
+  { slug: "humber-innovation-network", short: "humber", featured: true, walkthrough: true, noAdmin: true, name: "Humber Innovation Network", accent: "#0B4EA2", blurb: "An innovation navigator for one hub: programs, grants, events, people and resources, matched to your startup.",
     eyebrow: "Innovation navigator \u00b7 hub demo",
     tagline: "Every program, grant, event, person and resource in the Humber ecosystem, ranked for your startup.",
-    memberTitle: "As a founder", adminTitle: "As the hub team",
-    member: ["Next moves", "Programs & grants", "Events", "People", "Resources"], admin: ["Founder needs", "Applications", "Events", "Resources", "Impact reports"] },
+    memberTitle: "Look around as an established founder",
+    member: ["Next moves", "Programs & grants", "Events", "People", "Resources"] },
   { slug: "grace", short: "c3", name: "C3 Film Team", blurb: "A church's creative team: skills, shoots, onboarding and project teams anyone can start." },
   { slug: "club-pto", short: "club-pto", name: "Club PTO", blurb: "A padel club: Skill Lab coaching, sponsors and a member skill exchange." },
   { slug: "the-village", short: "the-village", name: "The Village", blurb: "A private dinner club: guests, long-table dinners and the host's guest list." },

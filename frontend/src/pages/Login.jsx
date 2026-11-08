@@ -106,7 +106,7 @@ export default function Login() {
 
   const founderAcct = { demo_role: "founder", email: "founder@yourcommunity.app", label: "Founder, no community yet", description: "Fife Ashley-Dejo has not joined any community. One profile drives the programs, the communities suggested and the guide." };
   const hostAcct = { demo_role: "host", email: "host@thevillage.example", label: "Community host demo", description: "Sign in as the host of The Village, a private dinner club, and review who has asked to join." };
-  const demoItems = [...(inDemo ? [] : [["founder", "Founder"], ["communities", "Examples"], ["admin", "Admin"], ["member", "Member"]]), ...(demo.accounts.length ? [["accounts", "Accounts"]] : [])];
+  const demoItems = [...(inDemo ? [] : [["founder", "Founder"], ["communities", "Examples"], ["member", "Member"]]), ...(demo.accounts.length ? [["accounts", "Accounts"]] : [])];
   const demoShown = demoItems.some(([k]) => k === demoTab) ? demoTab : demoItems[0]?.[0];
   const showDemoTab = !inDemo || demo.accounts.length > 0;
 

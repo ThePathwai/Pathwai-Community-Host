@@ -72,9 +72,9 @@ export default function DemoLanding() {
             <button type="button" onClick={() => startDemo("member", c.slug, { fresh: true })} className="mt-5 inline-flex w-full items-center justify-center gap-2 rounded-lg px-4 py-3 text-base font-semibold sm:w-auto" style={{ background: accent, color: "#fff" }} data-testid="demo-walkthrough"><Play className="h-4 w-4" aria-hidden />Start the walkthrough</button>
           </div>
         )}
-        <div className="mt-5 grid gap-4 sm:grid-cols-2">
+        <div className={c.noAdmin ? "mt-5" : "mt-5 grid gap-4 sm:grid-cols-2"}>
           <Side role="member" Icon={Users} title={c.memberTitle || "As a member"} chips={c.member || ["Directory", "Events", "Perks", "Intros"]} slug={c.slug} accent={accent} />
-          <Side role="admin" Icon={ShieldCheck} title={c.adminTitle || "As the admin"} chips={c.admin || ["Members", "Events", "Reports"]} slug={c.slug} accent={accent} />
+          {!c.noAdmin && <Side role="admin" Icon={ShieldCheck} title={c.adminTitle || "As the admin"} chips={c.admin || ["Members", "Events", "Reports"]} slug={c.slug} accent={accent} />}
         </div>
         {c.scale && (
           <div className="mt-5 flex flex-col gap-3 rounded-2xl border border-dashed border-line p-4 sm:flex-row sm:items-center sm:justify-between" data-testid="demo-scale">
@@ -85,7 +85,7 @@ export default function DemoLanding() {
             <button type="button" onClick={() => startDemo("founder")} className="btn-ghost shrink-0 border border-line !py-2 text-sm" data-testid="demo-scale-national">See it across Canada<ArrowRight className="h-4 w-4" aria-hidden /></button>
           </div>
         )}
-        <p className="mt-5 text-xs text-muted">Made-up people and events. Nothing you do is saved. Switch sides any time from the bar at the top.</p>
+        <p className="mt-5 text-xs text-muted">Made-up people and events. Nothing you do is saved.{!c.noAdmin && " Switch sides any time from the bar at the top."}</p>
       </main>
       <PoweredBy className="pb-2 text-center" />
     </div>

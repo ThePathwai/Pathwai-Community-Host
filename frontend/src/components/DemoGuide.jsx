@@ -1,22 +1,21 @@
 import React, { useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
-import { ArrowLeft, ArrowRight, EyeOff, RotateCcw } from "lucide-react";
+import { ArrowLeft, EyeOff, RotateCcw } from "lucide-react";
 import { toast } from "sonner";
 import { api } from "../lib/api";
 import { useAuth } from "../lib/auth";
 import { isDemo } from "../lib/demo";
 import { cx } from "./ui";
 
-// Demo only. A slim strip that says where a new founder is in the walkthrough (1 of 5), what this screen is for, and lets the presenter step back and
-// forward or reset to a blank founder between takes. It only appears in the Humber demo, for the founder side. "Hide" removes it completely so it
+// Demo only. A slim strip that says where a new founder is in the walkthrough (1 of 5), what to do on this screen, and lets the presenter step back or reset to a blank founder between takes. It only appears in the Humber demo, for the founder side. "Hide" removes it completely so it
 // never shows up in a recording; press G to bring it back.
 const HUMBER = "humber-innovation-network";
 const STEPS = [
-  { key: "home", to: "/", title: "Arrive", say: "A new founder lands on the hub's home page. The first thing it asks for is their story." },
-  { key: "story", to: "/plan?step=story", title: "Tell your story", say: "Where they are and what they want, in a minute. It is saved to their profile." },
-  { key: "directions", to: "/plan?step=directions", title: "Pick a direction", say: "Routes the business could take, and why each fits. Or say the decision in your own words." },
-  { key: "plan", to: "/plan?step=plan", title: "Build your plan", say: "Steps for 2 weeks, 30 days and 90 days, using this hub's programs, events and people. Drag to reorder." },
-  { key: "brief", to: "/plan?step=brief", title: "Decision plan", say: "The decision, the plan and the questions. Start it alone, or share it with a team or an advisor." },
+  { key: "home", to: "/", title: "Arrive", say: "A founder's first view of the hub. Press Continue to tell it about your startup." },
+  { key: "story", to: "/plan?step=story", title: "Tell your story", say: "Fill in your story, or press Use a sample story. Then press Save at the bottom." },
+  { key: "directions", to: "/plan?step=directions", title: "Pick a direction", say: "Choose one route for the business. Not sure? Press the best fit at the bottom." },
+  { key: "plan", to: "/plan?step=plan", title: "Build your plan", say: "Drag steps to reorder them. When it looks right, press See my decision plan." },
+  { key: "brief", to: "/plan?step=brief", title: "Decision plan", say: "Start the plan on your own, or share it with your team or an advisor." },
 ];
 const KEY = "pw_guide_hidden";
 const readHidden = () => { try { return window.sessionStorage.getItem(KEY) === "1"; } catch { return false; } };
@@ -62,10 +61,9 @@ export default function DemoGuide() {
         <span className="flex gap-1" aria-hidden>{STEPS.map((s, i) => <span key={s.key} className={cx("h-1.5 w-4 rounded-full", i <= idx ? "bg-accent" : "bg-ink/15")} style={i <= idx ? { background: "var(--accent)" } : undefined} />)}</span>
         {idx + 1} of {STEPS.length} · {cur.title}
       </span>
-      <span className="hidden min-w-0 flex-1 text-xs text-muted lg:block" data-testid="demo-guide-say">{cur.say}</span>
+      <span className={cx("min-w-0 flex-1 text-xs text-muted max-sm:order-last max-sm:basis-full", idx === 0 && "max-lg:hidden")} data-testid="demo-guide-say">{cur.say}</span>
       <span className="ml-auto flex shrink-0 items-center gap-1.5">
         <button type="button" className={btn} onClick={() => nav(STEPS[Math.max(0, idx - 1)].to)} disabled={idx === 0} data-testid="demo-guide-back" aria-label="Previous step"><ArrowLeft className="h-3.5 w-3.5" aria-hidden />Back</button>
-        <button type="button" className={btn} onClick={() => nav(STEPS[Math.min(STEPS.length - 1, idx + 1)].to)} disabled={idx === STEPS.length - 1} data-testid="demo-guide-next" aria-label="Next step">Next<ArrowRight className="h-3.5 w-3.5" aria-hidden /></button>
         <button type="button" className={btn} onClick={reset} disabled={busy} data-testid="demo-guide-reset"><RotateCcw className="h-3.5 w-3.5" aria-hidden />Reset</button>
         <button type="button" className={btn} onClick={hide} title="Hide (press G to bring it back)" data-testid="demo-guide-hide"><EyeOff className="h-3.5 w-3.5" aria-hidden /><span className="max-sm:hidden">Hide</span></button>
       </span>

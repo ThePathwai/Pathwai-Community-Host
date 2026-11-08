@@ -49,6 +49,21 @@ function Stepper({ states, step, onGo }) {
   );
 }
 
+// The one thing to do next, always in view at the bottom of the screen (above the tab bar on a phone), so nobody has to scroll to find it.
+function NextBar({ text, children, testid = "next-bar" }) {
+  return (
+    <>
+      <div className="h-28 sm:h-20" aria-hidden />
+      <div className="fixed inset-x-0 z-30 px-4 bottom-[calc(60px+env(safe-area-inset-bottom,0px))] lg:px-10 xl:bottom-3" data-testid={testid}>
+        <div className="mx-auto flex max-w-6xl flex-col gap-2 rounded-2xl border border-line bg-surface/95 px-3.5 py-3 shadow-lg backdrop-blur sm:flex-row sm:items-center sm:justify-between sm:gap-4 sm:px-5">
+          <p className="min-w-0 text-[13px] font-medium leading-snug max-sm:line-clamp-2 sm:flex-1 sm:text-sm" data-testid="next-text">{text}</p>
+          <div className="flex w-full flex-wrap items-center gap-2 sm:w-auto [&>button]:flex-1 sm:[&>button]:flex-none">{children}</div>
+        </div>
+      </div>
+    </>
+  );
+}
+
 function StepHead({ n, title, sub }) {
   return (
     <div className="mb-5">
@@ -82,11 +97,10 @@ function Story({ startup, plan, onSave, busy }) {
             <p className="flex flex-wrap items-center gap-2 text-sm text-muted" data-testid="story-heard"><Sparkles className="h-4 w-4" aria-hidden />You might also need
               {heard.map((n) => <button key={n} type="button" onClick={() => toggle(n)} className="rounded-full border border-dashed border-ink/30 px-3 py-1 text-xs font-semibold text-ink hover:bg-ink/5">+ Add {NEED_LABEL[n]}</button>)}</p>
           )}
-          <div className="flex flex-wrap items-center gap-3">
+          <p className="text-sm"><Link to="/me" className="text-muted underline underline-offset-2" data-testid="story-profile-link">See it on your profile</Link></p>
+          <NextBar text={ready ? "Looks good. Save it and we will show you the routes your business could take." : "To continue, add a one-line description, your stage, what you need next and what you are trying to do next."}>
             <button type="button" className={PRIMARY} style={ACCENT} disabled={!ready || busy} onClick={() => onSave(startupToApi(v))} data-testid="story-save">Save and see directions<ArrowRight className="h-4 w-4" aria-hidden /></button>
-            <Link to="/me" className="text-sm text-muted underline underline-offset-2" data-testid="story-profile-link">See it on your profile</Link>
-            {!ready && <span className="text-xs text-muted">Add a one-line description, your stage, what you need next and what you are trying to do next.</span>}
-          </div>
+          </NextBar>
         </div>
         <div className="space-y-5 lg:sticky lg:top-24 lg:self-start">
         <Journey plan={plan} empty limit={6} testid="story-journey" className="hidden lg:block" />
@@ -169,7 +183,6 @@ function Directions({ list, chosen, onChoose, busy, hub, decideProps }) {
   return (
     <section data-testid="directions-step">
       <StepHead n={2} title="Pick a direction to lean toward" sub="These are the routes your business could take next, best fit first. You are not locked in: you can switch later and your plan changes with it." />
-      <Decide {...decideProps} busy={busy} />
       <div className="grid gap-4 lg:grid-cols-3">
         {shown.map((d) => {
           const on = chosen === d.key;
@@ -204,6 +217,16 @@ function Directions({ list, chosen, onChoose, busy, hub, decideProps }) {
         })}
       </div>
       {list.length > 3 && <button type="button" className="btn-ghost mx-auto mt-5 flex !py-2 text-sm" onClick={() => setMore(!more)} data-testid="dir-more">{more ? "Show fewer" : `Show ${list.length - 3} other directions`}</button>}
+      <div className="mt-6"><Decide {...decideProps} busy={busy} /></div>
+      {(() => {
+        const best = list.find((d) => d.best) || list[0];
+        const pick = list.find((d) => d.key === chosen) || best;
+        return best && (
+          <NextBar text={chosen ? `You picked "${pick.title}". Build the plan for it, or choose a different direction above.` : "Read the routes above and choose one. Not sure? The best fit is a good place to start. You can change it later."}>
+            <button type="button" className={PRIMARY} style={ACCENT} disabled={busy} onClick={() => onChoose(pick.key)} data-testid="dir-next">{chosen ? "Build my plan" : `Choose the best fit: ${best.title}`}<ArrowRight className="h-4 w-4" aria-hidden /></button>
+          </NextBar>
+        );
+      })()}
     </section>
   );
 }
@@ -593,6 +616,16 @@ function Brief({ brief, plan, dir, steps, advisors, onInclude, onShare, onUnshar
         </article>
         <p className="px-1 text-xs leading-snug text-muted">Sharing is your call. Stop sharing at any time. Nobody sees your plan unless you choose to share it.</p>
       </div>
+      {dir && (
+        <NextBar text={started ? "You are on your way. Your first steps are on your home page." : shared ? `Shared with ${shared.name}. You can also start the plan on your own.` : "Two ways to finish: start the plan on your own, or share it with your team or an advisor."}>
+          {started
+            ? <button type="button" className={PRIMARY} style={ACCENT} onClick={onHome} data-testid="next-home">Go to my home<ArrowRight className="h-4 w-4" aria-hidden /></button>
+            : <>
+              <button type="button" className={cx(PRIMARY, "!bg-transparent border border-line")} onClick={() => { const el = document.querySelector('[data-testid="share-card"]'); if (el) el.scrollIntoView({ behavior: "smooth", block: "center" }); }} data-testid="next-share">Share it</button>
+              <button type="button" className={PRIMARY} style={ACCENT} onClick={onStart} disabled={busy} data-testid="next-start"><Rocket className="h-4 w-4" aria-hidden />Start this plan</button>
+            </>}
+        </NextBar>
+      )}
     </section>
   );
 }
@@ -669,7 +702,7 @@ export default function Planner() {
         <h1 className="mt-2 text-3xl sm:text-4xl" style={{ ...heading, letterSpacing: "-0.03em", textWrap: "balance" }}>{first ? `${first}, ` : ""}decide your next move</h1>
         <p className="mt-2 max-w-2xl text-sm text-muted">Say where you are, see the routes open to you, and leave with a plan you can start today or share with your team or an advisor. Everything here is yours.</p>
       </header>
-      {startup.stage && <UpdateBar startup={startup} today={today} open={updating} setOpen={setUpdating} onSave={logUpdate} busy={busy} last={(plan.log || [])[0]} plan={plan} steps={steps} />}
+      {startup.stage && (plan.direction || (plan.log || []).length > 0 || (plan.chapters || []).length > 0 || qs.get("update") === "1") && <UpdateBar startup={startup} today={today} open={updating} setOpen={setUpdating} onSave={logUpdate} busy={busy} last={(plan.log || [])[0]} plan={plan} steps={steps} />}
       <Chapters chapters={plan.chapters || []} hub={hub} />
       <Stepper states={states} step={step} onGo={go} />
       {step === "story" && <Story key={JSON.stringify(startup).length + ":" + (plan.log || []).length} startup={startup} plan={plan} onSave={saveStory} busy={busy} />}
@@ -682,7 +715,9 @@ export default function Planner() {
         onInclude={(k, v) => (k ? post({ include: { [k]: v } }) : post({ brief_ready: true }))}
         onShare={(a) => post({ share: { id: a.id, name: a.title, title: a.sub } }, `Shared with ${a.title}`)} onUnshare={() => post({ share: null }, "Sharing stopped")} />}
       {step === "plan" && dir && (
-        <div className="flex justify-end"><button type="button" className={PRIMARY} style={ACCENT} onClick={() => go("brief")} data-testid="to-brief">See my decision plan<ArrowRight className="h-4 w-4" aria-hidden /></button></div>
+        <NextBar text="This is your plan. Drag steps to reorder them, tick them off, or add your own. When it looks right, see your decision plan.">
+          <button type="button" className={PRIMARY} style={ACCENT} onClick={() => go("brief")} data-testid="to-brief">See my decision plan<ArrowRight className="h-4 w-4" aria-hidden /></button>
+        </NextBar>
       )}
       <p className="sr-only" aria-live="polite">{busy ? "Saving" : ""}</p>
     </div>
