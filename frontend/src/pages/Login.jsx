@@ -205,9 +205,9 @@ export default function Login() {
 
             {demoShown === "member" && (
               <div className="rounded-xl border border-line bg-surface p-4">
-                <p className="font-medium">See what your members see</p>
-                <p className="mt-1 text-xs text-muted">Perks, intros, offers and asks.</p>
-                <button type="button" data-testid="demo-link-member" onClick={() => startDemo("member", "humber-innovation-network")} className="btn-primary mt-3 w-full">Open the member demo</button>
+                <p className="font-medium">See what a founder sees</p>
+                <p className="mt-1 text-xs text-muted">From sign-up to a decision plan, one step at a time.</p>
+                <button type="button" data-testid="demo-link-member" onClick={() => startDemo("member", "humber-innovation-network", { fresh: true })} className="btn-primary mt-3 w-full">Start the walkthrough</button>
               </div>
             )}
 
@@ -219,10 +219,17 @@ export default function Login() {
                     <p className="eyebrow">{c.eyebrow || "Featured demo"}</p>
                     <p className="mt-1 text-lg font-semibold leading-tight">{c.name}</p>
                     {c.tagline && <p className="mt-0.5 text-xs text-muted">{c.tagline}</p>}
-                    <div className="mt-3 grid grid-cols-2 gap-2">
-                      <button type="button" className="rounded-lg px-3 py-2.5 text-sm font-semibold" style={{ background: c.accent, color: "#fff" }} data-testid={`demo-${c.slug}-member`} onClick={() => startDemo("member", c.slug)}>{c.memberTitle || "As a member"}</button>
-                      <button type="button" className="rounded-lg border px-3 py-2.5 text-sm font-semibold" style={{ borderColor: c.accent }} data-testid={`demo-${c.slug}-admin`} onClick={() => startDemo("admin", c.slug)}>{c.adminTitle || "As the admin"}</button>
-                    </div>
+                    {c.noAdmin ? (
+                      <div className="mt-3 grid gap-2">
+                        {c.walkthrough && <button type="button" className="rounded-lg px-3 py-2.5 text-sm font-semibold" style={{ background: c.accent, color: "#fff" }} data-testid={`demo-${c.slug}-walkthrough`} onClick={() => startDemo("member", c.slug, { fresh: true })}>Start the walkthrough</button>}
+                        <button type="button" className="rounded-lg border px-3 py-2.5 text-sm font-semibold" style={{ borderColor: c.accent }} data-testid={`demo-${c.slug}-member`} onClick={() => startDemo("member", c.slug)}>{c.memberTitle || "As a member"}</button>
+                      </div>
+                    ) : (
+                      <div className="mt-3 grid grid-cols-2 gap-2">
+                        <button type="button" className="rounded-lg px-3 py-2.5 text-sm font-semibold" style={{ background: c.accent, color: "#fff" }} data-testid={`demo-${c.slug}-member`} onClick={() => startDemo("member", c.slug)}>{c.memberTitle || "As a member"}</button>
+                        <button type="button" className="rounded-lg border px-3 py-2.5 text-sm font-semibold" style={{ borderColor: c.accent }} data-testid={`demo-${c.slug}-admin`} onClick={() => startDemo("admin", c.slug)}>{c.adminTitle || "As the admin"}</button>
+                      </div>
+                    )}
                     <Link to={`/demo/${c.short}`} className="mt-2 block text-center text-xs text-muted underline" data-testid={`demo-${c.slug}-page`}>Open its demo page (to share a link)</Link>
                   </div>))}
                 <p className="eyebrow pt-2">Leisure &amp; lifestyle</p>
@@ -230,7 +237,6 @@ export default function Login() {
                   <div key={c.slug} className="flex items-center gap-2 rounded-xl border border-line bg-surface p-2.5" data-testid={`demo-community-${c.slug}`}>
                     <div className="min-w-0 flex-1"><p className="truncate text-sm font-medium">{c.name}</p><p className="truncate text-[11px] text-muted" title={c.blurb}>{c.blurb}</p></div>
                     <button type="button" className="btn-ghost shrink-0 border border-line !px-2.5 !py-1.5 text-xs" data-testid={`demo-${c.slug}-member`} onClick={() => startDemo("member", c.slug)}>Member</button>
-                    <button type="button" className="btn-ghost shrink-0 border border-line !px-2.5 !py-1.5 text-xs" data-testid={`demo-${c.slug}-admin`} onClick={() => startDemo("admin", c.slug)}>Admin</button>
                   </div>))}
               </div>
             )}
