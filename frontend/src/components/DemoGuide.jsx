@@ -1,32 +1,26 @@
-import React, { useEffect, useState } from "react";
-import { useLocation, useNavigate } from "react-router-dom";
-import { ArrowLeft, EyeOff, RotateCcw } from "lucide-react";
-import { toast } from "sonner";
-import { api } from "../lib/api";
+import React, { useEffect, useState, useSyncExternalStore } from "react";
+import { useNavigate } from "react-router-dom";
+import { EyeOff, Pause, Play, RotateCcw, SkipBack, SkipForward } from "lucide-react";
 import { useAuth } from "../lib/auth";
-import { isDemo } from "../lib/demo";
+import { isDemo, walkthroughOn } from "../lib/demo";
+import { SCENES, bindTour, getTour, subscribeTour, tour } from "../lib/tour";
 import { cx } from "./ui";
 
-// Demo only. A slim strip that says where a new founder is in the walkthrough (1 of 5), what to do on this screen, and lets the presenter step back or reset to a blank founder between takes. It only appears in the Humber demo, for the founder side. "Hide" removes it completely so it
-// never shows up in a recording; press G to bring it back.
+// Demo only. The player for the guided walkthrough (lib/tour.js): it plays the whole journey by itself, with a caption for each part.
+// Play / Pause, previous / next part, restart. "Hide" removes the bar so it never shows up in a recording; press G to bring it back.
 const HUMBER = "humber-innovation-network";
-const STEPS = [
-  { key: "home", to: "/", title: "Arrive", say: "A founder's first view of the hub. Press Continue to tell it about your startup." },
-  { key: "story", to: "/plan?step=story", title: "Tell your story", say: "Fill in your story, or press Use a sample story. Then press Save at the bottom." },
-  { key: "directions", to: "/plan?step=directions", title: "Pick a direction", say: "Choose one route for the business. Not sure? Press the best fit at the bottom." },
-  { key: "plan", to: "/plan?step=plan", title: "Build your plan", say: "Drag steps to reorder them. When it looks right, press See my decision plan." },
-  { key: "brief", to: "/plan?step=brief", title: "Decision plan", say: "Start the plan on your own, or share it with your team or an advisor." },
-];
 const KEY = "pw_guide_hidden";
 const readHidden = () => { try { return window.sessionStorage.getItem(KEY) === "1"; } catch { return false; } };
 const writeHidden = (v) => { try { v ? window.sessionStorage.setItem(KEY, "1") : window.sessionStorage.removeItem(KEY); } catch { /* ignore */ } };
 
 export default function DemoGuide() {
   const { user, config, refresh } = useAuth();
-  const loc = useLocation();
   const nav = useNavigate();
+  const t = useSyncExternalStore(subscribeTour, getTour);
   const [hidden, setHidden] = useState(readHidden);
-  const [busy, setBusy] = useState(false);
+  const on = isDemo() && walkthroughOn() && !!user && user.role !== "admin" && config?.slug === HUMBER;
+  useEffect(() => { bindTour(nav, refresh); });   // every render, so the player always has a live way to move between screens
+  useEffect(() => { if (on && t.pending) tour.launch(); }, [on, t.pending]);
   useEffect(() => {
     const onKey = (e) => {
       if ((e.key !== "g" && e.key !== "G") || e.metaKey || e.ctrlKey || e.altKey) return;
@@ -36,37 +30,37 @@ export default function DemoGuide() {
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
   }, []);
-  const on = isDemo() && !!user && user.role !== "admin" && config?.slug === HUMBER;
-  const q = new URLSearchParams(loc.search);
-  const idx = !on ? -1 : loc.pathname === "/" ? 0 : loc.pathname === "/plan" ? Math.max(1, STEPS.findIndex((s) => s.key === (q.get("step") || "story"))) : -1;
-  const shown = idx >= 0 && !hidden;
-  // Tells the Home page the strip is taking room, so it can drop its least important rows a little sooner (index.css).
+  const shown = on && !hidden;
+  // Tells the Home page the bar is taking room, so it can drop its least important rows a little sooner (index.css).
   useEffect(() => {
     if (!shown) return undefined;
     document.body.dataset.guide = "1";
     return () => { delete document.body.dataset.guide; };
   }, [shown]);
   if (!shown) return null;
-  const cur = STEPS[idx];
-  const reset = async () => {
-    setBusy(true);
-    try { await api.post("/navigator/demo-reset", {}); await refresh(); nav("/", { replace: true }); window.scrollTo(0, 0); toast.success("Reset to a new founder"); }
-    catch { toast.error("Could not reset the demo"); } finally { setBusy(false); }
-  };
-  const hide = () => { writeHidden(true); setHidden(true); };
+  const idle = !t.playing && !t.paused && !t.done && !t.pending;
+  const cur = SCENES[t.scene] || SCENES[0];
   const btn = "inline-flex items-center gap-1 rounded-full border border-line px-2.5 py-1 text-xs font-semibold text-muted transition hover:text-ink disabled:opacity-40";
   return (
-    <div className="mb-3 flex flex-wrap items-center gap-x-3 gap-y-1.5 rounded-xl border border-dashed border-line bg-surface px-3 py-2 text-sm lg:mb-4" data-testid="demo-guide" role="region" aria-label="Demo walkthrough">
-      <span className="inline-flex shrink-0 items-center gap-2 font-semibold" data-testid="demo-guide-step">
-        <span className="flex gap-1" aria-hidden>{STEPS.map((s, i) => <span key={s.key} className={cx("h-1.5 w-4 rounded-full", i <= idx ? "bg-accent" : "bg-ink/15")} style={i <= idx ? { background: "var(--accent)" } : undefined} />)}</span>
-        {idx + 1} of {STEPS.length} · {cur.title}
-      </span>
-      <span className={cx("min-w-0 flex-1 text-xs text-muted max-sm:order-last max-sm:basis-full", idx === 0 && "max-lg:hidden")} data-testid="demo-guide-say">{cur.say}</span>
-      <span className="ml-auto flex shrink-0 items-center gap-1.5">
-        <button type="button" className={btn} onClick={() => nav(STEPS[Math.max(0, idx - 1)].to)} disabled={idx === 0} data-testid="demo-guide-back" aria-label="Previous step"><ArrowLeft className="h-3.5 w-3.5" aria-hidden />Back</button>
-        <button type="button" className={btn} onClick={reset} disabled={busy} data-testid="demo-guide-reset"><RotateCcw className="h-3.5 w-3.5" aria-hidden />Reset</button>
-        <button type="button" className={btn} onClick={hide} title="Hide (press G to bring it back)" data-testid="demo-guide-hide"><EyeOff className="h-3.5 w-3.5" aria-hidden /><span className="max-sm:hidden">Hide</span></button>
-      </span>
+    <div className="sticky top-[64px] z-[9500] mb-3 flex flex-wrap items-center gap-x-4 gap-y-2 rounded-xl border border-line bg-surface px-3.5 py-2.5 shadow-sm lg:mb-4" data-testid="demo-guide" role="region" aria-label="Demo walkthrough">
+      <div className="min-w-0 flex-1 basis-72">
+        <p className="flex flex-wrap items-center gap-x-3 gap-y-1 text-sm font-semibold" data-testid="demo-guide-step">
+          <span className="flex gap-1" aria-hidden>{SCENES.map((s, i) => <span key={s.key} className={cx("h-1.5 w-5 rounded-full", i <= t.scene ? "" : "bg-ink/15")} style={i <= t.scene ? { background: "var(--accent)" } : undefined} />)}</span>
+          {t.done ? "Done" : `Step ${t.scene + 1} of ${SCENES.length}`} · {cur.title}
+          {t.playing && <span className="text-[11px] font-medium uppercase text-muted" style={{ letterSpacing: "0.1em" }}>Playing</span>}
+          {t.paused && <span className="text-[11px] font-medium uppercase text-muted" style={{ letterSpacing: "0.1em" }}>Paused</span>}
+        </p>
+        <p className="mt-0.5 text-xs leading-snug text-muted sm:text-[13px]" data-testid="demo-guide-say">{idle ? "Press Play and the walkthrough runs by itself, from the founder's profile to a decision plan." : t.caption}</p>
+      </div>
+      <div className="flex shrink-0 flex-wrap items-center gap-1.5">
+        <button type="button" className={btn} onClick={() => tour.back()} disabled={t.scene === 0 && !t.done} data-testid="tour-back" aria-label="Previous part"><SkipBack className="h-3.5 w-3.5" aria-hidden /></button>
+        {t.playing
+          ? <button type="button" className={cx(btn, "!border-transparent")} style={{ background: "var(--accent)", color: "var(--on-accent)" }} onClick={() => tour.pause()} data-testid="tour-pause"><Pause className="h-3.5 w-3.5" aria-hidden />Pause</button>
+          : <button type="button" className={cx(btn, "!border-transparent")} style={{ background: "var(--accent)", color: "var(--on-accent)" }} onClick={() => tour.play()} data-testid="tour-play"><Play className="h-3.5 w-3.5" aria-hidden />{t.done || t.error ? "Replay" : t.paused ? "Resume" : "Play"}</button>}
+        <button type="button" className={btn} onClick={() => tour.next()} disabled={t.scene >= SCENES.length - 1} data-testid="tour-next" aria-label="Next part"><SkipForward className="h-3.5 w-3.5" aria-hidden /></button>
+        <button type="button" className={btn} onClick={() => tour.restart()} data-testid="tour-restart"><RotateCcw className="h-3.5 w-3.5" aria-hidden /><span className="max-sm:hidden">Restart</span></button>
+        <button type="button" className={btn} onClick={() => { writeHidden(true); setHidden(true); }} title="Hide (press G to bring it back)" data-testid="demo-guide-hide"><EyeOff className="h-3.5 w-3.5" aria-hidden /><span className="max-sm:hidden">Hide</span></button>
+      </div>
     </div>
   );
 }

@@ -8,6 +8,11 @@ export const demoRole = () => { try { return window.sessionStorage.getItem(ROLE)
 export const setDemoRole = (r) => { try { r ? window.sessionStorage.setItem(ROLE, r) : window.sessionStorage.removeItem(ROLE); } catch { /* ignore */ } };
 const set = (v) => { try { v ? window.sessionStorage.setItem(KEY, v) : window.sessionStorage.removeItem(KEY); } catch { /* storage blocked: the ?demo= link still works */ } };
 
+// True while someone is in the guided walkthrough (started with "Start the walkthrough"), as opposed to just looking around the demo.
+const WALK = "pw_walk";
+export const walkthroughOn = () => { try { return window.sessionStorage.getItem(WALK) === "1"; } catch { return false; } };
+export const setWalkthrough = (v) => { try { v ? window.sessionStorage.setItem(WALK, "1") : window.sessionStorage.removeItem(WALK); } catch { /* ignore */ } };
+
 export const isDemo = () => process.env.REACT_APP_PREVIEW === "true" || get() === "1";
 
 // A link like /login?demo=admin starts the demo too (so it can be shared, e.g. from a website button).
@@ -24,6 +29,7 @@ const PREVIEW = process.env.REACT_APP_PREVIEW === "true";
 const goTo = (path) => { window.location.hash = "#" + path; };
 // `fresh` starts the walkthrough as a brand-new founder (nothing filled in) instead of the ready-made one.
 export const startDemo = (role, slug, opts = {}) => {
+  setWalkthrough(!!opts.fresh);
   const q = `/login?demo=${role}${slug ? `&c=${encodeURIComponent(slug)}` : ""}${opts.fresh ? "&fresh=1" : ""}`;
   if (PREVIEW) { setDemoRole(role); goTo(q); return; }
   set("1"); setDemoRole(role); window.location.assign(q);
@@ -32,7 +38,7 @@ export const startDemo = (role, slug, opts = {}) => {
 export const inDemoTab = () => get() === "1";
 // Leaves the demo for good and reloads onto the real site, so the real server is used again (the demo's
 // stand-in server only goes away on a fresh page load).
-export const leaveDemo = (to = "/login") => { set(null); setDemoRole(null); if (PREVIEW) { goTo(to); return; } window.location.replace(to); };
+export const leaveDemo = (to = "/login") => { set(null); setDemoRole(null); setWalkthrough(false); if (PREVIEW) { goTo(to); return; } window.location.replace(to); };
 export const exitDemo = () => leaveDemo("/login");
 
 // The "Try the demo" buttons open the founder walkthrough in the Humber hub. The demo is for founders only; there is no admin side to open.

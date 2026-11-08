@@ -8,7 +8,7 @@ import { useEcosystem } from "../lib/ecosystem";
 import { NEED_LABEL, STAGES, STAGE_LABEL, needsFromText } from "../lib/navigator";
 import { BRIEF_SECTIONS, HORIZONS, STATUS_LABEL, STEPS, UPDATES, advisorBrief, applyUpdate, KEEP, buildPlan, decide, directions, moveStep, planProgress, stepStates } from "../lib/planner";
 import { Avatar, Spinner, cx } from "../components/ui";
-import { isDemo } from "../lib/demo";
+import { isDemo, walkthroughOn } from "../lib/demo";
 import { SAMPLE_STARTUP } from "../lib/demoSample";
 import Journey from "../components/Journey";
 import StartupFields, { BLANK_STARTUP, startupToApi, startupToForm } from "../components/StartupFields";
@@ -65,9 +65,10 @@ function NextBar({ text, children, testid = "next-bar" }) {
 }
 
 function StepHead({ n, title, sub }) {
+  const wt = walkthroughOn();   // in the guided walkthrough Home and the four option lists come between the story and the planner, so the planner steps after the first count from 6
   return (
     <div className="mb-5">
-      <Eyebrow>Step {n} of 4</Eyebrow>
+      <Eyebrow>Step {wt && n >= 2 ? n + 4 : n} of {wt ? 8 : 4}</Eyebrow>
       <h2 className="mt-1.5 text-2xl sm:text-3xl" style={{ ...heading, letterSpacing: "-0.025em", textWrap: "balance" }}>{title}</h2>
       <p className="mt-1.5 max-w-2xl text-sm text-muted">{sub}</p>
     </div>
@@ -89,7 +90,7 @@ function Story({ startup, plan, onSave, busy }) {
       <div className="grid gap-5 lg:grid-cols-[1fr_20rem]">
         <div className="space-y-4">
           <Journey plan={plan} empty limit={3} testid="story-journey-m" className="lg:hidden" />
-          {isDemo() && !startup.stage && (
+          {isDemo() && !walkthroughOn() && !startup.stage && (
             <button type="button" onClick={() => setV(startupToForm(SAMPLE_STARTUP))} className="inline-flex items-center gap-2 rounded-full border border-dashed border-ink/30 px-3.5 py-1.5 text-sm font-semibold text-ink hover:bg-ink/5" data-testid="story-sample"><Sparkles className="h-4 w-4" aria-hidden />Use a sample story</button>
           )}
           <StartupFields value={v} onChange={(x) => setV(x || { ...BLANK_STARTUP, needs: [] })} testPrefix="story" canRemove={false} />
@@ -98,7 +99,7 @@ function Story({ startup, plan, onSave, busy }) {
               {heard.map((n) => <button key={n} type="button" onClick={() => toggle(n)} className="rounded-full border border-dashed border-ink/30 px-3 py-1 text-xs font-semibold text-ink hover:bg-ink/5">+ Add {NEED_LABEL[n]}</button>)}</p>
           )}
           <p className="text-sm"><Link to="/me" className="text-muted underline underline-offset-2" data-testid="story-profile-link">See it on your profile</Link></p>
-          <NextBar text={ready ? "Looks good. Save it and we will show you the routes your business could take." : "To continue, add a one-line description, your stage, what you need next and what you are trying to do next."}>
+          <NextBar text={ready ? (walkthroughOn() ? "Save these to the profile and the hub starts matching its programs, events and people to this business." : "Looks good. Save it and we will show you the routes your business could take.") : "To continue, add a one-line description, your stage, what you need next and what you are trying to do next."}>
             <button type="button" className={PRIMARY} style={ACCENT} disabled={!ready || busy} onClick={() => onSave(startupToApi(v))} data-testid="story-save">Save and see directions<ArrowRight className="h-4 w-4" aria-hidden /></button>
           </NextBar>
         </div>
@@ -669,7 +670,7 @@ export default function Planner() {
   };
   const saveStory = async (next) => {
     setBusy(true);
-    try { await api.patch("/hub/profile", { startup: next }); await refresh(); toast.success("Saved"); go("directions"); }
+    try { await api.patch("/hub/profile", { startup: next }); await refresh(); toast.success("Saved"); if (walkthroughOn()) { nav("/"); window.scrollTo(0, 0); } else go("directions"); }
     catch (e) { toast.error(errMsg(e)); } finally { setBusy(false); }
   };
   const [updating, setUpdating] = useState(qs.get("update") === "1");

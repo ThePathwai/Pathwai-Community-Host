@@ -5,7 +5,8 @@ import { CalendarDays, Gift, Mail, Smartphone, Ticket, Users } from "lucide-reac
 import { api, errMsg } from "../lib/api";
 import { useAuth } from "../lib/auth";
 import { sampleMetrics } from "../lib/sampleReport";
-import { DEMO_COMMUNITIES, demoRole, inDemoTab, isDemo, leaveDemo, startAdminDemo, startDemo } from "../lib/demo";
+import { tour } from "../lib/tour";
+import { DEMO_COMMUNITIES, demoRole, inDemoTab, isDemo, leaveDemo, setWalkthrough, startAdminDemo, startDemo } from "../lib/demo";
 import { HowItWorks } from "../components/IntroTour";
 import { applyBrand } from "../lib/theme";
 import crowd from "../assets/crowd.jpg";
@@ -83,7 +84,7 @@ export default function Login() {
         } catch { /* already a member, or the apply failed -- fall through to the usual landing */ }
       }
       // A demo link can name a community to open straight into (/login?demo=member&c=yvettabetta-pilates).
-      if (isDemo() && params.get("c")) { try { await enter(params.get("c")); if (params.get("fresh")) await api.post("/navigator/demo-reset", {}).then(() => refresh()).catch(() => {}); nav("/", { replace: true }); return; } catch { /* not a member there: fall through to the Hub */ } }
+      if (isDemo() && params.get("c")) { try { await enter(params.get("c")); setWalkthrough(!!params.get("fresh")); if (params.get("fresh")) { await api.post("/navigator/demo-reset", {}).then(() => refresh()).catch(() => {}); tour.begin(); nav("/plan?step=story", { replace: true }); return; } nav("/", { replace: true }); return; } catch { /* not a member there: fall through to the Hub */ } }
       nav(params.get("next") === "navigator" ? "/navigator" : "/hub", { replace: true });
     } catch (ex) { setStatus(ex?.response?.status === 403 && /membership request/i.test(errMsg(ex)) ? (/not approved/i.test(errMsg(ex)) ? "rejected" : "pending") : ""); setErr(errMsg(ex)); if (ex?.response?.status !== 403) toast.error(errMsg(ex)); } finally { setBusy(false); }
   };
@@ -207,7 +208,7 @@ export default function Login() {
               <div className="rounded-xl border border-line bg-surface p-4">
                 <p className="font-medium">See what a founder sees</p>
                 <p className="mt-1 text-xs text-muted">From sign-up to a decision plan, one step at a time.</p>
-                <button type="button" data-testid="demo-link-member" onClick={() => startDemo("member", "humber-innovation-network", { fresh: true })} className="btn-primary mt-3 w-full">Start the walkthrough</button>
+                <button type="button" data-testid="demo-link-member" onClick={() => startDemo("member", "humber-innovation-network", { fresh: true })} className="btn-primary mt-3 w-full">Play the walkthrough</button>
               </div>
             )}
 
@@ -221,7 +222,7 @@ export default function Login() {
                     {c.tagline && <p className="mt-0.5 text-xs text-muted">{c.tagline}</p>}
                     {c.noAdmin ? (
                       <div className="mt-3 grid gap-2">
-                        {c.walkthrough && <button type="button" className="rounded-lg px-3 py-2.5 text-sm font-semibold" style={{ background: c.accent, color: "#fff" }} data-testid={`demo-${c.slug}-walkthrough`} onClick={() => startDemo("member", c.slug, { fresh: true })}>Start the walkthrough</button>}
+                        {c.walkthrough && <button type="button" className="rounded-lg px-3 py-2.5 text-sm font-semibold" style={{ background: c.accent, color: "#fff" }} data-testid={`demo-${c.slug}-walkthrough`} onClick={() => startDemo("member", c.slug, { fresh: true })}>Play the walkthrough</button>}
                         <button type="button" className="rounded-lg border px-3 py-2.5 text-sm font-semibold" style={{ borderColor: c.accent }} data-testid={`demo-${c.slug}-member`} onClick={() => startDemo("member", c.slug)}>{c.memberTitle || "As a member"}</button>
                       </div>
                     ) : (
