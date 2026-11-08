@@ -83,7 +83,7 @@ export default function Login() {
         } catch { /* already a member, or the apply failed -- fall through to the usual landing */ }
       }
       // A demo link can name a community to open straight into (/login?demo=member&c=yvettabetta-pilates).
-      if (isDemo() && params.get("c")) { try { await enter(params.get("c")); nav("/", { replace: true }); return; } catch { /* not a member there: fall through to the Hub */ } }
+      if (isDemo() && params.get("c")) { try { await enter(params.get("c")); if (params.get("fresh")) await api.post("/navigator/demo-reset", {}).then(() => refresh()).catch(() => {}); nav("/", { replace: true }); return; } catch { /* not a member there: fall through to the Hub */ } }
       nav(params.get("next") === "navigator" ? "/navigator" : "/hub", { replace: true });
     } catch (ex) { setStatus(ex?.response?.status === 403 && /membership request/i.test(errMsg(ex)) ? (/not approved/i.test(errMsg(ex)) ? "rejected" : "pending") : ""); setErr(errMsg(ex)); if (ex?.response?.status !== 403) toast.error(errMsg(ex)); } finally { setBusy(false); }
   };

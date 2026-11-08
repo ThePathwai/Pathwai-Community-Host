@@ -152,3 +152,6 @@ body[data-fit] .min-h-screen { min-height: 0; }
 /* very short phones: drop secondary lines so the lists keep room */
 @media (max-height: 700px) and (max-width: 1023px) { .short-hide { display: none; } }
 @media (max-height: 780px) { .tight-hide { display: none; } }
+
+/* The demo walkthrough strip takes a little room on Home, so the lowest-priority rows go a little sooner. */
+@media (max-height:860px){body[data-guide] .tight-hide{display:none}}

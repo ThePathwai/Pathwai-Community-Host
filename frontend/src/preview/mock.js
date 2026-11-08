@@ -1059,7 +1059,23 @@ function get(path, p, config) {
   return ok(config, d);
 }
 
+// Demo only: put the signed-in founder back to a brand-new account (no startup, plan, matches tracked, interest, saved items or RSVPs) so a
+// walkthrough can be recorded again from the start. Used by the Reset button and the "Start the walkthrough" entry.
+function resetDemoFounder() {
+  const m = (S.extra.acctProfile = S.extra.acctProfile || {});
+  m[S.email] = { location: "Toronto, ON", startup: {}, plan: null, tracked: [], interest: [], journey: [], nav_seen: [] };
+  const rv = sharedRsvp(); const ov = sharedContent("events");
+  for (const e of [...ov.created, ...((view()["/events"]) || [])]) {
+    const prior = rv.byUser[e.id] && rv.byUser[e.id][S.email];
+    const now = prior !== undefined ? prior : (applyEdit(e, "events") || {}).my_rsvp ?? null;
+    if (now === "yes") { rv.delta[e.id] = (rv.delta[e.id] || 0) - 1; (rv.byUser[e.id] = rv.byUser[e.id] || {})[S.email] = null; }
+  }
+  const sv = (book().shared || {}).saved || {};
+  for (const k of Object.keys(sv)) if (sv[k]) delete sv[k][S.email];
+}
+
 function write(method, path, body, config) {
+  if (path === "/navigator/demo-reset") { if (!S.role) return fail(config, 401, "Not authenticated"); resetDemoFounder(); return ok(config, { ok: true }); }
   if (path.startsWith("/navigator")) return navigatorCall(method, path, body, config.params || {}, navCtx(config));
   if (path.startsWith("/founder-events")) return eventsCall(method, path, config.params || {}, navCtx(config));
   if (path.startsWith("/talent")) return talentCall(method, path, body, config.params || {}, navCtx(config));

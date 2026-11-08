@@ -8,6 +8,7 @@ import { api } from "../lib/api";
 import { startNotificationWatch } from "../lib/webNotify";
 import { startLive, useLive } from "../lib/live";
 import AlertsPrompt from "./AlertsPrompt";
+import DemoGuide from "./DemoGuide";
 import { Avatar, BackButton, PoweredBy, Wordmark, cx } from "./ui";
 import { BrandDrawer, EditBar, Inline, useEdit } from "./EditKit";
 
@@ -202,7 +203,7 @@ export default function Layout({ children }) {
           {custom.map((l) => <a key={l.url} href={l.url} target="_blank" rel="noreferrer" className="whitespace-nowrap rounded-full px-3 py-1 text-sm text-muted">{l.label} ↗</a>)}
         </nav>
       </header>
-      <main className="mx-auto max-w-[1600px] px-4 py-6 lg:px-10 lg:py-10">{backTo && <BackButton fallback={backTo[0]} label={`Back to ${backTo[1]}`} />}{children}</main>
+      <main className="mx-auto max-w-[1600px] px-4 py-6 lg:px-10 lg:py-10"><DemoGuide />{backTo && <BackButton fallback={backTo[0]} label={`Back to ${backTo[1]}`} />}{children}</main>
       {AI_CHAT_ENABLED && loc.pathname !== "/ask" && <Link to="/ask" data-testid="ask-fab" className="btn-primary fixed bottom-5 right-5 z-40 hidden !px-4 shadow-card xl:inline-flex"><Sparkles className="h-4 w-4" />Ask</Link>}
       <nav className="fixed inset-x-0 bottom-0 z-40 grid border-t border-line bg-paper/90 backdrop-blur-xl backdrop-saturate-150 xl:hidden"
         style={{ gridTemplateColumns: `repeat(${Math.min(5, 1 + tabItems.length + (isAdmin ? 1 : 0))}, minmax(0, 1fr))`, paddingBottom: "env(safe-area-inset-bottom, 0px)" }} data-testid="tabbar">

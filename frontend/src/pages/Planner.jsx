@@ -1,13 +1,15 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { toast } from "sonner";
-import { ArrowRight, Check, CheckCircle2, Circle, Clock, Copy, Eye, EyeOff, GripVertical, Lock, Plus, Send, Share2, Sparkles, Target, X } from "lucide-react";
+import { ArrowRight, Check, CheckCircle2, Circle, Clock, Copy, Eye, EyeOff, GripVertical, Lock, Plus, Rocket, Send, Share2, Sparkles, Target, X } from "lucide-react";
 import { api, errMsg } from "../lib/api";
 import { useAuth } from "../lib/auth";
 import { useEcosystem } from "../lib/ecosystem";
 import { NEED_LABEL, STAGES, STAGE_LABEL, needsFromText } from "../lib/navigator";
 import { BRIEF_SECTIONS, HORIZONS, STATUS_LABEL, STEPS, UPDATES, advisorBrief, applyUpdate, KEEP, buildPlan, decide, directions, moveStep, planProgress, stepStates } from "../lib/planner";
 import { Avatar, Spinner, cx } from "../components/ui";
+import { isDemo } from "../lib/demo";
+import { SAMPLE_STARTUP } from "../lib/demoSample";
 import Journey from "../components/Journey";
 import StartupFields, { BLANK_STARTUP, startupToApi, startupToForm } from "../components/StartupFields";
 import { KindTile, VerdictBadge, dayShort, heading } from "../components/hub/HubKit";
@@ -16,7 +18,7 @@ import { KindTile, VerdictBadge, dayShort, heading } from "../components/hub/Hub
 //   1 Your story      what you are building, where you are, what you want  (saved to your startup profile, the same one the Navigator reads)
 //   2 Directions      a few routes the business could take, with why each fits you and what it costs
 //   3 Your plan       the steps for the route you chose, using the programs, events, people and resources around you
-//   4 Advisor brief   a one-page summary and specific questions. Private until you share it, and you choose what goes in.
+//   4 Decision plan   the decision, the plan and the questions, on one page. Start it on your own, or share it with a team or an advisor. Private until you share it.
 // The rules are in lib/planner.js. Matches come from GET /navigator/moves; ticks and sharing are saved with /navigator/plan.
 
 const ACCENT = { background: "var(--accent)", color: "var(--on-accent)" };
@@ -24,7 +26,7 @@ const PRIMARY = "inline-flex items-center justify-center gap-2 rounded-full px-6
 const Eyebrow = ({ children }) => <p className="text-[11px] font-semibold uppercase text-muted" style={{ letterSpacing: "0.12em" }}>{children}</p>;
 
 // ---- the four steps, always visible ----
-const SHORT = { story: "Story", directions: "Directions", plan: "Plan", brief: "Brief" };
+const SHORT = { story: "Story", directions: "Directions", plan: "Plan", brief: "Decision" };
 function Stepper({ states, step, onGo }) {
   return (
     <ol className="grid grid-cols-4 gap-1.5 sm:gap-3" data-testid="plan-steps" aria-label="Planner steps">
@@ -72,6 +74,9 @@ function Story({ startup, plan, onSave, busy }) {
       <div className="grid gap-5 lg:grid-cols-[1fr_20rem]">
         <div className="space-y-4">
           <Journey plan={plan} empty limit={3} testid="story-journey-m" className="lg:hidden" />
+          {isDemo() && !startup.stage && (
+            <button type="button" onClick={() => setV(startupToForm(SAMPLE_STARTUP))} className="inline-flex items-center gap-2 rounded-full border border-dashed border-ink/30 px-3.5 py-1.5 text-sm font-semibold text-ink hover:bg-ink/5" data-testid="story-sample"><Sparkles className="h-4 w-4" aria-hidden />Use a sample story</button>
+          )}
           <StartupFields value={v} onChange={(x) => setV(x || { ...BLANK_STARTUP, needs: [] })} testPrefix="story" canRemove={false} />
           {heard.length > 0 && (
             <p className="flex flex-wrap items-center gap-2 text-sm text-muted" data-testid="story-heard"><Sparkles className="h-4 w-4" aria-hidden />You might also need
@@ -89,8 +94,8 @@ function Story({ startup, plan, onSave, busy }) {
           <Eyebrow>What happens next</Eyebrow>
           <p className="flex gap-2.5"><span className="font-bold">2</span><span>We show a few directions the business could take, and why each fits.</span></p>
           <p className="flex gap-2.5"><span className="font-bold">3</span><span>You pick one and get a plan using the programs, people and events around you.</span></p>
-          <p className="flex gap-2.5"><span className="font-bold">4</span><span>You get a one-page brief and questions to take to an advisor.</span></p>
-          <p className="flex items-start gap-2 border-t border-line pt-3 text-xs text-muted"><Lock className="mt-0.5 h-3.5 w-3.5 shrink-0" aria-hidden />This is yours. Nobody sees it until you choose to share the brief.</p>
+          <p className="flex gap-2.5"><span className="font-bold">4</span><span>You get a decision plan: start it on your own, or share it with your team or an advisor.</span></p>
+          <p className="flex items-start gap-2 border-t border-line pt-3 text-xs text-muted"><Lock className="mt-0.5 h-3.5 w-3.5 shrink-0" aria-hidden />This is yours. Nobody sees it until you choose to share your decision plan.</p>
         </aside>
         </div>
       </div>
@@ -468,30 +473,113 @@ function ProgressLog({ log }) {
   );
 }
 
-// ---- 4. advisor brief ----
-function Brief({ brief, plan, advisors, onInclude, onShare, onUnshare, busy }) {
+// ---- 4. decision plan ----
+// The end of the journey. It leads with the decision, then offers two ways to finish: start the plan on your own (the steps show up on Home), or
+// share it with a team or an advisor. The full page below is what gets shared, and you choose what goes in.
+function Brief({ brief, plan, dir, steps, advisors, onInclude, onShare, onUnshare, onStart, onStop, onPickDirection, onHome, today, busy }) {
   const [pick, setPick] = useState(advisors[0]?.id || "");
   useEffect(() => { if (!pick && advisors[0]) setPick(advisors[0].id); }, [advisors]); // eslint-disable-line react-hooks/exhaustive-deps
   const who = advisors.find((a) => a.id === pick);
   const shared = plan.shared;
+  const started = plan.started;
+  const open = steps.filter((x) => x.kind !== "advisor" && x.status !== "done");
+  const first = open.filter((x) => x.horizon === "soon").slice(0, 3);
+  const hz = Object.fromEntries(HORIZONS);
   const copy = async () => {
     try { await navigator.clipboard.writeText(brief.text); toast.success("Copied. Paste it into an email or a doc."); onInclude(null); }
-    catch { toast.error("Your browser would not copy it. Select the brief and copy it by hand."); }
+    catch { toast.error("Your browser would not copy it. Select the plan and copy it by hand."); }
   };
   return (
     <section data-testid="brief-step">
-      <StepHead n={4} title="Your advisor brief" sub="One page that gets an advisor up to speed fast, with the questions worth their time. Tick what goes in. It stays private until you share it." />
-      <div className="grid items-start gap-5 lg:grid-cols-[1fr_21rem]">
+      <StepHead n={4} title="Your decision plan" sub="Where you landed: the decision, the plan and the questions worth asking. Start it on your own, or share it with your team or an advisor." />
+      <div className="space-y-5">
+        <div className="card space-y-4 !p-5 sm:!p-7" data-testid="decision-hero">
+          {dir ? (
+            <>
+              <div>
+                <Eyebrow>Your decision</Eyebrow>
+                <h3 className="mt-1.5 text-2xl font-bold sm:text-3xl" style={{ ...heading, letterSpacing: "-0.025em", textWrap: "balance" }} data-testid="decision-title">{dir.title}</h3>
+                <p className="mt-1.5 max-w-3xl text-[15px] text-ink/85">{dir.promise}</p>
+                {plan.decision && plan.decision.text && <p className="mt-1.5 text-sm text-muted">In your words: "{plan.decision.text}"</p>}
+              </div>
+              <div className="grid gap-3 sm:grid-cols-3" data-testid="decision-horizons">
+                {HORIZONS.map(([k, label]) => {
+                  const list = open.filter((x) => x.horizon === k);
+                  return (
+                    <div key={k} className="rounded-2xl border border-line p-3.5" data-testid={`horizon-${k}`}>
+                      <p className="text-[11px] font-semibold uppercase text-muted" style={{ letterSpacing: "0.1em" }}>{label}<span className="ml-1.5 font-normal normal-case tracking-normal">{list.length} step{list.length === 1 ? "" : "s"}</span></p>
+                      <ul className="mt-2 space-y-1.5 text-sm">{list.slice(0, 3).map((x) => <li key={x.id} className="flex gap-2 leading-snug"><span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-ink/40" aria-hidden />{x.title}</li>)}
+                        {list.length > 3 && <li className="text-xs text-muted">+ {list.length - 3} more in the plan below</li>}{list.length === 0 && <li className="text-xs text-muted">Nothing here yet.</li>}</ul>
+                    </div>
+                  );
+                })}
+              </div>
+            </>
+          ) : (
+            <div className="flex flex-wrap items-center justify-between gap-4" data-testid="decision-empty">
+              <div><Eyebrow>Your decision</Eyebrow><p className="mt-1.5 text-lg font-bold" style={heading}>Pick a direction first</p><p className="text-sm text-muted">Your decision plan is built from the direction you choose.</p></div>
+              <button type="button" className={PRIMARY} style={ACCENT} onClick={onPickDirection} data-testid="decision-pick">See directions<ArrowRight className="h-4 w-4" aria-hidden /></button>
+            </div>
+          )}
+        </div>
+
+        {dir && (
+          <div className="grid items-stretch gap-4 md:grid-cols-2" data-testid="exits">
+            <div className="card flex flex-col gap-3" data-testid="exit-start">
+              <div className="flex items-center gap-2"><Rocket className="h-4 w-4" aria-hidden /><h3 className="font-bold">Start this plan</h3></div>
+              {started ? (
+                <div className="flex flex-1 flex-col gap-3" data-testid="started-state">
+                  <p className="flex items-start gap-2 rounded-xl border border-emerald-500/40 bg-emerald-500/10 px-3 py-2.5 text-sm"><CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-emerald-600" aria-hidden /><span>You started this plan{started === true ? "" : ` on ${dayShort(started)}`}.{first[0] ? <> First up: <b>{first[0].title}</b>.</> : null}</span></p>
+                  <button type="button" className={cx(PRIMARY, "mt-auto w-full")} style={ACCENT} onClick={onHome} data-testid="go-home">Go to my home<ArrowRight className="h-4 w-4" aria-hidden /></button>
+                  <button type="button" className="text-center text-xs text-muted underline underline-offset-2" onClick={onStop} disabled={busy} data-testid="unstart">Not started yet</button>
+                </div>
+              ) : (
+                <>
+                  <p className="text-sm text-muted">Go it alone. Your first steps and deadlines show up on your home page, and you tick them off as you go. No advisor needed.</p>
+                  {first.length > 0 && <ol className="space-y-1.5 text-sm">{first.map((x, i) => <li key={x.id} className="flex gap-2.5"><span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-ink/10 text-[11px] font-bold">{i + 1}</span><span className="leading-snug">{x.title}<span className="block text-xs text-muted">{hz[x.horizon]}</span></span></li>)}</ol>}
+                  <button type="button" className={cx(PRIMARY, "mt-auto w-full")} style={ACCENT} onClick={onStart} disabled={busy} data-testid="start-plan"><Rocket className="h-4 w-4" aria-hidden />Start this plan</button>
+                </>
+              )}
+            </div>
+            <div className="card flex flex-col gap-3" data-testid="share-card">
+              <div className="flex items-center gap-2"><Share2 className="h-4 w-4" aria-hidden /><h3 className="font-bold">Share it with your team or an advisor</h3></div>
+              {shared ? (
+                <div className="space-y-3" data-testid="shared-state">
+                  <p className="flex items-start gap-2 rounded-xl border border-emerald-500/40 bg-emerald-500/10 px-3 py-2.5 text-sm"><CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-emerald-600" aria-hidden /><span>Shared with <b>{shared.name}</b>{shared.at ? ` on ${dayShort(shared.at)}` : ""}. They see only what is marked Included below.</span></p>
+                  <button type="button" className="btn-ghost w-full !py-2 text-sm" onClick={onUnshare} disabled={busy} data-testid="unshare">Stop sharing</button>
+                </div>
+              ) : (
+                <>
+                  <p className="flex items-start gap-2 text-sm text-muted"><Lock className="mt-0.5 h-4 w-4 shrink-0" aria-hidden />Private right now. Only you can see it, and you choose what goes in.</p>
+                  {advisors.length > 0 ? (
+                    <div className="space-y-1.5" role="radiogroup" aria-label="Choose an advisor">
+                      {advisors.slice(0, 3).map((a) => (
+                        <button key={a.id} type="button" role="radio" aria-checked={pick === a.id} onClick={() => setPick(a.id)} data-testid={`advisor-${a.id}`}
+                          className={cx("flex w-full items-center gap-3 rounded-xl border px-3 py-2 text-left transition", pick === a.id ? "border-emerald-500/60 bg-emerald-500/10" : "border-line hover:bg-ink/5")}>
+                          <Avatar src={a.avatar} name={a.title} size={32} /><span className="min-w-0"><span className="block truncate text-sm font-semibold">{a.title}</span><span className="block truncate text-xs text-muted">{a.sub}</span></span>
+                        </button>
+                      ))}
+                    </div>
+                  ) : <p className="text-sm text-muted">No advisors to choose from yet. You can still copy the plan.</p>}
+                  <button type="button" className={cx(PRIMARY, "w-full")} style={ACCENT} disabled={!who || busy} onClick={() => onShare(who)} data-testid="share-btn"><Send className="h-4 w-4" aria-hidden />{who ? `Share with ${who.title.split(" ")[0]}` : "Share"}</button>
+                </>
+              )}
+              <button type="button" className="btn-ghost mt-auto flex w-full items-center justify-center gap-2 !py-2 text-sm" onClick={copy} data-testid="copy-brief"><Copy className="h-4 w-4" aria-hidden />Copy as text, for your team</button>
+            </div>
+          </div>
+        )}
+
         <article className="card space-y-6 !p-5 sm:!p-8" data-testid="brief-doc">
           <header className="border-b border-line pb-4">
-            <Eyebrow>Advisor brief</Eyebrow>
-            <h3 className="mt-1.5 text-2xl font-bold" style={{ ...heading, letterSpacing: "-0.025em" }}>{brief.title.replace(": advisor brief", "")}</h3>
+            <Eyebrow>Decision plan</Eyebrow>
+            <h3 className="mt-1.5 text-2xl font-bold" style={{ ...heading, letterSpacing: "-0.025em" }}>{brief.title.replace(": decision plan", "")}</h3>
+            <p className="mt-1 text-sm text-muted">The full page. Use the Included buttons to leave anything out before you share it.</p>
           </header>
           {brief.sections.map((s) => (
             <section key={s.key} data-testid={`brief-${s.key}`} data-on={s.on ? "1" : "0"} className={cx(!s.on && "opacity-50")}>
               <div className="mb-2.5 flex items-center justify-between gap-3">
                 <h4 className="text-base font-bold" style={{ letterSpacing: "-0.01em" }}>{s.title}</h4>
-                <button type="button" onClick={() => onInclude(s.key, !s.on)} aria-pressed={s.on} data-testid={`inc-${s.key}`} className={cx("inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-xs font-semibold", s.on ? "border-emerald-500/40 bg-emerald-500/10 text-emerald-700 dark:text-emerald-300" : "border-line text-muted")}>
+                <button type="button" onClick={() => onInclude(s.key, !s.on)} aria-pressed={s.on} data-testid={`inc-${s.key}`} className={cx("inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-xs font-semibold", s.on ? "border-emerald-500/40 bg-emerald-500/10 text-emerald-700" : "border-line text-muted")}>
                   {s.on ? <Eye className="h-3.5 w-3.5" aria-hidden /> : <EyeOff className="h-3.5 w-3.5" aria-hidden />}{s.on ? "Included" : "Left out"}</button>
               </div>
               {s.rows && <dl className="space-y-2.5">{s.rows.map(([a, b]) => <div key={a} className="grid gap-x-4 gap-y-0.5 text-sm sm:grid-cols-[10rem_1fr]"><dt className="font-semibold text-muted">{a}</dt><dd className="leading-snug">{b}</dd></div>)}</dl>}
@@ -503,34 +591,7 @@ function Brief({ brief, plan, advisors, onInclude, onShare, onUnshare, busy }) {
             </section>
           ))}
         </article>
-        <aside className="space-y-4 lg:sticky lg:top-24">
-          <div className="card space-y-3" data-testid="share-card">
-            <div className="flex items-center gap-2"><Share2 className="h-4 w-4" aria-hidden /><h3 className="font-bold">Share with an advisor</h3></div>
-            {shared ? (
-              <div className="space-y-3" data-testid="shared-state">
-                <p className="flex items-start gap-2 rounded-xl border border-emerald-500/40 bg-emerald-500/10 px-3 py-2.5 text-sm"><CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-emerald-600" aria-hidden /><span>Shared with <b>{shared.name}</b>{shared.at ? ` on ${dayShort(shared.at)}` : ""}. They see only the sections you included.</span></p>
-                <button type="button" className="btn-ghost w-full !py-2 text-sm" onClick={onUnshare} disabled={busy} data-testid="unshare">Stop sharing</button>
-              </div>
-            ) : (
-              <>
-                <p className="flex items-start gap-2 text-sm text-muted"><Lock className="mt-0.5 h-4 w-4 shrink-0" aria-hidden />Private right now. Only you can see this brief.</p>
-                {advisors.length > 0 ? (
-                  <div className="space-y-1.5" role="radiogroup" aria-label="Choose an advisor">
-                    {advisors.map((a) => (
-                      <button key={a.id} type="button" role="radio" aria-checked={pick === a.id} onClick={() => setPick(a.id)} data-testid={`advisor-${a.id}`}
-                        className={cx("flex w-full items-center gap-3 rounded-xl border px-3 py-2 text-left transition", pick === a.id ? "border-emerald-500/60 bg-emerald-500/10" : "border-line hover:bg-ink/5")}>
-                        <Avatar src={a.avatar} name={a.title} size={32} /><span className="min-w-0"><span className="block truncate text-sm font-semibold">{a.title}</span><span className="block truncate text-xs text-muted">{a.sub}</span></span>
-                      </button>
-                    ))}
-                  </div>
-                ) : <p className="text-sm text-muted">No advisors to choose from yet. You can still copy the brief.</p>}
-                <button type="button" className={cx(PRIMARY, "w-full")} style={ACCENT} disabled={!who || busy} onClick={() => onShare(who)} data-testid="share-btn"><Send className="h-4 w-4" aria-hidden />{who ? `Share with ${who.title.split(" ")[0]}` : "Share"}</button>
-              </>
-            )}
-            <button type="button" className="btn-ghost flex w-full items-center justify-center gap-2 !py-2 text-sm" onClick={copy} data-testid="copy-brief"><Copy className="h-4 w-4" aria-hidden />Copy as text</button>
-          </div>
-          <p className="px-1 text-xs leading-snug text-muted">Sharing is your call. Leave out anything you would rather keep to yourself with the Included buttons, and stop sharing at any time.</p>
-        </aside>
+        <p className="px-1 text-xs leading-snug text-muted">Sharing is your call. Stop sharing at any time. Nobody sees your plan unless you choose to share it.</p>
       </div>
     </section>
   );
@@ -605,10 +666,10 @@ export default function Planner() {
     <div className="mx-auto max-w-6xl space-y-7" data-testid="planner">
       <header>
         <Eyebrow>My plan{hub ? ` · ${hub}` : ""}</Eyebrow>
-        <h1 className="mt-2 text-3xl sm:text-4xl" style={{ ...heading, letterSpacing: "-0.03em", textWrap: "balance" }}>{first ? `${first}, ` : ""}get ready for your advisor</h1>
-        <p className="mt-2 max-w-2xl text-sm text-muted">Work out where you are and where to go, then walk into the conversation knowing what to ask. Everything here is yours.</p>
+        <h1 className="mt-2 text-3xl sm:text-4xl" style={{ ...heading, letterSpacing: "-0.03em", textWrap: "balance" }}>{first ? `${first}, ` : ""}decide your next move</h1>
+        <p className="mt-2 max-w-2xl text-sm text-muted">Say where you are, see the routes open to you, and leave with a plan you can start today or share with your team or an advisor. Everything here is yours.</p>
       </header>
-      <UpdateBar startup={startup} today={today} open={updating} setOpen={setUpdating} onSave={logUpdate} busy={busy} last={(plan.log || [])[0]} plan={plan} steps={steps} />
+      {startup.stage && <UpdateBar startup={startup} today={today} open={updating} setOpen={setUpdating} onSave={logUpdate} busy={busy} last={(plan.log || [])[0]} plan={plan} steps={steps} />}
       <Chapters chapters={plan.chapters || []} hub={hub} />
       <Stepper states={states} step={step} onGo={go} />
       {step === "story" && <Story key={JSON.stringify(startup).length + ":" + (plan.log || []).length} startup={startup} plan={plan} onSave={saveStory} busy={busy} />}
@@ -616,11 +677,12 @@ export default function Planner() {
         : <div className="card flex flex-wrap items-center justify-between gap-4"><p className="text-sm">Tell us about your startup first, so the directions fit you.</p><button type="button" className={PRIMARY} style={ACCENT} onClick={() => go("story")}>Start with your story</button></div>)}
       {step === "plan" && <Plan dir={dir} steps={steps} log={plan.log || []} decision={plan.decision} arranged={(plan.arrange || []).length > 0} onArrange={arrange} hidden={(plan.hidden || []).length} busy={busy} onPickDirection={() => go("directions")}
         onStatus={(id, status) => post({ status: { id, status } })} onAdd={(title, horizon) => post({ add: { title, horizon } })} onRemove={(id) => post({ remove: id })} onRestore={() => post({ restore: true })} />}
-      {step === "brief" && <Brief brief={brief} plan={plan} advisors={advisors} busy={busy}
+      {step === "brief" && <Brief brief={brief} plan={plan} dir={dir} steps={steps} advisors={advisors} busy={busy} today={today} onPickDirection={() => go("directions")} onHome={() => nav("/")}
+        onStart={() => post({ started: today }, "Plan started. Your first steps are on your home page.")} onStop={() => post({ started: null })}
         onInclude={(k, v) => (k ? post({ include: { [k]: v } }) : post({ brief_ready: true }))}
         onShare={(a) => post({ share: { id: a.id, name: a.title, title: a.sub } }, `Shared with ${a.title}`)} onUnshare={() => post({ share: null }, "Sharing stopped")} />}
       {step === "plan" && dir && (
-        <div className="flex justify-end"><button type="button" className={PRIMARY} style={ACCENT} onClick={() => go("brief")} data-testid="to-brief">Prepare my advisor brief<ArrowRight className="h-4 w-4" aria-hidden /></button></div>
+        <div className="flex justify-end"><button type="button" className={PRIMARY} style={ACCENT} onClick={() => go("brief")} data-testid="to-brief">See my decision plan<ArrowRight className="h-4 w-4" aria-hidden /></button></div>
       )}
       <p className="sr-only" aria-live="polite">{busy ? "Saving" : ""}</p>
     </div>

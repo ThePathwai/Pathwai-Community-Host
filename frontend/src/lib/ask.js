@@ -99,8 +99,8 @@ export function ask(text, { lists = {}, startup = {}, plan = {}, state = {} } = 
   if (!raw) return null;
   if (PLANTALK.test(low) && !/\b(grant|customer|funding|lawyer)\b/.test(low)) {
     const picked = !!plan.direction;
-    return { reply: picked ? "Your plan and advisor brief are the best place for that. They already use what we know about your startup, and the brief lists the questions to bring." : "Start by picking a direction. It turns what you want into a plan, and then a brief with questions for your advisor.",
-      results: [], chips: ["Who can read my pitch deck?", "Which grant should I apply for?"], topic: "", link: { to: picked ? "/plan?step=brief" : "/plan?step=directions", label: picked ? "Open my advisor brief" : "Pick a direction" }, state: { last: state.last, seen: [...seen] } };
+    return { reply: picked ? "Your plan and decision plan are the best place for that. They already use what we know about your startup, and the decision plan lists the questions to bring." : "Start by picking a direction. It turns what you want into a plan, and then a decision plan with questions for your team or an advisor.",
+      results: [], chips: ["Who can read my pitch deck?", "Which grant should I apply for?"], topic: "", link: { to: picked ? "/plan?step=brief" : "/plan?step=directions", label: picked ? "Open my decision plan" : "Pick a direction" }, state: { last: state.last, seen: [...seen] } };
   }
   if (GREET.test(low) && tokens(low).length < 2) {
     return { reply: "Glad to help. Tell me what you are trying to make happen, like finding customers or getting feedback on a pitch, and I'll point you to the right person or resource.", results: [], chips: SUGGESTIONS.slice(0, 3), topic: "", link: null, state: { last: state.last, seen: [...seen] } };

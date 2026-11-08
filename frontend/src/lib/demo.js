@@ -22,8 +22,9 @@ export const prepareDemo = () => { const d = demoFromUrl(); if (d) { set("1"); s
 // with the in-page (#) router instead of loading a new address.
 const PREVIEW = process.env.REACT_APP_PREVIEW === "true";
 const goTo = (path) => { window.location.hash = "#" + path; };
-export const startDemo = (role, slug) => {
-  const q = `/login?demo=${role}${slug ? `&c=${encodeURIComponent(slug)}` : ""}`;
+// `fresh` starts the walkthrough as a brand-new founder (nothing filled in) instead of the ready-made one.
+export const startDemo = (role, slug, opts = {}) => {
+  const q = `/login?demo=${role}${slug ? `&c=${encodeURIComponent(slug)}` : ""}${opts.fresh ? "&fresh=1" : ""}`;
   if (PREVIEW) { setDemoRole(role); goTo(q); return; }
   set("1"); setDemoRole(role); window.location.assign(q);
 };
@@ -41,7 +42,7 @@ export const startAdminDemo = () => startDemo("admin", "humber-innovation-networ
 // `featured` ones are shown first and big. Each opens at /demo/<short> (a page with a Member button and an Admin button that
 // works the same on a phone and a desktop), so a link can be sent to someone as it is.
 export const DEMO_COMMUNITIES = [
-  { slug: "humber-innovation-network", short: "humber", featured: true, name: "Humber Innovation Network", accent: "#0B4EA2", blurb: "An innovation navigator for one hub: programs, grants, events, people and resources, matched to your startup.",
+  { slug: "humber-innovation-network", short: "humber", featured: true, walkthrough: true, name: "Humber Innovation Network", accent: "#0B4EA2", blurb: "An innovation navigator for one hub: programs, grants, events, people and resources, matched to your startup.",
     eyebrow: "Innovation navigator \u00b7 hub demo",
     tagline: "Every program, grant, event, person and resource in the Humber ecosystem, ranked for your startup.",
     memberTitle: "As a founder", adminTitle: "As the hub team",

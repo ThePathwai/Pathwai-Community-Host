@@ -11,11 +11,11 @@ export const STEPS = [
   { key: "story", label: "Your story", to: "/plan?step=story" },
   { key: "directions", label: "Directions", to: "/plan?step=directions" },
   { key: "plan", label: "Your plan", to: "/plan?step=plan" },
-  { key: "brief", label: "Advisor brief", to: "/plan?step=brief" },
+  { key: "brief", label: "Decision plan", to: "/plan?step=brief" },
 ];
 export const HORIZONS = [["soon", "Next 2 weeks"], ["month", "Next 30 days"], ["quarter", "Next 90 days"]];
 export const STATUS_LABEL = { todo: "To do", doing: "In progress", done: "Done" };
-export const BRIEF_SECTIONS = [["story", "Your story"], ["direction", "Direction you are leaning toward"], ["plan", "Where your plan stands"], ["progress", "What has happened lately"], ["chapters", "How the business has changed"], ["lined", "Support lined up"], ["questions", "Questions for your advisor"]];
+export const BRIEF_SECTIONS = [["story", "Your story"], ["direction", "Your decision"], ["plan", "The plan"], ["progress", "What has happened lately"], ["chapters", "How the business has changed"], ["lined", "Support lined up"], ["questions", "Questions for your advisor"]];
 const MAX_CUSTOM = 20;
 const MAX_LOG = 30;
 
@@ -276,7 +276,7 @@ export function buildPlan({ direction, lists = {}, plan = {}, today }) {
   for (const r of (lists.resource || []).filter(fit).slice(0, 1)) steps.push({ id: `i:resource:${r.id}`, kind: "resource", horizon: "soon", title: `Use "${r.title}"`, why: r.why, link: linkOf(r) });
   const unlock = [...(lists.program || []), ...(lists.grant || [])].filter((p) => (p.verdict === "close" || p.verdict === "later") && p.gap).slice(0, 1);
   for (const p of unlock) steps.push({ id: `u:${p.id}`, kind: "unlock", horizon: "quarter", title: `Work toward ${p.title}`, why: p.gap, link: linkOf(p) });
-  steps.push({ id: "final", kind: "advisor", horizon: "month", title: "Meet your advisor, with your brief", why: "Bring your direction, your plan and your questions so the time goes to advice." });
+  steps.push({ id: "final", kind: "advisor", horizon: "month", title: "Review your plan with an advisor or your team", why: "Bring your decision, your plan and your questions so the time goes to advice." });
   for (const c of plan.custom || []) steps.push({ id: c.id, kind: "custom", horizon: c.horizon, title: c.title, why: "Added by you." });
   const hidden = new Set(plan.hidden || []);
   return applyArrange(steps.filter((s) => !hidden.has(s.id)).map((s, i) => ({ ...s, status: (plan.status || {})[s.id] || "todo", order: i }))
@@ -290,12 +290,12 @@ export function stepStates({ startup = {}, plan = {}, steps = [] }) {
   const story = hasText(startup.one_liner) && !!startup.stage && (startup.needs || []).length > 0 && hasText(startup.goal);
   const picked = !!DIRECTION[plan.direction];
   const prog = planProgress(steps);
-  const brief = !!plan.shared || !!plan.brief_ready;
+  const brief = !!plan.started || !!plan.shared || !!plan.brief_ready;
   const list = [
     { key: "story", done: story, detail: story ? `${startup.name || "Your startup"} · ${STAGE_LABEL[startup.stage] || ""}` : "Tell us what you are building and what you want." },
     { key: "directions", done: picked, detail: picked ? DIRECTION[plan.direction].title : "See the routes your business could take." },
     { key: "plan", done: picked && prog.total > 0 && prog.done >= Math.max(3, Math.ceil(prog.total / 2)), detail: picked ? `${prog.done} of ${prog.total} steps done` : "Comes from the direction you pick." },
-    { key: "brief", done: brief, detail: plan.shared ? `Shared with ${plan.shared.name}` : brief ? "Ready for your advisor." : "A one-page summary with your questions." },
+    { key: "brief", done: brief, detail: plan.shared ? `Shared with ${plan.shared.name}` : plan.started ? "Plan started." : brief ? "Ready to start or share." : "The decision, the plan and your questions." },
   ];
   const next = list.find((s) => !s.done) || list[list.length - 1];
   return STEPS.map((s, i) => ({ ...s, ...list[i], current: s.key === next.key, n: i + 1 }));
@@ -306,7 +306,7 @@ export function stepStates({ startup = {}, plan = {}, steps = [] }) {
 // For a founder who does not know where to start: up to three moves, in the order to do them, each with one line on why. A deadline this
 // week comes first; then the next unfinished planner step; then the best program, event and person from the hub's own ranked moves; then a
 // nudge to log what has happened if nothing has been logged for two weeks.
-const STEP_TITLE = { story: "Tell us about your startup", directions: "Pick a direction to lean toward", plan: "Work through your plan", brief: "Prepare your advisor brief" };
+const STEP_TITLE = { story: "Tell us about your startup", directions: "Pick a direction to lean toward", plan: "Work through your plan", brief: "See your decision plan" };
 const MOVE_VERB = { program: "Apply to", grant: "Apply to", event: "Go to", person: "Meet", resource: "Use" };
 export function suggestNext({ states = [], moves = [], lists = {}, plan = {}, today = "", limit = 3 }) {
   const out = [];
@@ -333,7 +333,7 @@ export function suggestNext({ states = [], moves = [], lists = {}, plan = {}, to
   return out;
 }
 
-// ---- the advisor brief --------------------------------------------------------------------------------------------------------------------
+// ---- the decision plan --------------------------------------------------------------------------------------------------------------------
 const clip = (s, n = 160) => { const t = String(s || "").replace(/\s+/g, " ").trim(); return t.length > n ? t.slice(0, n - 1).trimEnd() + "…" : t; };
 const dateWord = (iso) => { const d = new Date(String(iso).slice(0, 10) + "T12:00:00Z"); return isNaN(d) ? "" : d.toLocaleDateString("en-CA", { month: "short", day: "numeric", timeZone: "UTC" }); };
 
@@ -370,6 +370,29 @@ export function advisorBrief({ startup = {}, direction, lists = {}, plan = {}, s
   const sections = [];
   const pitch = st.pitch || {};
   const need = joinList((st.needs || []).map((n) => NEED_LABEL[n] || n));
+  // The decision plan reads in this order: the decision, the plan, the support lined up, the background, then the questions.
+  if (dir) {
+    const top = directions({ startup: st, lists, hub }).find((d) => d.key === dir.key);
+    sections.push({ key: "direction", title: "Your decision", rows: [...(plan.decision ? [["In my words", plan.decision.text]] : []), [dir.title, dir.promise], ["Why it fits", (top ? top.reasons : []).join(" ")], ["What it costs", dir.cost]], on: inc.direction });
+  }
+  const p = planProgress(steps);
+  const names = (s) => steps.filter((x) => x.status === s).map((x) => x.title);
+  const planRows = [];
+  for (const [hk, hl] of HORIZONS) {
+    const list = steps.filter((x) => x.horizon === hk && x.kind !== "advisor" && x.status !== "done").map((x) => x.title);
+    if (list.length) planRows.push([hl, list.join("; ")]);
+  }
+  if (p.done || p.doing) planRows.unshift(["Progress", `${p.done} of ${p.total} steps done${p.doing ? `, ${p.doing} in progress` : ""}`]);
+  if (names("done").length) planRows.push(["Done", names("done").join("; ")]);
+  if (!planRows.length) planRows.push(["Progress", "No plan yet."]);
+  sections.push({ key: "plan", title: "The plan", rows: planRows, on: inc.plan });
+  const lined = [...(lists.program || []), ...(lists.grant || [])].filter((x) => x.verdict === "now").slice(0, 3).map((x) => `${x.title}${x.deadline ? ` (closes ${dateWord(x.deadline)})` : ""}`);
+  const evs = (lists.event || []).filter((e) => e.rsvp).slice(0, 2).map((e) => e.title);
+  const lrows = [];
+  if (lined.length) lrows.push(["Programs and grants that fit today", lined.join("; ")]);
+  if (evs.length) lrows.push(["Events I'm going to", evs.join("; ")]);
+  if (!lrows.length) lrows.push(["Nothing lined up yet", "Nothing matched strongly yet."]);
+  sections.push({ key: "lined", title: "Support lined up", rows: lrows, on: inc.lined });
   const story = [];
   story.push(["Snapshot", [st.name, STAGE_LABEL[st.stage], st.employees ? `${st.employees} ${st.employees === 1 ? "person" : "people"}` : "", st.province].filter(Boolean).join(" · ")]);
   if (hasText(st.one_liner)) story.push(["What we are building", st.one_liner]);
@@ -378,32 +401,13 @@ export function advisorBrief({ startup = {}, direction, lists = {}, plan = {}, s
   if (need) story.push(["Looking for", need]);
   if ((st.documents || []).length) story.push(["Documents", st.documents.map((d) => d.title || d.url).join(" · ")]);
   sections.push({ key: "story", title: "Your story", rows: story, on: inc.story });
-  if (dir) {
-    const top = directions({ startup: st, lists, hub }).find((d) => d.key === dir.key);
-    sections.push({ key: "direction", title: "Direction you are leaning toward", rows: [...(plan.decision ? [["My decision", plan.decision.text]] : []), [dir.title, dir.promise], ["Why it fits", (top ? top.reasons : []).join(" ")], ["What it costs", dir.cost]], on: inc.direction });
-  }
-  const p = planProgress(steps);
-  const names = (s) => steps.filter((x) => x.status === s).map((x) => x.title);
-  const planRows = [["Progress", p.total ? `${p.done} of ${p.total} steps done${p.doing ? `, ${p.doing} in progress` : ""}` : "No plan yet."]];
-  if (names("done").length) planRows.push(["Done", names("done").join("; ")]);
-  if (names("doing").length) planRows.push(["In progress", names("doing").join("; ")]);
-  const nextUp = steps.filter((x) => x.status === "todo" && x.kind !== "advisor").slice(0, 3).map((x) => x.title);
-  if (nextUp.length) planRows.push(["Up next", nextUp.join("; ")]);
-  sections.push({ key: "plan", title: "Where your plan stands", rows: planRows, on: inc.plan });
   const log = (plan.log || []).slice(0, 5);
   if (log.length) sections.push({ key: "progress", title: "What has happened lately", rows: log.map((l) => [dateWord(l.at), `${l.label}${l.note ? `: ${l.note}` : ""}`]), on: inc.progress });
   const chapters = (plan.chapters || []).slice(0, 3);
   if (chapters.length) sections.push({ key: "chapters", title: "How the business has changed", rows: chapters.map((c) => [dateWord(c.at), `Pivoted from "${c.one_liner || c.name || "the earlier idea"}"${c.lesson ? `. What we learned: ${c.lesson}` : ""}`]), on: inc.chapters });
-  const lined = [...(lists.program || []), ...(lists.grant || [])].filter((x) => x.verdict === "now").slice(0, 3).map((x) => `${x.title}${x.deadline ? ` (closes ${dateWord(x.deadline)})` : ""}`);
-  const evs = (lists.event || []).filter((e) => e.rsvp).slice(0, 2).map((e) => e.title);
-  const lrows = [];
-  if (lined.length) lrows.push(["Programs and grants that fit today", lined.join("; ")]);
-  if (evs.length) lrows.push(["Events I'm going to", evs.join("; ")]);
-  if (!lrows.length) lrows.push(["Nothing lined up yet", "Nothing matched strongly yet."]);
-  sections.push({ key: "lined", title: "Support lined up", rows: lrows, on: inc.lined });
   const qs = adviceQuestions({ startup: st, direction, lists, steps, plan, today });
-  sections.push({ key: "questions", title: "Questions for your advisor", questions: qs, on: inc.questions });
-  const title = `${st.name || "My startup"}: advisor brief`;
+  sections.push({ key: "questions", title: "Questions to take to your team or an advisor", questions: qs, on: inc.questions });
+  const title = `${st.name || "My startup"}: decision plan`;
   const text = [title, `Prepared ${dateWord(today)}`, "", ...sections.filter((s) => s.on).flatMap((s) => [
     s.title.toUpperCase(), ...(s.rows ? s.rows.map(([a, b]) => `${a}: ${b}`) : (s.questions || []).map((q, i) => `${i + 1}. ${q.q}`)), ""])].join("\n").trim();
   return { title, sections, text, questions: qs };
@@ -438,7 +442,7 @@ export function updatePlan(planIn, body = {}, newId = () => Math.random().toStri
       direction: DIRECTION[c.direction] ? c.direction : "", decision: clipNote(c.decision, 300), done: Math.max(0, +c.done || 0), total: Math.max(0, +c.total || 0),
       done_titles: (c.done_titles || []).slice(0, 6).map((x) => clipNote(x, 100)), lesson: clipNote(c.lesson) });
     plan.chapters = plan.chapters.slice(0, 10);
-    Object.assign(plan, { direction: "", status: {}, custom: [], hidden: [], arrange: [], decision: null, shared: null, brief_ready: false });
+    Object.assign(plan, { direction: "", status: {}, custom: [], hidden: [], arrange: [], decision: null, shared: null, brief_ready: false, started: null });
   }
   if ("arrange" in body) {
     const a = body.arrange;
@@ -461,6 +465,7 @@ export function updatePlan(planIn, body = {}, newId = () => Math.random().toStri
   if (body.restore) plan.hidden = [];
   if (body.include && typeof body.include === "object") for (const [k] of BRIEF_SECTIONS) if (k in body.include) plan.include[k] = !!body.include[k];
   if ("brief_ready" in body) plan.brief_ready = !!body.brief_ready;
+  if ("started" in body) plan.started = body.started ? String(body.started).slice(0, 10) : null;   // the day the founder chose "Start this plan"
   if ("share" in body) {
     const s = body.share;
     plan.shared = s && s.name ? { id: cleanId(s.id), name: String(s.name).slice(0, 80), title: String(s.title || "").slice(0, 120), at: String(s.at || "").slice(0, 10) } : null;
