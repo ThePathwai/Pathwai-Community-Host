@@ -205,16 +205,16 @@ function Matches({ tabs, today, onOpen }) {
   );
 }
 
-// The right column's second card: events you are going to, then the latest news, as one list. It takes whatever height is left and shows as many rows as fit.
-function Updates({ events, news, hub }) {
+// The right column's second card: the events you are going to, as one list. It takes whatever height is left and shows as many rows as fit.
+function Updates({ events, hub }) {
   const [ref, rows] = useRows(46, 0);
   const going = events.filter((e) => e.rsvp).sort((a, b) => String(a.at).localeCompare(String(b.at))).slice(0, 3)
     .map((e) => ({ key: `e${e.id}`, tag: "Going", title: e.title, sub: whenOf(e), to: `/events/${e.id}` }));
-  const items = [...going, ...news.map((a) => ({ key: `n${a.id}`, tag: "News", title: a.title, sub: timeAgo(a.published_at || a.created_at), to: "/updates" }))];
+  const items = going;
   if (!items.length) return null;
   return (
     <section className="card hidden min-h-0 flex-1 flex-col !p-4 lg:flex" data-testid="eco-news">
-      <div className="mb-2 flex flex-none items-center justify-between"><h2 className="text-base font-bold" style={heading}>Coming up &amp; news from {hub}</h2></div>
+      <div className="mb-2 flex flex-none items-center justify-between"><h2 className="text-base font-bold" style={heading}>Coming up at {hub}</h2></div>
       <div ref={ref} className="min-h-0 flex-1 overflow-hidden">
         <ul className="divide-y divide-line">{items.slice(0, Math.max(1, rows)).map((it) => (
           <li key={it.key}><Link to={it.to} className="block py-2 first:pt-0">
@@ -260,7 +260,6 @@ export default function EcosystemHome() {
   const [d, setD] = useState(null);
   const [err, setErr] = useState(false);
   const [open, setOpen] = useState(null);
-  const [news, setNews] = useState([]);
   const [planState, setPlanState] = useState(null);
   const { tracked, setTracked, track } = useTracked();
   const itc = useInterest();
@@ -269,7 +268,6 @@ export default function EcosystemHome() {
     document.title = `Home · ${hub}`;
     api.get("/navigator/moves").then((r) => { setD(r.data); }).catch(() => setErr(true));
     api.get("/navigator/plan").then((r) => setPlanState(r.data)).catch(() => {});
-    api.get("/announcements").then((r) => setNews((r.data || []).slice(0, 5))).catch(() => {});
     api.get("/navigator/me").then((r) => { setTracked(r.data.tracked || []); itc.setInterest(r.data.interest || []); }).catch(() => {});
   }, [account?.startup]); // eslint-disable-line react-hooks/exhaustive-deps
   const st = account?.startup || {};
@@ -314,7 +312,7 @@ export default function EcosystemHome() {
         </div>
         <div className="hidden min-h-0 flex-col gap-4 lg:col-span-4 lg:flex">
           {planState && <PlanCard states={states} />}
-          <Updates events={L.event || []} news={news} hub={hub} />
+          <Updates events={L.event || []} hub={hub} />
         </div>
       </div>
 

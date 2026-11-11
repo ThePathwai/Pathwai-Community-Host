@@ -1,14 +1,11 @@
 import React, { createContext, useContext, useEffect, useMemo, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { Briefcase, CalendarDays, Compass, Home, Inbox, LogOut, MessageCircle, Route, Search, Sparkles, User, UserRound, Users, Info } from "lucide-react";
-import { api } from "../lib/api";
+import { CalendarDays, Compass, LogOut, MessageCircle, Route, Search, User, UserRound, Info } from "lucide-react";
 import { useAuth } from "../lib/auth";
-import { groupOf } from "../lib/communityGroup";
 import { Avatar, Modal, PoweredBy, Wordmark, cx } from "./ui";
 import GuideChat from "./GuideChat";
 
-// The frame around everything that belongs to YOU rather than to one community: Home, Programs, your communities (innovation and leisure
-// kept apart), messages, people and your profile. A sidebar on a computer, tabs along the bottom on a phone, and the guide one tap away on both.
+// The frame around everything that belongs to YOU rather than to one hub: Programs, your journey, events, people and your profile. A sidebar on a computer, tabs along the bottom on a phone, and the guide one tap away on both.
 
 const ShellCtx = createContext(null);
 export const useShell = () => useContext(ShellCtx);
@@ -31,19 +28,8 @@ export default function AccountShell({ active, children }) {
   const nav = useNavigate();
   const [guide, setGuide] = useState(null);       // null = closed, else {q, n}
   const [menu, setMenu] = useState(false);
-  const [counts, setCounts] = useState({ innovation: 0, leisure: 0 });
-  const [unread, setUnread] = useState(0);
 
   useEffect(() => { showHubTheme(); }, [showHubTheme]);
-  useEffect(() => {
-    if (!account) return;
-    api.get("/hub/communities").then((r) => {
-      const mine = (r.data.communities || []).filter((c) => c.my?.status === "approved");
-      setCounts({ innovation: mine.filter((c) => groupOf(c) === "innovation").length, leisure: mine.filter((c) => groupOf(c) === "leisure").length });
-    }).catch(() => {});
-    api.get("/hub/messages").then((r) => setUnread(r.data?.unread || 0)).catch(() => {});
-  }, [account?.id]); // eslint-disable-line react-hooks/exhaustive-deps
-
   const ctx = useMemo(() => ({ openGuide: (q) => setGuide({ q: q || "", n: Date.now() }) }), []);
   if (!account) return null;
   const go = async (fn) => { setMenu(false); await fn(); };
@@ -51,16 +37,9 @@ export default function AccountShell({ active, children }) {
 
   const Items = () => (
     <>
-      <NavItem to="/hub" icon={Home} label="Home" active={active === "home"} testId="shell-home" />
       <NavItem to="/navigator" icon={Compass} label="Programs" active={active === "programs"} testId="shell-programs" />
       <NavItem to="/journey" icon={Route} label="Journey" active={active === "journey"} testId="shell-journey" />
       <NavItem to="/founder-events" icon={CalendarDays} label="Events" active={active === "events"} testId="shell-events" />
-      <NavItem to="/talent" icon={Briefcase} label="Talent" active={active === "talent"} testId="shell-talent" />
-      <GroupLabel>Communities</GroupLabel>
-      <NavItem to="/hub?v=innovation" icon={Sparkles} label="Innovation" active={active === "innovation"} badge={counts.innovation || null} testId="shell-innovation" />
-      <NavItem to="/hub?v=leisure" icon={Users} label="Leisure" active={active === "leisure"} badge={counts.leisure || null} testId="shell-leisure" />
-      <GroupLabel>You</GroupLabel>
-      <NavItem to="/hub?open=inbox" icon={Inbox} label="Messages" active={active === "messages"} badge={unread || null} testId="shell-messages" />
       <NavItem to="/people" icon={UserRound} label="People" active={active === "people"} testId="shell-people" />
       <NavItem to="/me" icon={User} label="Your profile" active={active === "profile"} testId="shell-profile" />
     </>
@@ -83,7 +62,7 @@ export default function AccountShell({ active, children }) {
       <div className="min-h-screen lg:grid lg:grid-cols-[256px_minmax(0,1fr)]" data-testid="account-shell">
         {/* computer: sidebar */}
         <aside className="sticky top-0 hidden h-screen flex-col border-r border-line px-3 py-5 lg:flex" aria-label="Main">
-          <Link to="/hub" className="mb-5 px-3 text-2xl" aria-label="Pathwai home"><Wordmark name="Pathwai" brand={{}} /></Link>
+          <Link to="/navigator" className="mb-5 px-3 text-2xl" aria-label="Pathwai home"><Wordmark name="Pathwai" brand={{}} /></Link>
           <button type="button" onClick={() => ctx.openGuide()} data-testid="shell-ask" className="mb-2 flex w-full items-center gap-2.5 rounded-lg border border-line bg-ink/[.04] px-3 py-2 text-left text-sm text-muted transition hover:border-ink/30 hover:text-ink">
             <Search className="h-4 w-4" aria-hidden /><span className="flex-1">Ask the guide</span><kbd className="rounded border border-line px-1.5 text-[10px] font-medium">AI</kbd>
           </button>
@@ -100,7 +79,7 @@ export default function AccountShell({ active, children }) {
         <div className="min-w-0">
           {/* phone: top bar */}
           <header className="sticky top-0 z-30 flex items-center justify-between border-b border-line px-4 py-3 pt-[calc(0.75rem+env(safe-area-inset-top))] glass lg:hidden">
-            <Link to="/hub" className="text-xl" aria-label="Pathwai home"><Wordmark name="Pathwai" brand={{}} /></Link>
+            <Link to="/navigator" className="text-xl" aria-label="Pathwai home"><Wordmark name="Pathwai" brand={{}} /></Link>
             <div className="relative flex items-center gap-3">
               <button type="button" onClick={() => ctx.openGuide()} aria-label="Ask the guide" data-testid="shell-ask-fab" className="flex h-9 w-9 items-center justify-center rounded-full border border-line text-ink/80"><MessageCircle className="h-[18px] w-[18px]" /></button>
               <button type="button" onClick={() => setMenu((o) => !o)} aria-haspopup="menu" aria-expanded={menu} title="Account"><Avatar src={account.avatar_url} name={account.name} size={34} /></button>
@@ -112,9 +91,9 @@ export default function AccountShell({ active, children }) {
         </div>
 
         {/* phone: guide button and tab bar */}
-        <nav className="fixed inset-x-0 bottom-0 z-30 grid grid-cols-6 border-t border-line pb-[env(safe-area-inset-bottom)] glass lg:hidden" aria-label="Main" data-testid="shell-tabs">
-          {[["home", "/hub", Home, "Home"], ["programs", "/navigator", Compass, "Programs"], ["events", "/founder-events", CalendarDays, "Events"], ["talent", "/talent", Briefcase, "Talent"], [["innovation", "leisure"].includes(active) ? active : "innovation", "/hub?v=" + (active === "leisure" ? "leisure" : "innovation"), Users, "Communities"], ["profile", "/me", User, "Profile"]].map(([k, to, Icon, label]) => {
-            const on = k === active || (label === "Communities" && ["innovation", "leisure"].includes(active));
+        <nav className="fixed inset-x-0 bottom-0 z-30 grid grid-cols-5 border-t border-line pb-[env(safe-area-inset-bottom)] glass lg:hidden" aria-label="Main" data-testid="shell-tabs">
+          {[["programs", "/navigator", Compass, "Programs"], ["journey", "/journey", Route, "Journey"], ["events", "/founder-events", CalendarDays, "Events"], ["people", "/people", UserRound, "People"], ["profile", "/me", User, "Profile"]].map(([k, to, Icon, label]) => {
+            const on = k === active;
             return (
               <Link key={label} to={to} aria-current={on ? "page" : undefined} className={cx("flex flex-col items-center gap-1 py-2.5 text-[10px] font-medium", on ? "text-ink" : "text-muted")}>
                 <Icon className="h-5 w-5" strokeWidth={on ? 2.4 : 1.8} aria-hidden />{label}

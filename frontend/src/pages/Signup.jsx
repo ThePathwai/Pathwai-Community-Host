@@ -5,37 +5,9 @@ import { useAuth } from "../lib/auth";
 import { applyBrand } from "../lib/theme";
 import { inDemoTab, leaveDemo } from "../lib/demo";
 import { AvatarUpload, Button, Card, Field, Input, MembershipStatusCard, Select, TagInput, Textarea, TermsConsent, Wordmark, cx } from "../components/ui";
-import { HowItWorks } from "../components/IntroTour";
 import { SUGGEST, ageFromBirthday, oldestISO, todayISO } from "../lib/profile";
 import StartupFields, { BLANK_STARTUP, startupToApi } from "../components/StartupFields";
 import SocialAuthButtons from "../components/SocialAuthButtons";
-
-const INTENTS = [
-  { key: "founder", title: "I'm building a startup", body: "Make your profile once. Get Canadian programs, mentors and communities matched to it, and keep them up to date." },
-  { key: "member", title: "I'm joining a community", body: "Browse communities on Pathwai and request to join the ones that fit you." },
-  { key: "admin", title: "I'm starting a new community", body: "Set up your own space — a church, a club, a wellness brand — with your own members, events and look." },
-];
-
-function IntentPicker({ onPick }) {
-  return (
-    <div className="mx-auto flex min-h-screen max-w-lg flex-col justify-center px-4 py-10">
-      <span className="mb-6 text-2xl"><Wordmark name="Pathwai" brand={{}} /></span>
-      <h1 className="mb-1 text-2xl font-bold sm:text-3xl">Welcome to Pathwai</h1>
-      <p className="mb-6 text-sm text-muted">First, what brings you here?</p>
-      <div className="space-y-3">
-        {INTENTS.map((o) => (
-          <button key={o.key} onClick={() => onPick(o.key)} data-testid={`intent-${o.key}`}
-            className="w-full rounded-xl border border-line bg-surface p-5 text-left transition hover:border-ink/40 hover:bg-ink/5">
-            <p className="text-base font-semibold">{o.title}</p>
-            <p className="mt-1 text-sm text-muted">{o.body}</p>
-          </button>
-        ))}
-      </div>
-      <p className="mt-6 text-center text-sm text-muted">Have an account? <Link className="underline" to="/login">Sign in</Link></p>
-      <p className="mt-4 text-center"><HowItWorks /></p>
-    </div>
-  );
-}
 
 // Asked once, right after account creation — before landing in the hub or in the new community's
 // setup wizard — so every "request to join" from here on starts pre-filled instead of asking the
@@ -120,10 +92,8 @@ export default function Signup() {
   const nav = useNavigate();
   const [params] = useSearchParams();
   const joinSlug = params.get("join") || null;
-  const [intent, setIntent] = useState(joinSlug ? "member" : params.get("for") === "founder" ? "founder" : null); // null | "member" | "admin"
+  const [intent] = useState(joinSlug ? "member" : "founder"); // "founder" (the default) or "member" (arrived on a community's invite link)
   const [f, setF] = useState({ name: "", email: "", password: "" });
-  const [community, setCommunity] = useState({ name: "", category: "other" });
-  const [categories, setCategories] = useState([]);
   const [err, setErr] = useState("");
   const [agreed, setAgreed] = useState(false); // "I agree to the Terms of Service and Privacy Policy"
   const [busy, setBusy] = useState(false);
@@ -136,8 +106,6 @@ export default function Signup() {
   const inDemo = inDemoTab();
   useEffect(() => { if (inDemo) leaveDemo("/signup" + window.location.search); }, [inDemo]);
 
-  useEffect(() => { api.get("/hub/community-categories").then((r) => setCategories(r.data.categories)).catch(() => {}); }, []);
-
   useEffect(() => {
     if (!joinSlug) return;
     api.get(`/hub/communities/${joinSlug}/public`)
@@ -146,20 +114,12 @@ export default function Signup() {
   }, [joinSlug]);
 
   const set = (k) => (e) => setF({ ...f, [k]: e.target.value });
-  const setC = (k) => (e) => setCommunity({ ...community, [k]: e.target.value });
 
   // Runs once the standard profile step is done (saved or skipped) — this is where the
   // pre-signup "where do they land" logic actually happens, so the founding community entry
   // created below picks up whatever profile info was just saved.
   const afterProfile = async () => {
-    if (intent === "admin") {
-      setBusy(true);
-      try {
-        await api.post("/hub/communities", { name: community.name.trim(), category: community.category });
-        await refresh(); // picks up the admin role in the community the call above just created
-        nav("/setup", { replace: true });
-      } catch (ex) { setErr(errMsg(ex)); setBusy(false); setShowProfile(false); }
-    } else {
+    {
       await refresh(); // picks up whatever was just saved in the standard profile step
       if (joinResult?.status === "approved") {
         // signup already dropped the pw_community cookie for us -- straight into the community
@@ -170,7 +130,7 @@ export default function Signup() {
       } else if (intent === "founder") {
         nav("/navigator", { replace: true }); // the point of this sign-up: programs matched to the profile just made
       } else {
-        nav("/hub", { replace: true });
+        nav("/navigator", { replace: true });
       }
     }
   };
@@ -178,7 +138,6 @@ export default function Signup() {
   const submit = async (e) => {
     e.preventDefault(); setErr("");
     if (f.password.length < 10 || !/[A-Za-z]/.test(f.password) || !/\d/.test(f.password)) return setErr("Password needs 10+ characters with a letter and a number.");
-    if (intent === "admin" && community.name.trim().length < 2) return setErr("Give your community a name.");
     if (!agreed) return setErr("Please agree to the Terms of Service and Privacy Policy to create your account.");
     setBusy(true);
     try {
@@ -191,20 +150,18 @@ export default function Signup() {
 
   const onSocialSignedIn = (data) => { applySession(data); setJoinResult(data?.joined || null); setShowProfile(true); };
 
-  if (showPending) return <PendingStep communityName={joinInfo?.name} onContinue={() => nav("/hub", { replace: true })} />;
+  if (showPending) return <PendingStep communityName={joinInfo?.name} onContinue={() => nav("/navigator", { replace: true })} />;
   if (showProfile) return <BuildProfileStep account={account} onDone={afterProfile} joinInfo={joinInfo} founder={intent === "founder"} />;
-  if (!intent) return <IntentPicker onPick={setIntent} />;
 
   return (
     <div className="mx-auto flex min-h-screen max-w-md flex-col justify-center px-4 py-10">
       <span className="mb-6 text-2xl"><Wordmark name={joinInfo?.name || "Pathwai"} brand={joinInfo?.brand || {}} /></span>
-      {!joinSlug && <button className="mb-3 w-fit text-xs font-medium text-muted underline" onClick={() => setIntent(null)} data-testid="intent-back">← Back</button>}
-      <h1 className="mb-1 text-2xl font-bold sm:text-3xl">{intent === "admin" ? "Set up your community" : intent === "founder" ? "Create your founder profile" : "Create your Pathwai account"}</h1>
+      <h1 className="mb-1 text-2xl font-bold sm:text-3xl">{intent === "founder" ? "Create your founder profile" : "Create your Pathwai account"}</h1>
       <p className="mb-6 text-sm text-muted">
         {joinInfo
           // Every community requires admin approval now -- no community can auto-approve a join request.
           ? <>You're creating your Pathwai account to join <strong>{joinInfo.name}</strong> — an admin will need to approve you.</>
-          : intent === "admin" ? "First your account, then a couple of quick choices for your community — you can change any of it later." : intent === "founder" ? "First your account. Next, a short profile about you and your startup. Then your programs." : "One login for every community. After this you can browse communities and ask to join the ones that fit you."}
+          : "First your account. Next, a short profile about you and your startup. Then your programs."}
       </p>
       <Card>
         <SocialAuthButtons onSignedIn={onSocialSignedIn} disabled={busy} joinSlug={joinSlug} acceptedTerms={agreed} />
@@ -215,18 +172,9 @@ export default function Signup() {
           <Field label="Full name"><Input data-testid="signup-name" value={f.name} onChange={set("name")} required minLength={2} /></Field>
           <Field label="Email"><Input data-testid="signup-email" type="email" value={f.email} onChange={set("email")} required /></Field>
           <Field label="Password" hint="10+ characters, with a letter and a number"><Input data-testid="signup-password" type="password" value={f.password} onChange={set("password")} required /></Field>
-          {intent === "admin" && (
-            <div className={cx("space-y-4 rounded-xl border border-dashed border-line p-4")}>
-              <p className="label">Your community</p>
-              <Field label="Community name"><Input data-testid="signup-community-name" value={community.name} onChange={setC("name")} placeholder="e.g. Riverside Run Club" required minLength={2} maxLength={80} /></Field>
-              <Field label="What kind of community is it?">
-                <Select data-testid="signup-community-category" value={community.category} onChange={setC("category")} options={categories.map((c) => ({ value: c.key, label: c.label }))} />
-              </Field>
-            </div>
-          )}
           <TermsConsent checked={agreed} onChange={(v) => { setAgreed(v); if (v) setErr(""); }} testId="signup-accept-terms" />
           {err && <p className="text-sm text-red-400" data-testid="signup-error">{err}</p>}
-          <Button type="submit" loading={busy} className="w-full" data-testid="signup-submit">{intent === "admin" ? "Create account & community" : "Create account"}</Button>
+          <Button type="submit" loading={busy} className="w-full" data-testid="signup-submit">Create account</Button>
         </form>
         <p className="mt-4 text-center text-sm text-muted">Have an account? <Link className="underline" to="/login">Sign in</Link></p>
       </Card>

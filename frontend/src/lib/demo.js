@@ -53,10 +53,6 @@ export const DEMO_COMMUNITIES = [
     tagline: "Every program, grant, event, person and resource in the Humber ecosystem, ranked for your startup.",
     memberTitle: "Look around as an established founder",
     member: ["Next moves", "Programs & grants", "Events", "People", "Resources"] },
-  { slug: "grace", short: "c3", name: "C3 Film Team", blurb: "A church's creative team: skills, shoots, onboarding and project teams anyone can start." },
-  { slug: "club-pto", short: "club-pto", name: "Club PTO", blurb: "A padel club: Skill Lab coaching, sponsors and a member skill exchange." },
-  { slug: "the-village", short: "the-village", name: "The Village", blurb: "A private dinner club: guests, long-table dinners and the host's guest list." },
-  { slug: "toronto-hyrox-crew", short: "hyrox", name: "Toronto Hyrox Crew", blurb: "A fitness racing crew: training sessions, race prep and perks." },
 ];
 // The community a /demo/<short> link (or the older /humber style) points at.
 export const demoCommunity = (key) => DEMO_COMMUNITIES.find((c) => c.short === key || c.slug === key) || null;

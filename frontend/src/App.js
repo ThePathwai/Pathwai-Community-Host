@@ -2,11 +2,11 @@ import React from "react";
 import { Navigate, Route, Routes, useLocation } from "react-router-dom";
 import { Toaster } from "sonner";
 import { useAuth } from "./lib/auth";
-import IntroTour from "./components/IntroTour";
 import { EditProvider } from "./components/EditKit";
 import Layout from "./components/Layout";
 import { Spinner } from "./components/ui";
 import Login from "./pages/Login";
+import EcosystemHome from "./components/EcosystemHome";
 import Planner from "./pages/Planner";
 import Ask from "./pages/Ask";
 import DemoLanding from "./pages/DemoLanding";
@@ -15,53 +15,28 @@ import ForgotPassword from "./pages/ForgotPassword";
 import ResetPassword from "./pages/ResetPassword";
 import JoinCommunity from "./pages/JoinCommunity";
 import CommunityLanding from "./pages/CommunityLanding";
-import Dashboard from "./pages/Dashboard";
-import Members from "./pages/Members";
+import HubPeople from "./components/hub/HubPeople";
 import MemberProfile from "./pages/MemberProfile";
-import Events from "./pages/Events";
-import Classes from "./pages/Classes";
-import Learning from "./pages/Learning";
-import Resources from "./pages/Resources";
-import Requests from "./pages/Requests";
-import Support from "./pages/Support";
-import Matches from "./pages/Matches";
+import HubEvents from "./components/hub/HubEvents";
+import HubResources from "./components/hub/HubResources";
 import EventDetail from "./pages/EventDetail";
-import Updates from "./pages/Updates";
 import SettingsPage from "./pages/Settings";
-import Discover from "./pages/Discover";
-import Organizations from "./pages/Organizations";
-import OrganizationDetail from "./pages/OrganizationDetail";
-import Applications from "./pages/Applications";
-import Inbox from "./pages/Inbox";
-import Notifications from "./pages/Notifications";
-import ProfileEdit from "./pages/ProfileEdit";
-import Saved from "./pages/Saved";
-import Copilot from "./pages/Copilot";
-import Admin from "./pages/Admin";
-import SetupWizard from "./pages/SetupWizard";
-import Hub from "./pages/Hub";
 import Legal from "./pages/Legal";
 import About from "./pages/About";
 import Install from "./pages/Install";
-import Teams from "./pages/Teams";
-import TeamDetail from "./pages/TeamDetail";
-import PublicReport from "./pages/PublicReport";
 import Navigator from "./pages/Navigator";
 import Journey from "./pages/Journey";
 import FounderEvents from "./pages/FounderEvents";
-import Talent from "./pages/Talent";
-import TalentProfile from "./pages/TalentProfile";
 import People from "./pages/People";
 import PersonProfile from "./pages/PersonProfile";
 import MyProfile from "./pages/MyProfile";
 
-function Protected({ children, admin }) {
+function Protected({ children }) {
   const { user, account, loading } = useAuth();
   const loc = useLocation();
   if (loading) return <Spinner />;
   if (!account) return <Navigate to="/login" state={{ from: loc.pathname }} replace />;
-  if (!user) return <Navigate to="/hub" replace />;
-  if (admin && user.role !== "admin") return <Navigate to="/" replace />;
+  if (!user) return <Navigate to="/navigator" replace />;
   return children;
 }
 
@@ -94,18 +69,6 @@ function FounderEventsRoute() {
   return user ? <Layout><FounderEvents embedded /></Layout> : <FounderEvents />;
 }
 
-// Talent is the account's own pool of people and startups, so like Events it sits inside a community's layout when one is open and on its own otherwise.
-function TalentRoute() {
-  const { user, loading } = useAuth();
-  if (loading) return <Spinner />;
-  return user ? <Layout><Talent embedded /></Layout> : <Talent />;
-}
-function TalentProfileRoute() {
-  const { user, loading } = useAuth();
-  if (loading) return <Spinner />;
-  return user ? <Layout><TalentProfile embedded /></Layout> : <TalentProfile />;
-}
-
 // People: the account's own directory, so like Talent it sits inside a community's layout when one is open and on its own otherwise.
 function PeopleRoute() {
   const { user, loading } = useAuth();
@@ -118,21 +81,13 @@ function PersonRoute() {
   return user ? <Layout><PersonProfile embedded /></Layout> : <PersonProfile />;
 }
 
-const P = ({ children, admin }) => <Protected admin={admin}><Layout>{children}</Layout></Protected>;
-
-// Reports now live inside Admin; the old address (and anything bookmarked or shared with it) lands in the right place.
-function ReportsRedirect() {
-  const { search } = useLocation();
-  const q = new URLSearchParams(search); q.set("tab", "reports");
-  return <Navigate to={`/admin?${q.toString()}`} replace />;
-}
+const P = ({ children }) => <Protected><Layout>{children}</Layout></Protected>;
 
 export default function App() {
   const { config } = useAuth();
   return (
     <>
       <Toaster position="top-right" theme={config?.brand?.mode || "dark"} />
-      <IntroTour />
       <EditProvider><Routes>
         <Route path="/login" element={<Login />} />
         <Route path="/signup" element={<Signup />} />
@@ -142,56 +97,30 @@ export default function App() {
         <Route path="/navigator" element={<NavigatorRoute />} />
         <Route path="/journey" element={<JourneyRoute />} />
         <Route path="/founder-events" element={<FounderEventsRoute />} />
-        <Route path="/talent" element={<TalentRoute />} />
-        <Route path="/talent/me" element={<TalentProfileRoute />} />
         <Route path="/people" element={<PeopleRoute />} />
         <Route path="/people/:key" element={<PersonRoute />} />
         <Route path="/me" element={<MyProfileRoute />} />
         <Route path="/humber" element={<Navigate to="/demo/humber" replace />} />
         <Route path="/install" element={<Install />} />
-        <Route path="/r/:slug/:token" element={<PublicReport />} />
         <Route path="/terms" element={<Legal doc="terms" />} />
         <Route path="/privacy" element={<Legal doc="privacy" />} />
         <Route path="/reset-password" element={<ResetPassword />} />
-        <Route path="/hub" element={<Hub />} />
         <Route path="/join/:code" element={<JoinCommunity />} />
         <Route path="/c/:slug" element={<CommunityLanding />} />
-        <Route path="/setup" element={<Protected admin><SetupWizard /></Protected>} />
-        <Route path="/" element={<P><Dashboard /></P>} />
+        <Route path="/" element={<P><EcosystemHome /></P>} />
         <Route path="/assistant" element={<P><Ask /></P>} />
         <Route path="/plan" element={<P><Planner /></P>} />
-        <Route path="/members" element={<P><Members /></P>} />
+        <Route path="/members" element={<P><HubPeople /></P>} />
         <Route path="/members/:id" element={<P><MemberProfile /></P>} />
-        <Route path="/events" element={<P><Events /></P>} />
+        <Route path="/events" element={<P><HubEvents /></P>} />
         <Route path="/events/:id" element={<P><EventDetail /></P>} />
-        <Route path="/classes" element={<P><Classes /></P>} />
-        <Route path="/learning" element={<P><Learning /></P>} />
-        <Route path="/teams" element={<P><Teams /></P>} />
-        <Route path="/teams/:id" element={<P><TeamDetail /></P>} />
-        <Route path="/matches" element={<P><Matches /></P>} />
-        <Route path="/updates" element={<P><Updates /></P>} />
-        <Route path="/support" element={<P><Support /></P>} />
+        <Route path="/resources" element={<P><HubResources /></P>} />
         <Route path="/settings" element={<P><SettingsPage /></P>} />
-        <Route path="/ask" element={<P><Copilot /></P>} />
-        <Route path="/resources" element={<P><Resources /></P>} />
-        <Route path="/requests" element={<P><Requests /></P>} />
-        <Route path="/discover" element={<P><Discover /></P>} />
-        <Route path="/organizations" element={<P><Organizations /></P>} />
-        <Route path="/organizations/:slug" element={<P><OrganizationDetail /></P>} />
-        <Route path="/applications" element={<P><Applications /></P>} />
-        {/* The admin blast composer moved into the Inbox page as a second tab (Blasts) -- this
-            route just keeps any bookmarked/old link to it working. */}
-        <Route path="/messages" element={<Navigate to="/inbox" replace />} />
-        <Route path="/inbox" element={<P><Inbox /></P>} />
-        <Route path="/inbox/:threadId" element={<P><Inbox /></P>} />
-        <Route path="/notifications" element={<P><Notifications /></P>} />
-        <Route path="/profile" element={<P><ProfileEdit /></P>} />
-        <Route path="/saved" element={<P><Saved /></P>} />
-        {/* Orphaned alias -- every in-app entry point links to /ask now; kept as a redirect (same
-            pattern as /messages -> /inbox above) in case anyone has the old path bookmarked. */}
-        <Route path="/copilot" element={<Navigate to="/ask" replace />} />
-        <Route path="/admin" element={<P admin><Admin /></P>} />
-        <Route path="/reports" element={<P admin><ReportsRedirect /></P>} />
+        {/* Screens that no longer exist send people somewhere that does. */}
+        <Route path="/profile" element={<Navigate to="/me" replace />} />
+        <Route path="/ask" element={<Navigate to="/assistant" replace />} />
+        <Route path="/copilot" element={<Navigate to="/assistant" replace />} />
+        <Route path="/hub" element={<Navigate to="/" replace />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes></EditProvider>
     </>
