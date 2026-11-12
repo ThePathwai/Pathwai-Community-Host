@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import { exitDemo, isDemo, setDemoRole } from "../lib/demo";
 import { useAuth } from "../lib/auth";
+import { HUB } from "../lib/demoHubConfig";
 
 const PASSWORD = "Demo123!";
 const SIDES = { member: "demo@yourcommunity.app", admin: "admin@yourcommunity.app" };
