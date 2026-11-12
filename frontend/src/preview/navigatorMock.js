@@ -2,7 +2,8 @@
 // See lib/navigator.js (the rules) and backend/routes/navigator.py (the real API this stands in for).
 import catalog from "./programs_ca.json";
 import * as nav from "../lib/navigator";
-import { humberNavigator, HUMBER_ECOSYSTEM } from "./humber";
+import { hubNavigator, HUB_ECOSYSTEM } from "./demoHub";
+import { HUB } from "../lib/demoHubConfig";
 import { buildMoves } from "../lib/moves";
 import * as guide from "../lib/navigatorGuide";
 import * as jny from "../lib/journey";
@@ -10,8 +11,8 @@ import { updatePlan } from "../lib/planner";
 import journeyTemplates from "./journey_templates.json";
 
 const BLANK_PROFILE = { public: false, blurb: "", stages: [], provides: [], audiences: [], sectors: [], city: "", provinces: [] };
-const SEEDED = { "humber-innovation-network": humberNavigator };
-const ECOSYSTEMS = { "humber-innovation-network": HUMBER_ECOSYSTEM };   // hubs that describe themselves as an ecosystem (see lib/ecosystem.js)
+const SEEDED = { [HUB.slug]: hubNavigator };
+const ECOSYSTEMS = { [HUB.slug]: HUB_ECOSYSTEM };   // hubs that describe themselves as an ecosystem (see lib/ecosystem.js)
 
 function bucket(ctx, slug) {
   const st = ctx.store;
@@ -22,7 +23,7 @@ function bucket(ctx, slug) {
   return st[slug];
 }
 
-// Every community that has opted in, as the real endpoint would list them (Humber is on by default in the demo).
+// Every community that has opted in, as the real endpoint would list them (the demo hub is on by default).
 function optedIn(ctx) {
   const slugs = new Set([...Object.keys(SEEDED), ...Object.keys(ctx.store)]);
   const out = [];
@@ -136,7 +137,7 @@ export function navigatorCall(method, path, body, params, ctx) {
     const raw = guide.navigatorProfile(ctx.account);
     const res = nav.suggest(scopedProgs(ctx, "hub"), raw, today, 80);
     const f = ctx.feeds();
-    const out = buildMoves({ programs: [...res.matches, ...(res.more || []), ...(res.later || []), ...(res.others || [])], events: f.events, people: f.people, resources: f.resources, why: f.why, profile: nav.normalizeProfile(raw), picks: eco.picks, today, hubSlug: ctx.slug });
+    const out = buildMoves({ programs: [...res.matches, ...(res.more || []), ...(res.later || []), ...(res.others || [])], events: f.events, people: f.people, resources: f.resources, why: f.why, profile: nav.normalizeProfile(raw), picks: eco.picks, today, hubSlug: ctx.slug, hubName: eco.hub });
     return ok(config, { hub: eco.hub, has_profile: !!(ctx.account.startup || {}).stage, as_of: today, ...out });
   }
   if (path === "/navigator/route" && method === "get") {

@@ -96,7 +96,7 @@ export default function Ask() {
     setMsgs((m) => [...m, { role: "user", text: q }]);
     setTyping(true);
     window.setTimeout(() => {
-      const a = ask(q, { lists, startup, plan, state: state.current });
+      const a = ask(q, { lists, startup, plan, state: state.current, hub: eco.hub });
       state.current = a ? a.state : state.current;
       setMsgs((m) => [...m, { role: "bot", ...(a || {}), text: a ? a.reply : "", q }]);
       setTyping(false);

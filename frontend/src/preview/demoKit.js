@@ -1,4 +1,4 @@
-// A small builder for hand-made demo communities (Hyrox, Humber, ...). It does what yvetta.js does for the
+// A small builder for hand-made demo communities (Hyrox, the demo hub, ...). It does what yvetta.js does for the
 // Yvettabetta Pilates demo, but takes the people, events, perks, news and help-board posts as plain data so a new
 // community is just a spec file. It registers into the in-browser demo's recorded data (see mock.js) and builds on
 // the same blank-community skeleton that "Create a community" uses, so every page keeps working.

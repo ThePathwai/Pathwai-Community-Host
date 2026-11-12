@@ -24,6 +24,7 @@ import SettingsPage from "./pages/Settings";
 import Legal from "./pages/Legal";
 import About from "./pages/About";
 import Install from "./pages/Install";
+import { HUB } from "./lib/demoHubConfig";
 import Navigator from "./pages/Navigator";
 import Journey from "./pages/Journey";
 import FounderEvents from "./pages/FounderEvents";
@@ -100,7 +101,7 @@ export default function App() {
         <Route path="/people" element={<PeopleRoute />} />
         <Route path="/people/:key" element={<PersonRoute />} />
         <Route path="/me" element={<MyProfileRoute />} />
-        <Route path="/humber" element={<Navigate to="/demo/humber" replace />} />
+        <Route path="/demo" element={<Navigate to={`/demo/${HUB.short}`} replace />} />
         <Route path="/install" element={<Install />} />
         <Route path="/terms" element={<Legal doc="terms" />} />
         <Route path="/privacy" element={<Legal doc="privacy" />} />

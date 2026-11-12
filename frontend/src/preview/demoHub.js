@@ -1,34 +1,34 @@
-// The "Humber Innovation Network" demo community: a network that connects student and alumni founders from Humber
-// Polytechnic (Toronto) with investors, industry leaders and innovation partners. Founders carry their pitch right on
-// their profile: the one-liner, the problem, the solution, traction, market and the ask, plus a link to the deck.
-// The setting is real (Humber's Longo Centre for Entrepreneurship runs the BMO Launch Me pitch competition, where
-// finalists get five minutes to pitch and then take judges' questions). Every person, venture, number, investor
-// and perk below is made up for the demo. Dates are relative to today.
+// The demo hub community: a network that connects student and alumni founders with investors, industry leaders and
+// innovation partners. Founders carry their pitch right on their profile: the one-liner, the problem, the solution,
+// traction, market and the ask, plus a link to the deck.
+// Every person, venture, number, investor and perk below is made up for the demo. Dates are relative to today.
+// The hub's name, colours, city and link are set in lib/demoHubConfig.js, not here.
 
+import { HUB } from "../lib/demoHubConfig";
 import { at, buildDemo, cover, iso } from "./demoKit";
 
-export const HUMBER_SLUG = "humber-innovation-network";
+export const HUB_SLUG = HUB.slug;
 const ME = "u-hm-me";          // the member-demo persona (a founder)
 const DANA = "u-hm-dana";      // the admin-demo persona (programs lead)
 
-const COLORS = { accent: "#0B4EA2", on_accent: "#FFFFFF", background: "#F4F6FA", surface: "#FFFFFF", text: "#0B1F3A", muted: "#5D6B82", border: "#DCE3EE" };
+const COLORS = { accent: HUB.accent, on_accent: "#FFFFFF", background: "#F4F6FA", surface: "#FFFFFF", text: "#0B1F3A", muted: "#5D6B82", border: "#DCE3EE" };
 const BRAND = {
   preset: "custom", mode: "light", colors: COLORS, font: "Manrope", heading_font: "Plus Jakarta Sans", heading_style: "normal",
   radius: "soft", button_shape: "rounded", logo_url: null, logo_mark_url: null, logo_adapts: true, show_name_with_logo: true,
   login_headline: "Where founders meet capital.", login_subhead: "Pitch to investors, get advice from people who've built it, and find your next customer.",
-  welcome_message: "Here is what to do next at Humber: the programs, grants, events and people that fit your startup.", footer_text: "Humber Innovation Network · demo community", support_email: "",
+  welcome_message: `Here is what to do next at ${HUB.shortName}: the programs, grants, events and people that fit your startup.`, footer_text: `${HUB.name} · demo community`, support_email: "",
 };
 const COVERS = {
-  blue: cover("#E8EEF8", "#0B4EA2", "#F2B33D"), gold: cover("#FBF3E2", "#F2B33D", "#0B4EA2"), teal: cover("#E6F3F1", "#1B9C8E", "#0B4EA2"),
-  slate: cover("#EBEEF3", "#5D6B82", "#F2B33D"), coral: cover("#FBEDE8", "#E76F51", "#0B4EA2"),
+  blue: cover("#E8EEF8", HUB.accent, "#F2B33D"), gold: cover("#FBF3E2", "#F2B33D", HUB.accent), teal: cover("#E6F3F1", "#1B9C8E", HUB.accent),
+  slate: cover("#EBEEF3", "#5D6B82", "#F2B33D"), coral: cover("#FBEDE8", "#E76F51", HUB.accent),
 };
 
-const doc = (title, id) => ({ title, url: `https://example.com/humber-network/decks/${id}` });
+const doc = (title, id) => ({ title, url: `https://example.com/hub-network/decks/${id}` });
 
 // [id, name, member_type, title, company, location, bio, offers, interests, goals, needs, open_to, extra]
 // Types: founder = Founder, partner = Investor, mentor = Industry leader, alumni = Innovation partner
 const PEOPLE = [
-  [DANA, "Dana Whitfield", "alumni", "Entrepreneurship programs lead", "Humber Polytechnic", "Etobicoke",
+  [DANA, "Dana Whitfield", "alumni", "Entrepreneurship programs lead", HUB.college, "Etobicoke",
     "I run the pitch programs: workshops, mentor matching and pitch day. I make sure every founder gets five honest minutes with the right investor and a plan for what comes next.",
     ["Pitch coaching", "Mentor matching", "Program design", "Introductions to investors"], ["Startups", "Community building", "Running"],
     ["Fill every pitch day with the right judges", "Place 30 founders with a mentor this term"], ["Judges", "Investors", "Industry mentors"], ["Partnerships", "Mentoring"],
@@ -43,7 +43,7 @@ const PEOPLE = [
         solution: "A branded member network: directory, events, perks, news and smart introductions, set up in an afternoon and run by the host.",
         traction: "Live demo communities for a wellness events brand, a Pilates studio, a church and a pro-sports community. A weekly events community in Toronto as the proving ground.",
         market: "Thousands of wellness, run-club and fitness event brands in Canada alone, each with a community and no software built for it.",
-        ask: "Introductions to wellness sponsors, a pilot with two Humber student clubs, and a technical advisor.",
+        ask: `Introductions to wellness sponsors, a pilot with two ${HUB.shortName} student clubs, and a technical advisor.`,
       },
       documents: [doc("Pitch deck · 10 slides", "pathwai")], social_links: { website: "https://example.com/pathwai" } }],
   ["u-hm-amina", "Amina Yusuf", "founder", "Founder & CEO", "Tidewell", "Rexdale",
@@ -114,7 +114,7 @@ const PEOPLE = [
   ["u-hm-ethan", "Ethan Park", "founder", "Founder", "StudyLoop", "Etobicoke",
     "Third-year student who tutored half his floor in first year. StudyLoop pays senior students to tutor juniors, with the college's approval and the right guardrails.",
     ["Peer tutoring", "EdTech", "Student acquisition"], ["Chess", "Basketball", "Anime"],
-    ["Launch with two Humber programs", "Win a college pilot"], ["Faculty champions", "Pre-seed investors", "Mentors in EdTech"], ["Pilots", "Mentoring"],
+    [`Launch with two ${HUB.shortName} programs`, "Win a college pilot"], ["Faculty champions", "Pre-seed investors", "Mentors in EdTech"], ["Pilots", "Mentoring"],
     { startup_name: "StudyLoop", startup_one_liner: "A peer-tutoring marketplace where senior students earn by helping first-years pass.", stage: "Pre-seed", industry: "EdTech",
       pitch: {
         problem: "First-year students fail courses they could pass with an hour of help, and colleges can't staff enough tutoring.",
@@ -195,7 +195,7 @@ const PEOPLE = [
     ["Corporate pilots", "Open innovation challenges", "Enterprise intros"], ["Soccer", "Podcasts", "Cooking"],
     ["Pilot with five startups this year"], ["Founders with a working product"], ["Pilots", "Partnerships"],
     { stage: "Innovation partner", industry: "Telecom" }],
-  ["u-hm-aisha", "Aisha Khan", "alumni", "Applied research lead", "Humber Polytechnic", "Etobicoke",
+  ["u-hm-aisha", "Aisha Khan", "alumni", "Applied research lead", HUB.college, "Etobicoke",
     "I lead applied research projects where students and industry partners work on real problems. If your startup needs a lab, a prototype or a research partner, start with me.",
     ["Applied research", "Prototyping labs", "Grant co-applications"], ["Research", "Running", "Baking"],
     ["Co-apply for three research grants"], ["Founders with research problems"], ["Research partnerships", "Grants"],
@@ -204,8 +204,8 @@ const PEOPLE = [
 
 function eventDefs({ at, until }) {
   const mon = until(1), tue = until(2), wed = until(3), thu = until(4), fri = until(5), sat = until(6);
-  const CAMPUS = "Humber North Campus · innovation space (room sent when you RSVP)";
-  const LAKE = "Humber Lakeshore Campus · innovation commons (room sent when you RSVP)";
+  const CAMPUS = "North Campus · innovation space (room sent when you RSVP)";
+  const LAKE = "Lakeshore Campus · innovation commons (room sent when you RSVP)";
   const ONLINE = "Online · link sent when you RSVP";
   const crowd = (...ids) => [DANA, ...ids];
   return [
@@ -288,7 +288,7 @@ const APPS = [
   ["u-hm-app-2", "Isabelle Roy", "isabelle.app-2@example.com", "Angel investor", "Independent", "I invest in early-stage consumer and health companies and would like to meet student founders.", ["Angel investing", "Consumer"]],
 ];
 
-// The programs founders are taking in Humber's Disco academy, and where each one is in them. [member id, status, % done, current module, days until next live session | null]
+// The programs founders are taking in the hub's Disco academy, and where each one is in them. [member id, status, % done, current module, days until next live session | null]
 // (Names, programs and progress are made up. In a live community this comes from Disco through Admin > Integrations.)
 const E = (id, status, pct, mod, days) => ({ id, status, pct, mod, days });
 const LEARNING = [
@@ -306,36 +306,36 @@ const LEARNING = [
 ];
 
 /** The learning data as the API returns it, for one viewer. roster: the community's members ({id, name, avatar_url}). */
-export function humberLearning(viewerId, roster) {
+export function hubLearning(viewerId, roster) {
   const byId = Object.fromEntries(roster.map((u) => [u.id, u]));
   const programs = LEARNING.map((p) => {
     const es = p.cohort;
     const e = es.find((x) => x.id === viewerId);
     const done = e && e.status === "completed";
     return {
-      id: p.id, source: "disco", external_id: p.id, name: p.name, description: p.description, url: "https://humber-innovation.example.com/academy/" + p.id, cover_url: null, status: "active",
+      id: p.id, source: "disco", external_id: p.id, name: p.name, description: p.description, url: "https://hub.example.com/academy/" + p.id, cover_url: null, status: "active",
       starts_at: iso(at(-21, 9)), ends_at: iso(at(35, 17)), modules_total: p.modules, tags: p.tags,
       enrolled_count: es.length, completed_count: es.filter((x) => x.status === "completed").length,
       cohort_preview: es.filter((x) => byId[x.id]).slice(0, 5).map((x) => ({ id: x.id, name: byId[x.id].name, avatar_url: byId[x.id].avatar_url || null })),
       my: e ? { status: e.status, progress_pct: e.pct, modules_done: Math.round(p.modules * e.pct / 100), current_module: e.mod, next_session_at: e.days != null ? iso(at(e.days, 18)) : null,
-        completed_at: done ? iso(at(-3, 12)) : null, certificate_url: done ? "https://humber-innovation.example.com/certificates/" + p.id : null } : null,
+        completed_at: done ? iso(at(-3, 12)) : null, certificate_url: done ? "https://hub.example.com/certificates/" + p.id : null } : null,
     };
   });
   programs.sort((a, b) => (a.my === null) - (b.my === null) || a.name.localeCompare(b.name));
   return programs;
 }
-export function humberLearningFor(uid, roster) {
+export function hubLearningFor(uid, roster) {
   const out = [];
   for (const p of LEARNING) {
     const e = p.cohort.find((x) => x.id === uid);
-    if (e) out.push({ program_id: p.id, name: p.name, url: "https://humber-innovation.example.com/academy/" + p.id, status: e.status, progress_pct: e.pct, completed_at: e.status === "completed" ? iso(at(-3, 12)) : null });
+    if (e) out.push({ program_id: p.id, name: p.name, url: "https://hub.example.com/academy/" + p.id, status: e.status, progress_pct: e.pct, completed_at: e.status === "completed" ? iso(at(-3, 12)) : null });
   }
   return out.sort((a, b) => (a.status !== "enrolled") - (b.status !== "enrolled") || a.name.localeCompare(b.name));
 }
 
 // Conversations already in the inbox when the demo opens, so neither side starts on an empty screen. They are real threads in the
 // demo's own store, so replying works. `unread` ones were last written by the other person. (Made up, like everything here.)
-export function humberThreads() {
+export function hubThreads() {
   const m = (id, sender, body, d, h, min = 0) => ({ id, sender_id: sender, body, created_at: iso(at(d, h, min)) });
   const T = (id, parts, subject, msgs, readBy = []) => ({
     id, participant_ids: parts.slice().sort(), subject, context: null, created_at: msgs[0].created_at,
@@ -369,18 +369,18 @@ export function humberThreads() {
 }
 
 /** Two past text and email blasts for the admin's "Blasts" tab (not sent to anyone: this is the demo). */
-export function humberBlasts() {
+export function hubBlasts() {
   const when = (d, h) => iso(at(d, h));
   return [
-    { id: "hm-b1", slug: HUMBER_SLUG, message: "Pitch Practice Lab is tonight at 5:30 PM, North Campus. Bring your deck and a printed one-liner.", subject: null, channel: "sms", audience: { type: "event", event_id: "hm-e3" }, internal: true, internal_sent: 9, sms_sent: 8, sms_failed: 0, email_sent: 0, email_failed: 0, sms_credits_used: 8, demo: true, at: when(-1, 11) },
-    { id: "hm-b2", slug: HUMBER_SLUG, message: "Pitch Day applications are open. Apply with your deck and a one-line ask. Applications close in two weeks.", subject: "Pitch Day applications are open", channel: "email", audience: { type: "all" }, internal: true, internal_sent: 20, sms_sent: 0, sms_failed: 0, email_sent: 18, email_failed: 0, sms_credits_used: 0, demo: true, at: when(-5, 10) },
+    { id: "hm-b1", slug: HUB_SLUG, message: "Pitch Practice Lab is tonight at 5:30 PM, North Campus. Bring your deck and a printed one-liner.", subject: null, channel: "sms", audience: { type: "event", event_id: "hm-e3" }, internal: true, internal_sent: 9, sms_sent: 8, sms_failed: 0, email_sent: 0, email_failed: 0, sms_credits_used: 8, demo: true, at: when(-1, 11) },
+    { id: "hm-b2", slug: HUB_SLUG, message: "Pitch Day applications are open. Apply with your deck and a one-line ask. Applications close in two weeks.", subject: "Pitch Day applications are open", channel: "email", audience: { type: "all" }, internal: true, internal_sent: 20, sms_sent: 0, sms_failed: 0, email_sent: 18, email_failed: 0, sms_credits_used: 0, demo: true, at: when(-5, 10) },
   ];
 }
 
-export function buildHumber(fixtures, deps) {
+export function buildHub(fixtures, deps) {
   return buildDemo(fixtures, deps, {
-    slug: HUMBER_SLUG, prefix: "hm", name: "Humber Innovation Network", tagline: "Where Humber founders meet capital, mentors and customers.", hubKind: "Innovation & entrepreneurship network",
-    hubCover: cover("#E8EEF8", "#0B4EA2", "#F2B33D"), covers: COVERS, brand: BRAND, emailDomain: "humber-network.example", memberId: ME, adminId: DANA, instagram: false,
+    slug: HUB_SLUG, prefix: "hm", name: HUB.name, tagline: `Where ${HUB.shortName} founders meet capital, mentors and customers.`, hubKind: "Innovation & entrepreneurship network",
+    hubCover: cover("#E8EEF8", HUB.accent, "#F2B33D"), covers: COVERS, brand: BRAND, emailDomain: "hub-network.example", memberId: ME, adminId: DANA, instagram: false,
     people: PEOPLE, events: eventDefs, resources: RESOURCES, announcements: ANNOUNCEMENTS, authorName: "Dana Whitfield", help: HELP, apps: APPS,
     matches: {
       member: [["u-hm-priyanka", ["Sponsor intros", "Pre-seed cheques"], ["Community building"]], ["u-hm-helen", ["Sponsor intros", "Business banking"], ["Event operations"]], ["u-hm-samira", ["Pitch feedback", "Deck review"], ["Event operations"]], ["u-hm-roberto", ["Corporate pilots"], ["Brand partnerships"]]],
@@ -389,8 +389,8 @@ export function buildHumber(fixtures, deps) {
     completion: { percent: 100, missing: [], missing_keys: [], sections: { "About you": { done: 5, total: 5 }, "Skills & interests": { done: 2, total: 2 }, "Goals & support": { done: 2, total: 2 } } },
     config: {
       blast_example: { subject: "Pitch Practice Lab is tonight", message: "Pitch Practice Lab is tonight at 5:30 PM, North Campus. Bring your deck and a printed one-liner." },
-      community_kind: "Innovation & entrepreneurship network", community_type: "professional", interest_tags: ["Startups", "Innovation"], ecosystem: HUMBER_ECOSYSTEM,
-      about: "A network that connects student and alumni founders from Humber Polytechnic with investors, industry leaders and innovation partners. Founders put their pitch on their profile and meet the people who can fund, advise or become their first customer. Pitch days, office hours, mixers and mentor matching run all term. This is a demo community: every person, venture and number is made up.",
+      community_kind: "Innovation & entrepreneurship network", community_type: "professional", interest_tags: ["Startups", "Innovation"], ecosystem: HUB_ECOSYSTEM,
+      about: `A network that connects student and alumni founders from ${HUB.college} with investors, industry leaders and innovation partners. Founders put their pitch on their profile and meet the people who can fund, advise or become their first customer. Pitch days, office hours, mixers and mentor matching run all term. This is a demo community: every person, venture and number is made up.`,
       about_url: "", about_cta: "",
       member_label_singular: "Member", member_label_plural: "Members",
       member_types: { founder: "Founder", mentor: "Industry leader", alumni: "Innovation partner", partner: "Investor", guest: "Guest" },
@@ -409,7 +409,7 @@ export function buildHumber(fixtures, deps) {
         { key: "why", label: "What would you like from the network?", placeholder: "Feedback on my pitch, deal flow, pilot customers..." },
       ],
       page_text: {
-        members_title: "People", members_subtitle: "Founders, mentors, investors and partners at Humber: what they do, what they offer and what they're looking for.",
+        members_title: "People", members_subtitle: `Founders, mentors, investors and partners at ${HUB.shortName}: what they do, what they offer and what they're looking for.`,
         events_title: "Events", events_subtitle: "Pitch Day, office hours, workshops, mixers and demo nights, with the ones that fit you first.",
         resources_title: "Resources", resources_subtitle: "Grant guides, legal hours, credits and templates, from the people who have done it.",
         support_title: "Asks", support_subtitle: "Need an intro, feedback on a deck or a pilot customer? Ask here. Offer a hand when you can.",
@@ -431,37 +431,37 @@ export function buildHumber(fixtures, deps) {
 }
 
 // The ecosystem lens: this hub is the first place a founder looks. It lists its own programs, and "picks" are the national and provincial programs
-// the hub's team points its founders to (so a grant or loan can sit beside a Humber program). Everything else in the catalog is one tap away.
+// the hub's team points its founders to (so a grant or loan can sit beside one of the hub's programs). Everything else in the catalog is one tap away.
 // (The notes are demo copy. In a live hub the programs team writes them.)
-// Humber's own view of the ecosystem lens: only what Humber runs. Set `wider` (e.g. "All of Canada") and `picks` to point founders beyond the hub.
-export const HUMBER_ECOSYSTEM = {
-  hub: "Humber", wider: null, city: "Toronto", home_title: "Your next moves at Humber",
-  home_sub: "Work out your next stage, then use Humber's programs, events, people and resources to get there.",
+// The hub's own view of the ecosystem lens: only what the hub runs. Set `wider` (e.g. "All of Canada") and `picks` to point founders beyond the hub.
+export const HUB_ECOSYSTEM = {
+  hub: HUB.shortName, wider: null, city: HUB.city, home_title: `Your next moves at ${HUB.shortName}`,
+  home_sub: `Work out your next stage, then use ${HUB.shortName}'s programs, events, people and resources to get there.`,
   picks: {},
 };
 
-// What Humber lists in the Navigator: its profile (who it serves and what it gives founders) and the programs it runs.
+// What the hub lists in the Navigator: its profile (who it serves and what it gives founders) and the programs it runs.
 // Made up for the demo, like everything else in this community. Dates are relative to today.
-export function humberNavigator() {
+export function hubNavigator() {
   const day = (d) => iso(at(d, 12)).slice(0, 10);
   const P = (id, name, type, summary, stages, needs, extra = {}) => ({
-    id, name, org: "Humber Innovation Network", type, summary, amount: "Free", stages, audiences: ["student"], needs, sectors: ["any"], requirements: [], status: "open", apply_url: "",
+    id, name, org: HUB.name, type, summary, amount: "Free", stages, audiences: ["student"], needs, sectors: ["any"], requirements: [], status: "open", apply_url: "",
     deadline: { kind: "rolling", date: null, note: "" }, created_at: iso(at(-30, 9)), updated_at: iso(at(-3, 9)), ...extra,
   });
   return {
     profile: {
-      public: true, blurb: "Where Humber founders meet capital, mentors and customers.", stages: ["idea", "prototype", "launched"], provides: ["mentorship", "network", "funding", "customers", "training"],
+      public: true, blurb: `Where ${HUB.shortName} founders meet capital, mentors and customers.`, stages: ["idea", "prototype", "launched"], provides: ["mentorship", "network", "funding", "customers", "training"],
       audiences: ["student", "youth"], sectors: ["tech", "health", "services"], city: "Toronto", provinces: ["ON"],
     },
     programs: [
       P("hm-p1", "Pitch Day", "competition", "Five minutes to pitch, then judges' questions, with investors in the room.", ["idea", "prototype", "launched"], ["funding", "network", "customers"],
-        { requirements: ["Humber student or alum", "A one-page pitch", "Five-minute slot, deck optional"], deadline: { kind: "fixed", date: day(21), note: "Apply by the date shown" } }),
+        { requirements: [`${HUB.shortName} student or alum`, "A one-page pitch", "Five-minute slot, deck optional"], deadline: { kind: "fixed", date: day(21), note: "Apply by the date shown" } }),
       P("hm-p2", "Founder Office Hours", "mentorship", "Weekly one-on-one time with a founder who has built it before.", ["idea", "prototype", "launched", "revenue"], ["mentorship", "network"],
         { requirements: ["Book a 30-minute slot"], deadline: { kind: "rolling", date: null, note: "Book any week" } }),
       P("hm-p3", "Pitch Practice Lab", "accelerator", "Rehearse your pitch with coaches and get feedback before the real thing.", ["idea", "prototype"], ["training", "mentorship"],
         { requirements: ["Bring your deck and a printed one-liner"], deadline: { kind: "rolling", date: null, note: "Runs every other week" } }),
-      P("hm-p4", "Founder Micro-Grant", "grant", "Up to $5,000 to build a prototype, run customer tests or land your first customers. Awarded each term to Humber founders.", ["idea", "prototype", "launched"], ["funding", "customers"],
-        { amount: "Up to $5,000", requirements: ["Humber student or alum", "A one-page plan and budget"], deadline: { kind: "fixed", date: day(35), note: "Applications close on the date shown" } }),
+      P("hm-p4", "Founder Micro-Grant", "grant", `Up to $5,000 to build a prototype, run customer tests or land your first customers. Awarded each term to ${HUB.shortName} founders.`, ["idea", "prototype", "launched"], ["funding", "customers"],
+        { amount: "Up to $5,000", requirements: [`${HUB.shortName} student or alum`, "A one-page plan and budget"], deadline: { kind: "fixed", date: day(35), note: "Applications close on the date shown" } }),
       P("hm-p5", "Grant Writing Clinic", "mentorship", "Bring a draft application. A programs coach reads it with you and fixes the parts reviewers skim past.", ["prototype", "launched"], ["funding", "training"],
         { requirements: ["A draft or an outline", "Book a 45-minute slot"], deadline: { kind: "rolling", date: null, note: "Book any week" } }),
       P("hm-p6", "Scale-Up Cohort", "accelerator", "Twelve weeks for companies already earning revenue: sales coaching, a hiring plan and warm intros to growth investors.", ["revenue", "growth"], ["funding", "customers", "talent"],

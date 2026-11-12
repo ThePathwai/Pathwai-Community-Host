@@ -3,7 +3,6 @@ import { Link, NavLink, useLocation, useNavigate } from "react-router-dom";
 import { Compass, MessageCircle, Target, Calendar, Gift, Info, Home as HomeIcon, LogOut, Moon, Settings, Sparkles, Sun, Users, CircleUser, ChevronDown } from "lucide-react";
 import { applyBrand, effectiveMode, setModePref } from "../lib/theme";
 import { useAuth } from "../lib/auth";
-import DemoGuide from "./DemoGuide";
 import { Avatar, BackButton, PoweredBy, Wordmark, cx } from "./ui";
 
 const ROUTES = { assistant: "/assistant", plan: "/plan", programs: "/navigator", members: "/members", events: "/events", resources: "/resources" };
@@ -123,7 +122,7 @@ export default function Layout({ children }) {
           {custom.map((l) => <a key={l.url} href={l.url} target="_blank" rel="noreferrer" className="whitespace-nowrap rounded-full px-3 py-1 text-sm text-muted">{l.label} ↗</a>)}
         </nav>
       </header>
-      <main className="mx-auto max-w-[1600px] px-4 py-6 lg:px-10 lg:py-10"><DemoGuide />{backTo && <BackButton fallback={backTo[0]} label={`Back to ${backTo[1]}`} />}{children}</main>
+      <main className="mx-auto max-w-[1600px] px-4 py-6 lg:px-10 lg:py-10">{backTo && <BackButton fallback={backTo[0]} label={`Back to ${backTo[1]}`} />}{children}</main>
       <nav className="fixed inset-x-0 bottom-0 z-40 grid border-t border-line bg-paper/90 backdrop-blur-xl backdrop-saturate-150 xl:hidden"
         style={{ gridTemplateColumns: `repeat(${Math.min(5, 1 + tabItems.length + 0)}, minmax(0, 1fr))`, paddingBottom: "env(safe-area-inset-bottom, 0px)" }} data-testid="tabbar">
         {[["/", "Home", TAB_ICONS["/"]], ...tabItems.map((n) => [ROUTES[n.key], n.label, TAB_ICONS[n.key]])].map(([to, label, Icon]) => (

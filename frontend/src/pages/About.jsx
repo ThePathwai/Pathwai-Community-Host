@@ -2,7 +2,7 @@ import React from "react";
 import { Link } from "react-router-dom";
 import { ArrowRight, CalendarDays, Compass, Gift, Handshake, Rocket, Route, Target, Users } from "lucide-react";
 import { Wordmark, PoweredBy } from "../components/ui";
-import { startDemo } from "../lib/demo";
+import { startHubDemo } from "../lib/demo";
 
 // /about: public (no login). One idea, said plainly: Pathwai is an innovation navigation system. A founder says what they are building, the hub
 // shows what fits and why, and they leave with a decision plan. Plain data below so copy edits are one-liners.
@@ -28,7 +28,7 @@ const FOR_HUBS = [
 ];
 
 export default function About() {
-  const demo = () => startDemo("member", "humber-innovation-network", { fresh: true });
+  const demo = () => startHubDemo();
   return (
     <div className="w-full" data-testid="about">
       <header className="glass sticky top-0 z-30 border-b border-line/60">

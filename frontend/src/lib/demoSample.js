@@ -1,4 +1,4 @@
-// Demo only: a sample founder story the walkthrough can load in one click, so nobody has to type live while recording.
+// Demo only: a sample founder story the "Use a sample story" button loads in one click, so nobody has to type to try the planner.
 // Same shape as the startup the profile saves (see components/StartupFields.jsx). Made up.
 export const SAMPLE_STARTUP = {
   name: "Bright Court", one_liner: "Booking and league tools for community sports", stage: "launched", sectors: ["tech"], audiences: [],

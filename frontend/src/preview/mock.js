@@ -8,7 +8,7 @@ import { buildYvetta, YVETTA_SLUG } from "./yvetta";
 import { buildHyrox, HYROX_SLUG } from "./hyrox";
 import { buildClubPto, CLUBPTO_SLUG } from "./clubpto";
 import { buildC3Film, C3_SLUG } from "./c3film";
-import { buildHumber, HUMBER_SLUG, humberBlasts, humberLearning, humberLearningFor, humberThreads } from "./humber";
+import { buildHub, HUB_SLUG, hubBlasts, hubLearning, hubLearningFor, hubThreads } from "./demoHub";
 import { classesHandler, newClassesState } from "./classes";
 import { eventsImport, guestsImport } from "./importMock";
 import { segments, smsBody } from "../lib/messaging";
@@ -28,8 +28,8 @@ const ACCOUNTS = { "demo@yourcommunity.app": { name: "Fife Ashley-Dejo", role: "
 // A role is per-community, not global: admin@ is the actual admin of playr/the-village/club-pto/unity
 // and of grace (the C3 Film Team demo, see c3film.js); demo@ is a plain member everywhere except Toronto Tech
 // Collective, where it's the founding admin — the "vice versa" half. See ADMIN_OF below.
-const BASE = { "demo@yourcommunity.app": { playr: "approved", grace: "approved", "the-village": "approved", "club-pto": "approved", "toronto-tech-collective": "approved", unity: "approved", [YVETTA_SLUG]: "approved", [HYROX_SLUG]: "approved", [HUMBER_SLUG]: "approved" }, "admin@yourcommunity.app": { playr: "approved", grace: "approved", "the-village": "approved", "club-pto": "approved", unity: "approved", [YVETTA_SLUG]: "approved", [HYROX_SLUG]: "approved", [HUMBER_SLUG]: "approved" }, "host@thevillage.example": { "the-village": "approved" }, "founder@yourcommunity.app": {} };
-const ADMIN_OF = { "admin@yourcommunity.app": ["playr", "grace", "the-village", "club-pto", "unity", YVETTA_SLUG, HYROX_SLUG, HUMBER_SLUG], "demo@yourcommunity.app": ["toronto-tech-collective"], "host@thevillage.example": ["the-village"] };
+const BASE = { "demo@yourcommunity.app": { playr: "approved", grace: "approved", "the-village": "approved", "club-pto": "approved", "toronto-tech-collective": "approved", unity: "approved", [YVETTA_SLUG]: "approved", [HYROX_SLUG]: "approved", [HUB_SLUG]: "approved" }, "admin@yourcommunity.app": { playr: "approved", grace: "approved", "the-village": "approved", "club-pto": "approved", unity: "approved", [YVETTA_SLUG]: "approved", [HYROX_SLUG]: "approved", [HUB_SLUG]: "approved" }, "host@thevillage.example": { "the-village": "approved" }, "founder@yourcommunity.app": {} };
+const ADMIN_OF = { "admin@yourcommunity.app": ["playr", "grace", "the-village", "club-pto", "unity", YVETTA_SLUG, HYROX_SLUG, HUB_SLUG], "demo@yourcommunity.app": ["toronto-tech-collective"], "host@thevillage.example": ["the-village"] };
 const memStatus = (email, slug) => (S.extra.join || {})[email + "|" + slug] || (BASE[email] || {})[slug] || "none";
 const isAdminHere = () => (ADMIN_OF[S.email] || []).includes(slugOf());
 const appsHere = () => ((S.extra.apps || {})[slugOf()] || []);
@@ -112,10 +112,10 @@ function blank(v) {
 
 // The Yvettabetta Pilates demo community (see yvetta.js): added to the recorded data and the hub's list once, at load.
 { const yv = buildYvetta(fixtures, { blank, clone, DEFAULT_CONFIG, REFERENCE_PUBLIC_KEYS }); fixtures.communities[YVETTA_SLUG] = yv.book; fixtures.hub.splice(1, 0, yv.hub); }
-// The Toronto Hyrox Crew and Humber Innovation Network demo communities (see hyrox.js, humber.js, demoKit.js).
+// The Toronto Hyrox Crew and demo hub community (see hyrox.js, demoHub.js, demoKit.js).
 { const deps = { blank, clone, DEFAULT_CONFIG, REFERENCE_PUBLIC_KEYS };
   const hx = buildHyrox(fixtures, deps); fixtures.communities[HYROX_SLUG] = hx.book; fixtures.hub.splice(2, 0, hx.hub);
-  const hm = buildHumber(fixtures, deps); fixtures.communities[HUMBER_SLUG] = hm.book; fixtures.hub.splice(3, 0, hm.hub);
+  const hm = buildHub(fixtures, deps); fixtures.communities[HUB_SLUG] = hm.book; fixtures.hub.splice(3, 0, hm.hub);
   // Club PTO is rebuilt from its public Skill Lab summary: sponsors, a member skill exchange and both demo sides (see clubpto.js).
   const pt = buildClubPto(fixtures, deps); fixtures.communities[CLUBPTO_SLUG] = pt.book;
   const ptAt = fixtures.hub.findIndex((c) => c.slug === CLUBPTO_SLUG); if (ptAt >= 0) fixtures.hub[ptAt] = pt.hub; else fixtures.hub.splice(4, 0, pt.hub);
@@ -195,7 +195,7 @@ const integ = () => {
   if (!bk.integrations) {
     const seed = Object.values(bk.logins).find((l) => l["/admin/integrations"]);
     bk.integrations = clone((seed && seed["/admin/integrations"].integrations) || []);
-    if (slugOf() === HUMBER_SLUG) {   // Humber runs on Disco: show the Disco connector first, alongside a few common ones
+    if (slugOf() === HUB_SLUG) {   // The demo hub runs on Disco: show the Disco connector first, alongside a few common ones
       const base = fixtures.communities.playr.logins["admin@yourcommunity.app"]["/admin/integrations"].integrations.filter((x) => ["stripe", "google_forms"].includes(x.provider));
       bk.integrations = clone([DISCO, ...base]);
     }
@@ -351,7 +351,7 @@ function withRsvpFields(e) {
 // /admin/blasts/history below, this is answered live rather than looked up from a captured snapshot.
 function threadStore() {
   const st = sharedContent("message_threads");
-  if (!st.seeded && slugOf() === HUMBER_SLUG) { st.seeded = true; st.created.push(...humberThreads()); }   // Humber opens with conversations already going
+  if (!st.seeded && slugOf() === HUB_SLUG) { st.seeded = true; st.created.push(...hubThreads()); }   // The demo hub opens with conversations already going
   return st;
 }
 function threadUserById(id) {
@@ -654,7 +654,7 @@ function get(path, p, config) {
   if (path.startsWith("/teams")) return teamsCall("get", path, {}, config);
   if (/^\/(admin\/(impact|report-types|reports\/|report-shares|deck-selection|partnership-offer|quiet|instagram|tiktok)|public\/report\/)/.test(path) || path === "/community/reliability") return impactCall("get", path, {}, config);
   if (path === "/admin/blasts/history") {
-    if (slugOf() === HUMBER_SLUG && !S.extra.humberBlasts) { S.extra.humberBlasts = true; S.extra.blasts = [...(S.extra.blasts || []), ...humberBlasts()].sort((a, b) => b.at.localeCompare(a.at)); }
+    if (slugOf() === HUB_SLUG && !S.extra.hubBlasts) { S.extra.hubBlasts = true; S.extra.blasts = [...(S.extra.blasts || []), ...hubBlasts()].sort((a, b) => b.at.localeCompare(a.at)); }
     let blasts = (S.extra.blasts || []).filter((b) => !b.slug || b.slug === slugOf());
     if (p.audience_type) blasts = blasts.filter((b) => b.audience?.type === p.audience_type);
     if (p.since) blasts = blasts.filter((b) => b.at >= p.since);
@@ -845,10 +845,10 @@ function get(path, p, config) {
     const cur = pay.find((x) => x.kind === "plan");
     return ok(config, { enabled: !!stripeOn(), plans: stripeOn() ? PLANS : [], status: cur ? "active" : null, plan: cur ? cur.description : null, payments: pay, currency: "cad" });
   }
-  if (path.startsWith("/learning/")) {   // Humber's Disco academy (see humber.js); other communities have no programs
-    const me = view()["/auth/me"] || {}; const hum = slugOf() === HUMBER_SLUG;
+  if (path.startsWith("/learning/")) {   // The demo hub's Disco academy (see demoHub.js); other communities have no programs
+    const me = view()["/auth/me"] || {}; const hum = slugOf() === HUB_SLUG;
     const roster = communityRoster(slugOf());
-    const progs = hum ? humberLearning(me.id, roster) : [];
+    const progs = hum ? hubLearning(me.id, roster) : [];
     if (path === "/learning/programs") return ok(config, { programs: progs, source: progs.length ? "disco" : null });
     if (path === "/learning/mine") {
       const mine = progs.filter((p) => p.my); const active = mine.filter((p) => p.my.status === "enrolled");
@@ -856,7 +856,7 @@ function get(path, p, config) {
       return ok(config, { programs: mine, summary: { enrolled: active.length, completed: mine.length - active.length, next_session_at: nxt[0] || null } });
     }
     const lp = path.match(/^\/learning\/people\/([^/]+)$/);
-    if (lp) return ok(config, { programs: hum ? humberLearningFor(lp[1], roster) : [] });
+    if (lp) return ok(config, { programs: hum ? hubLearningFor(lp[1], roster) : [] });
   }
   if (path === "/admin/integrations") return ok(config, { integrations: integ() });
   if (path === "/messages/threads") {
@@ -1059,23 +1059,7 @@ function get(path, p, config) {
   return ok(config, d);
 }
 
-// Demo only: put the signed-in founder back to a brand-new account (no startup, plan, matches tracked, interest, saved items or RSVPs) so a
-// walkthrough can be recorded again from the start. Used by the Reset button and the "Start the walkthrough" entry.
-function resetDemoFounder() {
-  const m = (S.extra.acctProfile = S.extra.acctProfile || {});
-  m[S.email] = { location: "Toronto, ON", startup: {}, plan: null, tracked: [], interest: [], journey: [], nav_seen: [] };
-  const rv = sharedRsvp(); const ov = sharedContent("events");
-  for (const e of [...ov.created, ...((view()["/events"]) || [])]) {
-    const prior = rv.byUser[e.id] && rv.byUser[e.id][S.email];
-    const now = prior !== undefined ? prior : (applyEdit(e, "events") || {}).my_rsvp ?? null;
-    if (now === "yes") { rv.delta[e.id] = (rv.delta[e.id] || 0) - 1; (rv.byUser[e.id] = rv.byUser[e.id] || {})[S.email] = null; }
-  }
-  const sv = (book().shared || {}).saved || {};
-  for (const k of Object.keys(sv)) if (sv[k]) delete sv[k][S.email];
-}
-
 function write(method, path, body, config) {
-  if (path === "/navigator/demo-reset") { if (!S.role) return fail(config, 401, "Not authenticated"); resetDemoFounder(); return ok(config, { ok: true }); }
   if (path.startsWith("/navigator")) return navigatorCall(method, path, body, config.params || {}, navCtx(config));
   if (path.startsWith("/founder-events")) return eventsCall(method, path, config.params || {}, navCtx(config));
   if (path.startsWith("/talent")) return talentCall(method, path, body, config.params || {}, navCtx(config));

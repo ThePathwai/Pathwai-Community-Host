@@ -1,17 +1,13 @@
 // The built-in demo: a practice copy of Pathwai that runs entirely inside the visitor's browser, with
 // made-up members and events (preview/mock.js + its recorded sample data). It never talks to the real
 // server, so nothing a visitor does in it can touch real members or data. It lasts for this browser tab.
+import { HUB } from "./demoHubConfig";
 const KEY = "pw_demo";
 const get = () => { try { return window.sessionStorage.getItem(KEY); } catch { return null; } };
 const ROLE = "pw_demo_role";  // which demo you're in, so a page refresh signs you back in (cleared by Sign out)
 export const demoRole = () => { try { return window.sessionStorage.getItem(ROLE); } catch { return null; } };
 export const setDemoRole = (r) => { try { r ? window.sessionStorage.setItem(ROLE, r) : window.sessionStorage.removeItem(ROLE); } catch { /* ignore */ } };
 const set = (v) => { try { v ? window.sessionStorage.setItem(KEY, v) : window.sessionStorage.removeItem(KEY); } catch { /* storage blocked: the ?demo= link still works */ } };
-
-// True while someone is in the guided walkthrough (started with "Start the walkthrough"), as opposed to just looking around the demo.
-const WALK = "pw_walk";
-export const walkthroughOn = () => { try { return window.sessionStorage.getItem(WALK) === "1"; } catch { return false; } };
-export const setWalkthrough = (v) => { try { v ? window.sessionStorage.setItem(WALK, "1") : window.sessionStorage.removeItem(WALK); } catch { /* ignore */ } };
 
 export const isDemo = () => process.env.REACT_APP_PREVIEW === "true" || get() === "1";
 
@@ -27,10 +23,8 @@ export const prepareDemo = () => { const d = demoFromUrl(); if (d) { set("1"); s
 // with the in-page (#) router instead of loading a new address.
 const PREVIEW = process.env.REACT_APP_PREVIEW === "true";
 const goTo = (path) => { window.location.hash = "#" + path; };
-// `fresh` starts the walkthrough as a brand-new founder (nothing filled in) instead of the ready-made one.
-export const startDemo = (role, slug, opts = {}) => {
-  setWalkthrough(!!opts.fresh);
-  const q = `/login?demo=${role}${slug ? `&c=${encodeURIComponent(slug)}` : ""}${opts.fresh ? "&fresh=1" : ""}`;
+export const startDemo = (role, slug) => {
+  const q = `/login?demo=${role}${slug ? `&c=${encodeURIComponent(slug)}` : ""}`;
   if (PREVIEW) { setDemoRole(role); goTo(q); return; }
   set("1"); setDemoRole(role); window.location.assign(q);
 };
@@ -38,23 +32,21 @@ export const startDemo = (role, slug, opts = {}) => {
 export const inDemoTab = () => get() === "1";
 // Leaves the demo for good and reloads onto the real site, so the real server is used again (the demo's
 // stand-in server only goes away on a fresh page load).
-export const leaveDemo = (to = "/login") => { set(null); setDemoRole(null); setWalkthrough(false); if (PREVIEW) { goTo(to); return; } window.location.replace(to); };
+export const leaveDemo = (to = "/login") => { set(null); setDemoRole(null); if (PREVIEW) { goTo(to); return; } window.location.replace(to); };
 export const exitDemo = () => leaveDemo("/login");
 
-// The "Try the demo" buttons open the founder walkthrough in the Humber hub. The demo is for founders only; there is no admin side to open.
-export const startAdminDemo = () => startDemo("member", "humber-innovation-network", { fresh: true });
+// The "Try the demo" buttons open the demo hub as an established founder. The demo is for founders only; there is no admin side to open.
+// The hub's name, colours and link are set in lib/demoHubConfig.js.
+export const startHubDemo = () => startDemo("member", HUB.slug);
 
-// Practice communities worth walking through, each open from both the member side and the admin side.
-// `featured` ones are shown first and big. Each opens at /demo/<short> (a page with a Member button and an Admin button that
-// works the same on a phone and a desktop), so a link can be sent to someone as it is.
+// The demo hubs shown on the demo page. Each opens at /demo/<short> (a page that works the same on a phone and a desktop),
+// so a link can be sent to someone as it is. Edit the hub itself in lib/demoHubConfig.js.
 export const DEMO_COMMUNITIES = [
-  { slug: "humber-innovation-network", short: "humber", featured: true, walkthrough: true, noAdmin: true, name: "Humber Innovation Network", accent: "#0B4EA2", blurb: "An innovation navigator for one hub: programs, grants, events, people and resources, matched to your startup.",
-    eyebrow: "Innovation navigator \u00b7 hub demo",
-    tagline: "Every program, grant, event, person and resource in the Humber ecosystem, ranked for your startup.",
-    memberTitle: "Look around as an established founder",
+  { slug: HUB.slug, short: HUB.short, featured: true, noAdmin: true, name: HUB.name, accent: HUB.accent, blurb: HUB.blurb,
+    eyebrow: HUB.eyebrow, tagline: HUB.tagline, memberTitle: HUB.memberTitle,
     member: ["Next moves", "Programs & grants", "Events", "People", "Resources"] },
 ];
-// The community a /demo/<short> link (or the older /humber style) points at.
+// The community a /demo/<short> link points at.
 export const demoCommunity = (key) => DEMO_COMMUNITIES.find((c) => c.short === key || c.slug === key) || null;
 // The link that drops someone straight into one side of a practice community (the same on phone and desktop).
 export const demoLink = (role, slug) => `${window.location.origin}/login?demo=${role}&c=${encodeURIComponent(slug)}`;

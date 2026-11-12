@@ -19,7 +19,7 @@ export const fitOf = (score) => (score >= 75 ? "strong" : score >= 56 ? "good" :
 // Everything a search might match on, in one lowercase string (used by the Ask page, lib/ask.js).
 const hay = (...xs) => xs.filter(Boolean).join(" ").toLowerCase();
 
-function collect({ programs, events, people, resources, needs, picks, today, hubSlug }) {
+function collect({ programs, events, people, resources, needs, picks, today, hubSlug, hubName }) {
   const pool = [];
   for (const p of programs) {
     const x = explainProgram(p);
@@ -30,7 +30,7 @@ function collect({ programs, events, people, resources, needs, picks, today, hub
     const own = !!(p.community && (!hubSlug || p.community.slug === hubSlug));
     if (own) score += 8; else if (picks[p.id]) score += 5;
     const kind = GRANTY.has(p.type) ? "grant" : "program";
-    pool.push({ kind, id: p.id, title: p.name, sub: p.org, ...x, badge: own ? "Humber" : picks[p.id] ? "Humber pick" : "", amount: p.amount || "", needs: p.needs || [],
+    pool.push({ kind, id: p.id, title: p.name, sub: p.org, ...x, badge: own ? hubName : picks[p.id] ? `${hubName} pick` : "", amount: p.amount || "", needs: p.needs || [],
       text: hay(p.name, p.org, p.type, p.summary, p.description, ...(p.needs || []), ...(p.tags || [])), deadline: dl != null && dl >= 0 ? p.deadline.date : null, action: dl != null && dl >= 0 ? "Apply" : p.status === "rolling" ? "Apply anytime" : "See details", score, ref: p });
   }
   for (const e of events) {
@@ -60,9 +60,9 @@ function collect({ programs, events, people, resources, needs, picks, today, hub
   return pool.sort((a, b) => (VRANK[a.verdict] - VRANK[b.verdict]) || (b.score - a.score));
 }
 
-export function buildMoves({ programs = [], events = [], people = [], resources = [], why = {}, profile = {}, picks = {}, today, hubSlug = "", limit = 7 }) {
+export function buildMoves({ programs = [], events = [], people = [], resources = [], why = {}, profile = {}, picks = {}, today, hubSlug = "", hubName = "Hub", limit = 7 }) {
   const needs = (profile.needs || []).filter((n) => NEED_TAGS[n] || NEED_LABEL[n]);
-  const all = collect({ programs, events, people, resources, why, needs, picks, today, hubSlug });
+  const all = collect({ programs, events, people, resources, why, needs, picks, today, hubSlug, hubName });
   const out = ({ ref, ...m }, i) => ({ ...m, ...(m.kind === "program" || m.kind === "grant" ? { program: ref } : {}), rank: i + 1, score: Math.round(m.score) });
   const group = (pool) => { const g = {}; for (const m of pool) (g[m.kind] = g[m.kind] || []).push(m); return g; };
   const full = group(all);

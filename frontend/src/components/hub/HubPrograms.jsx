@@ -37,7 +37,7 @@ export default function HubPrograms({ itc, tracked, onTrack, stage, guide, loadM
   if (!d) return <Spinner />;
   return (
     <div className="mx-auto w-full max-w-5xl" data-testid="hub-programs">
-      <PageHead eyebrow="Programs & grants" title={`Programs & grants at ${eco.hub}`} sub="Every program and grant Humber runs, checked against your startup. Each one says why it is, or isn't, a match right now, and what it would take."
+      <PageHead eyebrow="Programs & grants" title={`Programs & grants at ${eco.hub}`} sub={`Every program and grant ${eco.hub} runs, checked against your startup. Each one says why it is, or isn't, a match right now, and what it would take.`}
         right={<div className="inline-flex rounded-full border border-line p-1" role="group" aria-label="View">
           {[["list", "Browse"], ["ask", "Ask the guide"]].map(([k, label]) => <button key={k} type="button" onClick={() => setView(k)} aria-pressed={view === k} data-testid={`prog-view-${k}`} className={cx("rounded-full px-4 py-1.5 text-sm font-medium", view === k ? "" : "text-muted hover:text-ink")} style={view === k ? { background: "var(--accent)", color: "var(--on-accent)" } : undefined}>{label}</button>)}
         </div>} />

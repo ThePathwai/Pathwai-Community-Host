@@ -92,7 +92,7 @@ export const SUGGESTIONS = [
   "How do I get intros to corporate pilots?",
 ];
 
-export function ask(text, { lists = {}, startup = {}, plan = {}, state = {} } = {}) {
+export function ask(text, { lists = {}, startup = {}, plan = {}, state = {}, hub = "the hub" } = {}) {
   const raw = String(text || "").trim().slice(0, 300);
   const low = raw.toLowerCase();
   const seen = new Set(state.seen || []);
@@ -127,7 +127,7 @@ export function ask(text, { lists = {}, startup = {}, plan = {}, state = {} } = 
   const topic = joinList((needs.length ? needs.slice(0, 2).map((n) => NEED_LABEL[n]) : toks.slice(0, 3)));
   const nextState = { last: query, seen: [...seen, ...top.map((r) => `${r.it.kind}:${r.it.id}`)] };
   if (!top.length) {
-    return { reply: asksMore ? (strict ? `I don't have ${hint === "person" ? "another person" : hint === "event" ? "an event" : hint === "resource" ? "a resource" : "a program"} for that one. Try asking about it a different way.` : "That is everything I have for that one. Try describing it a different way.") : "I couldn't find anything at Humber that clearly helps with that. Try saying what you want to happen, like \"get my first customers\" or \"read my term sheet\", or ask for a person, a resource, an event or a program.",
+    return { reply: asksMore ? (strict ? `I don't have ${hint === "person" ? "another person" : hint === "event" ? "an event" : hint === "resource" ? "a resource" : "a program"} for that one. Try asking about it a different way.` : "That is everything I have for that one. Try describing it a different way.") : `I couldn't find anything at ${hub} that clearly helps with that. Try saying what you want to happen, like "get my first customers" or "read my term sheet", or ask for a person, a resource, an event or a program.`,
       results: [], chips: SUGGESTIONS.slice(0, 3), topic, link: null, state };
   }
   const results = top.map((r, i) => ({ item: r.it, helps: helpsLine(r.it, r), because: r.hit.length ? `Matches ${joinList(r.hit.slice(0, 3).map((h) => `"${h}"`))}` : `Fits ${topic}`, rank: i + 1 }));

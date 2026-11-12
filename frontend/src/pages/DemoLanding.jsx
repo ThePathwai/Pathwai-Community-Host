@@ -1,11 +1,11 @@
 import React, { useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
-import { ArrowRight, Check, Copy, Compass, Laptop, Play, ShieldCheck, Smartphone, Users } from "lucide-react";
+import { ArrowRight, Check, Copy, Compass, Laptop, ShieldCheck, Smartphone, Users } from "lucide-react";
 import { toast } from "sonner";
 import { Wordmark, PoweredBy, cx } from "../components/ui";
 import { demoCommunity, demoLink, startDemo } from "../lib/demo";
 
-// /demo/humber (and /demo/<any practice community>) -- the page to send someone so they can try a practice community.
+// /demo/<short> (set in lib/demoHubConfig.js) -- the page to send someone so they can try a practice community.
 // Two big choices (what members see, what the team runs), the same on a phone and a desktop. Sample data only.
 const PREVIEW = process.env.REACT_APP_PREVIEW === "true";
 
@@ -60,19 +60,7 @@ export default function DemoLanding() {
           <span className="inline-flex items-center gap-1.5"><Laptop className="h-4 w-4" /> Desktop</span>
         </div>
 
-        {c.walkthrough && (
-          <div className="mt-8 rounded-2xl border-2 p-5 sm:p-6" style={{ borderColor: accent }} data-testid="demo-walkthrough-card">
-            <p className="eyebrow">The whole journey, start to finish</p>
-            <h2 className="mt-1.5 text-2xl" style={{ textTransform: "none", letterSpacing: 0 }}>Watch a founder go from profile to decision plan</h2>
-            <ol className="mt-3 flex flex-wrap gap-x-2 gap-y-1.5 text-sm text-muted">
-              {["Your profile", "What the hub suggests", "Programs & grants", "Events", "People & resources", "Your decision", "Your plan", "Decision plan"].map((t, i) => (
-                <li key={t} className="inline-flex items-center gap-1.5"><span className="flex h-5 w-5 items-center justify-center rounded-full text-[11px] font-bold" style={{ background: accent, color: "#fff" }}>{i + 1}</span>{t}{i < 4 && <ArrowRight className="h-3.5 w-3.5 opacity-50" aria-hidden />}</li>
-              ))}
-            </ol>
-            <button type="button" onClick={() => startDemo("member", c.slug, { fresh: true })} className="mt-5 inline-flex w-full items-center justify-center gap-2 rounded-lg px-4 py-3 text-base font-semibold sm:w-auto" style={{ background: accent, color: "#fff" }} data-testid="demo-walkthrough"><Play className="h-4 w-4" aria-hidden />Play the walkthrough</button>
-          </div>
-        )}
-        <div className={c.noAdmin ? "mt-5" : "mt-5 grid gap-4 sm:grid-cols-2"}>
+        <div className={c.noAdmin ? "mt-8" : "mt-5 grid gap-4 sm:grid-cols-2"}>
           <Side role="member" Icon={Users} title={c.memberTitle || "As a member"} chips={c.member || ["Directory", "Events", "Perks", "Intros"]} slug={c.slug} accent={accent} />
           {!c.noAdmin && <Side role="admin" Icon={ShieldCheck} title={c.adminTitle || "As the admin"} chips={c.admin || ["Members", "Events", "Reports"]} slug={c.slug} accent={accent} />}
         </div>
