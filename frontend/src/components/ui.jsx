@@ -283,7 +283,7 @@ export const PageHeader = ({ title, subtitle, actions, k }) => (
       {k ? <Inline as="h1" field={`page_text.${k}_title`} fallback={title} className="text-2xl font-semibold sm:text-3xl" /> : <h1 className="text-2xl font-semibold sm:text-3xl">{title}</h1>}
       {k ? <Inline as="p" field={`page_text.${k}_subtitle`} fallback={subtitle} className="mt-1 text-sm text-muted" multiline /> : subtitle && <p className="mt-1 text-sm text-muted">{subtitle}</p>}
     </div>
-    <div className="flex gap-2">{actions}</div>
+    <div className="flex flex-wrap gap-2">{actions}</div>
   </div>
 );
 
@@ -374,13 +374,13 @@ export const PoweredBy = ({ className = "" }) => (
   <p className={"eyebrow flex flex-wrap items-center justify-center gap-x-2 gap-y-1 " + className}>
     <span className="inline-flex items-center gap-2">Powered by <img src={markWhite} alt="" className="h-3 w-auto" style={{ filter: "var(--mark-filter, none)" }} /><span className="font-black text-ink">Pathwai</span></span>
     <span aria-hidden>·</span>
-    <Link to="/about" className="underline-offset-2 hover:underline" data-testid="footer-about">About</Link>
+    <Link to="/about" className="tap underline-offset-2 hover:underline" data-testid="footer-about">About</Link>
     <span aria-hidden>·</span>
-    <Link to="/install" className="underline-offset-2 hover:underline" data-testid="footer-install">Get the app</Link>
+    <Link to="/install" className="tap underline-offset-2 hover:underline" data-testid="footer-install">Get the app</Link>
     <span aria-hidden>·</span>
-    <Link to="/terms" className="underline-offset-2 hover:underline" data-testid="footer-terms">Terms</Link>
+    <Link to="/terms" className="tap underline-offset-2 hover:underline" data-testid="footer-terms">Terms</Link>
     <span aria-hidden>·</span>
-    <Link to="/privacy" className="underline-offset-2 hover:underline" data-testid="footer-privacy">Privacy</Link>
+    <Link to="/privacy" className="tap underline-offset-2 hover:underline" data-testid="footer-privacy">Privacy</Link>
     <span aria-hidden>·</span>
     <span data-testid="build-id" title="Which version of Pathwai this page is running">Build {BUILD || "dev"}</span>
   </p>

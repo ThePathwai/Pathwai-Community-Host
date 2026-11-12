@@ -41,7 +41,7 @@ export default function ForgotPassword() {
             <Button type="submit" loading={busy} className="w-full" data-testid="forgot-password-submit">Send reset link</Button>
           </form>
         )}
-        <p className="mt-4 text-center text-sm text-muted"><Link className="underline" to="/login">Back to sign in</Link></p>
+        <p className="mt-4 text-center text-sm text-muted"><Link className="tap underline" to="/login">Back to sign in</Link></p>
       </Card>
       <PoweredBy className="mt-10 text-center" />
     </div>

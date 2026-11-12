@@ -33,8 +33,8 @@ export default function Legal({ doc }) {
         ))}
       </div>
       <div className="mt-10 flex flex-wrap items-center justify-between gap-3 border-t border-line pt-5 text-sm">
-        <Link className="underline" to="/signup">Back to sign up</Link>
-        <Link className="underline" to={doc === "privacy" ? "/terms" : "/privacy"}>{doc === "privacy" ? "Terms of Service" : "Privacy Policy"}</Link>
+        <Link className="tap underline" to="/signup">Back to sign up</Link>
+        <Link className="tap underline" to={doc === "privacy" ? "/terms" : "/privacy"}>{doc === "privacy" ? "Terms of Service" : "Privacy Policy"}</Link>
       </div>
       <PoweredBy className="mt-8 text-center" />
     </div>

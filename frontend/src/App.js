@@ -22,7 +22,7 @@ import HubResources from "./components/hub/HubResources";
 import EventDetail from "./pages/EventDetail";
 import SettingsPage from "./pages/Settings";
 import Legal from "./pages/Legal";
-import About from "./pages/About";
+import Site from "./pages/Site";
 import Install from "./pages/Install";
 import { HUB } from "./lib/demoHubConfig";
 import Navigator from "./pages/Navigator";
@@ -82,6 +82,18 @@ function PersonRoute() {
   return user ? <Layout><PersonProfile embedded /></Layout> : <PersonProfile />;
 }
 
+// The main address: members get their Home; anyone signed out gets the Pathwai website (sign in is one click away).
+function HomeRoute() {
+  const { user, account, loading } = useAuth();
+  // If the server is slow to say who is signed in, show the website after a moment instead of a spinner that never ends.
+  const [slow, setSlow] = React.useState(false);
+  React.useEffect(() => { if (!loading) return undefined; const t = setTimeout(() => setSlow(true), 1500); return () => clearTimeout(t); }, [loading]);
+  if (loading) return slow ? <Site /> : <Spinner />;
+  if (!account) return <Site />;
+  if (!user) return <Navigate to="/navigator" replace />;
+  return <Layout><EcosystemHome /></Layout>;
+}
+
 const P = ({ children }) => <Protected><Layout>{children}</Layout></Protected>;
 
 export default function App() {
@@ -93,7 +105,8 @@ export default function App() {
         <Route path="/login" element={<Login />} />
         <Route path="/signup" element={<Signup />} />
         <Route path="/forgot-password" element={<ForgotPassword />} />
-        <Route path="/about" element={<About />} />
+        <Route path="/about" element={<Site />} />
+        <Route path="/contact" element={<Site />} />
         <Route path="/demo/:short" element={<DemoLanding />} />
         <Route path="/navigator" element={<NavigatorRoute />} />
         <Route path="/journey" element={<JourneyRoute />} />
@@ -108,7 +121,7 @@ export default function App() {
         <Route path="/reset-password" element={<ResetPassword />} />
         <Route path="/join/:code" element={<JoinCommunity />} />
         <Route path="/c/:slug" element={<CommunityLanding />} />
-        <Route path="/" element={<P><EcosystemHome /></P>} />
+        <Route path="/" element={<HomeRoute />} />
         <Route path="/assistant" element={<P><Ask /></P>} />
         <Route path="/plan" element={<P><Planner /></P>} />
         <Route path="/members" element={<P><HubPeople /></P>} />

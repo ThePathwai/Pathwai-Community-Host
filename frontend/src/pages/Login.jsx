@@ -77,13 +77,13 @@ export default function Login() {
           await refresh();
           if (data.status === "approved") { nav("/", { replace: true }); return; }
           toast.success(`Request sent — you'll see ${joinInfo?.name || "the community"} once an admin approves you.`);
-          nav("/hub", { replace: true });
+          nav("/", { replace: true });
           return;
         } catch { /* already a member, or the apply failed -- fall through to the usual landing */ }
       }
       // A demo link can name a community to open straight into (/login?demo=member&c=yvettabetta-pilates).
       if (isDemo() && params.get("c")) { try { await enter(params.get("c")); nav("/", { replace: true }); return; } catch { /* not a member there: fall through to the Hub */ } }
-      nav(params.get("next") === "navigator" ? "/navigator" : "/hub", { replace: true });
+      nav(params.get("next") === "navigator" ? "/navigator" : "/", { replace: true });
     } catch (ex) { setStatus(ex?.response?.status === 403 && /membership request/i.test(errMsg(ex)) ? (/not approved/i.test(errMsg(ex)) ? "rejected" : "pending") : ""); setErr(errMsg(ex)); if (ex?.response?.status !== 403) toast.error(errMsg(ex)); } finally { setBusy(false); }
   };
 
@@ -100,7 +100,7 @@ export default function Login() {
       return;
     }
     if (data.new_account) toast.success("You're in. Apply to a community to get started.");
-    nav(params.get("next") === "navigator" ? "/navigator" : "/hub", { replace: true });
+    nav(params.get("next") === "navigator" ? "/navigator" : "/", { replace: true });
   };
 
   const founderAcct = { demo_role: "founder", email: "founder@yourcommunity.app", label: "Founder, no community yet", description: "Fife Ashley-Dejo has not joined any community. One profile drives the programs, the communities suggested and the guide." };
@@ -158,7 +158,7 @@ export default function Login() {
               </div>
               <form className="space-y-3" onSubmit={(e) => { e.preventDefault(); go(email, password); }}>
                 <Field label="Email"><Input data-testid="login-email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} required /></Field>
-                <Field label={<span className="flex items-center justify-between">Password <Link className="text-xs font-normal normal-case text-muted underline" to="/forgot-password" data-testid="forgot-password-link">Forgot password?</Link></span>}>
+                <Field label={<span className="flex items-center justify-between">Password <Link className="tap text-xs font-normal normal-case text-muted underline" to="/forgot-password" data-testid="forgot-password-link">Forgot password?</Link></span>}>
                   <Input data-testid="login-password" type="password" value={password} onChange={(e) => setPassword(e.target.value)} required />
                 </Field>
                 {status ? (
@@ -166,7 +166,7 @@ export default function Login() {
                 ) : err && <p className="text-sm text-red-400" data-testid="login-error">{err}</p>}
                 <Button type="submit" loading={busy} className="w-full" data-testid="login-submit">Sign in</Button>
               </form>
-              <p className="mt-3 text-center text-sm text-muted">New to Pathwai? <Link className="underline" to="/signup">Create your account</Link></p>
+              <p className="mt-3 text-center text-sm text-muted">New to Pathwai? <Link className="tap underline" to="/signup">Create your account</Link></p>
             </Card>
           </div>
         )}

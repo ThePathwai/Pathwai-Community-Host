@@ -29,9 +29,9 @@ export function ContactCard({ u, self }) {
   ].filter((r) => r[2]);
   return (
     <Card data-testid="contact-card">
-      <div className="mb-3 flex items-center justify-between"><h3 className="label !mb-0">Contact</h3>{self && <Link to="/profile" className="text-xs text-muted hover:text-ink">{u.contact_visibility === "hidden" ? "Hidden from members · edit" : "Visible to members · edit"}</Link>}</div>
+      <div className="mb-3 flex items-center justify-between"><h3 className="label !mb-0">Contact</h3>{self && <Link to="/me" className="text-xs text-muted hover:text-ink">{u.contact_visibility === "hidden" ? "Hidden from members · edit" : "Visible to members · edit"}</Link>}</div>
       {rows.length === 0 ? <p className="text-sm text-muted">{u.contact_visibility === "hidden" ? "This member keeps contact details private." : "No contact details added yet."}</p> : (
-        <ul className="grid gap-2 sm:grid-cols-2 xl:grid-cols-3">
+        <ul className="grid grid-cols-[minmax(0,1fr)] gap-2 sm:grid-cols-2 xl:grid-cols-3">
           {rows.map(([Icon, label, text, href]) => (
             <li key={label}><a href={href} target={href.startsWith("http") ? "_blank" : undefined} rel="noreferrer" className="flex items-center gap-3 rounded-xl border border-line px-3 py-2.5 hover:bg-ink/5">
               <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg" style={{ background: "rgb(var(--c-ink) / 0.07)", color: "var(--accent)" }}><Icon className="h-4 w-4" /></span>
@@ -73,18 +73,10 @@ export default function MemberProfile() {
                 <h1 className="text-2xl sm:text-3xl lg:text-4xl">{u.name}</h1>
                 <p className="mt-1 text-sm text-muted">{[u.company, u.location].filter(Boolean).join(" · ")}</p>
               </div>
-              <div className="flex gap-2">
+              <div className="flex flex-wrap gap-2">
                 <EditMemberButton member={u} onChanged={load} />
                 {user.id !== u.id && <button className="btn-ghost" onClick={toggleSave} aria-label="Save" data-testid="member-save"><Bookmark className={`h-4 w-4 ${u.is_saved ? "fill-current" : ""}`} />{u.is_saved ? "Saved" : "Save"}</button>}
-                {/* Bridges this community-scoped card to the platform-wide People panel (Hub.jsx/
-                    HubPeople.jsx) -- same person, same email, but People is where follow, cross-
-                    community visibility and platform messaging actually live, and there was
-                    previously no way to get from one to the other. Uses u.contact.email (the same
-                    field ContactCard already shows) rather than a bare u.email, which the backend
-                    strips for anyone who hasn't turned on "show my email" -- so this link appears
-                    exactly when this member's email is already visible on the page. */}
-                {user.id !== u.id && u.contact?.email && <Link to={`/hub?person=${encodeURIComponent(u.contact.email)}`} className="btn-ghost" data-testid="view-on-people">View on People</Link>}
-                {user.id !== u.id ? <Button onClick={() => setOpen(true)} data-testid="connect-btn">Reach out</Button> : <Link to="/profile" className="btn-ghost" data-testid="edit-my-profile">Edit my card</Link>}
+                {user.id !== u.id ? <Button onClick={() => setOpen(true)} data-testid="connect-btn">Reach out</Button> : <Link to="/me" className="btn-ghost" data-testid="edit-my-profile">Edit my card</Link>}
               </div>
             </div>
             <dl className="grid grid-cols-3 gap-px overflow-hidden border border-line bg-line" style={{ borderRadius: "var(--r-card)" }}>

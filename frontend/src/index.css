@@ -97,6 +97,8 @@ a, button, [role="button"], select, .input {
 .bg-surface { background-color: rgb(var(--c-surface) / 0.58); }
 .absolute.bg-surface, .fixed.bg-surface, [role="dialog"].bg-surface, [role="menu"].bg-surface { background-color: var(--glass-fill-strong); -webkit-backdrop-filter: var(--glass-blur); backdrop-filter: var(--glass-blur); border-color: var(--glass-edge); box-shadow: var(--glass-hi), 0 24px 60px -16px rgb(0 0 0 / 0.45); }
 .fixed[class*="bg-black/"] { -webkit-backdrop-filter: blur(10px) saturate(140%); backdrop-filter: blur(10px) saturate(140%); }
+/* Small text links get a taller tap area (without moving anything on the page), so they are easy to hit on a phone. */
+.tap { display: inline-block; padding-block: 0.55rem; margin-block: -0.55rem; }
 /* Rounder corners on the app's own tab rows and pills, to match. */
 nav a[class*="rounded-lg"] { border-radius: 9999px; }
 
