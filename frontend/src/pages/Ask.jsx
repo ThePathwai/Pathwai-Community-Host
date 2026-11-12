@@ -151,7 +151,7 @@ export default function Ask() {
             ))}
             {typing && <div className="flex items-center gap-2 pl-10 text-muted" data-testid="ask-typing" aria-label="Thinking"><span className="flex gap-1">{[0, 1, 2].map((i) => <span key={i} className="h-2 w-2 animate-bounce rounded-full bg-ink/30" style={{ animationDelay: `${i * 120}ms` }} />)}</span></div>}
           </div>
-          <div className="sticky bottom-[4.5rem] z-10 space-y-3 rounded-b-3xl border-t border-line bg-surface p-3.5 sm:p-4 lg:static">
+          <div className="sticky bottom-[6rem] z-10 space-y-3 rounded-b-3xl border-t border-line bg-surface p-3.5 sm:p-4 lg:static">
             <div className={cx("flex flex-wrap gap-2", !msgs.length && "lg:hidden")} data-testid="ask-chips">
               {((lastBot && lastBot.chips && lastBot.chips.length ? lastBot.chips : chips)).map((c) => (
                 <button key={c} type="button" onClick={() => send(c)} className="rounded-full border border-line px-3.5 py-1.5 text-left text-sm text-ink/80 transition hover:bg-ink/5">{c}</button>

@@ -38,17 +38,17 @@ export function withMode(brand = {}) {
 export function brandVars(brand = {}) {
   const b = { ...DEFAULT, ...brand, colors: { ...DEFAULT.colors, ...(brand.colors || {}) } };
   const c = b.colors;
-  const radius = { sharp: ["2px", "2px"], soft: ["0.75rem", "0.5rem"], round: ["1.5rem", "1rem"] }[b.radius] || ["0.5rem", "0.5rem"];
+  const radius = { sharp: ["2px", "2px"], soft: ["1.375rem", "0.875rem"], round: ["1.75rem", "1.1rem"] }[b.radius] || ["0.5rem", "0.5rem"];
   const btn = { pill: "9999px", rounded: "0.5rem", square: "2px" }[b.button_shape] || "9999px";
-  const font = `"${b.font}", ${SERIF.has(b.font) ? "Georgia, serif" : "ui-sans-serif, system-ui, sans-serif"}`;
+  const font = b.font === "Inter" ? `-apple-system, BlinkMacSystemFont, "SF Pro Text", "Inter", ui-sans-serif, system-ui, sans-serif` : `"${b.font}", ${SERIF.has(b.font) ? "Georgia, serif" : "ui-sans-serif, system-ui, sans-serif"}`;
   return {
     "--c-bg": trip(c.background), "--c-surface": trip(c.surface), "--c-ink": trip(c.text), "--c-muted": trip(c.muted), "--c-line": trip(c.border),
     "--accent": c.accent, "--accent-grad": `linear-gradient(135deg, ${c.accent}, color-mix(in srgb, ${c.accent} 84%, white))`, "--on-accent": c.on_accent || (lum(c.accent) > 0.6 ? "#0D0D0D" : "#FFFFFF"),
     "--font-sans": font, "--r-card": radius[0], "--r-input": radius[1], "--r-btn": btn,
-    "--font-heading": b.heading_font ? `"${b.heading_font}", ${font}` : font,
+    "--font-heading": b.heading_font === "Inter" ? `-apple-system, BlinkMacSystemFont, "SF Pro Display", "Inter", ui-sans-serif, system-ui, sans-serif` : b.heading_font ? `"${b.heading_font}", ${font}` : font,
     "--heading-transform": b.heading_style === "normal" ? "none" : "uppercase",
     "--heading-weight": SINGLE_WEIGHT.has(b.heading_font) ? "400" : b.heading_style === "normal" ? "700" : "900",
-    "--heading-ls": b.heading_font ? "0" : b.heading_style === "normal" ? "-0.01em" : "-0.025em",
+    "--heading-ls": b.heading_font ? "0" : b.heading_style === "normal" ? "-0.022em" : "-0.025em",
     colorScheme: b.mode,
   };
 }

@@ -11,10 +11,10 @@ export const HUB_SLUG = HUB.slug;
 const ME = "u-hm-me";          // the member-demo persona (a founder)
 const DANA = "u-hm-dana";      // the admin-demo persona (programs lead)
 
-const COLORS = { accent: HUB.accent, on_accent: "#FFFFFF", background: "#F4F6FA", surface: "#FFFFFF", text: "#0B1F3A", muted: "#5D6B82", border: "#DCE3EE" };
+const COLORS = { accent: HUB.accent, on_accent: "#FFFFFF", background: "#EEF2F9", surface: "#FFFFFF", text: "#0B1B33", muted: "#5B6678", border: "#DAE1EC" };
 const BRAND = {
-  preset: "custom", mode: "light", colors: COLORS, font: "Manrope", heading_font: "Plus Jakarta Sans", heading_style: "normal",
-  radius: "soft", button_shape: "rounded", logo_url: null, logo_mark_url: null, logo_adapts: true, show_name_with_logo: true,
+  preset: "custom", mode: "light", colors: COLORS, font: "Inter", heading_font: "Inter", heading_style: "normal",
+  radius: "soft", button_shape: "pill", logo_url: null, logo_mark_url: null, logo_adapts: true, show_name_with_logo: true,
   login_headline: "Where founders meet capital.", login_subhead: "Pitch to investors, get advice from people who've built it, and find your next customer.",
   welcome_message: `Here is what to do next at ${HUB.shortName}: the programs, grants, events and people that fit your startup.`, footer_text: `${HUB.name} · demo community`, support_email: "",
 };

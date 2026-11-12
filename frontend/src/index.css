@@ -6,7 +6,14 @@
   --c-bg: 13 13 13; --c-surface: 23 23 23; --c-ink: 235 235 235; --c-muted: 161 161 161; --c-line: 46 46 46;
   --accent: #EBEBEB; --on-accent: #0D0D0D;
   --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
-  --r-card: 0.5rem; --r-input: 0.5rem; --r-btn: 9999px;
+  --r-card: 1.375rem; --r-input: 0.875rem; --r-btn: 9999px;
+  /* Glass (Apple-style): a frosted, translucent fill over the soft colour wash behind the page, a bright hairline edge and a
+     one-pixel highlight along the top. Dark mode is the default; [data-mode="light"] below swaps the values. */
+  --glass-fill: rgb(var(--c-surface) / 0.55); --glass-fill-strong: rgb(var(--c-surface) / 0.82);
+  --glass-edge: rgb(255 255 255 / 0.10); --glass-hi: inset 0 1px 0 rgb(255 255 255 / 0.12), inset 0 0 0 0.5px rgb(255 255 255 / 0.04);
+  --glass-shadow: 0 1px 1px rgb(0 0 0 / 0.12), 0 14px 40px -14px rgb(0 0 0 / 0.55);
+  --glass-blur: blur(26px) saturate(190%);
+  --wash-a: 26%; --wash-b: 0.26; --wash-c: 0.18;
   --heading-transform: uppercase; --heading-weight: 900; --heading-ls: -0.025em;
   /* Layered elevation (ambient + contact shadow) instead of a flat drop-shadow — the same trick
      Shopify/Strava-style dark UI uses so cards read as physically raised panels, not just outlined
@@ -17,11 +24,24 @@
   --ease-out: cubic-bezier(.2, .8, .2, 1);
   color-scheme: dark;
 }
-html, body { background: rgb(var(--c-bg)); color: rgb(var(--c-ink)); font-family: var(--font-sans); -webkit-font-smoothing: antialiased; }
+html { background: rgb(var(--c-bg)); }
+body { background: transparent; color: rgb(var(--c-ink)); font-family: var(--font-sans); -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; text-rendering: optimizeLegibility; font-feature-settings: "cv11", "ss03"; }
+/* The soft colour wash the glass sits on: the brand colour glowing in from one corner, a violet and a teal haze from the others.
+   Fixed, so panels scrolling over it pick up different tints as they move, the way Apple's translucent bars do. */
+body::before { content: ""; position: fixed; inset: 0; z-index: -1; pointer-events: none;
+  background:
+    radial-gradient(70rem 46rem at 6% -8%, color-mix(in srgb, var(--accent) var(--wash-a), transparent), transparent 62%),
+    radial-gradient(60rem 42rem at 104% 6%, rgb(167 139 250 / var(--wash-b)), transparent 60%),
+    radial-gradient(64rem 46rem at 72% 112%, rgb(45 212 191 / var(--wash-c)), transparent 62%); }
 * { box-sizing: border-box; border-color: rgb(var(--c-line)); }
-.glass { background: rgb(var(--c-bg) / 0.72); -webkit-backdrop-filter: saturate(180%) blur(18px); backdrop-filter: saturate(180%) blur(18px); }
-h1, h2, .font-display { font-family: var(--font-heading, var(--font-sans)); font-weight: var(--heading-weight); text-transform: var(--heading-transform); letter-spacing: var(--heading-ls); line-height: 1.08; }
-h3 { font-weight: 700; letter-spacing: -0.01em; }
+.glass { background: var(--glass-fill-strong); -webkit-backdrop-filter: var(--glass-blur); backdrop-filter: var(--glass-blur); }
+/* Floating bars (top navigation, phone tab bar): glass with a rounded edge, lifted off the page. */
+.glass-bar { background: var(--glass-fill-strong); -webkit-backdrop-filter: var(--glass-blur); backdrop-filter: var(--glass-blur); border: 1px solid var(--glass-edge); box-shadow: var(--glass-hi), var(--glass-shadow); }
+/* The selected tab: a brighter glass pill, like the thumb of an iOS segmented control. */
+.glass-active { background: rgb(255 255 255 / 0.16); box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.22), 0 1px 3px rgb(0 0 0 / 0.25); }
+[data-mode="light"] .glass-active { background: rgb(255 255 255 / 0.95); box-shadow: 0 1px 2px rgb(16 24 40 / 0.10), 0 4px 12px -4px rgb(16 24 40 / 0.14); }
+h1, h2, .font-display { font-family: var(--font-heading, var(--font-sans)); font-weight: var(--heading-weight); text-transform: var(--heading-transform); letter-spacing: var(--heading-ls); line-height: 1.1; }
+h3 { font-weight: 650; letter-spacing: -0.015em; }
 /* No pinch or double-tap zoom on phones and tablets: the app is laid out for the screen. Fields stay at 16px
    on touch screens because iPhone zooms the page in whenever a smaller field is tapped. */
 html { touch-action: manipulation; -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }
@@ -31,7 +51,11 @@ html { touch-action: manipulation; -webkit-text-size-adjust: 100%; text-size-adj
 ::selection { background: var(--accent); color: var(--on-accent); }
 :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 select option { background: rgb(var(--c-surface)); color: rgb(var(--c-ink)); }
-[data-mode="light"] { --mark-filter: invert(1); }
+[data-mode="light"] { --mark-filter: invert(1);
+  --glass-fill: rgb(var(--c-surface) / 0.62); --glass-fill-strong: rgb(var(--c-surface) / 0.78);
+  --glass-edge: rgb(255 255 255 / 0.85); --glass-hi: inset 0 1px 0 rgb(255 255 255 / 0.95), 0 0 0 0.5px rgb(16 24 40 / 0.07);
+  --glass-shadow: 0 1px 2px rgb(16 24 40 / 0.04), 0 18px 44px -18px rgb(30 41 90 / 0.22);
+  --wash-a: 17%; --wash-b: 0.16; --wash-c: 0.13; }
 /* status colours are tuned for dark surfaces; darken them on light themes */
 [data-mode="light"] .text-amber-300 { color: #b45309; }
 [data-mode="light"] .text-sky-300 { color: #0369a1; }
@@ -47,24 +71,34 @@ a, button, [role="button"], select, .input {
    glance the way Strava's activity numbers do, instead of blending into body copy. */
 .stat { font-family: var(--font-heading, var(--font-sans)); font-weight: 800; font-variant-numeric: tabular-nums; letter-spacing: -0.02em; line-height: 1; }
 @layer components {
-  .btn { @apply inline-flex items-center justify-center gap-2 px-5 py-2.5 text-sm font-semibold disabled:opacity-50 disabled:cursor-not-allowed; border-radius: var(--r-btn); }
-  .btn-primary { @apply btn; background: var(--accent); background-image: var(--accent-grad, none); color: var(--on-accent); box-shadow: 0 6px 20px -8px var(--accent); }
-  .btn-primary:hover { filter: brightness(1.07); transform: translateY(-1px); box-shadow: 0 10px 26px -8px var(--accent); }
+  .btn { @apply inline-flex items-center justify-center gap-2 px-5 py-2.5 text-sm font-semibold disabled:opacity-50 disabled:cursor-not-allowed; border-radius: var(--r-btn); letter-spacing: -0.005em; }
+  /* Primary: the brand colour with a soft top sheen and a bright inner edge, so it reads as a glossy glass key. */
+  .btn-primary { @apply btn; background-color: var(--accent); background-image: linear-gradient(180deg, rgb(255 255 255 / 0.26), rgb(255 255 255 / 0) 58%), var(--accent-grad, none); color: var(--on-accent);
+    box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.38), inset 0 -1px 0 rgb(0 0 0 / 0.10), 0 8px 22px -8px var(--accent); }
+  .btn-primary:hover { filter: brightness(1.06) saturate(1.05); transform: translateY(-1px); box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.4), inset 0 -1px 0 rgb(0 0 0 / 0.10), 0 12px 28px -8px var(--accent); }
   .btn-primary:active { transform: translateY(0) scale(.97); filter: brightness(.97); }
-  .btn-ghost { @apply btn border border-line bg-transparent text-ink hover:bg-ink/5; }
-  .btn-ghost:hover { border-color: rgb(var(--c-ink) / 0.3); }
+  .btn-ghost { @apply btn text-ink; background: var(--glass-fill); -webkit-backdrop-filter: var(--glass-blur); backdrop-filter: var(--glass-blur); border: 1px solid var(--glass-edge); box-shadow: var(--glass-hi); }
+  .btn-ghost:hover { background: var(--glass-fill-strong); box-shadow: var(--glass-hi), 0 6px 18px -8px rgb(0 0 0 / 0.25); }
   .btn-ghost:active { transform: scale(.97); }
-  .card { @apply border border-line/70 bg-surface p-5; border-radius: var(--r-card); box-shadow: var(--shadow-sm); transition: border-color .2s var(--ease-out), transform .2s var(--ease-out), box-shadow .2s var(--ease-out); }
-  a.card:hover, .card-hover:hover { border-color: rgb(var(--c-ink) / 0.22); transform: translateY(-3px); box-shadow: var(--shadow-lg); }
+  .card { @apply p-5; background: var(--glass-fill); -webkit-backdrop-filter: var(--glass-blur); backdrop-filter: var(--glass-blur); border: 1px solid var(--glass-edge); border-radius: var(--r-card); box-shadow: var(--glass-hi), var(--glass-shadow); transition: transform .25s var(--ease-out), box-shadow .25s var(--ease-out), background-color .25s var(--ease-out); }
+  a.card:hover, .card-hover:hover { transform: translateY(-3px); background: var(--glass-fill-strong); box-shadow: var(--glass-hi), 0 2px 4px rgb(0 0 0 / 0.08), 0 26px 56px -20px rgb(0 0 0 / 0.38); }
   a.card:active, .card-hover:active { transform: translateY(-1px); }
-  .input { @apply w-full border border-line bg-surface px-3.5 py-2.5 text-sm text-ink placeholder:text-muted; border-radius: var(--r-input); }
+  .input { @apply w-full px-3.5 py-2.5 text-sm text-ink placeholder:text-muted; background: rgb(var(--c-ink) / 0.045); border: 1px solid rgb(var(--c-ink) / 0.10); border-radius: var(--r-input); box-shadow: inset 0 1px 2px rgb(0 0 0 / 0.06); }
   .input:hover { border-color: rgb(var(--c-ink) / 0.22); }
-  .input:focus { outline: 2px solid var(--accent); outline-offset: 0; border-color: transparent; }
-  .label { @apply mb-1 block text-[10px] font-medium uppercase text-muted; letter-spacing: 0.18em; }
-  .chip { @apply inline-flex items-center border border-line bg-ink/[.06] px-2.5 py-0.5 text-xs font-medium text-ink/80; border-radius: var(--r-btn); }
-  .chip-accent { background: var(--accent); background-image: var(--accent-grad, none); border-color: transparent; color: var(--on-accent); box-shadow: 0 4px 14px -6px var(--accent); }
-  .eyebrow { @apply text-[10px] font-medium uppercase text-muted; letter-spacing: 0.24em; }
+  .input:focus { outline: none; border-color: var(--accent); background: rgb(var(--c-surface) / 0.7); box-shadow: 0 0 0 4px color-mix(in srgb, var(--accent) 24%, transparent); }
+  .label { @apply mb-1 block text-[11px] font-semibold uppercase text-muted; letter-spacing: 0.1em; }
+  .chip { @apply inline-flex items-center px-2.5 py-0.5 text-xs font-medium text-ink/80; background: rgb(var(--c-ink) / 0.06); border: 1px solid var(--glass-edge); box-shadow: var(--glass-hi); border-radius: var(--r-btn); -webkit-backdrop-filter: blur(12px); backdrop-filter: blur(12px); }
+  .chip-accent { background-color: var(--accent); background-image: linear-gradient(180deg, rgb(255 255 255 / 0.24), rgb(255 255 255 / 0) 60%), var(--accent-grad, none); border-color: transparent; color: var(--on-accent); box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.35), 0 4px 14px -6px var(--accent); }
+  .eyebrow { @apply text-[11px] font-semibold uppercase text-muted; letter-spacing: 0.14em; }
 }
+
+/* Other surfaces in the app that use the plain surface colour take the same frosted fill, so a page never mixes opaque and glass panels.
+   Menus, popups and sheets (fixed or absolute) are more opaque and blur what is behind them. Dimmed backdrops blur the page too. */
+.bg-surface { background-color: rgb(var(--c-surface) / 0.58); }
+.absolute.bg-surface, .fixed.bg-surface, [role="dialog"].bg-surface, [role="menu"].bg-surface { background-color: var(--glass-fill-strong); -webkit-backdrop-filter: var(--glass-blur); backdrop-filter: var(--glass-blur); border-color: var(--glass-edge); box-shadow: var(--glass-hi), 0 24px 60px -16px rgb(0 0 0 / 0.45); }
+.fixed[class*="bg-black/"] { -webkit-backdrop-filter: blur(10px) saturate(140%); backdrop-filter: blur(10px) saturate(140%); }
+/* Rounder corners on the app's own tab rows and pills, to match. */
+nav a[class*="rounded-lg"] { border-radius: 9999px; }
 
 /* ---- First-visit intro (components/IntroTour.jsx) ---- */
 @keyframes pw-float { 0%, 100% { transform: translate(-50%, -50%) translateY(0) rotate(var(--r, 0deg)); } 50% { transform: translate(-50%, -50%) translateY(-5px) rotate(var(--r, 0deg)); } }

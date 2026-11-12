@@ -53,9 +53,9 @@ function Stepper({ states, step, onGo }) {
 function NextBar({ text, children, testid = "next-bar" }) {
   return (
     <>
-      <div className="h-28 sm:h-20" aria-hidden />
-      <div className="fixed inset-x-0 z-30 px-4 bottom-[calc(60px+env(safe-area-inset-bottom,0px))] lg:px-10 xl:bottom-3" data-testid={testid}>
-        <div className="mx-auto flex max-w-6xl flex-col gap-2 rounded-2xl border border-line bg-surface/95 px-3.5 py-3 shadow-lg backdrop-blur sm:flex-row sm:items-center sm:justify-between sm:gap-4 sm:px-5">
+      <div className="h-36 sm:h-24" aria-hidden />
+      <div className="fixed inset-x-0 z-30 px-4 bottom-[calc(88px+env(safe-area-inset-bottom,0px))] lg:px-10 xl:bottom-3" data-testid={testid}>
+        <div className="mx-auto flex max-w-6xl flex-col gap-2 glass-bar rounded-[1.5rem] px-3.5 py-3 sm:flex-row sm:items-center sm:justify-between sm:gap-4 sm:px-5">
           <p className="min-w-0 text-[13px] font-medium leading-snug max-sm:line-clamp-2 sm:flex-1 sm:text-sm" data-testid="next-text">{text}</p>
           <div className="flex w-full flex-wrap items-center gap-2 sm:w-auto [&>button]:flex-1 sm:[&>button]:flex-none">{children}</div>
         </div>

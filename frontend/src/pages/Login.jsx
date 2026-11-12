@@ -18,10 +18,10 @@ const SAMPLE_TILES = (() => { const m = sampleMetrics({ members: 64, seed: "path
 
 // A row of tabs: only the chosen one is shown, so the page never needs scrolling to see everything it offers.
 const Seg = ({ value, onChange, items, testPrefix, className = "" }) => (
-  <div role="tablist" className={cx("grid gap-1 rounded-xl border border-line bg-surface p-1", className)} style={{ gridTemplateColumns: `repeat(${items.length}, minmax(0, 1fr))` }}>
+  <div role="tablist" className={cx("grid gap-1 rounded-full border border-line bg-ink/[.05] p-1", className)} style={{ gridTemplateColumns: `repeat(${items.length}, minmax(0, 1fr))` }}>
     {items.map(([k, label]) => (
       <button key={k} type="button" role="tab" aria-selected={value === k} data-testid={`${testPrefix}-${k}`} onClick={() => onChange(k)}
-        className={cx("truncate rounded-lg px-2 py-2 text-sm font-medium transition-colors", value === k ? "bg-ink text-paper" : "text-muted hover:text-ink")}>{label}</button>
+        className={cx("truncate rounded-full px-2 py-2 text-sm font-medium transition-colors", value === k ? "glass-active text-ink" : "text-muted hover:text-ink")}>{label}</button>
     ))}
   </div>
 );

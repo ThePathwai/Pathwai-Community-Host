@@ -61,7 +61,7 @@ export default function AccountShell({ active, children }) {
     <ShellCtx.Provider value={ctx}>
       <div className="min-h-screen lg:grid lg:grid-cols-[256px_minmax(0,1fr)]" data-testid="account-shell">
         {/* computer: sidebar */}
-        <aside className="sticky top-0 hidden h-screen flex-col border-r border-line px-3 py-5 lg:flex" aria-label="Main">
+        <aside className="glass-bar sticky top-3 m-3 hidden h-[calc(100vh-1.5rem)] flex-col rounded-[1.75rem] px-3 py-5 lg:flex" aria-label="Main">
           <Link to="/navigator" className="mb-5 px-3 text-2xl" aria-label="Pathwai home"><Wordmark name="Pathwai" brand={{}} /></Link>
           <button type="button" onClick={() => ctx.openGuide()} data-testid="shell-ask" className="mb-2 flex w-full items-center gap-2.5 rounded-lg border border-line bg-ink/[.04] px-3 py-2 text-left text-sm text-muted transition hover:border-ink/30 hover:text-ink">
             <Search className="h-4 w-4" aria-hidden /><span className="flex-1">Ask the guide</span><kbd className="rounded border border-line px-1.5 text-[10px] font-medium">AI</kbd>
@@ -78,7 +78,7 @@ export default function AccountShell({ active, children }) {
 
         <div className="min-w-0">
           {/* phone: top bar */}
-          <header className="sticky top-0 z-30 flex items-center justify-between border-b border-line px-4 py-3 pt-[calc(0.75rem+env(safe-area-inset-top))] glass lg:hidden">
+          <header className="glass-bar sticky top-2 z-30 mx-2 mt-2 flex items-center justify-between rounded-[1.75rem] px-4 py-2.5 lg:hidden">
             <Link to="/navigator" className="text-xl" aria-label="Pathwai home"><Wordmark name="Pathwai" brand={{}} /></Link>
             <div className="relative flex items-center gap-3">
               <button type="button" onClick={() => ctx.openGuide()} aria-label="Ask the guide" data-testid="shell-ask-fab" className="flex h-9 w-9 items-center justify-center rounded-full border border-line text-ink/80"><MessageCircle className="h-[18px] w-[18px]" /></button>
@@ -91,11 +91,11 @@ export default function AccountShell({ active, children }) {
         </div>
 
         {/* phone: guide button and tab bar */}
-        <nav className="fixed inset-x-0 bottom-0 z-30 grid grid-cols-5 border-t border-line pb-[env(safe-area-inset-bottom)] glass lg:hidden" aria-label="Main" data-testid="shell-tabs">
+        <nav className="glass-bar fixed inset-x-3 z-30 grid grid-cols-5 overflow-hidden rounded-[1.75rem] lg:hidden" style={{ bottom: "calc(0.75rem + env(safe-area-inset-bottom, 0px))" }} aria-label="Main" data-testid="shell-tabs">
           {[["programs", "/navigator", Compass, "Programs"], ["journey", "/journey", Route, "Journey"], ["events", "/founder-events", CalendarDays, "Events"], ["people", "/people", UserRound, "People"], ["profile", "/me", User, "Profile"]].map(([k, to, Icon, label]) => {
             const on = k === active;
             return (
-              <Link key={label} to={to} aria-current={on ? "page" : undefined} className={cx("flex flex-col items-center gap-1 py-2.5 text-[10px] font-medium", on ? "text-ink" : "text-muted")}>
+              <Link key={label} to={to} aria-current={on ? "page" : undefined} className={cx("m-1 flex flex-col items-center gap-1 rounded-[1.25rem] py-2 text-[10px] font-medium", on ? "glass-active text-ink" : "text-muted")}>
                 <Icon className="h-5 w-5" strokeWidth={on ? 2.4 : 1.8} aria-hidden />{label}
               </Link>
             );

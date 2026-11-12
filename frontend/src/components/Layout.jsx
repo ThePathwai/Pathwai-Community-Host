@@ -73,12 +73,12 @@ export default function Layout({ children }) {
 
   return (
     <div className="min-h-screen">
-      <header className="sticky top-0 z-[45] border-b border-line/60 bg-paper/70 backdrop-blur-xl backdrop-saturate-150">
-        <div className="mx-auto flex max-w-[1600px] items-center gap-2 px-4 py-2 sm:gap-4 lg:px-10">
+      <header className="glass-bar sticky top-2 z-[45] mx-2 mt-2 rounded-[1.75rem] sm:top-3 sm:mx-4 sm:mt-3 lg:mx-8">
+        <div className="mx-auto flex max-w-[1600px] items-center gap-2 px-3 py-2 sm:gap-4 sm:px-5 lg:px-6">
           <Link to="/" className={"min-w-0 shrink overflow-hidden text-lg sm:text-2xl 2xl:max-w-[26rem] 2xl:text-2xl " + ((config?.community_name || "").length > 20 ? "xl:max-w-[17rem] xl:text-[1.05rem]" : "xl:max-w-[15rem] xl:text-xl")} data-testid="brand"><Wordmark name={config?.community_name || "Pathwai"} /></Link>
           <nav className="ml-2 hidden min-w-0 flex-1 gap-1 overflow-x-auto [scrollbar-width:none] xl:flex">
             {NAV.map(([to, label]) => (
-              <NavLink key={to} to={to} end={to === "/"} className={({ isActive }) => cx("whitespace-nowrap rounded-lg px-2.5 py-1.5 text-sm 2xl:px-3", isActive ? "bg-ink text-paper font-semibold" : "text-muted hover:bg-ink/5 hover:text-ink")}>{label}</NavLink>
+              <NavLink key={to} to={to} end={to === "/"} className={({ isActive }) => cx("whitespace-nowrap rounded-full px-3.5 py-1.5 text-sm 2xl:px-4", isActive ? "glass-active font-semibold text-ink" : "text-muted hover:bg-ink/5 hover:text-ink")}>{label}</NavLink>
             ))}
             {custom.map((l) => <a key={l.url} href={l.url} target="_blank" rel="noreferrer" className="whitespace-nowrap rounded-lg px-3 py-1.5 text-sm text-muted hover:bg-ink/5">{l.label} ↗</a>)}
           </nav>
@@ -122,17 +122,17 @@ export default function Layout({ children }) {
           {custom.map((l) => <a key={l.url} href={l.url} target="_blank" rel="noreferrer" className="whitespace-nowrap rounded-full px-3 py-1 text-sm text-muted">{l.label} ↗</a>)}
         </nav>
       </header>
-      <main className="mx-auto max-w-[1600px] px-4 py-6 lg:px-10 lg:py-10">{backTo && <BackButton fallback={backTo[0]} label={`Back to ${backTo[1]}`} />}{children}</main>
-      <nav className="fixed inset-x-0 bottom-0 z-40 grid border-t border-line bg-paper/90 backdrop-blur-xl backdrop-saturate-150 xl:hidden"
-        style={{ gridTemplateColumns: `repeat(${Math.min(5, 1 + tabItems.length + 0)}, minmax(0, 1fr))`, paddingBottom: "env(safe-area-inset-bottom, 0px)" }} data-testid="tabbar">
+      <main className="mx-auto max-w-[1600px] px-4 py-6 lg:px-10 lg:py-10 xl:py-8">{backTo && <BackButton fallback={backTo[0]} label={`Back to ${backTo[1]}`} />}{children}</main>
+      <nav className="glass-bar fixed inset-x-3 z-40 grid overflow-hidden rounded-[1.75rem] sm:inset-x-6 xl:hidden"
+        style={{ gridTemplateColumns: `repeat(${Math.min(5, 1 + tabItems.length + 0)}, minmax(0, 1fr))`, bottom: "calc(0.75rem + env(safe-area-inset-bottom, 0px))" }} data-testid="tabbar">
         {[["/", "Home", TAB_ICONS["/"]], ...tabItems.map((n) => [ROUTES[n.key], n.label, TAB_ICONS[n.key]])].map(([to, label, Icon]) => (
-          <NavLink key={to} to={to} end={to === "/"} className={({ isActive }) => cx("relative flex min-h-[52px] min-w-0 flex-col items-center justify-center gap-0.5 overflow-hidden py-1.5 text-[10px] font-semibold", isActive ? "text-ink" : "text-muted")}>
+          <NavLink key={to} to={to} end={to === "/"} className={({ isActive }) => cx("relative m-1 flex min-h-[48px] min-w-0 flex-col items-center justify-center gap-0.5 overflow-hidden rounded-[1.25rem] py-1.5 text-[10px] font-semibold", isActive ? "glass-active text-ink" : "text-muted")}>
             {({ isActive }) => (<>{Icon && <Icon className="h-5 w-5" strokeWidth={isActive ? 2.5 : 2} aria-hidden />}<span className="max-w-full truncate px-0.5">{label}</span>
-              {isActive && <span className="absolute left-1/2 top-0 h-0.5 w-8 -translate-x-1/2 rounded-full" style={{ background: "var(--accent)" }} aria-hidden />}</>)}
+              </>)}
           </NavLink>
         ))}
       </nav>
-      <footer className="mx-auto flex max-w-[1600px] flex-col items-center gap-3 border-t border-line px-4 pt-6 pb-28 text-center sm:flex-row sm:justify-between sm:text-left xl:pb-6"><PoweredBy /><span className="eyebrow">Find the right next step</span></footer>
+      <footer className="mx-auto flex max-w-[1600px] flex-col items-center gap-3 border-t border-line px-4 pt-6 pb-32 text-center sm:flex-row sm:justify-between sm:text-left xl:pb-6"><PoweredBy /><span className="eyebrow">Find the right next step</span></footer>
     </div>
   );
 }

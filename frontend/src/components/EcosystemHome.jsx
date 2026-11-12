@@ -242,7 +242,7 @@ function useFitScreen(ready) {
       const top = el.getBoundingClientRect().top + window.scrollY;
       const main = el.parentElement ? parseFloat(getComputedStyle(el.parentElement).paddingBottom) || 0 : 0;
       const bar = document.querySelector('[data-testid="tabbar"]');
-      const barH = bar && getComputedStyle(bar).display !== "none" ? bar.offsetHeight : 0;
+      const barH = bar && getComputedStyle(bar).display !== "none" ? bar.offsetHeight + (parseFloat(getComputedStyle(bar).bottom) || 0) : 0;
       setH(Math.max(420, Math.floor(window.innerHeight - top - main - barH)));
     };
     fit();

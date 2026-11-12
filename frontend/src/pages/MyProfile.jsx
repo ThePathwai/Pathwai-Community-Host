@@ -78,7 +78,7 @@ export default function MyProfile({ embedded }) {
         <div ref={formRef}><AccountProfileForm f={pf} setF={setPf} photo={photo} setPhoto={setPhoto} /></div>
       </Card>
       {/* Inside a community the phone's bottom tab bar is showing, so the bar rides above it. */}
-      <div className={`sticky z-10 -mx-1 mt-3 flex justify-end gap-2 border-t border-line bg-[rgb(var(--c-bg))] px-1 py-3 ${embedded ? "bottom-[calc(3.75rem+env(safe-area-inset-bottom))] md:bottom-0" : "bottom-[calc(3.75rem+env(safe-area-inset-bottom))] lg:bottom-0"}`}>
+      <div className={`sticky z-10 -mx-1 mt-3 flex justify-end gap-2 border-t border-line bg-[rgb(var(--c-bg))] px-1 py-3 ${embedded ? "bottom-[calc(5.5rem+env(safe-area-inset-bottom))] md:bottom-0" : "bottom-[calc(5.5rem+env(safe-area-inset-bottom))] lg:bottom-0"}`}>
         <Button variant="ghost" onClick={() => setEditing(false)} data-testid="my-profile-cancel">Cancel</Button>
         <Button onClick={save} loading={busy} data-testid="my-profile-save">Save profile</Button>
       </div>

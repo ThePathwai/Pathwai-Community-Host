@@ -11,7 +11,7 @@ export const HUB = {
   shortName: "Demo Hub",               // used in sentences: "Programs & grants at Demo Hub"
   college: "Sample College",           // the institution the sample mentors and alumni belong to
   city: "Toronto",                     // the city the hub serves
-  accent: "#0B4EA2",                   // brand colour: buttons, badges, the demo page
+  accent: "#0A63D6",                   // brand colour: buttons, badges, the demo page
   eyebrow: "Innovation navigator · hub demo",
   tagline: "Every program, grant, event, person and resource in one hub, ranked for your startup.",
   blurb: "An innovation navigator for one hub: programs, grants, events, people and resources, matched to your startup.",
