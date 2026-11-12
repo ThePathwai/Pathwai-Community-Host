@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { Link, useLocation, useNavigate, useSearchParams } from "react-router-dom";
 import { toast } from "sonner";
-import { CalendarDays, Gift, Mail, Smartphone, Ticket, Users } from "lucide-react";
+import { BookOpen, CalendarDays, Compass, Gift, Users } from "lucide-react";
 import { api, errMsg } from "../lib/api";
 import { useAuth } from "../lib/auth";
 import { sampleMetrics } from "../lib/sampleReport";
@@ -122,9 +122,10 @@ export default function Login() {
         <div className="relative flex h-full flex-col justify-between p-12 text-white">
           <span className="text-4xl"><Wordmark name="Pathwai" brand={{}} /></span>
           <div>
-            <p className="font-display text-5xl font-bold leading-[1.08]">Your whole community.<br />One app.</p>
+            <p className="font-display text-5xl font-bold leading-[1.08]">Your personal<br />venture planner.</p>
+            <p className="mt-4 max-w-md text-lg text-white/80">Tell it what you are building. It finds the programs, people and next steps that fit, and plans them with you.</p>
             <div className="mt-6 flex max-w-md flex-wrap gap-2" aria-label="Built in">
-              {[[Users, "Members"], [CalendarDays, "Events"], [Ticket, "Tickets"], [Smartphone, "Texts"], [Mail, "Email"], [Gift, "Perks"]].map(([Icon, l]) => (
+              {[[Compass, "Programs"], [Gift, "Grants"], [CalendarDays, "Events"], [Users, "People"], [BookOpen, "Resources"]].map(([Icon, l]) => (
                 <span key={l} className="inline-flex items-center gap-1.5 rounded-full border border-white/25 bg-white/10 px-3 py-1.5 text-sm backdrop-blur"><Icon className="h-4 w-4" />{l}</span>
               ))}
             </div>
@@ -148,7 +149,7 @@ export default function Login() {
           <div data-testid="login-pane-signin">
             <p className="mb-3 text-sm text-muted">
               {/* Every community requires admin approval now -- no community can auto-approve a join request. */}
-              {joinInfo ? <>Sign in to join <strong>{joinInfo.name}</strong> — an admin will need to approve you.</> : "One account for all your communities."}
+              {joinInfo ? <>Sign in to join <strong>{joinInfo.name}</strong> — an admin will need to approve you.</> : "Sign in to pick up your plan."}
             </p>
             <Card>
               <SocialAuthButtons onSignedIn={onSocialSignedIn} disabled={busy} joinSlug={joinSlug} />
@@ -173,7 +174,7 @@ export default function Login() {
         {tab === "demo" && showDemoTab && (
           <div className="space-y-3" data-testid="demo-links">
             <div>
-              <h2 className="text-lg leading-snug" style={{ textWrap: "balance" }}>Look around a practice community</h2>
+              <h2 className="text-lg leading-snug" style={{ textWrap: "balance" }}>Look around a sample hub</h2>
               <p className="mt-1 text-xs text-muted">Sample data. Nothing is saved.</p>
             </div>
             <Seg value={demoShown} onChange={setDemoTab} testPrefix="demo-tab" items={demoItems} />

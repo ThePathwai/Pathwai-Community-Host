@@ -48,7 +48,7 @@ export default function DemoLanding() {
     <div className="mx-auto flex min-h-[100dvh] w-full max-w-3xl flex-col px-4 py-6 sm:py-10" data-testid="demo-landing">
       <header className="flex items-center justify-between gap-3">
         <Link to="/about" className="text-xl"><Wordmark name="Pathwai" brand={{}} /></Link>
-        <span className="chip">Practice community · sample data</span>
+        <span className="chip">Demo hub · sample data</span>
       </header>
 
       <main className="flex flex-1 flex-col justify-center py-10 sm:py-14">
