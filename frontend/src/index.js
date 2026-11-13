@@ -10,12 +10,15 @@ import { api } from "./lib/api";
 import { prepareDemo } from "./lib/demo";
 import DemoBanner from "./components/DemoBanner";
 import { refreshIfStale } from "./lib/build";
+import { startAurora } from "./lib/aurora";
 
 // iPhone Safari ignores user-scalable=no, so block its pinch gesture directly (touch screens only).
 if (typeof window !== "undefined" && ("ontouchstart" in window || navigator.maxTouchPoints > 0)) {
   ["gesturestart", "gesturechange", "gestureend"].forEach((ev) => document.addEventListener(ev, (e) => e.preventDefault(), { passive: false }));
   document.addEventListener("touchmove", (e) => { if (e.touches && e.touches.length > 1) e.preventDefault(); }, { passive: false });
 }
+
+startAurora();
 
 async function start() {
   // The demo swaps the server for the in-browser practice copy (loaded only when someone asks for it).
