@@ -68,6 +68,8 @@ export default function Login() {
     setBusy(true); setErr(""); setStatus("");
     try {
       await login(e, p);
+      // Drop focus from the sign-in fields so the browser closes its saved-password popup before the home page appears.
+      try { document.activeElement?.blur?.(); } catch { /* not a focusable element */ }
       if (joinSlug) {
         try {
           const { data } = await api.post(`/hub/communities/${joinSlug}/apply`, {});
@@ -163,9 +165,9 @@ export default function Login() {
                 <span className="h-px flex-1 bg-line" /> or continue with email <span className="h-px flex-1 bg-line" />
               </div>
               <form className="space-y-3" onSubmit={(e) => { e.preventDefault(); go(email, password); }}>
-                <Field label="Email"><Input data-testid="login-email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} required /></Field>
+                <Field label="Email"><Input data-testid="login-email" type="email" name="email" autoComplete="username" value={email} onChange={(e) => setEmail(e.target.value)} required /></Field>
                 <Field label={<span className="flex items-center justify-between">Password <Link className="tap text-xs font-normal normal-case text-muted underline" to="/forgot-password" data-testid="forgot-password-link">Forgot password?</Link></span>}>
-                  <Input data-testid="login-password" type="password" value={password} onChange={(e) => setPassword(e.target.value)} required />
+                  <Input data-testid="login-password" type="password" name="password" autoComplete="current-password" value={password} onChange={(e) => setPassword(e.target.value)} required />
                 </Field>
                 {status ? (
                   <MembershipStatusCard status={status} communityName={joinInfo?.name} testId="login-status" />
