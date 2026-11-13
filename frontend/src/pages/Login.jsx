@@ -46,7 +46,8 @@ export default function Login() {
 
   useEffect(() => { api.get("/auth/demo-accounts").then((r) => setDemo(r.data)).catch(() => {}); }, []);
   // /login?demo=member|admin|host (what the "Try the demo" buttons open) signs straight in to the in-browser demo.
-  const autoDemo = params.get("demo") || (inDemo ? demoRole() : null);
+  // Opening the demo tab on purpose (/login?tab=demo) is a fresh choice, not a resume: ignore any demo already running in this tab.
+  const autoDemo = params.get("demo") || (inDemo && params.get("tab") !== "demo" ? demoRole() : null);
   const autoDone = React.useRef(false);
   // A login screen with no demo role to sign in to means the demo is over: switch to the real site.
   const demoOver = inDemoTab() && !autoDemo;
@@ -116,6 +117,8 @@ export default function Login() {
   const demoItems = [...(inDemo && !PREVIEW ? [] : [["hub", "Demo hub"]]), ...(demo.accounts.length ? [["accounts", "Accounts"]] : [])];
   const demoShown = demoItems.some(([k]) => k === demoTab) ? demoTab : demoItems[0]?.[0];
   const showDemoTab = !inDemo || PREVIEW || demo.accounts.length > 0;
+  // Never render an empty pane: if the demo tab can't show, fall back to sign in.
+  const shownTab = tab === "demo" && !showDemoTab ? "signin" : tab;
 
   return (
     <div className="grid min-h-[100dvh] grid-cols-[minmax(0,1fr)] lg:grid-cols-2">
@@ -151,9 +154,9 @@ export default function Login() {
           </div>
         </div>
 
-        {showDemoTab && <Seg value={tab} onChange={setTab} testPrefix="login-tab" items={[["signin", "Sign in"], ["demo", "Try the demo"]]} />}
+        {showDemoTab && <Seg value={shownTab} onChange={setTab} testPrefix="login-tab" items={[["signin", "Sign in"], ["demo", "Try the demo"]]} />}
 
-        {tab === "signin" && (
+        {shownTab === "signin" && (
           <div data-testid="login-pane-signin">
             <p className="mb-3 text-sm text-muted">
               {/* Every community requires admin approval now -- no community can auto-approve a join request. */}
@@ -179,7 +182,7 @@ export default function Login() {
           </div>
         )}
 
-        {tab === "demo" && showDemoTab && (
+        {shownTab === "demo" && (
           <div className="space-y-3" data-testid="demo-links">
             <div>
               <h2 className="text-lg leading-snug" style={{ textWrap: "balance" }}>Look around a sample hub</h2>
