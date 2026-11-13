@@ -32,7 +32,9 @@ export function setModePref(mode) { try { localStorage.setItem("pathwai.mode:" +
 export function withMode(brand = {}) {
   const mode = effectiveMode(brand);
   if (mode === (brand.mode || "dark")) return brand;
-  return { ...brand, mode, colors: { ...(brand.colors || {}), ...PALETTES[mode], on_accent: brand.colors?.on_accent } };
+  // The Pathwai look flips its accent with the mode: white buttons on near-black, black buttons on paper.
+  const flip = brand.preset === "pathwai" ? (mode === "light" ? { accent: "#0B0B0D", on_accent: "#FFFFFF" } : { accent: "#F4F4F5", on_accent: "#0A0A0A" }) : {};
+  return { ...brand, mode, colors: { ...(brand.colors || {}), ...PALETTES[mode], on_accent: brand.colors?.on_accent, ...flip } };
 }
 
 export function brandVars(brand = {}) {
@@ -75,6 +77,7 @@ export function applyBrand(config) {
   Object.entries(v).forEach(([k, val]) => { if (k.startsWith("--")) root.style.setProperty(k, val); });
   root.style.colorScheme = brand.mode || "dark";
   root.setAttribute("data-mode", brand.mode || "dark");
+  root.setAttribute("data-preset", brand.preset || "custom");  // "pathwai" = the website look (flat near-black, light type, hairline cards) inside the app too
   loadFont(brand.font, brand.heading_font);
   const meta = document.querySelector('meta[name="theme-color"]');
   if (meta) meta.setAttribute("content", brand.colors?.background || "#0D0D0D");

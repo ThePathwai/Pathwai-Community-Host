@@ -11,9 +11,10 @@ export const HUB_SLUG = HUB.slug;
 const ME = "u-hm-me";          // the member-demo persona (a founder)
 const DANA = "u-hm-dana";      // the admin-demo persona (programs lead)
 
-const COLORS = { accent: HUB.accent, on_accent: "#FFFFFF", background: "#EEF2F9", surface: "#FFFFFF", text: "#0B1B33", muted: "#5B6678", border: "#DAE1EC" };
+// The demo hub wears the Pathwai look (same as the website): near-black, white accent, light type.
+const COLORS = { accent: "#F4F4F5", on_accent: "#0A0A0A", background: "#0B0B0D", surface: "#141417", text: "#F4F4F6", muted: "#8E8E99", border: "#25252B" };
 const BRAND = {
-  preset: "custom", mode: "light", colors: COLORS, font: "Inter", heading_font: "Inter", heading_style: "normal",
+  preset: "pathwai", mode: "dark", colors: COLORS, font: "Inter", heading_font: "Inter", heading_style: "normal",
   radius: "soft", button_shape: "pill", logo_url: null, logo_mark_url: null, logo_adapts: true, show_name_with_logo: true,
   login_headline: "Where founders meet capital.", login_subhead: "Pitch to investors, get advice from people who've built it, and find your next customer.",
   welcome_message: `Here is what to do next at ${HUB.shortName}: the programs, grants, events and people that fit your startup.`, footer_text: `${HUB.name} · demo community`, support_email: "",
