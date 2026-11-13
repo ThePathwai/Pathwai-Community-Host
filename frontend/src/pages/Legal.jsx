@@ -12,7 +12,7 @@ export default function Legal({ doc }) {
 
   return (
     <div className="mx-auto w-full max-w-2xl px-4 py-10" data-testid={`legal-${doc}`}>
-      <Link to="/" className="mb-6 inline-block text-2xl"><Wordmark name="Pathwai" brand={{}} /></Link>
+      <Link to="/" className="mb-6 inline-block text-2xl" aria-label="Pathwai home"><Wordmark name="Pathwai" brand={{}} /></Link>
       <nav className="mb-6 flex gap-2 text-sm" aria-label="Legal documents">
         {[["terms", "Terms of Service", "/terms"], ["privacy", "Privacy Policy", "/privacy"]].map(([k, label, to]) => (
           <Link key={k} to={to} data-testid={`legal-tab-${k}`}

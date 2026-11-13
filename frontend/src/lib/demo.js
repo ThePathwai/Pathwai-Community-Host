@@ -23,8 +23,9 @@ export const prepareDemo = () => { const d = demoFromUrl(); if (d) { set("1"); s
 // with the in-page (#) router instead of loading a new address.
 const PREVIEW = process.env.REACT_APP_PREVIEW === "true";
 const goTo = (path) => { window.location.hash = "#" + path; };
-export const startDemo = (role, slug) => {
-  const q = `/login?demo=${role}${slug ? `&c=${encodeURIComponent(slug)}` : ""}`;
+// opts.fresh: true = open as a brand-new founder (blank profile, you fill in your own business); false/absent = the ready-made founder.
+export const startDemo = (role, slug, opts = {}) => {
+  const q = `/login?demo=${role}${slug ? `&c=${encodeURIComponent(slug)}` : ""}${opts.fresh ? "&fresh=1" : ""}`;
   if (PREVIEW) { setDemoRole(role); goTo(q); return; }
   set("1"); setDemoRole(role); window.location.assign(q);
 };
@@ -35,9 +36,9 @@ export const inDemoTab = () => get() === "1";
 export const leaveDemo = (to = "/login") => { set(null); setDemoRole(null); if (PREVIEW) { goTo(to); return; } window.location.replace(to); };
 export const exitDemo = () => leaveDemo("/login");
 
-// The "Try the demo" buttons open the demo hub as an established founder. The demo is for founders only; there is no admin side to open.
+// The "Try the demo" buttons open the demo page, where the visitor chooses to start from scratch or look around. The demo is for founders only.
 // The hub's name, colours and link are set in lib/demoHubConfig.js.
-export const startHubDemo = () => startDemo("member", HUB.slug);
+export const DEMO_PATH = `/demo/${HUB.short}`;
 
 // The demo hubs shown on the demo page. Each opens at /demo/<short> (a page that works the same on a phone and a desktop),
 // so a link can be sent to someone as it is. Edit the hub itself in lib/demoHubConfig.js.
@@ -49,4 +50,4 @@ export const DEMO_COMMUNITIES = [
 // The community a /demo/<short> link points at.
 export const demoCommunity = (key) => DEMO_COMMUNITIES.find((c) => c.short === key || c.slug === key) || null;
 // The link that drops someone straight into one side of a practice community (the same on phone and desktop).
-export const demoLink = (role, slug) => `${window.location.origin}/login?demo=${role}&c=${encodeURIComponent(slug)}`;
+export const demoLink = (role, slug, fresh) => `${window.location.origin}/login?demo=${role}&c=${encodeURIComponent(slug)}${fresh ? "&fresh=1" : ""}`;

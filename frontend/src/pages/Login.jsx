@@ -5,7 +5,7 @@ import { BookOpen, CalendarDays, Compass, Gift, Users } from "lucide-react";
 import { api, errMsg } from "../lib/api";
 import { useAuth } from "../lib/auth";
 import { sampleMetrics } from "../lib/sampleReport";
-import { DEMO_COMMUNITIES, demoRole, inDemoTab, isDemo, leaveDemo, startDemo, startHubDemo } from "../lib/demo";
+import { DEMO_COMMUNITIES, demoRole, inDemoTab, isDemo, leaveDemo, startDemo, DEMO_PATH } from "../lib/demo";
 import { applyBrand } from "../lib/theme";
 import crowd from "../assets/crowd.jpg";
 import { Button, Card, Field, Input, MembershipStatusCard, PoweredBy, Wordmark, cx } from "../components/ui";
@@ -82,7 +82,16 @@ export default function Login() {
         } catch { /* already a member, or the apply failed -- fall through to the usual landing */ }
       }
       // A demo link can name a community to open straight into (/login?demo=member&c=yvettabetta-pilates).
-      if (isDemo() && params.get("c")) { try { await enter(params.get("c")); nav("/", { replace: true }); return; } catch { /* not a member there: fall through to the Hub */ } }
+      if (isDemo() && params.get("c")) {
+        try {
+          await enter(params.get("c"));
+          // Start from scratch = a blank founder who fills in their own story; otherwise the ready-made founder.
+          const fresh = params.get("fresh") === "1";
+          try { await api.post("/navigator/demo-reset", { fresh }); } catch { /* an older demo server: carry on with whatever is there */ }
+          nav(fresh ? "/plan?step=story" : "/", { replace: true });
+          return;
+        } catch { /* not a member there: fall through to the Hub */ }
+      }
       nav(params.get("next") === "navigator" ? "/navigator" : "/", { replace: true });
     } catch (ex) { setStatus(ex?.response?.status === 403 && /membership request/i.test(errMsg(ex)) ? (/not approved/i.test(errMsg(ex)) ? "rejected" : "pending") : ""); setErr(errMsg(ex)); if (ex?.response?.status !== 403) toast.error(errMsg(ex)); } finally { setBusy(false); }
   };
@@ -198,7 +207,7 @@ export default function Login() {
                   ))}
                 </div>
                 <p className="mt-1.5 text-[11px] text-muted">Sample data. <Link to="/about#sample" className="underline" data-testid="demo-see-report">See a full sample report</Link></p>
-                <button type="button" data-testid="demo-link-admin" onClick={() => startHubDemo()} className="btn-primary mt-3 w-full">Open the demo</button>
+                <button type="button" data-testid="demo-link-admin" onClick={() => nav(DEMO_PATH)} className="btn-primary mt-3 w-full">Open the demo</button>
               </div>
             )}
 
@@ -206,7 +215,7 @@ export default function Login() {
               <div className="rounded-xl border border-line bg-surface p-4">
                 <p className="font-medium">See what a founder sees</p>
                 <p className="mt-1 text-xs text-muted">Programs, grants, events and people, matched to a startup.</p>
-                <button type="button" data-testid="demo-link-member" onClick={() => startHubDemo()} className="btn-primary mt-3 w-full">Open the demo</button>
+                <button type="button" data-testid="demo-link-member" onClick={() => nav(DEMO_PATH)} className="btn-primary mt-3 w-full">Open the demo</button>
               </div>
             )}
 

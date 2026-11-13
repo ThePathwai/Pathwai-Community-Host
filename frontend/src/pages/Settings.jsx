@@ -92,7 +92,7 @@ export default function SettingsPage() {
         <Toggle label="Show my phone number to members" checked={s.privacy.show_phone} onChange={(v) => patch({ privacy: { show_phone: v } })} />
       </SectionCard>
       <SectionCard title="Your data and security">
-        <p className="mb-3 text-sm text-muted">Download everything Pathwai holds about you, sign out of every device, or delete your account. See our <a className="underline" href="/privacy">Privacy Policy</a>.</p>
+        <p className="mb-3 text-sm text-muted">Download everything Pathwai holds about you, sign out of every device, or delete your account. See our <a className="hit underline" href="/privacy">Privacy Policy</a>.</p>
         <div className="flex flex-wrap gap-2">
           <Button variant="ghost" onClick={downloadData} data-testid="export-data">Download my data</Button>
           <Button variant="ghost" onClick={signOutEverywhere} data-testid="sign-out-everywhere">Sign out everywhere</Button>

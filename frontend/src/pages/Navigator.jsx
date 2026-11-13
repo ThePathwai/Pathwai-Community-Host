@@ -394,7 +394,7 @@ export default function Navigator({ embedded }) {
   return (
     <div className="min-h-[100dvh] px-4 py-5 sm:py-8" data-testid="navigator-page">
       <header className="mx-auto mb-8 flex w-full max-w-6xl items-center justify-between gap-3">
-        <Link to="/about" className="text-xl"><Wordmark name="Pathwai" brand={{}} /></Link>
+        <Link to="/" className="text-xl" aria-label="Pathwai home"><Wordmark name="Pathwai" brand={{}} /></Link>
         <Link to={user ? "/" : "/login"} className="btn-ghost !py-2 text-sm">{user ? "Back to community" : "Sign in"}</Link>
       </header>
       {body}

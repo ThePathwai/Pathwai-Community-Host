@@ -107,7 +107,7 @@ export function MatchCard({ m, lead, kicker, title, sub, actions, extra, testid 
         )}
         <div className="mt-auto flex flex-wrap items-center gap-2 pt-1">
           {actions}
-          <button type="button" onClick={() => setOpen(!open)} aria-expanded={open} data-testid="why-toggle" className="ml-auto inline-flex items-center gap-1 rounded-full px-2.5 py-1.5 text-xs font-semibold text-muted hover:text-ink">
+          <button type="button" onClick={() => setOpen(!open)} aria-expanded={open} data-testid="why-toggle" className="hit ml-auto inline-flex items-center gap-1 rounded-full px-2.5 py-1.5 text-xs font-semibold text-muted hover:text-ink">
             {open ? "Hide" : "How we checked"}<ChevronDown className={cx("h-3.5 w-3.5 transition", open && "rotate-180")} aria-hidden />
           </button>
         </div>

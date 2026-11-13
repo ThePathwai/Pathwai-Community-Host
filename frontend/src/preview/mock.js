@@ -1059,7 +1059,18 @@ function get(path, p, config) {
   return ok(config, d);
 }
 
+// Resets the demo founder. fresh = a blank founder who fills in their own story; otherwise the ready-made one (Bright Court) again.
+function resetDemoFounder(fresh) {
+  const m = (S.extra.acctProfile = S.extra.acctProfile || {});
+  const rv = sharedRsvp();
+  Object.keys(rv.byUser || {}).forEach((id) => { if (rv.byUser[id] && rv.byUser[id][S.email] === "yes") { rv.delta[id] = (rv.delta[id] || 0) - 1; rv.byUser[id][S.email] = null; } });
+  const sv = book().shared.saved || {};
+  Object.keys(sv).forEach((k) => { if (sv[k]) delete sv[k][S.email]; });
+  if (fresh) m[S.email] = { location: "Toronto, ON", startup: {}, plan: null, tracked: [], interest: [], journey: [], nav_seen: [] };
+  else { delete m[S.email]; seedDemoStartup(S.email); }
+}
 function write(method, path, body, config) {
+  if (path === "/navigator/demo-reset") { if (!S.role) return fail(config, 401, "Not authenticated"); resetDemoFounder(!!(body && body.fresh)); return ok(config, { ok: true }); }
   if (path.startsWith("/navigator")) return navigatorCall(method, path, body, config.params || {}, navCtx(config));
   if (path.startsWith("/founder-events")) return eventsCall(method, path, config.params || {}, navCtx(config));
   if (path.startsWith("/talent")) return talentCall(method, path, body, config.params || {}, navCtx(config));

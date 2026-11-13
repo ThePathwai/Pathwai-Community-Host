@@ -225,7 +225,7 @@ export default function Journey({ embedded }) {
           </div>
           <div className="mt-4 border-t border-line pt-4">
             {data.goal
-              ? <p className="text-sm"><span className="text-muted">What you are aiming for: </span><span className="font-medium">{data.goal}</span> <Link to="/me?edit=startup" className="ml-1 inline-flex items-center gap-1 text-xs font-semibold text-muted underline hover:text-ink"><Pencil className="h-3 w-3" aria-hidden />Change</Link></p>
+              ? <p className="text-sm"><span className="text-muted">What you are aiming for: </span><span className="font-medium">{data.goal}</span> <Link to="/me?edit=startup" className="hit ml-1 inline-flex items-center gap-1 text-xs font-semibold text-muted underline hover:text-ink"><Pencil className="h-3 w-3" aria-hidden />Change</Link></p>
               : <p className="text-sm text-muted">Say what you are trying to do next and it will show here. <Link to="/me?edit=startup" className="font-semibold underline hover:text-ink">Add it</Link></p>}
           </div>
           {data.next && <button type="button" onClick={() => saveStartup({ stage: data.next }, `You are now at the ${STAGE_LABEL[data.next]} stage`)} disabled={saving} className="btn-ghost mt-4 self-start !py-2 text-sm" data-testid="path-advance">I have reached {STAGE_LABEL[data.next]}</button>}

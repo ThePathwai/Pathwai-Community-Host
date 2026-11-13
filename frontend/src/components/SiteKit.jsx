@@ -100,7 +100,7 @@ export function SiteShell({ title, children }) {
             <Link to="/terms" className="tap hover:text-ink">Terms</Link>
             <Link to="/privacy" className="tap hover:text-ink">Privacy</Link>
           </nav>
-          <a href={`mailto:${CONTACT}`} className="inline-flex items-center gap-1 text-sm text-muted hover:text-ink">{CONTACT}<ArrowUpRight className="h-3.5 w-3.5" aria-hidden /></a>
+          <a href={`mailto:${CONTACT}`} className="hit inline-flex items-center gap-1 text-sm text-muted hover:text-ink">{CONTACT}<ArrowUpRight className="h-3.5 w-3.5" aria-hidden /></a>
         </div>
       </footer>
     </div>

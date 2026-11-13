@@ -176,7 +176,7 @@ export default function Signup() {
           {err && <p className="text-sm text-red-400" data-testid="signup-error">{err}</p>}
           <Button type="submit" loading={busy} className="w-full" data-testid="signup-submit">Create account</Button>
         </form>
-        <p className="mt-4 text-center text-sm text-muted">Have an account? <Link className="underline" to="/login">Sign in</Link></p>
+        <p className="mt-4 text-center text-sm text-muted">Have an account? <Link className="hit underline" to="/login">Sign in</Link></p>
       </Card>
     </div>
   );

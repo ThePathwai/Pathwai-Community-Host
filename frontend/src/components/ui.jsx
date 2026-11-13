@@ -390,7 +390,7 @@ export const PoweredBy = ({ className = "" }) => (
 export const TermsConsent = ({ checked, onChange, testId = "terms-consent", className = "" }) => (
   <label className={"flex cursor-pointer items-start gap-2.5 text-sm leading-snug " + className}>
     <input type="checkbox" className="mt-0.5 h-4 w-4 shrink-0 accent-accent" checked={!!checked} onChange={(e) => onChange(e.target.checked)} data-testid={testId} />
-    <span>I agree to the <Link to="/terms" target="_blank" rel="noreferrer" className="underline" data-testid="consent-terms-link">Terms of Service</Link> and <Link to="/privacy" target="_blank" rel="noreferrer" className="underline" data-testid="consent-privacy-link">Privacy Policy</Link>.</span>
+    <span>I agree to the <Link to="/terms" target="_blank" rel="noreferrer" className="hit underline" data-testid="consent-terms-link">Terms of Service</Link> and <Link to="/privacy" target="_blank" rel="noreferrer" className="hit underline" data-testid="consent-privacy-link">Privacy Policy</Link>.</span>
   </label>
 );
 export const StackedLogo = ({ className = "" }) => <img src={stackedWhite} alt="Pathwai" className={className} style={{ filter: "var(--mark-filter, none)" }} />;
@@ -446,5 +446,5 @@ export const BackButton = ({ fallback = "/", label = "Back", className = "" }) =
     const idx = window.history.state?.idx;
     if (typeof idx === "number" && idx > 0) nav(-1); else nav(fallback, { replace: true });
   };
-  return <button onClick={go} data-testid="back-btn" className={cx("mb-4 inline-flex items-center gap-1 text-sm text-muted hover:text-ink", className)}>← {label}</button>;
+  return <button type="button" onClick={go} data-testid="back-btn" className={cx("hit mb-4 inline-flex items-center gap-1 text-sm text-muted hover:text-ink", className)}>← {label}</button>;
 };

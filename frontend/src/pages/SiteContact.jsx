@@ -52,7 +52,7 @@ export default function SiteContact() {
           <div className="card h-fit">
             <Mail className="h-5 w-5 text-muted" aria-hidden />
             <p className="eyebrow mt-4">Email us</p>
-            <a href={`mailto:${CONTACT}`} className="mt-1 block break-all text-xl font-bold underline underline-offset-4" data-testid="site-email">{CONTACT}</a>
+            <a href={`mailto:${CONTACT}`} className="hit mt-1 block break-all text-xl font-bold underline underline-offset-4" data-testid="site-email">{CONTACT}</a>
             <p className="mt-3 text-sm text-muted">Partnerships, investment, enterprise and waitlist questions all come to the same inbox.</p>
           </div>
         </div>

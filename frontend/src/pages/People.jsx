@@ -61,7 +61,7 @@ export default function People({ embedded }) {
       <div className="mt-5 flex flex-wrap items-center gap-3">
         <label className="relative block w-full sm:w-80"><Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted" aria-hidden />
           <input type="search" value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search by name, title or company" aria-label="Search people" data-testid="people-search" className="w-full rounded-full border border-line bg-transparent py-2.5 pl-9 pr-3 text-sm outline-none focus:border-ink/50" /></label>
-        <Link to="/talent" className="inline-flex items-center gap-1 text-sm font-semibold hover:underline" data-testid="people-to-talent">Search talent by skill<ArrowRight className="h-4 w-4" aria-hidden /></Link>
+        <Link to="/talent" className="hit inline-flex items-center gap-1 text-sm font-semibold hover:underline" data-testid="people-to-talent">Search talent by skill<ArrowRight className="h-4 w-4" aria-hidden /></Link>
       </div>
 
       {!ready ? <div className="mt-10"><Spinner /></div> : searching ? (

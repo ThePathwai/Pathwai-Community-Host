@@ -1,6 +1,7 @@
 import React from "react";
+import { Link } from "react-router-dom";
 import { ArrowRight, Rocket } from "lucide-react";
-import { startHubDemo } from "../lib/demo";
+import { DEMO_PATH } from "../lib/demo";
 import { Eyebrow, Num, PageTop, Section, SiteShell, WAITLIST } from "../components/SiteKit";
 
 // The website's About page (/about). Wording follows thepathwai.com.
@@ -60,7 +61,7 @@ export default function SiteAbout() {
           <h2 className="max-w-3xl text-3xl sm:text-5xl" style={{ textWrap: "balance" }}>See it work for your incubator.</h2>
           <div className="flex flex-wrap justify-center gap-3">
             <a href={WAITLIST} className="btn-primary !px-6 !py-3" data-testid="site-waitlist-end">Join the waitlist<ArrowRight className="h-4 w-4" aria-hidden /></a>
-            <button type="button" onClick={startHubDemo} className="btn-ghost !px-6 !py-3" data-testid="site-demo-end"><Rocket className="h-4 w-4" aria-hidden />Try the demo</button>
+            <Link to={DEMO_PATH} className="btn-ghost !px-6 !py-3" data-testid="site-demo-end"><Rocket className="h-4 w-4" aria-hidden />Try the demo</Link>
           </div>
         </div>
       </section>

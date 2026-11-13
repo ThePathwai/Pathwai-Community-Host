@@ -42,7 +42,7 @@ export default function Install() {
   return (
     <div className="min-h-screen" data-testid="install-page">
       <header className="mx-auto flex max-w-3xl items-center justify-between px-4 py-4 sm:px-6">
-        <Link to="/login" className="text-2xl"><Wordmark name="Pathwai" brand={{}} /></Link>
+        <Link to="/" className="text-2xl" aria-label="Pathwai home"><Wordmark name="Pathwai" brand={{}} /></Link>
         <Link to="/login" className="btn-ghost" data-testid="install-back">Sign in</Link>
       </header>
       <main className="mx-auto max-w-3xl px-4 pb-16 sm:px-6">

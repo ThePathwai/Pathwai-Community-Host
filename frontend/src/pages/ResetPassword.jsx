@@ -42,7 +42,7 @@ export default function ResetPassword() {
             <Button type="submit" loading={busy} className="w-full" data-testid="reset-password-submit">Update password</Button>
           </form>
         )}
-        <p className="mt-4 text-center text-sm text-muted"><Link className="underline" to="/login">Back to sign in</Link></p>
+        <p className="mt-4 text-center text-sm text-muted"><Link className="hit underline" to="/login">Back to sign in</Link></p>
       </Card>
       <PoweredBy className="mt-10 text-center" />
     </div>

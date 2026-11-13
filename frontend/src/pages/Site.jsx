@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { Link } from "react-router-dom";
 import { ArrowRight, BookOpen, Building2, Check, Clock, Compass, Layers, Rocket, Search, Sparkles, Target, Users } from "lucide-react";
 import { cx } from "../components/ui";
-import { startHubDemo } from "../lib/demo";
+import { DEMO_PATH } from "../lib/demo";
 import { Eyebrow, Num, Pill, Section, SiteShell, WAITLIST } from "../components/SiteKit";
 
 // The website home page (shown at / to anyone who is signed out). About and Contact are their own pages (SiteAbout.jsx, SiteContact.jsx);
@@ -189,7 +189,7 @@ export default function Site() {
           <p className="mx-auto mt-6 max-w-2xl text-lg text-muted sm:text-xl">Pathwai is a personal venture planner for every founder in your incubator. It matches their business to the programs, people and resources around them, and helps them leave with a decision plan.</p>
           <div className="mt-9 flex flex-wrap items-center justify-center gap-3">
             <a href={WAITLIST} className="btn-primary !px-6 !py-3 text-base" data-testid="site-waitlist">Join the waitlist<ArrowRight className="h-4 w-4" aria-hidden /></a>
-            <button type="button" onClick={startHubDemo} className="btn-ghost !px-6 !py-3 text-base" data-testid="site-demo">Try the demo</button>
+            <Link to={DEMO_PATH} className="btn-ghost !px-6 !py-3 text-base" data-testid="site-demo">Try the demo</Link>
             <Link to="/about" className="btn-ghost !px-6 !py-3 text-base" data-testid="site-incubators">For incubators</Link>
           </div>
         </div>
@@ -252,7 +252,7 @@ export default function Site() {
           <h2 className="max-w-3xl text-3xl sm:text-5xl" style={{ textWrap: "balance" }}>Give every founder a way to find their next step.</h2>
           <div className="flex flex-wrap justify-center gap-3">
             <a href={WAITLIST} className="btn-primary !px-6 !py-3" data-testid="site-waitlist-end">Join the waitlist<ArrowRight className="h-4 w-4" aria-hidden /></a>
-            <button type="button" onClick={startHubDemo} className="btn-ghost !px-6 !py-3" data-testid="site-demo-end"><Rocket className="h-4 w-4" aria-hidden />Try the demo</button>
+            <Link to={DEMO_PATH} className="btn-ghost !px-6 !py-3" data-testid="site-demo-end"><Rocket className="h-4 w-4" aria-hidden />Try the demo</Link>
           </div>
         </div>
       </section>

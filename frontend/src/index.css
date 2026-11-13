@@ -191,3 +191,7 @@ body[data-fit] .min-h-screen { min-height: 0; }
 
 /* The demo walkthrough strip takes a little room on Home, so the lowest-priority rows go a little sooner. */
 @media (max-height:860px){body[data-guide] .tight-hide{display:none}}
+
+/* .hit: a bigger tap area for small links and buttons without changing layout (the invisible ::after extends past the box). */
+.hit { position: relative; }
+.hit::after { content: ""; position: absolute; inset: -0.5rem -0.35rem; }
