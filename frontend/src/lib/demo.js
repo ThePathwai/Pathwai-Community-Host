@@ -36,9 +36,9 @@ export const inDemoTab = () => get() === "1";
 export const leaveDemo = (to = "/login") => { set(null); setDemoRole(null); if (PREVIEW) { goTo(to); return; } window.location.replace(to); };
 export const exitDemo = () => leaveDemo("/login");
 
-// The "Try the demo" buttons open the demo page, where the visitor chooses to start from scratch or look around. The demo is for founders only.
+// The "Try the demo" buttons open the sign-in page on its demo tab, where the visitor chooses to start from scratch or look around. The demo is for founders only.
 // The hub's name, colours and link are set in lib/demoHubConfig.js.
-export const DEMO_PATH = `/demo/${HUB.short}`;
+export const DEMO_PATH = "/login?tab=demo";
 
 // The demo hubs shown on the demo page. Each opens at /demo/<short> (a page that works the same on a phone and a desktop),
 // so a link can be sent to someone as it is. Edit the hub itself in lib/demoHubConfig.js.

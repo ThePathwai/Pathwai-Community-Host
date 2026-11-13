@@ -1,20 +1,17 @@
 import React, { useEffect, useState } from "react";
 import { Link, useLocation, useNavigate, useSearchParams } from "react-router-dom";
 import { toast } from "sonner";
-import { BookOpen, CalendarDays, Compass, Gift, Users } from "lucide-react";
+import { ArrowRight, BookOpen, CalendarDays, Compass, Gift, Users } from "lucide-react";
 import { api, errMsg } from "../lib/api";
 import { useAuth } from "../lib/auth";
-import { sampleMetrics } from "../lib/sampleReport";
-import { DEMO_COMMUNITIES, demoRole, inDemoTab, isDemo, leaveDemo, startDemo, DEMO_PATH } from "../lib/demo";
+import { DEMO_COMMUNITIES, demoRole, inDemoTab, isDemo, leaveDemo, startDemo } from "../lib/demo";
 import { applyBrand } from "../lib/theme";
 import crowd from "../assets/crowd.jpg";
 import { Button, Card, Field, Input, MembershipStatusCard, PoweredBy, Wordmark, cx } from "../components/ui";
 import SocialAuthButtons from "../components/SocialAuthButtons";
 
-// Four sample figures for the demo entry (the same sample the About page and the admin demo use).
-const SAMPLE_TILES = (() => { const m = sampleMetrics({ members: 64, seed: "pathwai-sample" }); return [
-  { label: "Members active", value: `${m.active_pct}%` }, { label: "Intros made", value: m.intros_made },
-  { label: "Event turnout", value: `${m.turnout_pct}%` }, { label: "Perk opens", value: m.perk_opens }]; })();
+// The shared preview build is always "in the demo", but its sign-in page still offers the demo hub.
+const PREVIEW = process.env.REACT_APP_PREVIEW === "true";
 
 // A row of tabs: only the chosen one is shown, so the page never needs scrolling to see everything it offers.
 const Seg = ({ value, onChange, items, testPrefix, className = "" }) => (
@@ -45,7 +42,7 @@ export default function Login() {
   const inDemo = isDemo();
   // Two tabs: sign in (the default) and try the demo. /login?tab=demo opens the demo tab directly.
   const [tab, setTab] = useState(params.get("tab") === "demo" ? "demo" : "signin");
-  const [demoTab, setDemoTab] = useState("founder");
+  const [demoTab, setDemoTab] = useState("hub");
 
   useEffect(() => { api.get("/auth/demo-accounts").then((r) => setDemo(r.data)).catch(() => {}); }, []);
   // /login?demo=member|admin|host (what the "Try the demo" buttons open) signs straight in to the in-browser demo.
@@ -114,9 +111,9 @@ export default function Login() {
 
   const founderAcct = { demo_role: "founder", email: "founder@yourcommunity.app", label: "Founder, no community yet", description: "Fife Ashley-Dejo has not joined any community. One profile drives the programs, the communities suggested and the guide." };
   const hostAcct = { demo_role: "host", email: "host@thevillage.example", label: "Community host demo", description: "Sign in as the host of The Village, a private dinner club, and review who has asked to join." };
-  const demoItems = [...(inDemo ? [] : [["founder", "Founder"], ["communities", "Examples"], ["member", "Member"]]), ...(demo.accounts.length ? [["accounts", "Accounts"]] : [])];
+  const demoItems = [...(inDemo && !PREVIEW ? [] : [["hub", "Demo hub"]]), ...(demo.accounts.length ? [["accounts", "Accounts"]] : [])];
   const demoShown = demoItems.some(([k]) => k === demoTab) ? demoTab : demoItems[0]?.[0];
-  const showDemoTab = !inDemo || demo.accounts.length > 0;
+  const showDemoTab = !inDemo || PREVIEW || demo.accounts.length > 0;
 
   return (
     <div className="grid min-h-[100dvh] grid-cols-[minmax(0,1fr)] lg:grid-cols-2">
@@ -186,67 +183,20 @@ export default function Login() {
               <h2 className="text-lg leading-snug" style={{ textWrap: "balance" }}>Look around a sample hub</h2>
               <p className="mt-1 text-xs text-muted">Sample data. Nothing is saved.</p>
             </div>
-            <Seg value={demoShown} onChange={setDemoTab} testPrefix="demo-tab" items={demoItems} />
+            {demoItems.length > 1 && <Seg value={demoShown} onChange={setDemoTab} testPrefix="demo-tab" items={demoItems} />}
 
-            {demoShown === "founder" && (
-              <div className="rounded-xl border-2 border-ink/40 bg-surface p-4" data-testid="demo-founder-card">
-                <p className="eyebrow">Start here</p>
-                <p className="mt-1 text-lg font-semibold leading-tight">A founder with no community yet</p>
-                <p className="mt-1 text-sm text-muted">Fife Ashley-Dejo has one profile and has joined nothing. That profile alone picks the programs, suggests communities and powers the guide.</p>
-                <button type="button" data-testid="demo-link-founder" onClick={() => startDemo("founder")} className="btn-primary mt-3 w-full">Open the founder demo</button>
-              </div>
-            )}
-
-            {demoShown === "admin" && (
-              <div className="rounded-xl border border-ink/40 bg-surface p-4" data-testid="demo-admin-card">
-                <p className="font-medium">See it as the person running a community</p>
-                <p className="mt-1 text-xs text-muted">Numbers, who is going quiet, a report to send.</p>
-                <div className="mt-3 grid grid-cols-4 gap-1.5" data-testid="demo-sample-tiles" aria-label="Sample figures">
-                  {SAMPLE_TILES.map((t) => (
-                    <div key={t.label} className="min-w-0 rounded-lg bg-ink/[.05] p-2"><p className="stat text-base leading-none">{t.value}</p><p className="mt-1 break-words text-[10px] leading-tight text-muted">{t.label}</p></div>
-                  ))}
+            {demoShown === "hub" && DEMO_COMMUNITIES.filter((c) => c.featured).map((c) => (
+              <div key={c.slug} className="rounded-xl border-2 bg-surface p-4" style={{ borderColor: c.accent }} data-testid={`demo-featured-${c.slug}`}>
+                <p className="eyebrow">{c.eyebrow || "Featured demo"}</p>
+                <p className="mt-1 text-lg font-semibold leading-tight">{c.name}</p>
+                {c.tagline && <p className="mt-0.5 text-sm text-muted">{c.tagline}</p>}
+                <div className="mt-4 grid gap-2">
+                  <button type="button" className="flex items-center justify-center gap-2 rounded-lg px-3 py-3 text-sm font-semibold" style={{ background: c.accent, color: "#fff" }} data-testid="demo-start-fresh" onClick={() => startDemo("member", c.slug, { fresh: true })}>Start from scratch<ArrowRight className="h-4 w-4" aria-hidden /></button>
+                  <p className="-mt-1 text-center text-xs text-muted">Enter your own business and get directions built around it.</p>
+                  <button type="button" className="flex items-center justify-center gap-2 rounded-lg border border-line px-3 py-3 text-sm font-semibold hover:bg-ink/5" data-testid="demo-look-around" onClick={() => startDemo("member", c.slug)}>Look around<ArrowRight className="h-4 w-4" aria-hidden /></button>
+                  <p className="-mt-1 text-center text-xs text-muted">Open a ready-made founder with a finished plan.</p>
                 </div>
-                <p className="mt-1.5 text-[11px] text-muted">Sample data. <Link to="/about#sample" className="underline" data-testid="demo-see-report">See a full sample report</Link></p>
-                <button type="button" data-testid="demo-link-admin" onClick={() => nav(DEMO_PATH)} className="btn-primary mt-3 w-full">Open the demo</button>
-              </div>
-            )}
-
-            {demoShown === "member" && (
-              <div className="rounded-xl border border-line bg-surface p-4">
-                <p className="font-medium">See what a founder sees</p>
-                <p className="mt-1 text-xs text-muted">Programs, grants, events and people, matched to a startup.</p>
-                <button type="button" data-testid="demo-link-member" onClick={() => nav(DEMO_PATH)} className="btn-primary mt-3 w-full">Open the demo</button>
-              </div>
-            )}
-
-            {demoShown === "communities" && (
-              <div className="space-y-2">
-                <p className="eyebrow">Innovation &amp; business</p>
-                {DEMO_COMMUNITIES.filter((c) => c.featured).map((c) => (
-                  <div key={c.slug} className="rounded-xl border-2 bg-surface p-4" style={{ borderColor: c.accent }} data-testid={`demo-featured-${c.slug}`}>
-                    <p className="eyebrow">{c.eyebrow || "Featured demo"}</p>
-                    <p className="mt-1 text-lg font-semibold leading-tight">{c.name}</p>
-                    {c.tagline && <p className="mt-0.5 text-xs text-muted">{c.tagline}</p>}
-                    {c.noAdmin ? (
-                      <div className="mt-3 grid gap-2">
-                        <button type="button" className="rounded-lg px-3 py-2.5 text-sm font-semibold" style={{ background: c.accent, color: "#fff" }} data-testid={`demo-${c.slug}-member`} onClick={() => startDemo("member", c.slug)}>{c.memberTitle || "As a member"}</button>
-                      </div>
-                    ) : (
-                      <div className="mt-3 grid grid-cols-2 gap-2">
-                        <button type="button" className="rounded-lg px-3 py-2.5 text-sm font-semibold" style={{ background: c.accent, color: "#fff" }} data-testid={`demo-${c.slug}-member`} onClick={() => startDemo("member", c.slug)}>{c.memberTitle || "As a member"}</button>
-                        <button type="button" className="rounded-lg border px-3 py-2.5 text-sm font-semibold" style={{ borderColor: c.accent }} data-testid={`demo-${c.slug}-admin`} onClick={() => startDemo("admin", c.slug)}>{c.adminTitle || "As the admin"}</button>
-                      </div>
-                    )}
-                    <Link to={`/demo/${c.short}`} className="mt-2 block text-center text-xs text-muted underline" data-testid={`demo-${c.slug}-page`}>Open its demo page (to share a link)</Link>
-                  </div>))}
-                <p className="eyebrow pt-2">Leisure &amp; lifestyle</p>
-                {DEMO_COMMUNITIES.filter((c) => !c.featured).map((c) => (
-                  <div key={c.slug} className="flex items-center gap-2 rounded-xl border border-line bg-surface p-2.5" data-testid={`demo-community-${c.slug}`}>
-                    <div className="min-w-0 flex-1"><p className="truncate text-sm font-medium">{c.name}</p><p className="truncate text-[11px] text-muted" title={c.blurb}>{c.blurb}</p></div>
-                    <button type="button" className="btn-ghost shrink-0 border border-line !px-2.5 !py-1.5 text-xs" data-testid={`demo-${c.slug}-member`} onClick={() => startDemo("member", c.slug)}>Member</button>
-                  </div>))}
-              </div>
-            )}
+              </div>))}
 
             {demoShown === "accounts" && demo.accounts.length > 0 && (
               <div className="space-y-2">
