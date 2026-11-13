@@ -56,7 +56,7 @@ export function SiteShell({ title, children }) {
   const [open, setOpen] = useState(false);
 
   useEffect(() => { applyBrand({ community_name: "", brand: SITE_BRAND }); setMode(effectiveMode(SITE_BRAND)); }, []);
-  useEffect(() => { document.title = title ? `${title} — Pathwai` : "Pathwai — Founder Self-Service for Incubators"; }, [title]);
+  useEffect(() => { document.title = title ? `${title} — Pathwai` : "Pathwai — Your personal venture planner"; }, [title]);
   // A new page starts at the top, and the phone menu closes.
   useEffect(() => { window.scrollTo(0, 0); setOpen(false); }, [loc.pathname]);
   const flip = () => { const n = mode === "dark" ? "light" : "dark"; setModePref(n); applyBrand({ community_name: "", brand: SITE_BRAND }); setMode(n); };

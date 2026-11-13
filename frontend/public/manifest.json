@@ -1,7 +1,7 @@
 {
   "name": "Pathwai",
   "short_name": "Pathwai",
-  "description": "Your community, in your pocket.",
+  "description": "Your personal venture planner.",
   "start_url": "/",
   "scope": "/",
   "display": "standalone",
