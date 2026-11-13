@@ -12,7 +12,7 @@ export const WAITLIST = `mailto:${CONTACT}?subject=${encodeURIComponent("Join th
 // The site is always branded Pathwai (not whichever community was open last). Dark by default, with a light switch.
 const SITE_BRAND = {
   preset: "pathwai", mode: "dark", font: "Inter", heading_font: "Inter", heading_style: "normal", radius: "soft", button_shape: "pill",
-  colors: { accent: "#7BA4FF", on_accent: "#07111F", background: "#08090D", surface: "#12141B", text: "#F2F4F8", muted: "#8D95A6", border: "#252A36" },
+  colors: { accent: "#F4F4F5", on_accent: "#0A0A0A", background: "#0B0B0D", surface: "#141417", text: "#F4F4F6", muted: "#8E8E99", border: "#25252B" },
 };
 
 const NAV = [["Home", "/"], ["About", "/about"], ["Contact", "/contact"]];
@@ -23,27 +23,36 @@ export const Pill = ({ children, tone = "green" }) => (
   <span className={cx("inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-[11px] font-semibold", tone === "green" ? "bg-emerald-500/15 text-emerald-500" : tone === "blue" ? "bg-sky-500/15 text-sky-500" : "bg-ink/10 text-muted")}>{children}</span>
 );
 
-export function Section({ id, eyebrow, title, sub, children, className }) {
+// A soft purple-blue light that sits between sections.
+export const Glow = ({ className }) => <div aria-hidden className={cx("site-glow", className)} />;
+
+// A section: a small label, a big light headline, one sentence, then the content. Centered, with a lot of room around it.
+export function Section({ id, eyebrow, title, sub, children, className, align = "center" }) {
+  const c = align === "center";
   return (
-    <section id={id} className={cx("scroll-mt-28 py-14 sm:py-20", className)}>
+    <section id={id} className={cx("scroll-mt-28 py-20 sm:py-28", className)}>
       <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
-        {eyebrow && <Eyebrow>{eyebrow}</Eyebrow>}
-        {title && <h2 className="mt-3 max-w-3xl text-3xl sm:text-5xl" style={{ textWrap: "balance" }}>{title}</h2>}
-        {sub && <p className="mt-4 max-w-xl text-base text-muted sm:text-lg">{sub}</p>}
-        {children && <div className={title || sub ? "mt-10" : ""}>{children}</div>}
+        {(eyebrow || title || sub) && (
+          <div className={cx("mx-auto max-w-3xl", c ? "text-center" : "mx-0 text-left")}>
+            {eyebrow && <Eyebrow>{eyebrow}</Eyebrow>}
+            {title && <h2 className="mt-4 text-4xl sm:text-5xl lg:text-6xl" style={{ textWrap: "balance" }}>{title}</h2>}
+            {sub && <p className={cx("mt-5 text-base text-muted sm:text-lg", c && "mx-auto max-w-xl")}>{sub}</p>}
+          </div>
+        )}
+        {children && <div className={title || sub ? "mt-14" : ""}>{children}</div>}
       </div>
     </section>
   );
 }
 
-// The top of an inner page (About, Contact): a small label, a big line and one sentence.
+// The top of an inner page (About, Contact): a small label, a big light line and one sentence.
 export function PageTop({ eyebrow, title, sub }) {
   return (
-    <section className="px-4 pb-6 pt-16 sm:px-6 sm:pt-24">
-      <div className="mx-auto max-w-6xl lg:px-8">
+    <section className="px-4 pb-6 pt-20 text-center sm:px-6 sm:pt-28">
+      <div className="mx-auto max-w-4xl">
         <Eyebrow>{eyebrow}</Eyebrow>
-        <h1 className="mt-4 max-w-4xl text-5xl sm:text-6xl lg:text-7xl" style={{ textWrap: "balance" }}>{title}</h1>
-        {sub && <p className="mt-5 max-w-xl text-lg text-muted sm:text-xl">{sub}</p>}
+        <h1 className="mt-5 text-5xl sm:text-6xl lg:text-7xl" style={{ textWrap: "balance" }}>{title}</h1>
+        {sub && <p className="mx-auto mt-6 max-w-xl text-lg text-muted sm:text-xl">{sub}</p>}
       </div>
     </section>
   );
@@ -54,38 +63,38 @@ export function SiteShell({ title, children }) {
   const loc = useLocation();
   const [mode, setMode] = useState(() => effectiveMode(SITE_BRAND));
   const [open, setOpen] = useState(false);
+  const [scrolled, setScrolled] = useState(false);
 
   useEffect(() => { applyBrand({ community_name: "", brand: SITE_BRAND }); setMode(effectiveMode(SITE_BRAND)); }, []);
   useEffect(() => { document.title = title ? `${title} — Pathwai` : "Pathwai — Your personal venture planner"; }, [title]);
   // A new page starts at the top, and the phone menu closes.
   useEffect(() => { window.scrollTo(0, 0); setOpen(false); }, [loc.pathname]);
+  useEffect(() => { const f = () => setScrolled(window.scrollY > 12); f(); window.addEventListener("scroll", f, { passive: true }); return () => window.removeEventListener("scroll", f); }, []);
   const flip = () => { const n = mode === "dark" ? "light" : "dark"; setModePref(n); applyBrand({ community_name: "", brand: SITE_BRAND }); setMode(n); };
 
-  const link = ({ isActive }) => cx("rounded-full px-3.5 py-1.5 text-sm", isActive ? "glass-active font-semibold text-ink" : "text-muted hover:bg-ink/5 hover:text-ink");
+  const link = ({ isActive }) => cx("rounded-full px-3.5 py-1.5 text-sm", isActive ? "text-ink" : "text-muted hover:text-ink");
 
   return (
-    <div className="site relative w-full" data-testid="site">
-      <header className="sticky top-2 z-40 mx-2 mt-2 sm:top-3 sm:mx-4 sm:mt-3 lg:mx-auto lg:max-w-6xl">
-        <div className="glass-bar rounded-[1.75rem] md:rounded-full">
-          <div className="flex items-center gap-2 px-3 py-2 sm:gap-4 sm:px-5">
-            <Link to="/" className="shrink-0 text-xl sm:text-2xl" aria-label="Pathwai home"><Wordmark name="Pathwai" brand={{}} /></Link>
-            <nav className="mx-auto hidden items-center gap-1 md:flex" aria-label="Site">
-              {NAV.map(([label, to]) => <NavLink key={to} to={to} end className={link} data-testid={`site-nav-${label.toLowerCase()}`}>{label}</NavLink>)}
-            </nav>
-            <div className="ml-auto flex shrink-0 items-center gap-1.5 sm:gap-2 md:ml-0">
-              <Link to="/login" className="btn-ghost !px-3 !py-1.5 text-sm" data-testid="site-signin">Sign in</Link>
-              <button type="button" onClick={flip} className="btn-ghost !px-2.5 !py-1.5" aria-label={mode === "dark" ? "Switch to light mode" : "Switch to dark mode"} data-testid="site-theme">{mode === "dark" ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}</button>
-              <a href={WAITLIST} className="btn-primary !px-4 !py-1.5 text-sm max-md:hidden" data-testid="site-waitlist-top">Join waitlist</a>
-              <button type="button" onClick={() => setOpen((o) => !o)} className="btn-ghost !px-2.5 !py-1.5 md:hidden" aria-label={open ? "Close menu" : "Open menu"} aria-expanded={open} data-testid="site-menu">{open ? <X className="h-4 w-4" /> : <Menu className="h-4 w-4" />}</button>
-            </div>
+    <div className="site relative w-full overflow-x-clip" data-testid="site">
+      <header className={cx("sticky top-0 z-40 transition-colors", scrolled || open ? "border-b border-line/60 bg-paper/70 backdrop-blur-xl" : "border-b border-transparent")}>
+        <div className="mx-auto flex max-w-6xl items-center gap-3 px-4 py-3 sm:gap-4 sm:px-6 lg:px-8">
+          <Link to="/" className="hit shrink-0 text-xl sm:text-2xl" aria-label="Pathwai home"><Wordmark name="Pathwai" brand={{}} /></Link>
+          <nav className="mx-auto hidden items-center gap-1 md:flex" aria-label="Site">
+            {NAV.map(([label, to]) => <NavLink key={to} to={to} end className={link} data-testid={`site-nav-${label.toLowerCase()}`}>{label}</NavLink>)}
+          </nav>
+          <div className="ml-auto flex shrink-0 items-center gap-2 md:ml-0">
+            <Link to="/login" className="hit rounded-full px-3 py-1.5 text-sm text-muted hover:text-ink" data-testid="site-signin">Sign in</Link>
+            <a href={WAITLIST} className="btn-primary !px-4 !py-1.5 text-sm max-sm:hidden" data-testid="site-waitlist-top">Join waitlist</a>
+            <button type="button" onClick={flip} className="flex h-9 w-9 items-center justify-center rounded-full bg-ink/10 text-muted hover:text-ink" aria-label={mode === "dark" ? "Switch to light mode" : "Switch to dark mode"} data-testid="site-theme">{mode === "dark" ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}</button>
+            <button type="button" onClick={() => setOpen((o) => !o)} className="flex h-9 w-9 items-center justify-center rounded-full bg-ink/10 text-muted hover:text-ink md:hidden" aria-label={open ? "Close menu" : "Open menu"} aria-expanded={open} data-testid="site-menu">{open ? <X className="h-4 w-4" /> : <Menu className="h-4 w-4" />}</button>
           </div>
-          {open && (
-            <nav className="grid gap-1 border-t border-line/60 p-2 md:hidden" aria-label="Site menu" data-testid="site-menu-panel">
-              {NAV.map(([label, to]) => <NavLink key={to} to={to} end className={({ isActive }) => cx("rounded-2xl px-4 py-3 text-base", isActive ? "glass-active font-semibold text-ink" : "text-muted")}>{label}</NavLink>)}
-              <a href={WAITLIST} className="btn-primary mt-1 !py-3 text-base">Join the waitlist</a>
-            </nav>
-          )}
         </div>
+        {open && (
+          <nav className="mx-auto grid max-w-6xl gap-1 px-4 pb-4 md:hidden" aria-label="Site menu" data-testid="site-menu-panel">
+            {NAV.map(([label, to]) => <NavLink key={to} to={to} end className={({ isActive }) => cx("rounded-2xl px-4 py-3 text-lg", isActive ? "bg-ink/10 text-ink" : "text-muted")}>{label}</NavLink>)}
+            <a href={WAITLIST} className="btn-primary mt-2 !py-3 text-base">Join the waitlist</a>
+          </nav>
+        )}
       </header>
 
       <main>{children}</main>

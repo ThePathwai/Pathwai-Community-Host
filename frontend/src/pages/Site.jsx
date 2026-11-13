@@ -1,9 +1,9 @@
-import React, { useState } from "react";
-import { Link } from "react-router-dom";
-import { ArrowRight, BookOpen, Building2, Check, Clock, Compass, Layers, Rocket, Search, Sparkles, Target, Users } from "lucide-react";
+import React, { useEffect, useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
+import { ArrowRight, ArrowUp, BookOpen, Check, Clock, Compass, Layers, Rocket, Search, Sparkles, Target, Users } from "lucide-react";
 import { cx } from "../components/ui";
 import { DEMO_PATH } from "../lib/demo";
-import { Eyebrow, Num, Pill, Section, SiteShell, WAITLIST } from "../components/SiteKit";
+import { Eyebrow, Glow, Num, Pill, Section, SiteShell, WAITLIST } from "../components/SiteKit";
 
 // The website home page (shown at / to anyone who is signed out). About and Contact are their own pages (SiteAbout.jsx, SiteContact.jsx);
 // header, footer and shared blocks live in components/SiteKit.jsx. Plain data arrays below, so copy edits are one-liners.
@@ -18,17 +18,15 @@ const FLOW = [
 ];
 
 const TOUR = [
-  ["Business context", "Start with the business trajectory, its goals, and current needs."],
-  ["Relevant support", "Match that context with opportunities and people in the community."],
-  ["Context & clarity", "Show founders why a match matters and what to explore next."],
-  ["Advisor capacity", "Less routine discovery. More time for complex founder needs."],
+  [Layers, "For founders", "Business context", "Start with the business trajectory, its goals, and current needs."],
+  [Compass, "For founders", "Relevant support", "Match that context with opportunities and people in the community."],
+  [Target, "For founders", "Context and clarity", "Show founders why a match matters and what to explore next."],
+  [Users, "For advisors", "Advisor capacity", "Less routine discovery. More time for complex founder needs."],
 ];
 
-const CHALLENGE = [
-  [Search, "Founders", "Can't see what fits."],
-  [Users, "Advisors", "Repeat the same answers."],
-  [Building2, "Incubators", "Stretched thin."],
-];
+// What the box in the hero cycles through, and the chips under it. Both open the demo.
+const PROMPTS = ["I need to find my first customers", "Which grant should I apply for?", "Who can give me feedback on my pitch?", "What should I do in the next 90 days?"];
+const STARTS = ["Funding", "Mentors", "Events", "People", "Resources"];
 
 const SIDES = [
   { tag: "For founders", title: "Find your way.", sub: "Self-service, matched to you.", items: ["Opportunities matched to you", "The right people", "Why each match matters", "Sharper advisor questions"] },
@@ -192,31 +190,55 @@ function Story() {
   );
 }
 
+function AskBox() {
+  const nav = useNavigate();
+  const [i, setI] = useState(0);
+  useEffect(() => { const t = setInterval(() => setI((x) => (x + 1) % PROMPTS.length), 3400); return () => clearInterval(t); }, []);
+  return (
+    <div className="mx-auto mt-12 max-w-2xl text-left" data-testid="site-ask">
+      <form onSubmit={(e) => { e.preventDefault(); nav(DEMO_PATH); }} className="glass-bar rounded-[1.75rem] p-2.5">
+        <div className="flex items-center gap-3 px-3 py-2">
+          <Search className="h-5 w-5 shrink-0 text-muted" aria-hidden />
+          <label htmlFor="site-ask-input" className="sr-only">Ask Pathwai</label>
+          <input id="site-ask-input" readOnly onFocus={() => nav(DEMO_PATH)} placeholder={PROMPTS[i]} className="min-w-0 flex-1 cursor-pointer bg-transparent text-base outline-none placeholder:text-muted sm:text-lg" />
+          <button type="submit" aria-label="Try it in the demo" className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-ink text-paper"><ArrowUp className="h-4 w-4" aria-hidden /></button>
+        </div>
+      </form>
+      <p className="mt-6 text-center text-xs text-muted">Or start here</p>
+      <div className="mt-3 flex flex-wrap justify-center gap-2">
+        {STARTS.map((t) => <Link key={t} to={DEMO_PATH} className="chip hit !px-4 !py-2 text-sm hover:text-ink">{t}</Link>)}
+      </div>
+      <p className="mt-5 text-center text-xs text-muted">Opens the demo with sample data.</p>
+    </div>
+  );
+}
+
+// The three headline figures as big light numerals, divided by hairlines. Sources and what each number measures sit below.
 function Numbers() {
   return (
-    <Section id="problem" eyebrow="The problem" title="Entrepreneurs spend valuable time finding support. Innovation teams spend valuable resources delivering it." className="border-t border-line/60">
-      <div className="grid gap-4 sm:grid-cols-3" data-testid="site-numbers">
+    <Section id="problem" eyebrow="The problem" title="Entrepreneurs spend valuable time finding support. Innovation teams spend valuable resources delivering it.">
+      <div className="grid divide-y divide-line/60 overflow-hidden rounded-[1.6rem] border border-line/60 sm:grid-cols-3 sm:divide-x sm:divide-y-0" data-testid="site-numbers">
         {HEADLINE_STATS.map(([n, label, line, id]) => (
-          <div key={id} className="card" data-testid={`site-stat-${id}`}>
+          <div key={id} className="p-7 sm:p-9" data-testid={`site-stat-${id}`}>
             <p className="stat text-6xl sm:text-7xl">{n}</p>
-            <p className="eyebrow mt-4">{label}</p>
+            <p className="eyebrow mt-6">{label}</p>
             <p className="mt-2 text-sm text-muted">{line}</p>
           </div>
         ))}
       </div>
-      <p className="mt-5 max-w-3xl text-xs text-muted" data-testid="site-numbers-sources">
+      <p className="mx-auto mt-6 max-w-3xl text-center text-xs text-muted" data-testid="site-numbers-sources">
         Sources: <a href={SRC_CENSUS[1]} target="_blank" rel="noreferrer" className="hit underline">{SRC_CENSUS[0]}</a>; <a href={SRC_JOBBANK[1]} target="_blank" rel="noreferrer" className="hit underline">{SRC_JOBBANK[0]}</a>. Figures measure different populations and are not estimates of Pathwai's savings.
       </p>
-      <details className="mt-6 rounded-2xl border border-line bg-surface/60 p-4 sm:p-5" data-testid="site-evidence">
-        <summary className="cursor-pointer text-sm font-semibold">See all five figures and what each one measures</summary>
-        <ul className="mt-5 grid gap-5 sm:grid-cols-2">
+      <details className="mx-auto mt-8 max-w-4xl rounded-2xl border border-line/60 p-4 sm:p-5" data-testid="site-evidence">
+        <summary className="cursor-pointer text-sm font-medium">See all five figures and what each one measures</summary>
+        <ul className="mt-5 grid gap-6 sm:grid-cols-2">
           {EVIDENCE.map(([tag, n, line, caveat, src, url]) => (
             <li key={tag} className="flex flex-col gap-1">
               <p className="eyebrow">{tag}</p>
-              <p className="stat text-3xl">{n}</p>
+              <p className="stat text-4xl">{n}</p>
               <p className="text-sm">{line}</p>
               <p className="text-xs text-muted">{caveat}</p>
-              <a href={url} target="_blank" rel="noreferrer" className="hit mt-1 inline-flex w-fit text-xs underline text-muted hover:text-ink">{src}</a>
+              <a href={url} target="_blank" rel="noreferrer" className="hit mt-1 inline-flex w-fit text-xs text-muted underline hover:text-ink">{src}</a>
             </li>
           ))}
         </ul>
@@ -231,78 +253,85 @@ export default function Site() {
   return (
     <SiteShell>
       {/* hero */}
-      <section className="px-4 pb-10 pt-16 text-center sm:px-6 sm:pt-24">
+      <section className="px-4 pb-16 pt-16 text-center sm:px-6 sm:pt-24">
         <div className="mx-auto max-w-5xl">
-          <span className="chip mx-auto !px-4 !py-1.5 text-[11px] font-semibold uppercase" style={{ letterSpacing: "0.14em" }}>Founder self-service for incubators</span>
-          <h1 className="mx-auto mt-6 text-5xl sm:text-6xl lg:text-7xl" style={{ textWrap: "balance" }}>
-            Founders find support.<br /><span className="text-muted">Advisors get time back.</span>
+          <span className="chip mx-auto !px-4 !py-1.5 text-xs" data-testid="site-badge"><span className="mr-1.5 inline-block h-1.5 w-1.5 rounded-full bg-amber-400" aria-hidden />Founder self-service for incubators</span>
+          <h1 className="mx-auto mt-8 text-5xl sm:text-7xl lg:text-8xl" style={{ textWrap: "balance" }}>
+            Founders find support. Advisors get time back.
           </h1>
-          <p className="mx-auto mt-6 max-w-2xl text-lg text-muted sm:text-xl">Pathwai is a personal venture planner for every founder in your incubator. It matches their business to the programs, people and resources around them, and helps them leave with a decision plan.</p>
-          <div className="mt-9 flex flex-wrap items-center justify-center gap-3">
+          <p className="mx-auto mt-7 max-w-2xl text-lg text-muted sm:text-xl">Pathwai is a personal venture planner for every founder in your incubator. It matches their business to the programs, people and resources around them, and helps them leave with a decision plan.</p>
+          <AskBox />
+          <div className="mt-10 flex flex-wrap items-center justify-center gap-3">
             <a href={WAITLIST} className="btn-primary !px-6 !py-3 text-base" data-testid="site-waitlist">Join the waitlist<ArrowRight className="h-4 w-4" aria-hidden /></a>
             <Link to={DEMO_PATH} className="btn-ghost !px-6 !py-3 text-base" data-testid="site-demo">Try the demo</Link>
             <Link to="/about" className="btn-ghost !px-6 !py-3 text-base" data-testid="site-incubators">For incubators</Link>
           </div>
         </div>
-        <ol className="mx-auto mt-14 grid max-w-6xl grid-cols-2 gap-px overflow-hidden rounded-[1.5rem] border border-line bg-line/60 text-left sm:grid-cols-3 lg:grid-cols-5" data-testid="site-flow">
+        <ol className="mx-auto mt-20 grid max-w-6xl grid-cols-2 overflow-hidden rounded-[1.6rem] border border-line/60 text-left sm:grid-cols-3 lg:grid-cols-5" data-testid="site-flow">
           {FLOW.map(([Icon, t, d], i) => (
-            <li key={t} className={cx("bg-surface/80 p-4 backdrop-blur sm:p-5", i === 4 && "col-span-2 sm:col-span-1")}>
+            <li key={t} className={cx("border-line/60 p-5 sm:p-6", i % 2 === 0 && "border-r max-sm:border-r", i < 4 && "border-b lg:border-b-0", i < FLOW.length - 1 && "lg:border-r", i === 4 && "col-span-2 border-t border-r-0 sm:col-span-1 sm:border-t-0")}>
               <div className="flex items-center justify-between"><Num n={i + 1} /><Icon className="h-4 w-4 text-muted" aria-hidden /></div>
-              <p className="mt-4 text-sm font-bold uppercase" style={{ letterSpacing: "0.04em" }}>{t}</p>
+              <p className="mt-6 text-sm font-medium">{t}</p>
               <p className="mt-1 text-xs text-muted">{d}</p>
             </li>
           ))}
         </ol>
       </section>
 
+      <Glow />
+
+      {/* the statement: one large light paragraph with the key phrase picked out */}
+      <section className="px-4 py-24 text-center sm:px-6 sm:py-32" data-testid="site-statement">
+        <p className="mx-auto max-w-4xl text-3xl font-light leading-[1.3] text-muted sm:text-[2.6rem] sm:leading-[1.25]" style={{ letterSpacing: "-0.03em", textWrap: "balance" }}>
+          Support exists across hundreds of portals. <span className="text-ink">Founders can't see what fits</span>, and advisors keep repeating the same answers. Pathwai reads what a founder is building and <span className="text-ink">shows what is relevant, and why.</span>
+        </p>
+      </section>
+
       <Numbers />
+
+      <Glow />
 
       <Section id="see" eyebrow="See it in action" title="Watch the product come alive." sub="A four-part story, from the pain to the payoff.">
         <Story />
       </Section>
 
-      <Section id="tour" eyebrow="Product tour" title="Relevant support, explained." sub="Built around where each founder's business is heading." className="border-t border-line/60">
+      <Section id="tour" eyebrow="Product tour" title="Relevant support, explained." sub="Built around where each founder's business is heading.">
         <ol className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4" data-testid="site-tour">
-          {TOUR.map(([t, d], i) => (
-            <li key={t} className="card flex flex-col gap-2"><Num n={i + 1} /><h3 className="text-lg font-bold">{t}</h3><p className="text-sm text-muted">{d}</p></li>
+          {TOUR.map(([Icon, tag, t, d]) => (
+            <li key={t} className="card flex flex-col gap-3 !p-6">
+              <div className="flex items-center justify-between"><span className="flex h-9 w-9 items-center justify-center rounded-xl bg-ink/10"><Icon className="h-4 w-4" aria-hidden /></span><span className="chip !px-2.5 !py-0.5 text-[11px]">{tag}</span></div>
+              <h3 className="mt-3 text-lg">{t}</h3><p className="text-sm text-muted">{d}</p>
+            </li>
           ))}
         </ol>
       </Section>
 
-      <Section id="challenge" eyebrow="The challenge" title="Support exists. Founders can't see it." className="border-t border-line/60">
-        <div className="grid gap-4 sm:grid-cols-3" data-testid="site-challenge">
-          {CHALLENGE.map(([Icon, who, line]) => (
-            <div key={who} className="card"><Icon className="h-5 w-5 text-muted" aria-hidden /><p className="eyebrow mt-4">{who}</p><p className="mt-1 text-xl font-bold leading-snug">{line}</p></div>
-          ))}
-        </div>
-        <p className="mt-6 flex flex-wrap gap-x-6 gap-y-1 text-lg font-semibold"><span>What is available?</span><span className="text-muted">Who can help?</span></p>
-      </Section>
-
-      <Section id="sides" eyebrow="Two sides" title="For founders. For advisors." className="border-t border-line/60">
+      <Section id="sides" eyebrow="Two sides" title="For founders. For advisors.">
         <div className="grid gap-4 lg:grid-cols-2" data-testid="site-sides">
           {SIDES.map((s) => (
-            <div key={s.tag} className="card !p-6 sm:!p-8">
+            <div key={s.tag} className="card !p-7 sm:!p-10">
               <Eyebrow>{s.tag}</Eyebrow>
-              <p className="mt-2 text-3xl font-bold sm:text-4xl">{s.title}</p>
-              <p className="mt-1 text-muted">{s.sub}</p>
-              <ul className="mt-6 space-y-2.5">{s.items.map((t) => <li key={t} className="flex items-start gap-2.5 text-sm"><Check className="mt-0.5 h-4 w-4 shrink-0" aria-hidden />{t}</li>)}</ul>
+              <p className="mt-3 text-4xl font-light sm:text-5xl" style={{ letterSpacing: "-0.035em" }}>{s.title}</p>
+              <p className="mt-2 text-muted">{s.sub}</p>
+              <ul className="mt-8 space-y-3">{s.items.map((t) => <li key={t} className="flex items-start gap-3 text-sm"><Check className="mt-0.5 h-4 w-4 shrink-0 text-muted" aria-hidden />{t}</li>)}</ul>
             </div>
           ))}
         </div>
       </Section>
 
-      <Section id="selfservice" eyebrow="Founder self-service" title="Discover. Understand. Ask." className="border-t border-line/60">
+      <Section id="selfservice" eyebrow="Founder self-service" title="Discover. Understand. Ask.">
         <ol className="grid gap-4 sm:grid-cols-3" data-testid="site-steps">
           {STEPS.map(([t, d], i) => (
-            <li key={t} className="card flex flex-col gap-2"><p className="eyebrow">Step {String(i + 1).padStart(2, "0")}</p><h3 className="text-xl font-bold">{t}</h3><p className="text-sm text-muted">{d}</p></li>
+            <li key={t} className="card flex flex-col gap-2 !p-7"><p className="eyebrow">Step {String(i + 1).padStart(2, "0")}</p><h3 className="mt-3 text-2xl">{t}</h3><p className="text-sm text-muted">{d}</p></li>
           ))}
         </ol>
       </Section>
 
-      <section className="px-4 pb-16 sm:px-6 sm:pb-24">
-        <div className="card mx-auto flex max-w-6xl flex-col items-center gap-7 !p-8 text-center sm:!p-14">
-          <Sparkles className="h-6 w-6 text-muted" aria-hidden />
-          <h2 className="max-w-3xl text-3xl sm:text-5xl" style={{ textWrap: "balance" }}>Give every founder a way to find their next step.</h2>
+      <Glow />
+
+      <section className="px-4 pb-24 pt-8 text-center sm:px-6 sm:pb-32">
+        <div className="mx-auto flex max-w-4xl flex-col items-center gap-9">
+          <h2 className="text-4xl sm:text-6xl" style={{ textWrap: "balance" }}>Give every founder a way to find their next step.</h2>
           <div className="flex flex-wrap justify-center gap-3">
             <a href={WAITLIST} className="btn-primary !px-6 !py-3" data-testid="site-waitlist-end">Join the waitlist<ArrowRight className="h-4 w-4" aria-hidden /></a>
             <Link to={DEMO_PATH} className="btn-ghost !px-6 !py-3" data-testid="site-demo-end"><Rocket className="h-4 w-4" aria-hidden />Try the demo</Link>

@@ -56,7 +56,7 @@ export default function SiteAbout() {
         </div>
       </Section>
 
-      <section className="px-4 pb-16 sm:px-6 sm:pb-24">
+      <section className="px-4 pb-16 sm:px-6 sm:pb-24 lg:px-8">
         <div className="card mx-auto flex max-w-6xl flex-col items-center gap-7 !p-8 text-center sm:!p-14">
           <h2 className="max-w-3xl text-3xl sm:text-5xl" style={{ textWrap: "balance" }}>See it work for your incubator.</h2>
           <div className="flex flex-wrap justify-center gap-3">
