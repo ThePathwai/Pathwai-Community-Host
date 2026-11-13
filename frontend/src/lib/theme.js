@@ -47,8 +47,8 @@ export function brandVars(brand = {}) {
     "--font-sans": font, "--r-card": radius[0], "--r-input": radius[1], "--r-btn": btn,
     "--font-heading": b.heading_font === "Inter" ? `-apple-system, BlinkMacSystemFont, "SF Pro Display", "Inter", ui-sans-serif, system-ui, sans-serif` : b.heading_font ? `"${b.heading_font}", ${font}` : font,
     "--heading-transform": b.heading_style === "normal" ? "none" : "uppercase",
-    "--heading-weight": SINGLE_WEIGHT.has(b.heading_font) ? "400" : b.heading_style === "normal" ? "700" : "900",
-    "--heading-ls": b.heading_font ? "0" : b.heading_style === "normal" ? "-0.022em" : "-0.025em",
+    "--heading-weight": SINGLE_WEIGHT.has(b.heading_font) ? "400" : b.heading_style === "normal" ? "500" : "800",
+    "--heading-ls": b.heading_font ? "0" : b.heading_style === "normal" ? "-0.03em" : "-0.025em",
     colorScheme: b.mode,
   };
 }

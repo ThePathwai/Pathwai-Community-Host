@@ -41,6 +41,23 @@ const STEPS = [
   ["Seek deeper help", "Bring focused questions."],
 ];
 
+// Published figures behind the "problem" section. Every number names its source and what it does and does not measure; edit them here.
+const SRC_CENSUS = ["Startup Canada, 2022 Entrepreneur Census", "https://www.startupcan.ca/wp-content/uploads/2023/03/Startup-Canada-Census-Report-2022.pdf"];
+const SRC_NRCAN = ["Natural Resources Canada, 2025 Cleantech Industry Survey", "https://natural-resources.canada.ca/sites/admin/files/documents/2025-07/2025_Cleantech_Industry_Survey_Results_EN.pdf"];
+const SRC_JOBBANK = ["Government of Canada Job Bank, Ontario", "https://www.jobbank.gc.ca/marketreport/wages-occupation/3873/ON"];
+const HEADLINE_STATS = [
+  ["535", "Hours", "Average foundational business research time reported by surveyed entrepreneurs.", "founder-time"],
+  ["44.6%", "Funding discovery", "Identified knowing what funding is available as a financial challenge.", "funding-discovery"],
+  ["$94.9K", "Annualized wages", "Ontario median for a comparable business development role.", "staffing-cost"],
+];
+const EVIDENCE = [
+  ["Founder time", "535 hours", "Average foundational business research time reported by surveyed entrepreneurs.", "Not an annual figure, and it covers broader business research, not just innovation resources.", "Startup Canada, 2022 Entrepreneur Census, p. 8", SRC_CENSUS[1]],
+  ["Funding discovery", "44.6%", "Identified knowing what funding is available as a financial challenge.", "Among respondents to Startup Canada's entrepreneur census.", "Startup Canada, 2022, p. 8", SRC_CENSUS[1]],
+  ["Funding access", "69.6%", "Identified accessing government grants as a financial challenge.", "Among Startup Canada's surveyed entrepreneurs.", "Startup Canada, 2022, p. 8", SRC_CENSUS[1]],
+  ["Financial and administrative friction", "52%", "Cited excessive application paperwork and costs as a barrier to federal funding.", "Among respondents to Natural Resources Canada's 2025 cleantech survey (funding-barriers question, n=547). Specific to that sector.", "Natural Resources Canada, 2025, p. 19", SRC_NRCAN[1]],
+  ["Institutional staffing cost", "$94,931 a year", "Annualized median wage for an Ontario Business Development Officer.", "From the Job Bank median of $45.64 an hour at 40 hours a week for 52 weeks, before employer benefits. A comparable occupation, not a Venture Advisor salary survey or a proven Pathwai saving.", "Government of Canada Job Bank, Ontario", SRC_JOBBANK[1]],
+];
+
 const TABS = [["problem", "The problem"], ["match", "The match"], ["profile", "The profile"], ["plan", "The plan"]];
 
 /* ---------- the product story: four short, made-up screens ---------- */
@@ -52,16 +69,17 @@ function Problem() {
         <Eyebrow>The problem</Eyebrow>
         <h3 className="mt-3 text-3xl font-bold sm:text-4xl" style={{ textWrap: "balance" }}>Canada's ecosystem is unnavigable.</h3>
         <ul className="mt-5 space-y-2.5 text-base text-muted">
-          {["Scattered across hundreds of portals", "No way to know what's relevant or timely", "1.07M SMBs. Zero shared map."].map((t) => (
+          {["Scattered across hundreds of portals", "No way to know what's relevant or timely", "44.6% find it hard to know what funding exists"].map((t) => (
             <li key={t} className="flex items-start gap-2.5"><Check className="mt-1 h-4 w-4 shrink-0 text-ink" aria-hidden />{t}</li>
           ))}
         </ul>
       </div>
       <div className="card text-center">
         <Eyebrow>The navigation tax</Eyebrow>
-        <p className="stat mt-4 text-6xl sm:text-7xl">6.4M+</p>
-        <p className="mt-2 text-sm font-semibold uppercase text-muted" style={{ letterSpacing: "0.14em" }}>Hours a year</p>
-        <p className="mt-5 inline-flex items-center gap-2 rounded-full border border-line px-4 py-1.5 text-sm"><Clock className="h-4 w-4" aria-hidden />About $320M lost to navigation, every year</p>
+        <p className="stat mt-4 text-6xl sm:text-7xl">535</p>
+        <p className="mt-2 text-sm font-semibold uppercase text-muted" style={{ letterSpacing: "0.14em" }}>Hours</p>
+        <p className="mx-auto mt-3 max-w-xs text-sm text-muted">Average foundational business research time reported by surveyed entrepreneurs.</p>
+        <p className="mt-5 inline-flex items-center gap-2 rounded-full border border-line px-4 py-1.5 text-sm"><Clock className="h-4 w-4" aria-hidden />Source: Startup Canada, 2022</p>
         <div className="mt-6 grid grid-cols-3 gap-2 text-xs text-muted" aria-hidden>
           {["Communities", "Startups", "Resources", "Funding", "Collaboration", "Investment"].map((t) => <span key={t} className="rounded-xl border border-dashed border-line px-2 py-2">{t}</span>)}
         </div>
@@ -174,6 +192,39 @@ function Story() {
   );
 }
 
+function Numbers() {
+  return (
+    <Section id="problem" eyebrow="The problem" title="Entrepreneurs spend valuable time finding support. Innovation teams spend valuable resources delivering it." className="border-t border-line/60">
+      <div className="grid gap-4 sm:grid-cols-3" data-testid="site-numbers">
+        {HEADLINE_STATS.map(([n, label, line, id]) => (
+          <div key={id} className="card" data-testid={`site-stat-${id}`}>
+            <p className="stat text-6xl sm:text-7xl">{n}</p>
+            <p className="eyebrow mt-4">{label}</p>
+            <p className="mt-2 text-sm text-muted">{line}</p>
+          </div>
+        ))}
+      </div>
+      <p className="mt-5 max-w-3xl text-xs text-muted" data-testid="site-numbers-sources">
+        Sources: <a href={SRC_CENSUS[1]} target="_blank" rel="noreferrer" className="hit underline">{SRC_CENSUS[0]}</a>; <a href={SRC_JOBBANK[1]} target="_blank" rel="noreferrer" className="hit underline">{SRC_JOBBANK[0]}</a>. Figures measure different populations and are not estimates of Pathwai's savings.
+      </p>
+      <details className="mt-6 rounded-2xl border border-line bg-surface/60 p-4 sm:p-5" data-testid="site-evidence">
+        <summary className="cursor-pointer text-sm font-semibold">See all five figures and what each one measures</summary>
+        <ul className="mt-5 grid gap-5 sm:grid-cols-2">
+          {EVIDENCE.map(([tag, n, line, caveat, src, url]) => (
+            <li key={tag} className="flex flex-col gap-1">
+              <p className="eyebrow">{tag}</p>
+              <p className="stat text-3xl">{n}</p>
+              <p className="text-sm">{line}</p>
+              <p className="text-xs text-muted">{caveat}</p>
+              <a href={url} target="_blank" rel="noreferrer" className="hit mt-1 inline-flex w-fit text-xs underline text-muted hover:text-ink">{src}</a>
+            </li>
+          ))}
+        </ul>
+      </details>
+    </Section>
+  );
+}
+
 /* ---------- the page ---------- */
 
 export default function Site() {
@@ -203,6 +254,8 @@ export default function Site() {
           ))}
         </ol>
       </section>
+
+      <Numbers />
 
       <Section id="see" eyebrow="See it in action" title="Watch the product come alive." sub="A four-part story, from the pain to the payoff.">
         <Story />
