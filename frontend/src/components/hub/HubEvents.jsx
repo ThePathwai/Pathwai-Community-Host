@@ -17,7 +17,7 @@ function Card({ m, onRsvp }) {
   return (
     <MatchCard m={m} testid={`event-${m.id}`} kicker={m.category}
       lead={<Link to={`/events/${m.id}`} className="flex h-14 w-14 shrink-0 flex-col items-center justify-center rounded-xl bg-ink/[.07] text-center" aria-label={`${m.title}, details`}>
-        <span className="text-[10px] font-bold uppercase leading-none text-red-600" style={{ letterSpacing: "0.08em" }}>{dt.toLocaleString("en", { month: "short" })}</span>
+        <span className="text-[10px] font-bold uppercase leading-none text-red-600 dark:text-red-400" style={{ letterSpacing: "0.08em" }}>{dt.toLocaleString("en", { month: "short" })}</span>
         <span className="mt-0.5 text-xl font-bold leading-none">{dt.getDate()}</span></Link>}
       title={<Link to={`/events/${m.id}`} className="hover:underline">{m.title}</Link>}
       sub={<span className="flex flex-wrap items-center gap-x-3 gap-y-0.5"><span>{fmtDate(m.at, { weekday: "short", hour: "numeric", minute: "2-digit" })}</span>

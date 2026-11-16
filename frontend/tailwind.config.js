@@ -2,7 +2,7 @@
 // Colours are CSS variables (rgb triplets) so each community's brand can re-skin the whole member experience.
 const v = (name) => `rgb(var(${name}) / <alpha-value>)`;
 module.exports = {
-  darkMode: ["class"],
+  darkMode: ["selector", '[data-mode="dark"]'],
   content: ["./src/**/*.{js,jsx}", "./public/index.html"],
   theme: {
     extend: {

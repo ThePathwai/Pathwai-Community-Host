@@ -253,21 +253,21 @@ export default function Site() {
   return (
     <SiteShell>
       {/* hero */}
-      <section className="px-4 pb-16 pt-16 text-center sm:px-6 sm:pt-24">
+      <section className="px-4 pb-8 pt-10 text-center sm:px-6 sm:pb-10 sm:pt-16">
         <div className="mx-auto max-w-5xl">
           <span className="chip mx-auto !px-4 !py-1.5 text-xs" data-testid="site-badge"><span className="mr-1.5 inline-block h-1.5 w-1.5 rounded-full bg-amber-400" aria-hidden />Founder self-service for incubators</span>
-          <h1 className="mx-auto mt-8 text-5xl sm:text-7xl lg:text-8xl" style={{ textWrap: "balance" }}>
+          <h1 className="mx-auto mt-6 text-5xl sm:text-7xl lg:text-8xl" style={{ textWrap: "balance" }}>
             Founders find support. Advisors get time back.
           </h1>
-          <p className="mx-auto mt-7 max-w-2xl text-lg text-muted sm:text-xl">Pathwai is a personal venture planner for every founder in your incubator. It matches their business to the programs, people and resources around them, and helps them leave with a decision plan.</p>
+          <p className="mx-auto mt-5 max-w-2xl text-lg text-muted sm:text-xl">Pathwai is a personal venture planner for every founder in your incubator. It matches their business to the programs, people and resources around them, and helps them leave with a decision plan.</p>
           <AskBox />
-          <div className="mt-10 flex flex-wrap items-center justify-center gap-3">
+          <div className="mt-7 flex flex-wrap items-center justify-center gap-3">
             <a href={WAITLIST} className="btn-primary !px-6 !py-3 text-base" data-testid="site-waitlist">Join the waitlist<ArrowRight className="h-4 w-4" aria-hidden /></a>
             <Link to={DEMO_PATH} className="btn-ghost !px-6 !py-3 text-base" data-testid="site-demo">Try the demo</Link>
             <Link to="/about" className="btn-ghost !px-6 !py-3 text-base" data-testid="site-incubators">For incubators</Link>
           </div>
         </div>
-        <ol className="mx-auto mt-20 grid max-w-6xl grid-cols-2 overflow-hidden rounded-[1.6rem] border border-line/60 text-left sm:grid-cols-3 lg:grid-cols-5" data-testid="site-flow">
+        <ol className="mx-auto mt-12 grid max-w-6xl grid-cols-2 overflow-hidden rounded-[1.6rem] border border-line/60 text-left sm:grid-cols-3 lg:grid-cols-5" data-testid="site-flow">
           {FLOW.map(([Icon, t, d], i) => (
             <li key={t} className={cx("border-line/60 p-5 sm:p-6", i % 2 === 0 && "border-r max-sm:border-r", i < 4 && "border-b lg:border-b-0", i < FLOW.length - 1 && "lg:border-r", i === 4 && "col-span-2 border-t border-r-0 sm:col-span-1 sm:border-t-0")}>
               <div className="flex items-center justify-between"><Num n={i + 1} /><Icon className="h-4 w-4 text-muted" aria-hidden /></div>
@@ -281,7 +281,7 @@ export default function Site() {
       <Glow />
 
       {/* the statement: one large light paragraph with the key phrase picked out */}
-      <section className="px-4 py-24 text-center sm:px-6 sm:py-32" data-testid="site-statement">
+      <section className="px-4 py-12 text-center sm:px-6 sm:py-16" data-testid="site-statement">
         <p className="mx-auto max-w-4xl text-3xl font-light leading-[1.3] text-muted sm:text-[2.6rem] sm:leading-[1.25]" style={{ letterSpacing: "-0.03em", textWrap: "balance" }}>
           Support exists across hundreds of portals. <span className="text-ink">Founders can't see what fits</span>, and advisors keep repeating the same answers. Pathwai reads what a founder is building and <span className="text-ink">shows what is relevant, and why.</span>
         </p>
@@ -329,7 +329,7 @@ export default function Site() {
 
       <Glow />
 
-      <section className="px-4 pb-24 pt-8 text-center sm:px-6 sm:pb-32">
+      <section className="px-4 pb-14 pt-4 text-center sm:px-6 sm:pb-20">
         <div className="mx-auto flex max-w-4xl flex-col items-center gap-9">
           <h2 className="text-4xl sm:text-6xl" style={{ textWrap: "balance" }}>Give every founder a way to find their next step.</h2>
           <div className="flex flex-wrap justify-center gap-3">

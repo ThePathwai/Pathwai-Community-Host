@@ -37,7 +37,7 @@ function AskBar() {
   const [q, setQ] = useState("");
   const go = (t) => { const v = String(t ?? q).trim(); nav(v ? `/assistant?q=${encodeURIComponent(v)}` : "/assistant"); };
   return (
-    <section className="flex-none rounded-2xl border border-line bg-surface p-3 shadow-sm sm:p-4" data-testid="eco-ask">
+    <section className="card flex-none !p-3 sm:!p-4" data-testid="eco-ask">
       <form onSubmit={(e) => { e.preventDefault(); go(); }}>
         <label className="flex items-center gap-3 rounded-full border border-line bg-paper py-1 pl-4 pr-1 transition focus-within:border-ink/40 focus-within:shadow-sm">
           <MessageCircle className="h-5 w-5 shrink-0 text-muted" aria-hidden />
@@ -59,7 +59,7 @@ function NextMoves({ items, states, today, onOpen }) {
   const go = (it) => (it.kind === "move" ? openMove(it.move, nav, onOpen) : nav(it.to));
   const meta = (it) => (it.kind === "move" ? [whenOf(it.move), it.move.why].filter(Boolean).join(" · ") : it.why);
   return (
-    <section className="flex-none rounded-2xl border border-line bg-surface shadow-sm" data-testid="eco-moves">
+    <section className="card flex-none !p-0" data-testid="eco-moves">
       <div className="flex items-center justify-between gap-3 px-3 pt-3 sm:px-4 sm:pt-4">
         <div className="min-w-0"><p className="hidden text-[11px] font-semibold uppercase text-muted sm:block" style={{ letterSpacing: "0.12em" }}>Not sure where to start?</p>
           <h2 className="text-base font-bold sm:text-lg" style={heading}>Do these next</h2></div>
@@ -165,7 +165,7 @@ function Matches({ tabs, today, onOpen }) {
             return (
               <button key={t.id} type="button" role="tab" aria-selected={on} onClick={() => setId(t.id)} data-testid={`eco-tab-${t.id}`}
                 className={cx("inline-flex shrink-0 items-center gap-1.5 whitespace-nowrap rounded-full px-3 py-1.5 text-sm transition sm:px-3.5", on ? "bg-surface font-semibold shadow-sm" : "text-muted hover:text-ink")}>
-                {t.title}<span className={cx("hidden rounded-full px-1.5 text-xs font-bold tabular-nums sm:inline", on ? "bg-emerald-500/15 text-emerald-700 dark:text-emerald-300" : "bg-ink/10")}>{t.counts.now}</span>
+                {t.title}<span className={cx("hidden rounded-full px-1.5 text-xs font-bold tabular-nums sm:inline", on ? "bg-emerald-500/15 text-emerald-700 dark:text-emerald-300" : "bg-ink/10 text-ink/75")}>{t.counts.now}</span>
               </button>
             );
           })}
@@ -208,16 +208,21 @@ function Matches({ tabs, today, onOpen }) {
 // The right column's second card: the events you are going to, as one list. It takes whatever height is left and shows as many rows as fit.
 function Updates({ events, hub }) {
   const [ref, rows] = useRows(46, 0);
-  const going = events.filter((e) => e.rsvp).sort((a, b) => String(a.at).localeCompare(String(b.at))).slice(0, 3)
+  // The events you are going to first, then the next ones coming up, so the card is never left half empty.
+  const byAt = (x, y) => String(x.at).localeCompare(String(y.at));
+  const nowIso = new Date().toISOString();
+  const going = events.filter((e) => e.rsvp).sort(byAt).slice(0, 3)
     .map((e) => ({ key: `e${e.id}`, tag: "Going", title: e.title, sub: whenOf(e), to: `/events/${e.id}` }));
-  const items = going;
+  const next = events.filter((e) => !e.rsvp && String(e.at) >= nowIso).sort(byAt).slice(0, 4)
+    .map((e) => ({ key: `e${e.id}`, tag: "Next", title: e.title, sub: whenOf(e), to: `/events/${e.id}` }));
+  const items = [...going, ...next];
   if (!items.length) return null;
   return (
     <section className="card hidden min-h-0 flex-1 flex-col !p-4 lg:flex" data-testid="eco-news">
       <div className="mb-2 flex flex-none items-center justify-between"><h2 className="text-base font-bold" style={heading}>Coming up at {hub}</h2></div>
       <div ref={ref} className="min-h-0 flex-1 overflow-hidden">
-        <ul className="divide-y divide-line">{items.slice(0, Math.max(1, rows)).map((it) => (
-          <li key={it.key}><Link to={it.to} className="block py-2 first:pt-0">
+        <ul className="flex h-full flex-col divide-y divide-line">{items.slice(0, Math.max(1, rows)).map((it) => (
+          <li key={it.key} className="flex min-h-0 flex-1 items-center"><Link to={it.to} className="block w-full py-1.5">
             <p className="flex items-center gap-2"><span className={cx("rounded px-1.5 py-px text-[10px] font-bold uppercase", it.tag === "Going" ? "bg-emerald-500/15 text-emerald-700 dark:text-emerald-300" : "bg-ink/10 text-ink/70")} style={{ letterSpacing: "0.08em" }}>{it.tag}</span><span className="text-[11px] text-muted">{it.sub}</span></p>
             <p className="mt-0.5 line-clamp-1 text-sm font-semibold leading-snug">{it.title}</p>
           </Link></li>))}</ul>

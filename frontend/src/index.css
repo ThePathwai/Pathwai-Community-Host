@@ -57,6 +57,14 @@ select option { background: rgb(var(--c-surface)); color: rgb(var(--c-ink)); }
   --glass-edge: rgb(255 255 255 / 0.85); --glass-hi: inset 0 1px 0 rgb(255 255 255 / 0.95), 0 0 0 0.5px rgb(16 24 40 / 0.07);
   --glass-shadow: 0 1px 2px rgb(16 24 40 / 0.04), 0 18px 44px -18px rgb(30 41 90 / 0.22);
   --wash-a: 17%; --wash-b: 0.16; --wash-c: 0.13; }
+/* Colour hierarchy for status text. Dark mode uses the 300/400 shades (Tailwind's dark: variants, switched on by data-mode) and light
+   mode the 800s, so small green / amber / blue labels stay readable on the tinted page in both. */
+[data-mode="light"] .text-emerald-700, [data-mode="light"] .text-green-700 { color: #064e3b; }
+[data-mode="light"] .text-amber-700 { color: #92400e; }
+[data-mode="light"] .text-sky-700 { color: #075985; }
+[data-mode="light"] .text-indigo-700 { color: #3730a3; }
+[data-mode="light"] .text-violet-700 { color: #5b21b6; }
+[data-mode="light"] .text-red-600, [data-mode="light"] .text-rose-600 { color: #b91c1c; }
 /* status colours are tuned for dark surfaces; darken them on light themes */
 [data-mode="light"] .text-amber-300 { color: #b45309; }
 [data-mode="light"] .text-sky-300 { color: #0369a1; }
@@ -218,7 +226,7 @@ h3, h4 { letter-spacing: -0.02em; }
 .site .chip { background: rgb(var(--c-ink) / 0.07); border-color: rgb(var(--c-ink) / 0.10); }
 .site .btn-ghost { background: rgb(var(--c-ink) / 0.07); border: 1px solid rgb(var(--c-ink) / 0.10); }
 .site .btn-ghost:hover { background: rgb(var(--c-ink) / 0.12); }
-.site-glow { height: 120px; pointer-events: none; } /* spacing only: the page-wide aurora replaces the old glow bands */
+.site-glow { height: 0; pointer-events: none; } /* spacing only: the page-wide aurora replaces the old glow bands */
 
 /* ---------- the Pathwai look inside the app (demo hub and the default Pathwai hub) ----------
    Same language as the website: flat near-black, light large type, hairline cards, a soft glow instead of the glass colour wash.
@@ -266,3 +274,7 @@ h3, h4 { letter-spacing: -0.02em; }
 /* some page headings set a heavy weight inline; the Pathwai look wins over it */
 :root[data-preset="pathwai"] h1, :root[data-preset="pathwai"] h2 { font-weight: 300 !important; letter-spacing: -0.035em !important; }
 :root[data-preset="pathwai"] .chip.chip-accent { background-color: var(--accent); background-image: none; border-color: transparent; color: var(--on-accent); }
+
+/* Card levels, one rule for both modes: dark cards are a faint lift above the ground, light cards are frosted white above it. */
+:root[data-preset="pathwai"][data-mode="light"] .card, .site .card:is([data-mode="light"] *) { background: rgb(255 255 255 / .58); border-color: rgb(255 255 255 / .85); box-shadow: 0 1px 2px rgb(30 30 80 / .05), 0 14px 36px -18px rgb(50 40 120 / .22); -webkit-backdrop-filter: blur(16px); backdrop-filter: blur(16px); }
+:root[data-preset="pathwai"][data-mode="light"] .card-hover:hover { background: rgb(255 255 255 / .78); }

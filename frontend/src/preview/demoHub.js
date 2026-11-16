@@ -12,7 +12,7 @@ const ME = "u-hm-me";          // the member-demo persona (a founder)
 const DANA = "u-hm-dana";      // the admin-demo persona (programs lead)
 
 // The demo hub wears the Pathwai look (same as the website): near-black, white accent, light type.
-const COLORS = { accent: "#F4F4F5", on_accent: "#0A0A0A", background: "#0B0B0D", surface: "#141417", text: "#F4F4F6", muted: "#8E8E99", border: "#25252B" };
+const COLORS = { accent: "#F4F4F5", on_accent: "#0A0A0A", background: "#0B0B0D", surface: "#141417", text: "#F4F4F6", muted: "#A6A6B1", border: "#2A2A30" };
 const BRAND = {
   preset: "pathwai", mode: "dark", colors: COLORS, font: "Inter", heading_font: "Inter", heading_style: "normal",
   radius: "soft", button_shape: "pill", logo_url: null, logo_mark_url: null, logo_adapts: true, show_name_with_logo: true,

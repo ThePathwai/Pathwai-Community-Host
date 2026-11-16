@@ -21,8 +21,8 @@ const lum = (hex) => {
 
 // Light / dark: members can flip the mode for themselves (stored in this browser). The brand's own mode is the default.
 const PALETTES = {
-  light: { background: "#F6F5F2", surface: "#FFFFFF", text: "#0B0B0C", muted: "#6B6B70", border: "#E6E4DF" },
-  dark: { background: "#09090B", surface: "#131316", text: "#F5F5F4", muted: "#8F8F98", border: "#26262B" },
+  light: { background: "#F6F5F2", surface: "#FFFFFF", text: "#0B0B0C", muted: "#4A4A52", border: "#DAD8E0" },
+  dark: { background: "#09090B", surface: "#131316", text: "#F5F5F4", muted: "#A6A6B1", border: "#2A2A30" },
 };
 let SCOPE = "";
 export const setThemeScope = (s) => { SCOPE = s || ""; };
@@ -67,7 +67,7 @@ export function loadFont(font, heading) {
 
 export const HUB_BRAND = {
   preset: "pathwai", mode: "dark", font: "Plus Jakarta Sans", heading_font: "Plus Jakarta Sans", heading_style: "normal", radius: "soft", button_shape: "rounded",
-  colors: { accent: "#F4F4F5", on_accent: "#0A0A0A", background: "#08080B", surface: "#111116", text: "#F4F4F6", muted: "#8C8C98", border: "#26262C" },
+  colors: { accent: "#F4F4F5", on_accent: "#0A0A0A", background: "#08080B", surface: "#111116", text: "#F4F4F6", muted: "#A6A6B1", border: "#2A2A30" },
 };
 export function applyBrand(config) {
   setThemeScope(config?.community_name || "");

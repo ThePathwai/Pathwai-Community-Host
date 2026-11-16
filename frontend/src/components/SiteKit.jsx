@@ -12,7 +12,7 @@ export const WAITLIST = `mailto:${CONTACT}?subject=${encodeURIComponent("Join th
 // The site is always branded Pathwai (not whichever community was open last). Dark by default, with a light switch.
 const SITE_BRAND = {
   preset: "pathwai", mode: "dark", font: "Inter", heading_font: "Inter", heading_style: "normal", radius: "soft", button_shape: "pill",
-  colors: { accent: "#F4F4F5", on_accent: "#0A0A0A", background: "#0B0B0D", surface: "#141417", text: "#F4F4F6", muted: "#8E8E99", border: "#25252B" },
+  colors: { accent: "#F4F4F5", on_accent: "#0A0A0A", background: "#0B0B0D", surface: "#141417", text: "#F4F4F6", muted: "#A6A6B1", border: "#2A2A30" },
 };
 
 const NAV = [["Home", "/"], ["About", "/about"], ["Contact", "/contact"]];
@@ -30,16 +30,16 @@ export const Glow = ({ className }) => <div aria-hidden className={cx("site-glow
 export function Section({ id, eyebrow, title, sub, children, className, align = "center" }) {
   const c = align === "center";
   return (
-    <section id={id} className={cx("scroll-mt-28 py-20 sm:py-28", className)}>
+    <section id={id} className={cx("scroll-mt-24 py-12 sm:py-16", className)}>
       <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
         {(eyebrow || title || sub) && (
           <div className={cx("mx-auto max-w-3xl", c ? "text-center" : "mx-0 text-left")}>
             {eyebrow && <Eyebrow>{eyebrow}</Eyebrow>}
-            {title && <h2 className="mt-4 text-4xl sm:text-5xl lg:text-6xl" style={{ textWrap: "balance" }}>{title}</h2>}
-            {sub && <p className={cx("mt-5 text-base text-muted sm:text-lg", c && "mx-auto max-w-xl")}>{sub}</p>}
+            {title && <h2 className="mt-3 text-4xl sm:text-5xl lg:text-6xl" style={{ textWrap: "balance" }}>{title}</h2>}
+            {sub && <p className={cx("mt-4 text-base text-muted sm:text-lg", c && "mx-auto max-w-xl")}>{sub}</p>}
           </div>
         )}
-        {children && <div className={title || sub ? "mt-14" : ""}>{children}</div>}
+        {children && <div className={title || sub ? "mt-9 sm:mt-10" : ""}>{children}</div>}
       </div>
     </section>
   );
@@ -48,7 +48,7 @@ export function Section({ id, eyebrow, title, sub, children, className, align = 
 // The top of an inner page (About, Contact): a small label, a big light line and one sentence.
 export function PageTop({ eyebrow, title, sub }) {
   return (
-    <section className="px-4 pb-6 pt-20 text-center sm:px-6 sm:pt-28">
+    <section className="px-4 pb-4 pt-14 text-center sm:px-6 sm:pt-20">
       <div className="mx-auto max-w-4xl">
         <Eyebrow>{eyebrow}</Eyebrow>
         <h1 className="mt-5 text-5xl sm:text-6xl lg:text-7xl" style={{ textWrap: "balance" }}>{title}</h1>
