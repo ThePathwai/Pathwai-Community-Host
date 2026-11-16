@@ -30,7 +30,7 @@ export const Glow = ({ className }) => <div aria-hidden className={cx("site-glow
 export function Section({ id, eyebrow, title, sub, children, className, align = "center" }) {
   const c = align === "center";
   return (
-    <section id={id} className={cx("scroll-mt-24 py-12 sm:py-16", className)}>
+    <section id={id} className={cx("scroll-mt-24 py-12 max-sm:border-t max-sm:border-line/50 sm:py-16", className)}>
       <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
         {(eyebrow || title || sub) && (
           <div className={cx("mx-auto max-w-3xl", c ? "text-center" : "mx-0 text-left")}>

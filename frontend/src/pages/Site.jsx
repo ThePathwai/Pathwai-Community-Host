@@ -255,14 +255,14 @@ export default function Site() {
       {/* hero */}
       <section className="px-4 pb-8 pt-10 text-center sm:px-6 sm:pb-10 sm:pt-16">
         <div className="mx-auto max-w-5xl">
-          <span className="chip mx-auto !px-4 !py-1.5 text-xs" data-testid="site-badge"><span className="mr-1.5 inline-block h-1.5 w-1.5 rounded-full bg-amber-400" aria-hidden />Founder self-service for incubators</span>
+          <span className="chip mx-auto !px-4 !py-1.5 text-xs" data-testid="site-badge">Founder self-service for incubators</span>
           <h1 className="mx-auto mt-6 text-5xl sm:text-7xl lg:text-8xl" style={{ textWrap: "balance" }}>
             Founders find support. Advisors get time back.
           </h1>
           <p className="mx-auto mt-5 max-w-2xl text-lg text-muted sm:text-xl">Pathwai is a personal venture planner for every founder in your incubator. It matches their business to the programs, people and resources around them, and helps them leave with a decision plan.</p>
           <AskBox />
-          <div className="mt-7 flex flex-wrap items-center justify-center gap-3">
-            <a href={WAITLIST} className="btn-primary !px-6 !py-3 text-base" data-testid="site-waitlist">Join the waitlist<ArrowRight className="h-4 w-4" aria-hidden /></a>
+          <div className="mx-auto mt-7 grid max-w-sm grid-cols-2 gap-3 sm:flex sm:max-w-none sm:flex-wrap sm:items-center sm:justify-center">
+            <a href={WAITLIST} className="btn-primary col-span-2 !px-6 !py-3 text-base sm:col-span-1" data-testid="site-waitlist">Join the waitlist<ArrowRight className="h-4 w-4" aria-hidden /></a>
             <Link to={DEMO_PATH} className="btn-ghost !px-6 !py-3 text-base" data-testid="site-demo">Try the demo</Link>
             <Link to="/about" className="btn-ghost !px-6 !py-3 text-base" data-testid="site-incubators">For incubators</Link>
           </div>
@@ -282,7 +282,12 @@ export default function Site() {
 
       {/* the statement: one large light paragraph with the key phrase picked out */}
       <section className="px-4 py-12 text-center sm:px-6 sm:py-16" data-testid="site-statement">
-        <p className="mx-auto max-w-4xl text-3xl font-light leading-[1.3] text-muted sm:text-[2.6rem] sm:leading-[1.25]" style={{ letterSpacing: "-0.03em", textWrap: "balance" }}>
+        <div className="mx-auto grid max-w-md gap-3 text-left sm:hidden" data-testid="site-statement-cards">
+          {[["The gap", "Support exists across hundreds of portals.", false], ["The cost", "Founders can't see what fits, and advisors keep repeating the same answers.", false], ["The fix", "Pathwai reads what a founder is building and shows what is relevant, and why.", true]].map(([tag, line, hot]) => (
+            <div key={tag} className="card !p-5"><p className="eyebrow">{tag}</p><p className={cx("mt-2 text-xl font-light leading-snug", hot ? "text-ink" : "text-muted")} style={{ letterSpacing: "-0.02em" }}>{line}</p></div>
+          ))}
+        </div>
+        <p className="mx-auto hidden max-w-4xl text-3xl font-light leading-[1.3] text-muted sm:block sm:text-[2.6rem] sm:leading-[1.25]" style={{ letterSpacing: "-0.03em", textWrap: "balance" }}>
           Support exists across hundreds of portals. <span className="text-ink">Founders can't see what fits</span>, and advisors keep repeating the same answers. Pathwai reads what a founder is building and <span className="text-ink">shows what is relevant, and why.</span>
         </p>
       </section>
@@ -296,9 +301,9 @@ export default function Site() {
       </Section>
 
       <Section id="tour" eyebrow="Product tour" title="Relevant support, explained." sub="Built around where each founder's business is heading.">
-        <ol className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4" data-testid="site-tour">
+        <ol className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4" data-testid="site-tour">
           {TOUR.map(([Icon, tag, t, d]) => (
-            <li key={t} className="card flex flex-col gap-3 !p-6">
+            <li key={t} className="card flex flex-col gap-3 !p-4 sm:!p-6">
               <div className="flex items-center justify-between"><span className="flex h-9 w-9 items-center justify-center rounded-xl bg-ink/10"><Icon className="h-4 w-4" aria-hidden /></span><span className="chip !px-2.5 !py-0.5 text-[11px]">{tag}</span></div>
               <h3 className="mt-3 text-lg">{t}</h3><p className="text-sm text-muted">{d}</p>
             </li>
