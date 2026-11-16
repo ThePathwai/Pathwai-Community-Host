@@ -255,8 +255,7 @@ export default function Site() {
       {/* hero */}
       <section className="px-4 pb-8 pt-10 text-center sm:px-6 sm:pb-10 sm:pt-16">
         <div className="mx-auto max-w-5xl">
-          <span className="chip mx-auto !px-4 !py-1.5 text-xs" data-testid="site-badge">Founder self-service for incubators</span>
-          <h1 className="mx-auto mt-6 text-5xl sm:text-7xl lg:text-8xl" style={{ textWrap: "balance" }}>
+          <h1 className="mx-auto text-5xl sm:text-7xl lg:text-8xl" style={{ textWrap: "balance" }}>
             Founders find support. Advisors get time back.
           </h1>
           <p className="mx-auto mt-5 max-w-2xl text-lg text-muted sm:text-xl">Pathwai is a personal venture planner for every founder in your incubator. It matches their business to the programs, people and resources around them, and helps them leave with a decision plan.</p>
