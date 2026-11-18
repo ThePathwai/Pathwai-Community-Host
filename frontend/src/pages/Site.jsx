@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { ArrowRight, ArrowUp, BookOpen, Check, Compass, Layers, Rocket, Search, Sparkles, Target, Users } from "lucide-react";
+import { ArrowRight, ArrowUp, BookOpen, Briefcase, Check, Compass, Layers, Rocket, Search, Sparkles, Target, TrendingUp, Users } from "lucide-react";
 import { cx } from "../components/ui";
 import { DEMO_PATH } from "../lib/demo";
 import { Eyebrow, Glow, Num, Pill, Section, SiteShell, WAITLIST } from "../components/SiteKit";
@@ -11,8 +11,8 @@ import { Eyebrow, Glow, Num, Pill, Section, SiteShell, WAITLIST } from "../compo
 
 const FLOW = [
   [Layers, "Business context", "Where the business is heading"],
-  [Compass, "Opportunities", "Programs and funding that fit"],
-  [Users, "People", "Mentors, funders and peers"],
+  [Compass, "Opportunities", "Programs and capital that fit"],
+  [Users, "People", "Mentors, investors and peers"],
   [BookOpen, "Resources", "Guides, templates and perks"],
   [Target, "Clarity", "Why it matters, what to do next"],
 ];
@@ -20,17 +20,20 @@ const FLOW = [
 const TOUR = [
   [Layers, "For founders", "Business context", "Start with the business trajectory, its goals, and current needs."],
   [Compass, "For founders", "Relevant support", "Match that context with opportunities and people in the community."],
+  [TrendingUp, "For founders", "Investor introductions", "Find the angels and venture funds that back this stage and sector, and arrive with a clear ask."],
   [Target, "For founders", "Context and clarity", "Show founders why a match matters and what to explore next."],
   [Users, "For advisors", "Advisor capacity", "Less routine discovery. More time for complex founder needs."],
+  [Briefcase, "For investors", "Founders worth meeting", "See who is building what, with a pitch and a plan on each profile, and meet the ones founders choose to introduce."],
 ];
 
 // What the box in the hero cycles through, and the chips under it. Both open the demo.
-const PROMPTS = ["I need to find my first customers", "Which grant should I apply for?", "Who can give me feedback on my pitch?", "What should I do in the next 90 days?"];
-const STARTS = ["Funding", "Mentors", "Events", "People", "Resources"];
+const PROMPTS = ["I need to find my first customers", "Which grant should I apply for?", "Which investors back companies like mine?", "Who can give me feedback on my pitch?", "What should I do in the next 90 days?"];
+const STARTS = ["Funding", "Investors", "Mentors", "Events", "People", "Resources"];
 
 const SIDES = [
-  { tag: "For founders", title: "Find your way.", sub: "Self-service, matched to you.", items: ["Opportunities matched to you", "The right people", "Why each match matters", "Sharper advisor questions"] },
+  { tag: "For founders", title: "Find your way.", sub: "Self-service, matched to you.", items: ["Programs and funding matched to you", "Mentors and investors who fit", "Why each match matters", "Sharper advisor questions"] },
   { tag: "For advisors", title: "Get time back.", sub: "Focus where it matters.", items: ["Less routine work", "Programs easy to find", "Time for complex needs", "More founders, same team"] },
+  { tag: "For investors", title: "Meet the right founders.", sub: "Prepared, and known to their community.", items: ["Founders by stage and sector", "A clear pitch and plan on each profile", "Introductions founders choose to make", "Backed by a community that knows them"] },
 ];
 
 const STEPS = [
@@ -79,7 +82,8 @@ function Match() {
   const rows = [
     ["1", "Apply to the seed funding round", "Closes Dec 2 · Fits your stage and sector, and gives you the funding you asked for.", "Good match now"],
     ["2", "Meet the utility partnerships mentor", "Has sold to Canadian utilities. Covers first pilots, which you asked for.", "Good match now"],
-    ["3", "Go to the founders and utilities mixer", "Thu, 6:00 PM · You will meet three buyers. Does not cover fundraising.", "Almost"],
+    ["3", "Meet an angel who backs early climate hardware", "Invests in Ontario pre-seed teams. Wants a clear ask and a pilot story first.", "Good match now"],
+    ["4", "Go to the founders and utilities mixer", "Thu, 6:00 PM · You will meet three buyers. Does not cover fundraising.", "Almost"],
   ];
   return (
     <div className="grid items-center gap-8 lg:grid-cols-2" data-testid="story-match">
@@ -139,7 +143,7 @@ function Profile() {
 }
 
 function Plan() {
-  const cols = [["Next 2 weeks", ["Book the utility mentor", "Draft the one-page pilot offer"]], ["30 days", ["Apply to the seed funding round", "Run two utility discovery calls"]], ["90 days", ["Sign a pilot letter of intent", "Open the seed conversation"]]];
+  const cols = [["Next 2 weeks", ["Book the utility mentor", "Draft the one-page pilot offer"]], ["30 days", ["Apply to the seed funding round", "Run two utility discovery calls"]], ["90 days", ["Sign a pilot letter of intent", "Open the seed conversation with an investor"]]];
   return (
     <div className="grid items-center gap-8 lg:grid-cols-2" data-testid="story-plan">
       <div>
@@ -234,7 +238,7 @@ export default function Site() {
           <h1 className="mx-auto text-5xl sm:text-7xl lg:text-8xl" style={{ textWrap: "balance" }}>
             Founders find support. Advisors get time back.
           </h1>
-          <p className="mx-auto mt-5 max-w-2xl text-lg text-muted sm:text-xl">Pathwai is a personal venture planner for every founder in your incubator. It matches their business to the programs, people and resources around them, and helps them leave with a decision plan.</p>
+          <p className="mx-auto mt-5 max-w-2xl text-lg text-muted sm:text-xl">Pathwai is a personal venture planner for every founder in your incubator. It matches their business to the programs, people, investors and resources around them, and helps them leave with a decision plan.</p>
           <AskBox />
           <div className="mx-auto mt-7 grid max-w-sm grid-cols-2 gap-3 sm:flex sm:max-w-none sm:flex-wrap sm:items-center sm:justify-center">
             <a href={WAITLIST} className="btn-primary col-span-2 !px-6 !py-3 text-base sm:col-span-1" data-testid="site-waitlist">Join the waitlist<ArrowRight className="h-4 w-4" aria-hidden /></a>
@@ -276,7 +280,7 @@ export default function Site() {
       </Section>
 
       <Section id="tour" eyebrow="Product tour" title="Relevant support, explained." sub="Built around where each founder's business is heading.">
-        <ol className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4" data-testid="site-tour">
+        <ol className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-3" data-testid="site-tour">
           {TOUR.map(([Icon, tag, t, d]) => (
             <li key={t} className="card flex flex-col gap-3 !p-4 sm:!p-6">
               <div className="flex items-center justify-between"><span className="flex h-9 w-9 items-center justify-center rounded-xl bg-ink/10"><Icon className="h-4 w-4" aria-hidden /></span><span className="chip !px-2.5 !py-0.5 text-[11px]">{tag}</span></div>
@@ -286,12 +290,12 @@ export default function Site() {
         </ol>
       </Section>
 
-      <Section id="sides" eyebrow="Two sides" title="For founders. For advisors.">
-        <div className="grid gap-4 lg:grid-cols-2" data-testid="site-sides">
+      <Section id="sides" eyebrow="Two sides" title="For founders. For advisors. For investors.">
+        <div className="grid gap-4 lg:grid-cols-3" data-testid="site-sides">
           {SIDES.map((s) => (
             <div key={s.tag} className="card !p-7 sm:!p-10">
               <Eyebrow>{s.tag}</Eyebrow>
-              <p className="mt-3 text-4xl font-light sm:text-5xl" style={{ letterSpacing: "-0.035em" }}>{s.title}</p>
+              <p className="mt-3 text-4xl font-light sm:text-5xl lg:text-3xl xl:text-4xl" style={{ letterSpacing: "-0.035em", textWrap: "balance" }}>{s.title}</p>
               <p className="mt-2 text-muted">{s.sub}</p>
               <ul className="mt-8 space-y-3">{s.items.map((t) => <li key={t} className="flex items-start gap-3 text-sm"><Check className="mt-0.5 h-4 w-4 shrink-0 text-muted" aria-hidden />{t}</li>)}</ul>
             </div>

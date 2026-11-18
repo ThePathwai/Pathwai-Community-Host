@@ -21,7 +21,8 @@ export const GRACE = 0.1;                 // allow 10% over a limit before askin
 // Every feature a tier can have, in the order a comparison table shows them. A tier lists the ids it includes.
 export const FEATURES = [
   { id: "directions", label: "Founder directions and decision plan" },
-  { id: "matching", label: "Programs, people and resources matched to each founder" },
+  { id: "matching", label: "Programs, investors, people and resources matched to each founder" },
+  { id: "investors", label: "Your own investor network and introductions" },
   { id: "aiGuide", label: "AI guide for founders" },
   { id: "brand", label: "Your own logo and colours" },
   { id: "whitelabel", label: "Fully white-label (no Pathwai branding)" },
@@ -50,12 +51,12 @@ export const TIERS = [
   {
     id: "hub", name: "Hub", monthly: 749, forWho: "An established incubator, accelerator or innovation hub", popular: true,
     limits: { resources: 400, founders: 750, admins: 10, aiGuide: "High" },
-    features: { directions: true, matching: true, aiGuide: true, brand: true, whitelabel: true, events: true, imports: true, reports: true, integrations: true, support: "Priority email" },
+    features: { directions: true, matching: true, aiGuide: true, brand: true, whitelabel: true, investors: true, events: true, imports: true, reports: true, integrations: true, support: "Priority email" },
   },
   {
     id: "network", name: "Network", monthly: 1999, from: true, forWho: "Large hubs, universities and multi-site networks",
     limits: { resources: null, founders: null, admins: null, aiGuide: "Custom" },
-    features: { directions: true, matching: true, aiGuide: true, brand: true, whitelabel: true, events: true, imports: true, reports: true, integrations: true, domain: true, sso: true, multi: true, support: "Named contact" },
+    features: { directions: true, matching: true, aiGuide: true, brand: true, whitelabel: true, investors: true, events: true, imports: true, reports: true, integrations: true, domain: true, sso: true, multi: true, support: "Named contact" },
   },
 ];
 

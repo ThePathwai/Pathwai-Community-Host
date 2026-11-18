@@ -22,14 +22,14 @@ const VALUE = [
 const WHY = [
   ["For founders", "Clarity without waiting."],
   ["For advisors", "Time for deeper needs."],
-  ["For host organizations", "Serve more founders."],
+  ["For investors", "Meet founders who arrive prepared."],
   ["Human support stays", "Advisors for what matters."],
 ];
 
 export default function SiteAbout() {
   return (
     <SiteShell title="About">
-      <PageTop eyebrow="About Pathwai" title="Founder clarity. Advisor capacity." sub="Pathwai helps founders navigate the opportunities and people in their incubator community, giving advisors more capacity for deeper needs." />
+      <PageTop eyebrow="About Pathwai" title="Founder clarity. Advisor capacity." sub="Pathwai helps founders navigate the opportunities, people and investors in their incubator community, giving advisors more capacity for deeper needs." />
 
       <Section className="!pt-6">
         <div className="grid gap-4 sm:grid-cols-3" data-testid="site-about">
@@ -37,10 +37,11 @@ export default function SiteAbout() {
         </div>
       </Section>
 
-      <Section id="hubs" eyebrow="Who it's for" title="Incubators and their founders." className="border-t border-line/60">
-        <div className="grid gap-4 sm:grid-cols-2">
+      <Section id="hubs" eyebrow="Who it's for" title="Founders, incubators and investors." className="border-t border-line/60">
+        <div className="grid gap-4 sm:grid-cols-3">
           <div className="card"><Eyebrow>Founders</Eyebrow><p className="mt-2 text-2xl font-bold">Find support on your own.</p></div>
           <div className="card"><Eyebrow>Incubators &amp; advisors</Eyebrow><p className="mt-2 text-2xl font-bold">Less explaining. More advising.</p></div>
+          <div className="card"><Eyebrow>Investors</Eyebrow><p className="mt-2 text-2xl font-bold">Meet founders worth backing.</p></div>
         </div>
       </Section>
 
