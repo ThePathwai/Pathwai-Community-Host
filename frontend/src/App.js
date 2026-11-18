@@ -25,6 +25,7 @@ import Legal from "./pages/Legal";
 import Site from "./pages/Site";
 import SiteAbout from "./pages/SiteAbout";
 import SiteContact from "./pages/SiteContact";
+import SitePricing from "./pages/SitePricing";
 import Install from "./pages/Install";
 import { HUB } from "./lib/demoHubConfig";
 import Navigator from "./pages/Navigator";
@@ -108,6 +109,7 @@ export default function App() {
         <Route path="/signup" element={<Signup />} />
         <Route path="/forgot-password" element={<ForgotPassword />} />
         <Route path="/about" element={<SiteAbout />} />
+        <Route path="/pricing" element={<SitePricing />} />
         <Route path="/contact" element={<SiteContact />} />
         <Route path="/demo/:short" element={<DemoLanding />} />
         <Route path="/navigator" element={<NavigatorRoute />} />

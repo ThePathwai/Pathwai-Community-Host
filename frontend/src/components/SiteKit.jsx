@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import { Link, NavLink, useLocation } from "react-router-dom";
 import { ArrowUpRight, Menu, Moon, Sun, X } from "lucide-react";
 import { Wordmark, cx } from "./ui";
-import { applyBrand, effectiveMode, setModePref } from "../lib/theme";
+import { applyBrand, effectiveMode, setModePref, setThemeScope } from "../lib/theme";
 
 // Shared pieces of the public website (pages/Site.jsx, SiteAbout.jsx, SiteContact.jsx): the header, footer, theme switch and section blocks.
 // The waitlist and contact buttons open an email to CONTACT because there is no waitlist service behind the site yet.
@@ -15,7 +15,7 @@ const SITE_BRAND = {
   colors: { accent: "#F4F4F5", on_accent: "#0A0A0A", background: "#0B0B0D", surface: "#141417", text: "#F4F4F6", muted: "#A6A6B1", border: "#2A2A30" },
 };
 
-const NAV = [["Home", "/"], ["About", "/about"], ["Contact", "/contact"]];
+const NAV = [["Home", "/"], ["About", "/about"], ["Pricing", "/pricing"], ["Contact", "/contact"]];
 
 export const Eyebrow = ({ children, className }) => <p className={cx("eyebrow", className)}>{children}</p>;
 export const Num = ({ n }) => <span className="font-display text-sm font-bold text-muted" style={{ fontVariantNumeric: "tabular-nums" }}>{String(n).padStart(2, "0")}</span>;
@@ -70,7 +70,7 @@ export function SiteShell({ title, children }) {
   // A new page starts at the top, and the phone menu closes.
   useEffect(() => { window.scrollTo(0, 0); setOpen(false); }, [loc.pathname]);
   useEffect(() => { const f = () => setScrolled(window.scrollY > 12); f(); window.addEventListener("scroll", f, { passive: true }); return () => window.removeEventListener("scroll", f); }, []);
-  const flip = () => { const n = mode === "dark" ? "light" : "dark"; setModePref(n); applyBrand({ community_name: "", brand: SITE_BRAND }); setMode(n); };
+  const flip = () => { setThemeScope(""); const n = mode === "dark" ? "light" : "dark"; setModePref(n); applyBrand({ community_name: "", brand: SITE_BRAND }); setMode(n); };
 
   const link = ({ isActive }) => cx("rounded-full px-3.5 py-1.5 text-sm", isActive ? "text-ink" : "text-muted hover:text-ink");
 
