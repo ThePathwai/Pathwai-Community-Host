@@ -4,7 +4,7 @@ import { Compass, MessageCircle, Pencil, Plus, Rocket } from "lucide-react";
 import { toast } from "sonner";
 import { api, errMsg } from "../lib/api";
 import { useAuth } from "../lib/auth";
-import { STAGE_LABEL } from "../lib/navigator";
+import { STAGE_LABEL, GENDER_LABEL } from "../lib/navigator";
 import { Avatar, Button, Card, Chip, Modal, PoweredBy, Spinner, Wordmark } from "../components/ui";
 import { AccountProfileForm, formFromAccount, profileBody, profileProblem } from "../components/AccountProfileForm";
 import GuideChat from "../components/GuideChat";
@@ -66,7 +66,10 @@ export default function MyProfile({ embedded }) {
   const st = account.startup || {};
   const u = { startup_name: st.name, startup_one_liner: st.one_liner, stage: st.stage ? cap(STAGE_LABEL[st.stage] || st.stage) : "", industry: (st.sectors || []).map(cap).join(" · "), pitch: st.pitch || {}, documents: st.documents || [], company: account.company, goal: st.goal, needs: st.needs };
   const hasPitch = !!(st.name || st.one_liner || Object.keys(st.pitch || {}).length || (st.documents || []).length);
-  const stats = [["Age", account.age], ["Stage", u.stage], ["Role", account.title]].filter(([, v]) => v);
+  // Gender is private (it only decides which programs are shown to you). Set, it reads here; not set, it is one tap to add.
+  const genderNow = st.gender || ((st.audiences || []).includes("women") ? "female" : "");
+  const genderTile = u.stage ? (genderNow ? GENDER_LABEL[genderNow] : <button type="button" onClick={() => startEdit(false)} className="text-sm font-medium underline underline-offset-2" data-testid="my-profile-add-gender">Add gender</button>) : null;
+  const stats = [["Age", account.age], ["Stage", u.stage], ["Gender", genderTile], ["Role", account.title]].filter(([, v]) => v);
   const contact = { contact: { email: account.email, ...(account.contact || {}) } };
   const photos = account.photos || [];
 

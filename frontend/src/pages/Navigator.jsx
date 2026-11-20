@@ -91,6 +91,20 @@ function SignedOutGate() {
 }
 
 // Signed in: your profile in one line, with the single way to change it.
+// Gender is optional, but programs made for women only match once it is set. One quiet line, until it is answered or put away.
+function GenderNudge({ mine }) {
+  const [gone, setGone] = useState(() => { try { return localStorage.getItem("pw-gender-nudge") === "1"; } catch { return false; } });
+  const set = mine?.gender || (mine?.audiences || []).includes("women");
+  if (gone || set || !mine?.stage) return null;
+  const hide = () => { setGone(true); try { localStorage.setItem("pw-gender-nudge", "1"); } catch { /* storage unavailable: it just shows again next visit */ } };
+  return (
+    <div className="flex items-center gap-3 rounded-2xl border border-dashed border-line p-3 pr-2 text-sm" data-testid="nav-gender-nudge">
+      <Link to="/me?edit=startup" className="min-w-0 flex-1"><span className="block font-semibold">Add your gender to see programs made for women</span><span className="block text-muted">Optional, private, and used only for matching. Takes a few seconds.</span></Link>
+      <button type="button" onClick={hide} className="shrink-0 rounded-full px-3 py-2 text-xs font-semibold text-muted hover:text-ink">Not now</button>
+    </div>
+  );
+}
+
 function ProfileBar({ mine, meta }) {
   const has = !!mine?.stage;
   const stage = meta.stages.find((x) => x.key === mine?.stage)?.label;
@@ -442,7 +456,7 @@ export default function Navigator({ embedded }) {
         <div className="mx-auto w-full max-w-3xl"><GuideChat className="h-[min(72dvh,680px)]" signedIn={!!account} hasProfile={!!mine?.stage} startupName={mine?.name} formProfile={account ? apiProfile : undefined} /></div>
       ) : account ? (
         <div className="space-y-6">
-          {mine === null ? <Spinner /> : <ProfileBar mine={mine} meta={meta} />}
+          {mine === null ? <Spinner /> : <><ProfileBar mine={mine} meta={meta} /><div className="mt-3 empty:hidden"><GenderNudge mine={mine} /></div></>}
           {ready && <Results res={res} meta={meta} loading={loading} generic={generic} onOpen={setOpen} tracked={tracked} onTrack={track} imap={itc.byId} eco={eco} scope={scope} onWiden={() => setScope("all")} />}
         </div>
       ) : <SignedOutGate />}

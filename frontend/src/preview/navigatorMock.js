@@ -58,8 +58,9 @@ export function cleanStartup(raw) {
   raw = raw || {};
   if (!Object.keys(raw).length) return {};
   const p = nav.normalizeProfile({ ...raw, age: null });
+  const g = nav.applyGender(raw.gender, (raw.audiences || []).filter((a, i, l) => nav.AUDIENCES.includes(a) && l.indexOf(a) === i));
   return { name: String(raw.name || "").trim().slice(0, 80), one_liner: String(raw.one_liner || "").trim().slice(0, 200), stage: p.stage, sectors: p.sectors,
-    audiences: (raw.audiences || []).filter((a, i, l) => nav.AUDIENCES.includes(a) && l.indexOf(a) === i), incorporated: p.incorporated, employees: p.employees,
+    gender: g.gender, audiences: g.audiences, incorporated: p.incorporated, employees: p.employees,
     student: !!raw.student, needs: p.needs, goal: p.goal, province: p.province, seeking: raw.seeking !== false,
     pitch: Object.fromEntries(["problem", "solution", "traction", "market", "ask"].map((k) => [k, String((raw.pitch || {})[k] || "").replace(/\s+/g, " ").trim().slice(0, 600)]).filter(([, v]) => v)),
     documents: (Array.isArray(raw.documents) ? raw.documents : []).map((d) => ({ title: String((d && d.title) || "").trim().slice(0, 80), url: String((d && d.url) || "").trim().slice(0, 300) })).filter((d) => /^https?:\/\//i.test(d.url)).slice(0, 6) };
