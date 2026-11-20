@@ -91,6 +91,19 @@ function WeekWidget({ g, other, first, later }) {
   );
 }
 
+// The few events that fit this founder best, whatever their date: made for their group, or about what they asked for, their sector or their stage.
+function BestWidget({ items }) {
+  return (
+    <Widget data-testid="events-best" className="border-2" style={{ borderColor: "var(--accent)" }}>
+      <div className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1">
+        <h2 className="text-lg" style={heading}>Best for you</h2>
+        <Label>Matched to your startup · {plural(items.length, "event")}</Label>
+      </div>
+      <ul className="mt-3 divide-y divide-line">{items.map((e) => <EventItem key={e.id} e={e} other={false} />)}</ul>
+    </Widget>
+  );
+}
+
 // ---------------------------------------------------------------------------------------------------- calendar
 const pad = (n) => String(n).padStart(2, "0");
 const isoOf = (y, m, d) => `${y}-${pad(m + 1)}-${pad(d)}`;
@@ -259,6 +272,7 @@ export default function FounderEvents({ embedded }) {
   }, [account, loading, q, topic, free, online]);
 
   const list = useMemo(() => (data ? (view === "fit" ? data.events : data.others) : []), [data, view]);
+  const best = useMemo(() => (data && view === "fit" && data.best ? data.best.map((id) => data.events.find((e) => e.id === id)).filter(Boolean) : []), [data, view]);
   const groups = useMemo(() => {
     const out = [];
     for (const e of list.slice(0, limit)) { const g = out[out.length - 1]; if (g && g.week === e.week) g.items.push(e); else out.push({ week: e.week, items: [e] }); }
@@ -273,7 +287,7 @@ export default function FounderEvents({ embedded }) {
     <div className={cx("mx-auto w-full", layout === "calendar" ? "max-w-5xl" : "max-w-3xl")} data-testid="events-page">
       <p className="eyebrow">Events</p>
       <h1 className="mt-2 text-3xl sm:text-4xl" style={{ textTransform: "none", letterSpacing: "-0.03em", fontWeight: 800, textWrap: "balance" }}>Events for founders</h1>
-      <p className="mt-2 max-w-2xl text-sm text-muted">Upcoming networking, pitch, mentor and learning events{prov ? ` in ${prov} and online` : ""}, picked for what you asked for. Each one links to the organizer's own page.</p>
+      <p className="mt-2 max-w-2xl text-sm text-muted">Upcoming networking, pitch, mentor and learning events{prov ? ` in ${prov} and online` : ""}, picked for your stage, sector, group and what you asked for. Each one links to the organizer's own page.</p>
 
       {data && !data.has_profile && (
         <Link to={account ? "/me?edit=startup" : "/signup"} className="mt-5 flex items-center gap-3 rounded-2xl border border-dashed border-line p-4 text-sm transition hover:border-ink/40" data-testid="events-no-profile">
@@ -312,6 +326,7 @@ export default function FounderEvents({ embedded }) {
       {!data && !error ? <div className="mt-10"><Spinner /></div> : data && (
         <div className="mt-6 space-y-8">
           {view === "other" && <p className="text-sm text-muted">Real events too. They are outside your province or made for a group you have not said you belong to. Each card says why.</p>}
+          {view === "fit" && best.length > 0 && <BestWidget items={best} />}
           {layout === "calendar" && list.length > 0 && <CalendarView list={list} other={view === "other"} />}
           {layout === "list" && groups.length > 0 && <div className="space-y-4" data-testid="events-timeline">{groups.map((g, gi) => <WeekWidget key={g.week} g={g} other={view === "other"} first={gi === 0} later={gi > 0 && groups[gi - 1].items[0].date.slice(0, 7) === g.items[0].date.slice(0, 7)} />)}</div>}
           {!list.length && (

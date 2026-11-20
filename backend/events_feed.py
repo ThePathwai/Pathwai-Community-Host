@@ -54,6 +54,53 @@ NEED_REASON = {
     "customers": "Covers sales or customers, and you asked for first customers.",
     "training": "A workshop or class, and you asked for training.",
 }
+NEED_REASON.update({
+    "export": "About selling abroad, and you asked for help exporting.",
+    "rd": "About R&D and innovation funding, and you asked for R&D support.",
+    "ip": "Covers patents and IP, and you asked for IP help.",
+    "talent": "Covers hiring and team building, and you asked for help with talent.",
+    "tax": "Covers tax and accounting, and you asked for tax help.",
+    "legal": "Covers legal basics, and you asked for legal help.",
+    "visa": "Covers immigration for founders, and you asked for visa help.",
+    "tools": "Covers tools and software, and you asked for tools and discounts.",
+    "space": "About workspace, and you asked for a place to work.",
+})
+# What an event is about, read from its title and summary when we rank it (so these never need a re-read of the page). Topics tell us network, pitch,
+# mentors, funding, learning and customers; these cover the rest of what a founder can ask for, plus sector and stage.
+NEED_WORDS = {
+    "export": re.compile(r"export|international (?:trade|expansion|markets?)|global markets?|canexport|trade mission|cross-border|selling abroad", re.I),
+    "rd": re.compile(r"\br&d\b|research and development|sr&ed|sred|irap|commerciali[sz]ation|deep ?tech|university research|lab to market", re.I),
+    "ip": re.compile(r"intellectual property|patents?\b|trademarks?|copyright|\bip (?:strategy|protection|basics)", re.I),
+    "talent": re.compile(r"\bhiring\b|recruit|talent|team building|co-?op students?|interns?\b|first hire|building your team", re.I),
+    "tax": re.compile(r"\btax(?:es)?\b|accounting|bookkeeping|\bcra\b|\bgst\b|\bhst\b", re.I),
+    "legal": re.compile(r"\blegal\b|lawyer|law firm|contracts?\b|incorporat|compliance|privacy law|shareholder|terms of service", re.I),
+    "visa": re.compile(r"\bvisa\b|immigration|work permit|start-?up visa|permanent residen", re.I),
+    "tools": re.compile(r"software|\btools\b|ai tools|automation|no-?code|cloud credits|\baws\b|google cloud|microsoft for startups", re.I),
+    "space": re.compile(r"co-?working|workspace|office space|maker ?space|lab space|desk space", re.I),
+}
+SECTOR_WORDS = {
+    "tech": re.compile(r"\bai\b|artificial intelligence|machine learning|saas|software|deep ?tech|cyber|developers?\b|\bapi\b|fintech|blockchain", re.I),
+    "hardware": re.compile(r"hardware|robotics|manufactur|\biot\b|semiconductor|electronics|3d print", re.I),
+    "health": re.compile(r"health|med ?tech|biotech|clinical|life sciences?|pharma|wellness|patient", re.I),
+    "cleantech": re.compile(r"clean ?tech|climate|energy|sustainab|net[- ]zero|carbon|renewable|green ?tech", re.I),
+    "mobility": re.compile(r"mobility|transport|automotive|electric vehicles?|\bev\b|logistics|supply chain", re.I),
+    "creative": re.compile(r"creative|media\b|film|music|design\b|gaming|games\b|fashion|content creators?", re.I),
+    "retail": re.compile(r"retail|e-?commerce|consumer|\bdtc\b|shopify|direct[- ]to[- ]consumer", re.I),
+    "food": re.compile(r"\bfood\b|agri|restaurant|beverage|farm|grocery|cpg\b", re.I),
+    "services": re.compile(r"consulting|agency|professional services|freelanc", re.I),
+    "social": re.compile(r"social enterprise|non-?profit|social impact|charit|community impact", re.I),
+}
+# Events that say who they are pitched at: first ideas and first customers, or scaling up. A founder at the other end gets told, not hidden.
+EARLY_WORDS = re.compile(r"idea[- ]stage|pre-?seed|early[- ]stage|first-?time founders?|aspiring (?:founders?|entrepreneurs?)|ideation|zero to one|0 to 1|startup (?:basics|101)|getting started|validate your idea|from idea", re.I)
+LATE_WORDS = re.compile(r"scale-?ups?|scaling up|growth[- ]stage|series [a-c]\b|late[- ]stage|going global|international expansion|exit strategy|\$?\d+m(?:illion)? arr", re.I)
+STAGE_LABEL_EARLY = ("idea", "prototype")
+STAGE_LABEL_LATE = ("revenue", "growth")
+
+
+def event_hay(e: Dict[str, Any]) -> str:
+    return " ".join([e.get("title") or "", e.get("summary") or "", e.get("org") or ""]).lower()
+
+
 # For listings that cover everything (Eventbrite and the like), an event has to look like a founder event before we keep it.
 FOUNDER_WORDS = re.compile(r"founder|startup|start-up|entrepreneur|small business|business owner|investor|venture|pitch|scale-?up|innovation|b2b|saas|\bvc\b|accelerator|incubator|side hustle", re.I)
 # Things that are not what we are looking for even when a keyword slips in, and the everyday hobby and language groups that share a Meetup page with founders.
@@ -430,11 +477,25 @@ def rank_events(events: List[Dict[str, Any]], raw_profile: Optional[Dict[str, An
         tailored = []
         if group_hits:
             tailored.append("Made for " + nav._join([nav.AUDIENCE_LABEL[a] for a in group_hits]) + " founders, which you are.")
-        need_hits = [TOPIC_NEED[t] for t in e["topics"] if TOPIC_NEED[t] in needs]
-        for n in dict.fromkeys(need_hits):
+        hay = event_hay(e)
+        need_hits = [TOPIC_NEED[t] for t in e["topics"] if TOPIC_NEED[t] in needs] + [n for n, rx in NEED_WORDS.items() if n in needs and rx.search(hay)]
+        need_hits = list(dict.fromkeys(need_hits))
+        for n in need_hits:
             reasons.append(NEED_REASON[n])
+        sector_hits = [sec for sec in profile["sectors"] if SECTOR_WORDS.get(sec) and SECTOR_WORDS[sec].search(hay)]
+        if sector_hits:
+            reasons.append("About " + nav._join(sector_hits) + ", your sector.")
+        aimed = "early" if EARLY_WORDS.search(hay) else "late" if LATE_WORDS.search(hay) and not EARLY_WORDS.search(hay) else ""
+        stage_fit = 0
+        if aimed and (raw_profile or {}).get("stage"):
+            mine_early, mine_late = profile["stage"] in STAGE_LABEL_EARLY, profile["stage"] in STAGE_LABEL_LATE
+            if (aimed == "early" and mine_early) or (aimed == "late" and mine_late):
+                stage_fit = 1
+                reasons.append("Pitched at founders at your stage.")
+            elif (aimed == "early" and mine_late) or (aimed == "late" and mine_early):
+                stage_fit = -1
         # Every event says why it may fit and why it may not, so nothing sits on the list as a mystery.
-        if not need_hits and e["topics"]:
+        if not need_hits and not sector_hits and e["topics"]:
             reasons.append("Covers " + nav._join([TOPIC_PHRASE[t] for t in e["topics"] if t in TOPIC_PHRASE][:2]) + ".")
         if e["price"] == "free":
             reasons.append("Free to attend.")
@@ -443,6 +504,8 @@ def rank_events(events: List[Dict[str, Any]], raw_profile: Optional[Dict[str, An
         have_profile = bool((raw_profile or {}).get("stage"))
         if needs and not need_hits:
             cautions.append("Not about what you asked for (" + nav._join([nav.NEED_LABEL[n] for n in needs[:3]]) + "). Worth it mainly for the people you would meet.")
+        if stage_fit < 0:
+            cautions.append("Pitched at " + ("first-time and early-stage founders" if aimed == "early" else "scale-ups and later-stage founders") + ", and you are at the " + nav.STAGE_LABEL[profile["stage"]] + " stage.")
         if e["price"] == "paid":
             cautions.append("Paid. Check the price and what it includes on the event page.")
         if (profile.get("city") and not e["online"] and e["city"] and e["province"] == prov and e["city"].strip().lower() != profile["city"].strip().lower()):
@@ -453,8 +516,13 @@ def rank_events(events: List[Dict[str, Any]], raw_profile: Optional[Dict[str, An
             cautions.append("Details can change. Confirm the date, price and place on the event page.")
         if not tailored and not reasons:
             reasons.append(f"A founder-focused event from {e['org']}.")
-        row = {**e, "reasons": tailored + reasons, "cautions": cautions, "days_away": (d - today).days,
-               "fit": "strong" if (group_hits or need_hits) else "possible"}
+        # How well it fits, for picking the best few. Made for your group counts most, then what you asked for, your sector, your stage and your city.
+        # Never shown; the reasons are what the founder reads.
+        score = (100000 if group_hits else 0) + 10000 * min(3, len(need_hits)) + (6000 if sector_hits else 0) + 4000 * stage_fit \
+            + (3000 if profile.get("city") and not e["online"] and (e["city"] or "").strip().lower() == profile["city"].strip().lower() else 0) \
+            + (1000 if e["province"] == prov and not e["online"] else 500 if e["online"] else 0) + (200 if e["price"] == "free" else 0)
+        row = {**e, "reasons": tailored + reasons, "cautions": cautions, "days_away": (d - today).days, "score": score,
+               "fit": "strong" if (group_hits or need_hits or sector_hits) else "possible"}
         if not where_ok:
             others.append({**row, "fit": "skip", "cautions": [f"In {e['city'] or e['province']}, outside your province ({prov}). Online events and events near you show first.", *cautions]})
         elif group_miss and not group_hits:
@@ -463,7 +531,9 @@ def rank_events(events: List[Dict[str, Any]], raw_profile: Optional[Dict[str, An
         else:
             fits.append(row)
     total = len(fits) + len(others)
-    return {"profile": {"province": prov, "needs": needs, "audiences": profile["audiences"]}, "events": fits, "others": others,
+    # The few that fit best, whatever their date: made for you or about what you asked for, nearest first among equals. Only with a profile to match against.
+    best = [r["id"] for r in sorted((r for r in fits if r["score"] >= 10000), key=lambda r: (-r["score"], r["start"]))[:5]] if (raw_profile or {}).get("stage") else []
+    return {"profile": {"province": prov, "needs": needs, "audiences": profile["audiences"]}, "events": fits, "others": others, "best": best,
             "totals": {"fit": len(fits), "others": len(others), "all": total}, "as_of": today.isoformat()}
 
 
