@@ -124,7 +124,7 @@ export default function Login() {
     <div className="grid min-h-[100dvh] grid-cols-[minmax(0,1fr)] lg:grid-cols-2">
       <div className="pointer-events-none fixed inset-x-0 top-0 z-30 hidden justify-end gap-2 px-4 py-4 lg:flex lg:px-8">
         <Link to="/install" className="btn-ghost pointer-events-auto border border-line bg-paper/70 backdrop-blur" data-testid="login-install">Get the app</Link>
-        <Link to="/navigator" className="btn-ghost pointer-events-auto border border-line bg-paper/70 backdrop-blur" data-testid="login-navigator">Find programs</Link>
+        <Link to="/navigator" className="btn-ghost pointer-events-auto border border-line bg-paper/70 backdrop-blur" data-testid="login-navigator">Opportunities</Link>
         <Link to="/about" className="btn-ghost pointer-events-auto border border-line bg-paper/70 backdrop-blur" data-testid="login-about">About Pathwai <span aria-hidden>→</span></Link>
       </div>
       <div className="relative hidden overflow-hidden lg:block" style={{ background: "#08080B" }}>
@@ -136,7 +136,7 @@ export default function Login() {
             <p className="font-display text-5xl font-bold leading-[1.08]">Your personal<br />venture planner.</p>
             <p className="mt-4 max-w-md text-lg text-white/80">Tell it what you are building. It finds the programs, people and next steps that fit, and plans them with you.</p>
             <div className="mt-6 flex max-w-md flex-wrap gap-2" aria-label="Built in">
-              {[[Compass, "Programs"], [Gift, "Grants"], [CalendarDays, "Events"], [Users, "People"], [BookOpen, "Resources"]].map(([Icon, l]) => (
+              {[[Compass, "Opportunities"], [Gift, "Grants"], [CalendarDays, "Events"], [Users, "People"], [BookOpen, "Resources"]].map(([Icon, l]) => (
                 <span key={l} className="inline-flex items-center gap-1.5 rounded-full border border-white/25 bg-white/10 px-3 py-1.5 text-sm backdrop-blur"><Icon className="h-4 w-4" />{l}</span>
               ))}
             </div>
@@ -149,7 +149,6 @@ export default function Login() {
           <span className="min-w-0 text-xl"><Wordmark name={joinInfo?.name || "Pathwai"} brand={joinInfo?.brand || {}} /></span>
           <div className="flex shrink-0 items-center gap-1.5">
             <Link to="/install" className="btn-ghost border border-line !px-3 !py-1.5 text-xs" data-testid="login-install-mobile">Get the app</Link>
-            <Link to="/navigator" className="btn-ghost border border-line !px-3 !py-1.5 text-xs" data-testid="login-navigator-mobile">Programs</Link>
             <Link to="/about" className="btn-ghost border border-line !px-3 !py-1.5 text-xs" data-testid="login-about-mobile">About</Link>
           </div>
         </div>
@@ -214,6 +213,19 @@ export default function Login() {
               </div>
             )}
           </div>
+        )}
+        {/* The way in for a founder who is not part of a community: no account, no invitation, straight to what fits. */}
+        {!joinInfo && (
+          <Link to="/navigator" className="group flex items-center gap-4 rounded-3xl border p-4 transition hover:-translate-y-0.5 hover:shadow-lg sm:p-5" data-testid="login-opportunities"
+            style={{ borderColor: "color-mix(in srgb, var(--accent) 45%, transparent)", background: "color-mix(in srgb, var(--accent) 10%, transparent)" }}>
+            <span className="grid h-12 w-12 shrink-0 place-items-center rounded-2xl" style={{ background: "var(--accent)", color: "var(--on-accent)" }}><Compass className="h-6 w-6" aria-hidden /></span>
+            <span className="min-w-0 flex-1">
+              <span className="block text-[11px] font-semibold uppercase text-muted" style={{ letterSpacing: "0.12em" }}>Not part of a community?</span>
+              <span className="mt-0.5 block text-base font-semibold leading-snug">Find funding, programs and events for your startup</span>
+              <span className="mt-0.5 block text-sm text-muted">200+ grants, loans, accelerators, mentors and founder communities across Canada. No account needed.</span>
+            </span>
+            <ArrowRight className="h-5 w-5 shrink-0 transition group-hover:translate-x-0.5" aria-hidden />
+          </Link>
         )}
         <PoweredBy className="mt-2 text-center" />
       </div>

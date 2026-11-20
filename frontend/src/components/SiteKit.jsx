@@ -104,7 +104,7 @@ export function SiteShell({ title, children }) {
           <span className="text-xl"><Wordmark name="Pathwai" brand={{}} /></span>
           <nav className="flex flex-wrap items-center justify-center gap-x-5 gap-y-2 text-sm text-muted" aria-label="Footer">
             {NAV.map(([label, to]) => <Link key={to} to={to} className="tap hover:text-ink">{label}</Link>)}
-            <Link to="/navigator" className="tap hover:text-ink">Find programs</Link>
+            <Link to="/navigator" className="tap hover:text-ink">Find opportunities</Link>
             <Link to="/login" className="tap hover:text-ink">Sign in</Link>
             <Link to="/terms" className="tap hover:text-ink">Terms</Link>
             <Link to="/privacy" className="tap hover:text-ink">Privacy</Link>

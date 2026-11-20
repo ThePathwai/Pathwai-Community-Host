@@ -37,7 +37,7 @@ export default function AccountShell({ active, children }) {
 
   const Items = () => (
     <>
-      <NavItem to="/navigator" icon={Compass} label="Programs" active={active === "programs"} testId="shell-programs" />
+      <NavItem to="/navigator" icon={Compass} label="Opportunities" active={active === "programs"} testId="shell-programs" />
       <NavItem to="/journey" icon={Route} label="Journey" active={active === "journey"} testId="shell-journey" />
       <NavItem to="/founder-events" icon={CalendarDays} label="Events" active={active === "events"} testId="shell-events" />
       <NavItem to="/people" icon={UserRound} label="People" active={active === "people"} testId="shell-people" />
@@ -92,7 +92,7 @@ export default function AccountShell({ active, children }) {
 
         {/* phone: guide button and tab bar */}
         <nav className="glass-bar fixed inset-x-3 z-30 grid grid-cols-5 overflow-hidden rounded-[1.75rem] lg:hidden" style={{ bottom: "calc(0.75rem + env(safe-area-inset-bottom, 0px))" }} aria-label="Main" data-testid="shell-tabs">
-          {[["programs", "/navigator", Compass, "Programs"], ["journey", "/journey", Route, "Journey"], ["events", "/founder-events", CalendarDays, "Events"], ["people", "/people", UserRound, "People"], ["profile", "/me", User, "Profile"]].map(([k, to, Icon, label]) => {
+          {[["programs", "/navigator", Compass, "Opportunities"], ["journey", "/journey", Route, "Journey"], ["events", "/founder-events", CalendarDays, "Events"], ["people", "/people", UserRound, "People"], ["profile", "/me", User, "Profile"]].map(([k, to, Icon, label]) => {
             const on = k === active;
             return (
               <Link key={label} to={to} aria-current={on ? "page" : undefined} className={cx("m-1 flex flex-col items-center gap-1 rounded-[1.25rem] py-2 text-[10px] font-medium", on ? "glass-active text-ink" : "text-muted")}>

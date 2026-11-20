@@ -376,7 +376,7 @@ export default function Navigator({ embedded }) {
   const ready = !account || mine !== null;       // signed in: wait for the profile so we never flash results for someone else's answers
   const generic = !!account && ready && !mine?.stage;
 
-  useEffect(() => { document.title = "Programs · Pathwai"; api.get("/navigator/meta").then((r) => setMeta(r.data)).catch(() => setErr("The directory could not load. Please try again.")); }, []);
+  useEffect(() => { document.title = "Opportunities · Pathwai"; api.get("/navigator/meta").then((r) => setMeta(r.data)).catch(() => setErr("The directory could not load. Please try again.")); }, []);
 
   // Signed in: the profile on the account IS the input. Read it; changing it happens on the profile page, and everything here follows.
   useEffect(() => {
@@ -417,9 +417,9 @@ export default function Navigator({ embedded }) {
     <div className="mx-auto w-full max-w-6xl">
       <div className="mb-6 flex flex-wrap items-end justify-between gap-4">
         <div>
-          <p className="eyebrow">Programs</p>
-          <h1 className="mt-2 text-3xl sm:text-4xl" style={{ textTransform: "none", letterSpacing: "-0.03em", fontWeight: 800, textWrap: "balance" }}>{eco ? (scope === "hub" ? `Programs & grants at ${eco.hub}` : `Programs & grants across ${eco.wider}`) : account ? "Programs that fit you" : "Canadian programs that fit you"}</h1>
-          <p className="mt-2 text-sm text-muted">{eco ? (scope === "hub" ? (eco.wider ? `What ${eco.hub} runs, plus the grants, loans and programs its team points founders to. Each one is checked against your startup.` : `What ${eco.hub} runs for founders. Each one is checked against your startup.`) : `Every grant, loan, accelerator and mentor we track, with ${eco.hub} programs first.`) : meta ? <>{meta.count} grants, loans, accelerators, mentors and founder communities, hand-checked. Communities you join add their own on top.</> : "Loading"}</p>
+          <p className="eyebrow">Opportunities</p>
+          <h1 className="mt-2 text-3xl sm:text-4xl" style={{ textTransform: "none", letterSpacing: "-0.03em", fontWeight: 800, textWrap: "balance" }}>{eco ? (scope === "hub" ? `Programs & grants at ${eco.hub}` : `Programs & grants across ${eco.wider}`) : account ? "Opportunities that fit your startup" : "Canadian opportunities that fit your startup"}</h1>
+          <p className="mt-2 text-sm text-muted">{eco ? (scope === "hub" ? (eco.wider ? `What ${eco.hub} runs, plus the grants, loans and programs its team points founders to. Each one is checked against your startup.` : `What ${eco.hub} runs for founders. Each one is checked against your startup.`) : `Every grant, loan, accelerator and mentor we track, with ${eco.hub} programs first.`) : meta ? <>{meta.count} grants, loans, accelerators, mentors and founder communities, hand-checked, plus upcoming events. Communities you join add their own on top.</> : "Loading"}</p>
         </div>
         <Segmented items={[["path", "For you"], ["all", "Browse all"], ...(account ? [["saved", itc.interest.some((i) => i.state === "yes") ? `Interested · ${itc.interest.filter((i) => i.state === "yes").length}` : "Interested"]] : []), ["ask", <><span className="sm:hidden">Guide</span><span className="hidden sm:inline">Ask the guide</span></>]]} value={tab} onChange={setTab} />
       </div>
