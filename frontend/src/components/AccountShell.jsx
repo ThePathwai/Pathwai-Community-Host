@@ -78,25 +78,25 @@ export default function AccountShell({ active, children }) {
 
         <div className="min-w-0">
           {/* phone: top bar */}
-          <header className="glass-bar sticky top-2 z-30 mx-2 mt-2 flex items-center justify-between rounded-[1.75rem] px-4 py-2.5 lg:hidden">
-            <Link to="/navigator" className="text-xl" aria-label="Pathwai home"><Wordmark name="Pathwai" brand={{}} /></Link>
-            <div className="relative flex items-center gap-3">
-              <button type="button" onClick={() => ctx.openGuide()} aria-label="Ask the guide" data-testid="shell-ask-fab" className="flex h-9 w-9 items-center justify-center rounded-full border border-line text-ink/80"><MessageCircle className="h-[18px] w-[18px]" /></button>
-              <button type="button" onClick={() => setMenu((o) => !o)} aria-haspopup="menu" aria-expanded={menu} title="Account"><Avatar src={account.avatar_url} name={account.name} size={34} /></button>
+          <header className="app-topbar flex lg:hidden">
+            <Link to="/navigator" className="text-lg" aria-label="Pathwai home"><Wordmark name="Pathwai" brand={{}} /></Link>
+            <div className="relative flex items-center gap-1.5">
+              <button type="button" onClick={() => ctx.openGuide()} aria-label="Ask the guide" data-testid="shell-ask-fab" className="flex h-10 w-10 items-center justify-center rounded-full text-ink/85 active:bg-ink/10"><MessageCircle className="h-[22px] w-[22px]" strokeWidth={1.8} /></button>
+              <button type="button" onClick={() => setMenu((o) => !o)} aria-haspopup="menu" aria-expanded={menu} title="Account" className="flex h-10 w-10 items-center justify-center rounded-full"><Avatar src={account.avatar_url} name={account.name} size={32} /></button>
               {UserMenu({})}
             </div>
           </header>
 
-          <main className="px-4 pb-32 pt-6 sm:px-6 lg:px-10 lg:pb-16 lg:pt-10">{children}<PoweredBy className="mt-16 flex justify-center" /></main>
+          <main className="px-4 pb-[calc(6rem+env(safe-area-inset-bottom,0px))] pt-5 sm:px-6 lg:px-10 lg:pb-16 lg:pt-10">{children}<PoweredBy className="mt-16 flex justify-center" /></main>
         </div>
 
         {/* phone: guide button and tab bar */}
-        <nav className="glass-bar fixed inset-x-3 z-30 grid grid-cols-5 overflow-hidden rounded-[1.75rem] lg:hidden" style={{ bottom: "calc(0.75rem + env(safe-area-inset-bottom, 0px))" }} aria-label="Main" data-testid="shell-tabs">
+        <nav className="app-tabbar grid grid-cols-[1.4fr_1fr_1fr_1fr_1fr] lg:hidden" aria-label="Main" data-testid="shell-tabs">
           {[["programs", "/navigator", Compass, "Opportunities"], ["journey", "/journey", Route, "Journey"], ["events", "/founder-events", CalendarDays, "Events"], ["people", "/people", UserRound, "People"], ["profile", "/me", User, "Profile"]].map(([k, to, Icon, label]) => {
             const on = k === active;
             return (
-              <Link key={label} to={to} aria-current={on ? "page" : undefined} className={cx("m-1 flex flex-col items-center gap-1 rounded-[1.25rem] py-2 text-[10px] font-medium", on ? "glass-active text-ink" : "text-muted")}>
-                <Icon className="h-5 w-5" strokeWidth={on ? 2.4 : 1.8} aria-hidden />{label}
+              <Link key={label} to={to} aria-current={on ? "page" : undefined} className="app-tab">
+                <span className="app-tab-ico"><Icon className="h-[22px] w-[22px]" strokeWidth={on ? 2.3 : 1.7} aria-hidden /></span><span>{label}</span>
               </Link>
             );
           })}

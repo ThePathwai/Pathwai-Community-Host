@@ -284,11 +284,11 @@ export default function EcosystemHome() {
       <p className="eyebrow">Welcome{first ? `, ${first}` : ""}</p>
       <h1 className="mt-1 text-xl font-semibold sm:text-2xl">{hub ? `Welcome to ${hub}` : "Welcome"}</h1>
       <p className="mt-1.5 max-w-xl text-sm text-muted">Find grants, programs, mentors and events that fit your business, see who else is here, and keep your own path in one place.</p>
-      <div className="mt-4 flex flex-wrap gap-2">
-        <Link to="/navigator" className="btn-primary" data-testid="home-opportunities">Find opportunities</Link>
+      <div className="mt-4 grid grid-cols-3 gap-2 sm:flex sm:flex-wrap">
+        <Link to="/navigator" className="btn-primary col-span-3 sm:col-span-1" data-testid="home-opportunities">Find opportunities</Link>
         <Link to="/events" className="btn-ghost">Events</Link>
         <Link to="/members" className="btn-ghost">People</Link>
-        <Link to="/journey" className="btn-ghost">Your journey</Link>
+        <Link to="/journey" className="btn-ghost">Journey</Link>
       </div>
     </div>
   );

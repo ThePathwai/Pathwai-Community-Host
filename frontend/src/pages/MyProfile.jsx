@@ -87,8 +87,8 @@ export default function MyProfile({ embedded }) {
     <div className="mx-auto w-full max-w-5xl space-y-5" data-testid="my-profile">
       <Card className="!p-0 overflow-hidden" data-testid="member-card">
         <div className="grid gap-0 md:grid-cols-[260px_1fr]">
-          <div className="relative min-h-[260px] bg-ink/5">
-            {account.avatar_url ? <img src={account.avatar_url} alt={account.name} className="absolute inset-0 h-full w-full object-cover" /> : <Avatar name={account.name} size={260} square />}
+          <div className="relative flex justify-center bg-ink/5 py-5 md:block md:min-h-[260px] md:py-0">
+            {account.avatar_url ? <img src={account.avatar_url} alt={account.name} className="h-28 w-28 rounded-full object-cover md:absolute md:inset-0 md:h-full md:w-full md:rounded-none" /> : <><span className="md:hidden"><Avatar name={account.name} size={112} /></span><span className="hidden md:block"><Avatar name={account.name} size={260} square /></span></>}
           </div>
           <div className="flex flex-col gap-4 p-6">
             <div className="flex flex-wrap items-start justify-between gap-3">

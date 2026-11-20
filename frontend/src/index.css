@@ -184,7 +184,7 @@ html { -webkit-text-size-adjust: 100%; }
 .pw-drawer { animation: pw-in-up .32s var(--ease-out) both; }
 @media (min-width: 640px) { .pw-drawer { animation: pw-in-right .32s var(--ease-out) both; } }
 .pw-fade { animation: pw-fade .2s ease both; }
-.pw-rail { scrollbar-width: none; -webkit-overflow-scrolling: touch; scroll-snap-type: x proximity; }
+.pw-rail { scroll-padding-inline: 1rem; scrollbar-width: none; -webkit-overflow-scrolling: touch; scroll-snap-type: x proximity; }
 .pw-rail::-webkit-scrollbar { display: none; }
 .pw-rail > * { scroll-snap-align: start; }
 .pw-surface { background: linear-gradient(180deg, rgb(var(--c-surface)) 0%, rgb(var(--c-surface) / 0.7) 100%); }
@@ -278,3 +278,59 @@ h3, h4 { letter-spacing: -0.02em; }
 /* Card levels, one rule for both modes: dark cards are a faint lift above the ground, light cards are frosted white above it. */
 :root[data-preset="pathwai"][data-mode="light"] .card, .site .card:is([data-mode="light"] *) { background: rgb(255 255 255 / .58); border-color: rgb(255 255 255 / .85); box-shadow: 0 1px 2px rgb(30 30 80 / .05), 0 14px 36px -18px rgb(50 40 120 / .22); -webkit-backdrop-filter: blur(16px); backdrop-filter: blur(16px); }
 :root[data-preset="pathwai"][data-mode="light"] .card-hover:hover { background: rgb(255 255 255 / .78); }
+
+
+/* ---------------------------------------------------------------------------------------------------------------------------------
+   Phone app frame. On a phone Pathwai reads like an app: a flat bar docked to the top, a full-width tab bar docked to the bottom with
+   the current tab marked by a pill behind its icon, compact page titles, 16px form fields (so iOS never zooms in on tap) and
+   44px touch targets. Nothing here changes the computer layout.
+   --------------------------------------------------------------------------------------------------------------------------------- */
+.app-topbar {
+  position: sticky; top: 0; z-index: 45; align-items: center; justify-content: space-between; gap: 0.75rem;
+  padding: calc(env(safe-area-inset-top, 0px) + 0.4rem) 1rem 0.4rem; min-height: calc(52px + env(safe-area-inset-top, 0px));
+  background: rgb(var(--c-bg) / 0.88); -webkit-backdrop-filter: blur(22px) saturate(1.4); backdrop-filter: blur(22px) saturate(1.4);
+  border-bottom: 1px solid rgb(var(--c-ink) / 0.08);
+}
+.app-tabbar {
+  position: fixed; left: 0; right: 0; bottom: 0; z-index: 40; padding: 0.3rem 0.25rem calc(0.3rem + env(safe-area-inset-bottom, 0px));
+  background: rgb(var(--c-bg) / 0.94); -webkit-backdrop-filter: blur(24px) saturate(1.4); backdrop-filter: blur(24px) saturate(1.4);
+  border-top: 1px solid rgb(var(--c-ink) / 0.1);
+}
+.app-tab { display: flex; min-width: 0; flex-direction: column; align-items: center; justify-content: flex-start; gap: 2px; padding: 0.15rem 0.1rem; color: rgb(var(--c-muted)); font-size: 10.5px; font-weight: 600; line-height: 1.1; -webkit-tap-highlight-color: transparent; }
+.app-tab > span:last-child { max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.app-tab-ico { display: flex; height: 30px; width: 58px; align-items: center; justify-content: center; border-radius: 999px; transition: background-color .2s var(--ease-out, ease), transform .15s; }
+.app-tab:active .app-tab-ico { transform: scale(.92); }
+.app-tab[aria-current="page"] { color: rgb(var(--c-ink)); }
+.app-tab[aria-current="page"] .app-tab-ico { background: rgb(var(--c-ink) / 0.14); }
+
+@media (max-width: 639px) {
+  html { -webkit-text-size-adjust: 100%; }
+  a, button { -webkit-tap-highlight-color: transparent; }
+  input:not([type="checkbox"]):not([type="radio"]), select, textarea { font-size: 16px; }
+  /* the community bar (Layout) becomes the same flat docked bar */
+  .glass-bar.app-topbar-phone { top: 0; margin: 0; border-radius: 0; border-width: 0 0 1px 0; box-shadow: none; background: rgb(var(--c-bg) / 0.88); }
+  .app-topbar-phone > div { padding-block: 0.4rem; }
+
+  /* page titles: the tab already says where you are, so drop the small label and make the title app-sized */
+  main .eyebrow:has(+ h1) { display: none; }
+  main h1.text-3xl, main h1.sm\:text-4xl { font-size: 1.625rem; line-height: 1.15; margin-top: 0; letter-spacing: -0.025em; }
+  main h1.text-2xl { font-size: 1.375rem; }
+  main h1 + p { margin-top: 0.375rem; font-size: 0.8125rem; line-height: 1.45; }
+  main h2.text-2xl, main h2.text-3xl { font-size: 1.25rem; line-height: 1.2; }
+  main { padding-top: 1rem; }
+  /* cards: a little tighter, softer corners, so more fits on one screen */
+  .card { border-radius: 1.1rem; }
+  /* buttons and chips: a thumb-sized target without growing the look */
+  .btn, .btn-primary, .btn-ghost { min-height: 44px; }
+  .pill, [role="tab"] { min-height: 36px; }
+}
+
+@media (max-width: 639px) {
+  .app-topbar-phone .btn-ghost { background: transparent; border: 0; box-shadow: none; padding: 0; width: 40px; min-height: 40px; -webkit-backdrop-filter: none; backdrop-filter: none; }
+  .app-topbar-phone [data-testid="user-menu-trigger"] svg.lucide-chevron-down { display: none; }
+  /* a row of chips or tabs scrolls edge to edge instead of stopping at the page margin */
+  .pw-rail, .scroll-rail { max-width: none; }
+  .bleed-x { margin-inline: -1rem; padding-inline: 1rem; }
+}
+
+@media (max-width: 399px) { .app-tab { font-size: 10px; letter-spacing: -0.01em; } .app-tab-ico { width: 50px; } }

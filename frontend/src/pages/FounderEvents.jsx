@@ -283,20 +283,20 @@ export default function FounderEvents({ embedded }) {
         </Link>
       )}
 
-      <div className="mt-6 flex flex-wrap items-center justify-between gap-3">
-        <div className="inline-flex rounded-full border border-line p-1" role="tablist">
+      <div className="mt-5 flex flex-wrap items-center justify-between gap-2.5 sm:mt-6 sm:gap-3">
+        <div className="flex w-full rounded-full border border-line p-1 sm:inline-flex sm:w-auto" role="tablist">
           {[["fit", `For you · ${data?.totals?.fit ?? 0}`], ["other", `Everything else · ${data?.totals?.others ?? 0}`]].map(([k, label]) => (
             <button key={k} role="tab" aria-selected={view === k} onClick={() => { setView(k); setLimit(12); }} data-testid={`events-tab-${k}`}
-              className={cx("rounded-full px-4 py-1.5 text-sm font-medium transition", view === k ? "" : "text-muted hover:text-ink")} style={view === k ? { background: "var(--accent)", color: "var(--on-accent)" } : undefined}>{label}</button>
+              className={cx("flex-1 whitespace-nowrap rounded-full px-3 py-2 text-sm font-medium transition sm:flex-none sm:px-4 sm:py-1.5", view === k ? "" : "text-muted hover:text-ink")} style={view === k ? { background: "var(--accent)", color: "var(--on-accent)" } : undefined}>{label}</button>
           ))}
         </div>
         <div className="inline-flex rounded-full border border-line p-1" role="group" aria-label="Show events as">
           {[["calendar", "Calendar", CalendarDays], ["list", "List", List]].map(([k, label, Icon]) => (
             <button key={k} type="button" aria-pressed={layout === k} onClick={() => setLayout(k)} data-testid={`events-layout-${k}`}
-              className={cx("inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-sm font-medium transition", layout === k ? "" : "text-muted hover:text-ink")} style={layout === k ? { background: "var(--accent)", color: "var(--on-accent)" } : undefined}><Icon className="h-3.5 w-3.5" aria-hidden />{label}</button>
+              className={cx("inline-flex items-center gap-1.5 rounded-full px-3 py-2 text-sm font-medium transition sm:py-1.5", layout === k ? "" : "text-muted hover:text-ink")} style={layout === k ? { background: "var(--accent)", color: "var(--on-accent)" } : undefined}><Icon className="h-4 w-4 sm:h-3.5 sm:w-3.5" aria-hidden /><span className="max-sm:sr-only">{label}</span></button>
           ))}
         </div>
-        <label className="relative block w-full sm:w-64"><Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted" aria-hidden />
+        <label className="relative block min-w-0 flex-1 sm:w-64 sm:flex-none"><Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted" aria-hidden />
           <input type="search" value={q} onChange={(e) => { setQ(e.target.value); setLimit(12); }} placeholder="Search events" aria-label="Search events" data-testid="events-search" className="w-full rounded-full border border-line bg-transparent py-2 pl-9 pr-3 text-sm outline-none focus:border-ink/50" /></label>
       </div>
 

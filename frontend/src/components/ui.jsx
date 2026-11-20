@@ -319,14 +319,16 @@ export const Tabs = ({ tabs, value, onChange }) => {
   );
 };
 
+// On a computer a centred dialog; on a phone a sheet that slides up from the bottom edge with a grab handle, like a native app.
 export const Modal = ({ open, onClose, title, children }) =>
   !open ? null : (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4" onClick={onClose}>
+    <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/70 sm:items-center sm:p-4" onClick={onClose}>
       <ScrollLock />
-      <div className="max-h-modal w-full max-w-lg overflow-y-auto overscroll-contain rounded-xl2 bg-surface p-6" onClick={(e) => e.stopPropagation()}>
+      <div className="max-h-modal w-full max-w-lg overflow-y-auto overscroll-contain rounded-t-[1.75rem] bg-surface px-5 pb-[calc(1.25rem+env(safe-area-inset-bottom,0px))] pt-2 sm:rounded-xl2 sm:p-6" onClick={(e) => e.stopPropagation()}>
+        <div className="mx-auto mb-3 h-1.5 w-10 rounded-full bg-ink/20 sm:hidden" aria-hidden />
         <div className="mb-4 flex items-center justify-between">
           <h2 className="text-xl font-semibold">{title}</h2>
-          <button onClick={onClose} className="text-muted hover:text-ink" aria-label="Close">✕</button>
+          <button onClick={onClose} className="flex h-10 w-10 items-center justify-center rounded-full text-muted hover:text-ink active:bg-ink/10" aria-label="Close">✕</button>
         </div>
         {children}
       </div>

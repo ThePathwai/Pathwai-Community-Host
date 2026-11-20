@@ -235,10 +235,10 @@ export default function Site() {
       {/* hero */}
       <section className="px-4 pb-8 pt-10 text-center sm:px-6 sm:pb-10 sm:pt-16">
         <div className="mx-auto max-w-5xl">
-          <h1 className="mx-auto text-5xl sm:text-7xl lg:text-8xl" style={{ textWrap: "balance" }}>
+          <h1 className="mx-auto text-[2.6rem] leading-[1.05] sm:text-7xl lg:text-8xl" style={{ textWrap: "balance" }}>
             Founders find support. Advisors get time back.
           </h1>
-          <p className="mx-auto mt-5 max-w-2xl text-lg text-muted sm:text-xl">Pathwai is a personal venture planner for founders, and for the incubators that serve them. It matches a business to the programs, grants, people, investors and events around it, and helps founders leave with a decision plan.</p>
+          <p className="mx-auto mt-4 max-w-2xl text-base text-muted sm:mt-5 sm:text-xl">Pathwai is a personal venture planner for founders, and for the incubators that serve them. It matches a business to the programs, grants, people, investors and events around it, and helps founders leave with a decision plan.</p>
           <AskBox />
           <div className="mx-auto mt-7 grid max-w-sm grid-cols-2 gap-3 sm:flex sm:max-w-none sm:flex-wrap sm:items-center sm:justify-center">
             <Link to="/navigator" className="btn-primary col-span-2 !px-6 !py-3 text-base sm:col-span-1" data-testid="site-founders">Find opportunities for my startup<ArrowRight className="h-4 w-4" aria-hidden /></Link>

@@ -73,7 +73,7 @@ export default function Layout({ children }) {
 
   return (
     <div className="min-h-screen">
-      <header className="glass-bar sticky top-2 z-[45] mx-2 mt-2 rounded-[1.75rem] sm:top-3 sm:mx-4 sm:mt-3 lg:mx-8">
+      <header className="glass-bar app-topbar-phone sticky top-2 z-[45] mx-2 mt-2 rounded-[1.75rem] sm:top-3 sm:mx-4 sm:mt-3 lg:mx-8">
         <div className="mx-auto flex max-w-[1600px] items-center gap-2 px-3 py-2 sm:gap-4 sm:px-5 lg:px-6">
           <Link to="/" className={"hit min-w-0 shrink overflow-hidden text-lg sm:text-2xl 2xl:max-w-[26rem] 2xl:text-2xl " + ((config?.community_name || "").length > 20 ? "xl:max-w-[17rem] xl:text-[1.05rem]" : "xl:max-w-[15rem] xl:text-xl")} data-testid="brand"><Wordmark name={config?.community_name || "Pathwai"} /></Link>
           <nav className="ml-2 hidden min-w-0 flex-1 gap-1 overflow-x-auto [scrollbar-width:none] xl:flex">
@@ -125,16 +125,15 @@ export default function Layout({ children }) {
         </nav>
       </header>
       <main className="mx-auto max-w-[1600px] px-4 py-6 lg:px-10 lg:py-10 xl:py-8">{backTo && <BackButton fallback={backTo[0]} label={`Back to ${backTo[1]}`} />}{children}</main>
-      <nav className="glass-bar fixed inset-x-3 z-40 grid overflow-hidden rounded-[1.75rem] sm:inset-x-6 xl:hidden"
-        style={{ gridTemplateColumns: `repeat(${Math.min(5, 1 + tabItems.length + 0)}, minmax(0, 1fr))`, bottom: "calc(0.75rem + env(safe-area-inset-bottom, 0px))" }} data-testid="tabbar">
+      <nav className="app-tabbar grid xl:hidden"
+        style={{ gridTemplateColumns: `repeat(${Math.min(5, 1 + tabItems.length)}, minmax(0, 1fr))` }} data-testid="tabbar">
         {[["/", "Home", TAB_ICONS["/"]], ...tabItems.map((n) => [ROUTES[n.key], n.label, TAB_ICONS[n.key]])].map(([to, label, Icon]) => (
-          <NavLink key={to} to={to} end={to === "/"} className={({ isActive }) => cx("relative m-1 flex min-h-[48px] min-w-0 flex-col items-center justify-center gap-0.5 overflow-hidden rounded-[1.25rem] py-1.5 text-[10px] font-semibold", isActive ? "glass-active text-ink" : "text-muted")}>
-            {({ isActive }) => (<>{Icon && <Icon className="h-5 w-5" strokeWidth={isActive ? 2.5 : 2} aria-hidden />}<span className="max-w-full truncate px-0.5">{label}</span>
-              </>)}
+          <NavLink key={to} to={to} end={to === "/"} className="app-tab">
+            {({ isActive }) => (<><span className="app-tab-ico">{Icon && <Icon className="h-[22px] w-[22px]" strokeWidth={isActive ? 2.3 : 1.7} aria-hidden />}</span><span>{label}</span></>)}
           </NavLink>
         ))}
       </nav>
-      <footer className="mx-auto flex max-w-[1600px] flex-col items-center gap-3 border-t border-line px-4 pt-6 pb-32 text-center sm:flex-row sm:justify-between sm:text-left xl:pb-6"><PoweredBy /><span className="eyebrow">Find the right next step</span></footer>
+      <footer className="mx-auto flex max-w-[1600px] flex-col items-center gap-3 border-t border-line px-4 pt-6 pb-[calc(6rem+env(safe-area-inset-bottom,0px))] text-center sm:flex-row sm:justify-between sm:text-left xl:pb-6"><PoweredBy /><span className="eyebrow">Find the right next step</span></footer>
     </div>
   );
 }
