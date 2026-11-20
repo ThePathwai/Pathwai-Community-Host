@@ -49,6 +49,7 @@ const meta = () => ({
   needs: nav.NEEDS.map((k) => ({ key: k, label: nav.NEED_LABEL[k] })),
   audiences: nav.AUDIENCES.map((k) => ({ key: k, label: nav.AUDIENCE_LABEL[k] })),
   sectors: nav.SECTORS, provinces: nav.PROVINCES,
+  regions: Object.keys(nav.REGION_LABEL).map((k) => ({ key: k, label: nav.REGION_LABEL[k] })),
   types: nav.TYPES.map((k) => ({ key: k, label: nav.TYPE_LABEL[k] })), statuses: nav.STATUSES.map((k) => ({ key: k, label: nav.STATUS_LABEL[k] })),
 });
 
@@ -106,7 +107,7 @@ export function navigatorCall(method, path, body, params, ctx) {
   const today = nav.todayIso();
   if (path === "/navigator/meta") return ok(config, meta());
   if (path === "/navigator/programs" && method === "get") {
-    const rows = nav.filterPrograms(allPrograms(ctx), { q: params.q, type: params.type, province: params.province, stage: params.stage, audience: params.audience, status: params.status, need: params.need }, today);
+    const rows = nav.filterPrograms(allPrograms(ctx), { q: params.q, type: params.type, province: params.province, stage: params.stage, audience: params.audience, status: params.status, need: params.need, region: params.region }, today);
     return ok(config, { programs: rows, count: rows.length });
   }
   const one = path.match(/^\/navigator\/programs\/([^/]+)$/);

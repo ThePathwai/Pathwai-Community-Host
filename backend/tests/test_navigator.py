@@ -28,7 +28,7 @@ def by_id(pid):
 
 # --------------------------------------------------------------------------- catalog hygiene
 # Entries whose link is knowingly not an exact program page; each says so to the founder (link_exact false), so the list stays short and visible.
-CLOSEST_PAGE_ONLY = {"wef", "bmo-launch-me", "liftoff-black", "garage-capital", "inovia-capital", "naco-angels"}
+CLOSEST_PAGE_ONLY = {"amplify", "bmo-launch-me", "canadian-queer-chamber-of-commerce-programs", "financerher-elevateher-and-innovateher", "garage-capital", "golden-ventures", "growthwheel-expansion-support", "idea-fund", "inovia-capital", "liftoff-black", "naco-angels", "ripple-ventures", "startup-canada-equal-slice-pitch-competition", "toronto-business-webinars-and-starting-your-business-101", "wef", "women-entrepreneurship-knowledge-hub", "womens-launchpad", "yedi-incubator"}
 
 
 def test_every_link_goes_to_a_specific_page_and_says_why():
@@ -65,6 +65,12 @@ def test_every_catalog_entry_is_complete_and_honest():
         assert p["verified"] in ("official", "third_party", "unconfirmed") and p["last_checked"]
         assert set(p["stages"]) <= set(nav.STAGES) and set(p["needs"]) <= set(nav.NEEDS) and set(p["audiences"]) <= set(nav.AUDIENCES)
         assert set(p["restricted_to"]) <= set(nav.AUDIENCES)
+        assert set(p.get("regions") or []) <= set(nav.REGION_LABEL), p["id"]
+        if p.get("regions"):
+            assert "any" not in p["provinces"], p["id"]  # a place in Ontario is an Ontario program
+        # stages are one unbroken run, or "your stage" gives nonsense answers
+        idx = sorted(nav.STAGES.index(x) for x in p["stages"])
+        assert idx == list(range(idx[0], idx[-1] + 1)) if idx else True, p["id"]
         assert p["deadline"]["kind"] in ("fixed", "rolling", "annual", "none_published", "closed")
         if p["deadline"]["kind"] == "fixed":
             date.fromisoformat(p["deadline"]["date"])
@@ -546,3 +552,58 @@ def test_python_and_javascript_interest_rules_agree():
         res = subprocess.run(["node", str(Path(tmp) / "run.mjs"), json.dumps(steps)], capture_output=True, text=True, timeout=60)
     assert res.returncode == 0, res.stderr
     assert json.loads(res.stdout) == want
+
+
+# --------------------------------------------------------------------------- places and tool discounts
+def test_a_city_maps_to_every_region_it_sits_in_narrowest_first():
+    assert nav.place_regions("Toronto") == ["toronto", "gta", "southern-ontario"]
+    assert nav.place_regions("  st. catharines, ON ") == ["hamilton-niagara", "southern-ontario"]
+    assert nav.place_regions("Saint Catharines") == nav.place_regions("St Catharines")
+    assert nav.place_regions("GTA")[0] == "toronto"
+    assert nav.place_regions("Greater Sudbury")[-1] == "northern-ontario"
+    assert nav.place_regions("Liberty Village") is None and nav.place_regions("") is None
+
+
+def test_every_region_a_program_uses_has_at_least_one_city_in_it():
+    covered = {r for regs in nav.CITY_REGIONS.values() for r in regs}
+    for p in PROGRAMS:
+        assert set(p.get("regions") or []) <= covered, p["id"]
+
+
+def test_a_program_for_one_city_is_skipped_elsewhere_and_open_when_the_city_is_unknown():
+    p = by_id("toronto-small-business-enterprise-centre")
+    assert p["regions"] == ["toronto"]
+    base = {"stage": "launched", "needs": ["training"]}
+    assert nav.evaluate(p, nav.normalize_profile({**base, "city": "Ottawa"}), TODAY)["fit"] == "skip"
+    assert nav.evaluate(p, nav.normalize_profile({**base, "city": "Etobicoke"}), TODAY)["fit"] == "strong"
+    unknown = nav.evaluate(p, nav.normalize_profile({**base, "city": ""}), TODAY)
+    assert unknown["fit"] == "possible" and unknown["checks"][0]["ask"] == "city"
+    elsewhere = nav.evaluate(p, nav.normalize_profile({**base, "city": "Toronto", "province": "BC"}), TODAY)
+    assert elsewhere["fit"] == "skip"
+
+
+def test_a_wide_region_does_not_outrank_a_program_made_for_your_city():
+    me = nav.normalize_profile({"stage": "launched", "needs": ["funding"], "city": "Hamilton"})
+    wide = nav.evaluate(by_id("feddev-ontario-funding-for-businesses"), me, TODAY)
+    assert wide["fit"] != "skip"
+    local = {**by_id("feddev-ontario-funding-for-businesses"), "regions": ["hamilton-niagara"]}
+    assert nav.evaluate(local, me, TODAY)["score"] > wide["score"]
+    north = nav.normalize_profile({"stage": "launched", "needs": ["funding"], "city": "Thunder Bay", "employees": 20, "incorporated": "yes"})
+    assert nav.evaluate(by_id("feddev-ontario-funding-for-businesses"), north, TODAY)["fit"] == "skip"  # FedDev serves southern Ontario
+
+
+def test_tool_discounts_are_their_own_type_and_need():
+    perks = [p for p in PROGRAMS if p["type"] == "perk"]
+    assert len(perks) >= 5 and all("tools" in p["needs"] for p in perks)
+    me = nav.normalize_profile({"stage": "prototype", "needs": ["tools"]})
+    out = nav.suggest(PROGRAMS, me, TODAY)
+    top = [r["type"] for r in out["matches"][:5]]
+    assert "perk" in top
+    assert nav.TYPE_LABEL["perk"] == "Tool discount"
+
+
+def test_the_directory_can_be_filtered_by_place():
+    here = nav.filter_programs(PROGRAMS, region="ottawa", today=TODAY)
+    ids = {r["id"] for r in here}
+    assert "invest-ottawa-business-advisory" in ids and "toronto-small-business-enterprise-centre" not in ids
+    assert "irap" in ids  # open to everyone, so it is still shown

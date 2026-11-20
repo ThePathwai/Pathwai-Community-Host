@@ -1,4 +1,4 @@
-import { Banknote, Building2, FlaskConical, Handshake, Landmark, Percent, Plane, Rocket, TrendingUp, Trophy } from "lucide-react";
+import { Banknote, Building2, FlaskConical, Handshake, Landmark, Percent, Plane, Rocket, Tag, TrendingUp, Trophy } from "lucide-react";
 import { daysUntil, isStageLine, todayIso } from "./navigator";
 
 // Each kind of program gets its own colour and icon, so a list reads at a glance (grant vs loan vs accelerator) before a word is read.
@@ -14,6 +14,7 @@ export const TYPE_META = {
   investor: { color: "#F472B6", Icon: TrendingUp },
   immigration: { color: "#94A3B8", Icon: Plane },
   research_partnership: { color: "#60A5FA", Icon: FlaskConical },
+  perk: { color: "#E879F9", Icon: Tag },
 };
 export const typeMeta = (t) => TYPE_META[t] || { color: "#94A3B8", Icon: Banknote };
 export const tint = (hex, a = 0.16) => `${hex}${Math.round(a * 255).toString(16).padStart(2, "0")}`;

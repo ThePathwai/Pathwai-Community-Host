@@ -30,9 +30,10 @@ ALIASES: Dict[str, List[str]] = {
 }
 TYPE_WORDS = [("tax credit", "tax_credit"), ("grant", "grant"), ("loan", "loan"), ("accelerator", "accelerator"), ("incubator", "incubator"),
               ("competition", "competition"), ("pitch", "competition"), ("investor", "investor"), ("venture capital", "investor"), ("visa", "immigration"),
-              ("immigration", "immigration")]
+              ("immigration", "immigration"),
+              ("discount", "perk"), ("perk", "perk"), ("credits", "perk")]
 TYPE_NOUN = {"grant": "grants", "loan": "loans", "tax_credit": "tax credits", "accelerator": "accelerators", "incubator": "incubators",
-             "competition": "competitions", "investor": "investors", "immigration": "immigration routes"}
+             "competition": "competitions", "investor": "investors", "immigration": "immigration routes", "perk": "tool discounts"}
 W = {
     "profile": ["my profile", "about me", "know about me", "where am i", "my startup", "what do you know"],
     "communities": ["communit", "join", "network", "cohort"],
@@ -269,6 +270,7 @@ KEYWORD_WORDS = {k: [w for w in v] for k, v in {
     "customers": ["customer", "clients", "pilot", "sales"], "export": ["export", "international", "abroad"], "rd": ["r&d", "research", "prototype"],
     "ip": ["patent", "trademark", "intellectual"], "talent": ["hire", "hiring", "talent", "intern", "staff"], "network": ["network", "introduc", "connect"],
     "tax": ["tax"], "training": ["training", "course", "learn", "workshop"], "visa": ["immigra", "visa", "permanent resident", "work permit"],
+    "tools": ["software", "discount", "credits", "tools"], "legal": ["lawyer", "legal", "contract"],
 }.items()}
 
 

@@ -25,7 +25,7 @@ TODAY = "2026-10-27"
 def cases():
     out = []
     stages = nav.STAGES
-    needs = [[], ["funding"], ["mentorship", "network"], ["export", "customers", "funding"], ["rd", "ip", "tax", "talent"]]
+    needs = [[], ["funding"], ["mentorship", "network"], ["export", "customers", "funding"], ["rd", "ip", "tax", "talent"], ["tools", "legal"]]
     auds = [[], ["women"], ["black"], ["indigenous", "student"], ["newcomer"]]
     for i, (st, nd, au) in enumerate(itertools.product(stages, needs, auds)):
         out.append({
@@ -33,7 +33,7 @@ def cases():
             "age": [None, 19, 27, 35, 44][i % 5], "province": ["ON", "BC", "ON", "QC", "ON"][i % 5],
             "sectors": [[], ["tech"], ["hardware", "mobility"], ["food"], ["health", "cleantech"]][(i // 3) % 5],
             "incorporated": ["yes", "no", None, "unsure", "yes"][i % 5], "employees": [None, 1, 8, 120, 600][(i // 2) % 5],
-            "city": ["", "Toronto", "toronto", "Ottawa", ""][i % 5], "student": i % 7 == 0,
+            "city": ["", "Toronto", "St. Catharines, ON", "Ottawa", "Liberty Village", "Sudbury", "kitchener", "GTA", "Hamilton"][i % 9], "student": i % 7 == 0,
         })
     out += [{}, {"stage": "wizard", "age": "x"}, {"stage": "growth", "employees": "12", "age": "30"}]
     return out

@@ -16,8 +16,9 @@ const ALIASES = {
   "startup-visa": ["start-up visa", "startup visa"],
 };
 const TYPE_WORDS = [["tax credit", "tax_credit"], ["grant", "grant"], ["loan", "loan"], ["accelerator", "accelerator"], ["incubator", "incubator"],
-  ["competition", "competition"], ["pitch", "competition"], ["investor", "investor"], ["venture capital", "investor"], ["visa", "immigration"], ["immigration", "immigration"]];
-const TYPE_NOUN = { grant: "grants", loan: "loans", tax_credit: "tax credits", accelerator: "accelerators", incubator: "incubators", competition: "competitions", investor: "investors", immigration: "immigration routes" };
+  ["competition", "competition"], ["pitch", "competition"], ["investor", "investor"], ["venture capital", "investor"], ["visa", "immigration"], ["immigration", "immigration"],
+  ["discount", "perk"], ["perk", "perk"], ["credits", "perk"]];
+const TYPE_NOUN = { grant: "grants", loan: "loans", tax_credit: "tax credits", accelerator: "accelerators", incubator: "incubators", competition: "competitions", investor: "investors", immigration: "immigration routes", perk: "tool discounts" };
 const W = {
   profile: ["my profile", "about me", "know about me", "where am i", "my startup", "what do you know"],
   communities: ["communit", "join", "network", "cohort"],
@@ -33,6 +34,7 @@ const KEYWORD_WORDS = {
   customers: ["customer", "clients", "pilot", "sales"], export: ["export", "international", "abroad"], rd: ["r&d", "research", "prototype"],
   ip: ["patent", "trademark", "intellectual"], talent: ["hire", "hiring", "talent", "intern", "staff"], network: ["network", "introduc", "connect"],
   tax: ["tax"], training: ["training", "course", "learn", "workshop"], visa: ["immigra", "visa", "permanent resident", "work permit"],
+  tools: ["software", "discount", "credits", "tools"], legal: ["lawyer", "legal", "contract"],
 };
 const FIT_LINE = { strong: "It looks like a good match for you.", possible: "It is worth a look.", later: "Not yet, but it could be a match later." };
 const MISSING_LABELS = [["needs", "what you need next"], ["sectors", "what you build"], ["incorporated", "whether you are incorporated"], ["goal", "your next goal"], ["city", "your city"], ["age", "your age or birthday"]];

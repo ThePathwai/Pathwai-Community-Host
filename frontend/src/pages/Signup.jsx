@@ -8,6 +8,7 @@ import { AvatarUpload, Button, Card, Field, Input, MembershipStatusCard, Select,
 import { SUGGEST, ageFromBirthday, oldestISO, todayISO } from "../lib/profile";
 import StartupFields, { BLANK_STARTUP, startupToApi } from "../components/StartupFields";
 import SocialAuthButtons from "../components/SocialAuthButtons";
+import { PLACE_NAMES } from "../lib/navigator";
 
 // Asked once, right after account creation — before landing in the hub or in the new community's
 // setup wizard — so every "request to join" from here on starts pre-filled instead of asking the
@@ -45,7 +46,8 @@ function BuildProfileStep({ account, onDone, joinInfo, founder }) {
           <p className="-mt-2 text-xs text-muted">Your age is worked out from this and keeps updating on its own. Other members see your age, never your birthday.</p>
           <Field label="What do you do?"><Input data-testid="profile-title" value={f.title} onChange={set("title")} placeholder="e.g. Physiotherapist, teacher, chef" maxLength={120} /></Field>
           <Field label="Employer or school"><Input data-testid="profile-company" value={f.company} onChange={set("company")} maxLength={120} /></Field>
-          <Field label="Neighbourhood or city"><Input data-testid="profile-location" value={f.location} onChange={set("location")} maxLength={120} /></Field>
+          <Field label="City"><Input data-testid="profile-location" value={f.location} onChange={set("location")} maxLength={120} list="pw-places" placeholder="e.g. Toronto, Ottawa, Kitchener" /></Field>
+          <datalist id="pw-places">{PLACE_NAMES.map((n) => <option key={n} value={n} />)}</datalist>
           <Field label="About you"><Textarea data-testid="profile-bio" rows={3} value={f.bio} onChange={set("bio")} maxLength={1000} /></Field>
           <StartupFields value={f.startup} onChange={(v) => setF({ ...f, startup: v })} testPrefix="profile-startup" />
           <Field label="Skills"><TagInput value={f.skill_set} suggestions={SUGGEST.skill_set} onChange={(v) => setF({ ...f, skill_set: v })} /></Field>

@@ -113,7 +113,7 @@ function ProfileBar({ mine, meta }) {
 }
 
 // The whole decision, in the open: four questions, and how their answers become a label. Collapsed so it is there when asked for.
-const QUESTIONS = [["Can I apply?", "Your province, group, age, team size, sector and whether you are incorporated, against what the program requires."], ["Is it for my stage?", "The stages the program serves, against yours."], ["Does it give me what I need?", "What it offers, against what you said you need."], ["Can I apply now?", "Open, apply anytime, closed or paused, and any deadline."]];
+const QUESTIONS = [["Can I apply?", "Your province, city, group, age, team size, sector and whether you are incorporated, against what the program requires."], ["Is it for my stage?", "The stages the program serves, against yours."], ["Does it give me what I need?", "What it offers, against what you said you need."], ["Can I apply now?", "Open, apply anytime, closed or paused, and any deadline."]];
 function HowWeDecide() {
   return (
     <details className="mt-3 rounded-xl border border-line px-4 py-3 text-sm" data-testid="nav-how">
@@ -244,7 +244,7 @@ function Results({ res, meta, loading, generic, onOpen, tracked, onTrack, imap, 
 }
 
 function Directory({ meta, onOpen, imap, eco }) {
-  const [f, setF] = useState({ q: "", type: "", status: "", province: "", need: "" });
+  const [f, setF] = useState({ q: "", type: "", status: "", province: "", need: "", region: "" });
   const [rows, setRows] = useState(null);
   useEffect(() => {
     let live = true;
@@ -264,7 +264,16 @@ function Directory({ meta, onOpen, imap, eco }) {
           <Pill on={f.status === "live"} onClick={() => set("status", f.status === "live" ? "" : "live")} testId="dir-live">Taking applications</Pill>
           {meta.types.map((t) => { const { color, Icon } = typeMeta(t.key); return <Pill key={t.key} on={f.type === t.key} color={color} onClick={() => set("type", f.type === t.key ? "" : t.key)} testId={`dir-type-${t.key}`}><Icon className="h-3.5 w-3.5" aria-hidden />{t.label}</Pill>; })}
         </div>
-        <div className="pw-rail -mx-4 flex gap-2 overflow-x-auto px-4 pb-1 sm:mx-0 sm:px-0">{meta.needs.slice(0, 7).map((n) => <Pill key={n.key} on={f.need === n.key} onClick={() => set("need", f.need === n.key ? "" : n.key)} testId={`dir-need-${n.key}`}>{n.label}</Pill>)}</div>
+        {meta.regions && (
+          <label className="flex items-center gap-2 text-sm text-muted">Near
+            <select className="input !w-auto !rounded-full !py-2" value={f.region} onChange={(e) => set("region", e.target.value)} aria-label="Show programs near" data-testid="dir-region">
+              <option value="">Anywhere in Canada</option>
+              {meta.regions.map((r) => <option key={r.key} value={r.key}>{r.label}</option>)}
+            </select>
+            <span className="text-xs">Programs for one place only show when you pick it.</span>
+          </label>
+        )}
+        <div className="pw-rail -mx-4 flex gap-2 overflow-x-auto px-4 pb-1 sm:mx-0 sm:px-0">{meta.needs.map((n) => <Pill key={n.key} on={f.need === n.key} onClick={() => set("need", f.need === n.key ? "" : n.key)} testId={`dir-need-${n.key}`}>{n.label}</Pill>)}</div>
       </div>
       <p className="mb-3 mt-5 text-sm text-muted">{rows ? `${rows.length} program${rows.length === 1 ? "" : "s"}` : ""}</p>
       {!rows ? <Spinner /> : rows.length === 0 ? <p className="rounded-2xl border border-dashed border-line p-8 text-center text-muted">Nothing matches. Try clearing a filter.</p>

@@ -88,14 +88,15 @@ async def navigator_meta() -> Dict[str, Any]:
         "needs": [{"key": k, "label": nav.NEED_LABEL[k]} for k in nav.NEEDS],
         "audiences": [{"key": k, "label": nav.AUDIENCE_LABEL[k]} for k in nav.AUDIENCES],
         "sectors": nav.SECTORS, "provinces": nav.PROVINCES,
+        "regions": [{"key": k, "label": nav.REGION_LABEL[k]} for k in nav.REGION_LABEL],
         "types": [{"key": k, "label": nav.TYPE_LABEL[k]} for k in nav.TYPES],
         "statuses": [{"key": k, "label": nav.STATUS_LABEL[k], "help": nav.STATUS_HELP[k]} for k in nav.STATUSES],
     }
 
 
 @router.get("/navigator/programs")
-async def navigator_programs(q: str = "", type: str = "", province: str = "", stage: str = "", audience: str = "", status: str = "", need: str = "") -> Dict[str, Any]:
-    rows = nav.filter_programs(await _all_programs(), q=q[:80], ptype=type, province=province, stage=stage, audience=audience, status=status, need=need)
+async def navigator_programs(q: str = "", type: str = "", province: str = "", stage: str = "", audience: str = "", status: str = "", need: str = "", region: str = "") -> Dict[str, Any]:
+    rows = nav.filter_programs(await _all_programs(), q=q[:80], ptype=type, province=province, stage=stage, audience=audience, status=status, need=need, region=region)
     return {"programs": rows, "count": len(rows)}
 
 
@@ -326,6 +327,7 @@ _KEYWORDS = {
     "space": ("space", "office", "lab", "studio"), "customers": ("customer", "client", "sales", "market", "pilot"), "export": ("export", "international", "global", "abroad"),
     "rd": ("r&d", "research", "prototype", "develop"), "ip": ("patent", "trademark", "legal", "intellectual"), "talent": ("hire", "talent", "intern", "recruit", "developer"),
     "network": ("network", "intro", "connect", "community"), "tax": ("tax", "sr&ed"), "training": ("train", "learn", "course", "workshop", "skill"), "visa": ("visa", "immigra", "work permit"),
+    "tools": ("software", "discount", "credits", "tools"), "legal": ("lawyer", "contract", "incorporat", "registration"),
 }
 
 

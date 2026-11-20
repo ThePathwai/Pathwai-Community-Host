@@ -30,20 +30,193 @@ STAGE_HINT = {
     "growth": "Scaling a proven product",
 }
 STAGE_NOW = {"idea": "at the idea stage", "prototype": "at the prototype stage", "launched": "just launched", "revenue": "earning revenue", "growth": "growing"}
-NEEDS = ["funding", "mentorship", "space", "customers", "export", "rd", "ip", "talent", "network", "tax", "training", "visa"]
+NEEDS = ["funding", "mentorship", "space", "customers", "export", "rd", "ip", "talent", "network", "tax", "training", "visa", "tools", "legal"]
 NEED_LABEL = {
     "funding": "funding", "mentorship": "mentors", "space": "a workspace", "customers": "first customers", "export": "export help",
     "rd": "R&D support", "ip": "IP protection", "talent": "talent", "network": "a network", "tax": "tax savings", "training": "training", "visa": "an immigration route",
+    "tools": "tool discounts", "legal": "legal help",
 }
 AUDIENCES = ["women", "black", "indigenous", "newcomer", "youth", "student", "rural"]
 AUDIENCE_LABEL = {"women": "women", "black": "Black", "indigenous": "Indigenous", "newcomer": "newcomer", "youth": "young", "student": "student", "rural": "rural"}
 SECTORS = ["tech", "hardware", "health", "cleantech", "mobility", "creative", "retail", "food", "services", "social"]
 PROVINCES = ["ON", "BC", "AB", "SK", "MB", "QC", "NB", "NS", "PE", "NL", "YT", "NT", "NU"]
-TYPES = ["grant", "loan", "tax_credit", "accelerator", "incubator", "mentorship", "competition", "investor", "immigration", "research_partnership", "resource"]
+TYPES = ["grant", "loan", "tax_credit", "accelerator", "incubator", "mentorship", "competition", "investor", "immigration", "research_partnership", "resource", "perk"]
 TYPE_LABEL = {
     "grant": "Grant", "loan": "Loan", "tax_credit": "Tax credit", "accelerator": "Accelerator", "incubator": "Incubator", "mentorship": "Mentorship",
-    "competition": "Competition", "investor": "Investor", "immigration": "Immigration", "research_partnership": "Research partner", "resource": "Resource",
+    "competition": "Competition", "investor": "Investor", "immigration": "Immigration", "research_partnership": "Research partner", "resource": "Resource", "perk": "Tool discount",
 }
+
+# ---------- places in Ontario ----------
+# A program can serve one part of the province (a regional innovation centre, a city's own services). Its `regions` lists the
+# places it serves; empty means everyone. A founder's city maps to every region it sits in, narrowest first, so a Toronto founder
+# fits a program for "toronto", for "gta" and for "southern-ontario". A city we do not know counts as not answered, never as outside.
+# The table is generated once and copied to frontend/src/lib/navigator.js; the parity test keeps the two the same.
+REGION_LABEL = {
+    "toronto": "Toronto",
+    "gta": "the Greater Toronto Area",
+    "peel": "Peel Region",
+    "york": "York Region",
+    "durham": "Durham Region",
+    "northumberland": "Northumberland",
+    "halton": "Halton Region",
+    "hamilton-niagara": "Hamilton and Niagara",
+    "waterloo-region": "Waterloo Region",
+    "guelph": "Guelph",
+    "london": "London",
+    "windsor": "Windsor-Essex and Chatham-Kent",
+    "ottawa": "Ottawa",
+    "kingston": "Kingston",
+    "sudbury": "Greater Sudbury",
+    "thunder-bay": "Thunder Bay",
+    "southwestern-ontario": "southwestern Ontario",
+    "eastern-ontario": "eastern Ontario",
+    "northern-ontario": "northern Ontario",
+    "southern-ontario": "southern Ontario"
+}
+CITY_REGIONS = {
+    "toronto": ["toronto", "gta", "southern-ontario"],
+    "scarborough": ["toronto", "gta", "southern-ontario"],
+    "north york": ["toronto", "gta", "southern-ontario"],
+    "etobicoke": ["toronto", "gta", "southern-ontario"],
+    "east york": ["toronto", "gta", "southern-ontario"],
+    "york": ["toronto", "gta", "southern-ontario"],
+    "mississauga": ["peel", "gta", "southern-ontario"],
+    "brampton": ["peel", "gta", "southern-ontario"],
+    "caledon": ["peel", "gta", "southern-ontario"],
+    "markham": ["york", "gta", "southern-ontario"],
+    "vaughan": ["york", "gta", "southern-ontario"],
+    "richmond hill": ["york", "gta", "southern-ontario"],
+    "newmarket": ["york", "gta", "southern-ontario"],
+    "aurora": ["york", "gta", "southern-ontario"],
+    "king city": ["york", "gta", "southern-ontario"],
+    "stouffville": ["york", "gta", "southern-ontario"],
+    "georgina": ["york", "gta", "southern-ontario"],
+    "east gwillimbury": ["york", "gta", "southern-ontario"],
+    "oshawa": ["durham", "gta", "southern-ontario"],
+    "ajax": ["durham", "gta", "southern-ontario"],
+    "pickering": ["durham", "gta", "southern-ontario"],
+    "whitby": ["durham", "gta", "southern-ontario"],
+    "clarington": ["durham", "gta", "southern-ontario"],
+    "bowmanville": ["durham", "gta", "southern-ontario"],
+    "uxbridge": ["durham", "gta", "southern-ontario"],
+    "scugog": ["durham", "gta", "southern-ontario"],
+    "port perry": ["durham", "gta", "southern-ontario"],
+    "brock": ["durham", "gta", "southern-ontario"],
+    "oakville": ["halton", "gta", "southern-ontario"],
+    "milton": ["halton", "gta", "southern-ontario"],
+    "halton hills": ["halton", "gta", "southern-ontario"],
+    "georgetown": ["halton", "gta", "southern-ontario"],
+    "acton": ["halton", "gta", "southern-ontario"],
+    "burlington": ["halton", "hamilton-niagara", "gta", "southern-ontario"],
+    "hamilton": ["hamilton-niagara", "southern-ontario"],
+    "ancaster": ["hamilton-niagara", "southern-ontario"],
+    "dundas": ["hamilton-niagara", "southern-ontario"],
+    "stoney creek": ["hamilton-niagara", "southern-ontario"],
+    "grimsby": ["hamilton-niagara", "southern-ontario"],
+    "st catharines": ["hamilton-niagara", "southern-ontario"],
+    "niagara falls": ["hamilton-niagara", "southern-ontario"],
+    "niagara on the lake": ["hamilton-niagara", "southern-ontario"],
+    "welland": ["hamilton-niagara", "southern-ontario"],
+    "fort erie": ["hamilton-niagara", "southern-ontario"],
+    "thorold": ["hamilton-niagara", "southern-ontario"],
+    "port colborne": ["hamilton-niagara", "southern-ontario"],
+    "lincoln": ["hamilton-niagara", "southern-ontario"],
+    "waterloo": ["waterloo-region", "southwestern-ontario", "southern-ontario"],
+    "kitchener": ["waterloo-region", "southwestern-ontario", "southern-ontario"],
+    "cambridge": ["waterloo-region", "southwestern-ontario", "southern-ontario"],
+    "elmira": ["waterloo-region", "southwestern-ontario", "southern-ontario"],
+    "st jacobs": ["waterloo-region", "southwestern-ontario", "southern-ontario"],
+    "guelph": ["guelph", "southwestern-ontario", "southern-ontario"],
+    "fergus": ["guelph", "southwestern-ontario", "southern-ontario"],
+    "elora": ["guelph", "southwestern-ontario", "southern-ontario"],
+    "london": ["london", "southwestern-ontario", "southern-ontario"],
+    "st thomas": ["london", "southwestern-ontario", "southern-ontario"],
+    "strathroy": ["london", "southwestern-ontario", "southern-ontario"],
+    "windsor": ["windsor", "southwestern-ontario", "southern-ontario"],
+    "leamington": ["windsor", "southwestern-ontario", "southern-ontario"],
+    "amherstburg": ["windsor", "southwestern-ontario", "southern-ontario"],
+    "lasalle": ["windsor", "southwestern-ontario", "southern-ontario"],
+    "tecumseh": ["windsor", "southwestern-ontario", "southern-ontario"],
+    "essex": ["windsor", "southwestern-ontario", "southern-ontario"],
+    "kingsville": ["windsor", "southwestern-ontario", "southern-ontario"],
+    "chatham": ["windsor", "southwestern-ontario", "southern-ontario"],
+    "chatham kent": ["windsor", "southwestern-ontario", "southern-ontario"],
+    "sarnia": ["southwestern-ontario", "southern-ontario"],
+    "stratford": ["southwestern-ontario", "southern-ontario"],
+    "woodstock": ["southwestern-ontario", "southern-ontario"],
+    "brantford": ["southwestern-ontario", "southern-ontario"],
+    "tillsonburg": ["southwestern-ontario", "southern-ontario"],
+    "ingersoll": ["southwestern-ontario", "southern-ontario"],
+    "goderich": ["southwestern-ontario", "southern-ontario"],
+    "owen sound": ["southwestern-ontario", "southern-ontario"],
+    "cobourg": ["northumberland", "eastern-ontario", "southern-ontario"],
+    "port hope": ["northumberland", "eastern-ontario", "southern-ontario"],
+    "brighton": ["northumberland", "eastern-ontario", "southern-ontario"],
+    "ottawa": ["ottawa", "eastern-ontario", "southern-ontario"],
+    "kanata": ["ottawa", "eastern-ontario", "southern-ontario"],
+    "nepean": ["ottawa", "eastern-ontario", "southern-ontario"],
+    "orleans": ["ottawa", "eastern-ontario", "southern-ontario"],
+    "gloucester": ["ottawa", "eastern-ontario", "southern-ontario"],
+    "stittsville": ["ottawa", "eastern-ontario", "southern-ontario"],
+    "barrhaven": ["ottawa", "eastern-ontario", "southern-ontario"],
+    "kingston": ["kingston", "eastern-ontario", "southern-ontario"],
+    "gananoque": ["kingston", "eastern-ontario", "southern-ontario"],
+    "napanee": ["kingston", "eastern-ontario", "southern-ontario"],
+    "belleville": ["eastern-ontario", "southern-ontario"],
+    "quinte west": ["eastern-ontario", "southern-ontario"],
+    "peterborough": ["eastern-ontario", "southern-ontario"],
+    "cornwall": ["eastern-ontario", "southern-ontario"],
+    "brockville": ["eastern-ontario", "southern-ontario"],
+    "pembroke": ["eastern-ontario", "southern-ontario"],
+    "smiths falls": ["eastern-ontario", "southern-ontario"],
+    "perth": ["eastern-ontario", "southern-ontario"],
+    "carleton place": ["eastern-ontario", "southern-ontario"],
+    "trenton": ["eastern-ontario", "southern-ontario"],
+    "lindsay": ["eastern-ontario", "southern-ontario"],
+    "barrie": ["southern-ontario"],
+    "orillia": ["southern-ontario"],
+    "collingwood": ["southern-ontario"],
+    "midland": ["southern-ontario"],
+    "innisfil": ["southern-ontario"],
+    "bradford": ["southern-ontario"],
+    "bracebridge": ["southern-ontario"],
+    "huntsville": ["southern-ontario"],
+    "orangeville": ["southern-ontario"],
+    "sudbury": ["sudbury", "northern-ontario"],
+    "greater sudbury": ["sudbury", "northern-ontario"],
+    "thunder bay": ["thunder-bay", "northern-ontario"],
+    "north bay": ["northern-ontario"],
+    "sault ste marie": ["northern-ontario"],
+    "timmins": ["northern-ontario"],
+    "kenora": ["northern-ontario"],
+    "kapuskasing": ["northern-ontario"],
+    "elliot lake": ["northern-ontario"],
+    "gta": ["toronto", "gta", "southern-ontario"],
+    "greater toronto area": ["toronto", "gta", "southern-ontario"],
+    "greater toronto": ["toronto", "gta", "southern-ontario"],
+    "waterloo region": ["waterloo-region", "southwestern-ontario", "southern-ontario"],
+    "kitchener waterloo": ["waterloo-region", "southwestern-ontario", "southern-ontario"],
+    "niagara": ["hamilton-niagara", "southern-ontario"],
+    "niagara region": ["hamilton-niagara", "southern-ontario"],
+    "windsor essex": ["windsor", "southwestern-ontario", "southern-ontario"],
+    "durham region": ["durham", "gta", "southern-ontario"],
+    "peel region": ["peel", "gta", "southern-ontario"],
+    "york region": ["york", "gta", "southern-ontario"],
+}
+
+
+def _norm_place(text: Any) -> str:
+    t = str(text or "").lower().replace("\u2019", "").replace("'", "")
+    t = t.replace("saint ", "st ").replace("sainte ", "ste ")
+    t = re.sub(r"[.,()/\-]", " ", t)
+    t = re.sub(r"\b(ontario|on|canada)\b", " ", t)
+    return " ".join(t.split())
+
+
+def place_regions(city: Any) -> Optional[List[str]]:
+    """Every region a city sits in, narrowest first, or None when we do not know the place (so the question stays open)."""
+    return CITY_REGIONS.get(_norm_place(city))
+
 STATUSES = ["open", "rolling", "check", "closed", "paused"]
 # Plain words, because "open" and "rolling" read as the same thing: open = taking applications now (often with a closing date),
 # rolling = no deadline, apply whenever, check = the organisation has not published dates.
@@ -229,6 +402,8 @@ def unchecked_requirements(program: Dict[str, Any]) -> List[str]:
         pats += [_PROVINCE_WORDS[x] for x in provs if x in _PROVINCE_WORDS]
     if program.get("restricted_to"):
         pats.append(r"black|women|woman|indigenous|newcomer|youth|student|owned|led by|visible minorit")
+    for rg in program.get("regions") or []:
+        pats += [re.escape(REGION_LABEL.get(rg, rg).lower()), re.escape(rg.replace("-", " "))]
     rx = re.compile("|".join(pats), re.I) if pats else None
     return [r for r in (program.get("requirements") or []) if not (rx and rx.search(r))]
 
@@ -277,6 +452,20 @@ def evaluate(program: Dict[str, Any], profile: Dict[str, Any], today: Optional[d
             add("yes", f"Open to founders in {profile['province']}.")
         else:
             add("no", "Only for " + _join(provs))
+    regions = program.get("regions") or []
+    if regions:
+        where = _join([REGION_LABEL.get(r, r) for r in regions])
+        mine = place_regions(profile["city"]) if profile["province"] == "ON" else []
+        if mine is None:
+            add("maybe", f"Serves {where}; add your city to check.", "city")
+        else:
+            hit = next((r for r in mine if r in regions), None)
+            if hit:
+                add("yes", f"Serves {REGION_LABEL.get(hit, hit)}, where you are.")
+                if hit != "southern-ontario":
+                    focus.append(f"Serves {REGION_LABEL.get(hit, hit)}, where you are.")
+            else:
+                add("no", f"Only serves {where}")
     age = profile["age"]
     lo, hi = req.get("age_min"), req.get("age_max")
     if lo is not None or hi is not None:
@@ -391,11 +580,13 @@ def evaluate(program: Dict[str, Any], profile: Dict[str, Any], today: Optional[d
     checks = [apply_check, stage_check, need_check, timing_check]
 
     # The order inside a match group: live before closed, made for you before merely open to you, more needs covered,
-    # sooner deadline, then how sure we are of the details. Packed into one number, used for sorting only.
+    # more focused on those needs, sooner deadline, then how sure we are of the details. Packed into one number, used for sorting only.
     live = 0 if status in ("closed", "paused") else 1
     urgency = 3 if (days is not None and days <= 60) else 2 if status == "open" else 1 if status == "rolling" else 0
     trust = {"official": 2, "third_party": 1}.get(program.get("verified") or "unconfirmed", 0)
-    score = live * 10000 + (len(tailored) + len(focus)) * 1000 + min(3, len(hits)) * 100 + urgency * 10 + trust
+    # How focused it is on what you asked for: a program that does only that beats one that does it among five other things.
+    focused = (9 * len(hits)) // max(1, len([n for n in provides if n in NEEDS]))
+    score = live * 100000 + (len(tailored) + len(focus)) * 10000 + min(3, len(hits)) * 1000 + focused * 100 + urgency * 10 + trust
 
     # Reasons and cautions are the same answers, flattened to sentences for the places that show one line.
     reasons = tailored + ([need_check["text"]] if need_check["state"] == "yes" else []) + focus + ([timing_check["text"]] if timing_check["state"] == "yes" else []) + ([stage_check["text"]] if stage_check["state"] == "yes" else [])
@@ -418,7 +609,7 @@ def evaluate(program: Dict[str, Any], profile: Dict[str, Any], today: Optional[d
 
 
 def _brief(program: Dict[str, Any]) -> Dict[str, Any]:
-    keys = ["id", "name", "org", "level", "type", "summary", "amount", "stages", "audiences", "needs", "sectors", "provinces", "requirements",
+    keys = ["id", "name", "org", "level", "type", "summary", "amount", "stages", "audiences", "needs", "sectors", "provinces", "regions", "requirements",
             "deadline", "status", "phase", "apply_url", "link_label", "link_kind", "link_note", "link_exact", "source_url", "verified", "last_checked", "restricted_to", "community"]
     return {k: program.get(k) for k in keys if k in program}
 
@@ -478,7 +669,7 @@ def suggest(programs: List[Dict[str, Any]], raw_profile: Optional[Dict[str, Any]
 def _anytime(p: Dict[str, Any]) -> bool:
     """Not tied to a stage: resources, and anything that serves four or more of the five stages."""
     st = [x for x in (p.get("stages") or STAGES) if x in STAGES]
-    return p.get("type") == "resource" or len(st) >= 4 or not st
+    return p.get("type") in ("resource", "perk") or len(st) >= 4 or not st
 
 
 def trajectory(programs: List[Dict[str, Any]], raw_profile: Optional[Dict[str, Any]], today: Optional[date] = None, per_stage: int = 3, any_limit: int = 6, current_limit: int = 5) -> Dict[str, Any]:
@@ -763,7 +954,7 @@ def rank_communities(communities: List[Dict[str, Any]], raw_profile: Optional[Di
 
 # ---------- listing / filtering ----------
 def filter_programs(programs: List[Dict[str, Any]], q: str = "", ptype: str = "", province: str = "", stage: str = "", audience: str = "",
-                    status: str = "", need: str = "", today: Optional[date] = None) -> List[Dict[str, Any]]:
+                    status: str = "", need: str = "", region: str = "", today: Optional[date] = None) -> List[Dict[str, Any]]:
     today = today or date.today()
     out = []
     ql = q.strip().lower()
@@ -778,6 +969,8 @@ def filter_programs(programs: List[Dict[str, Any]], q: str = "", ptype: str = ""
         if audience and audience not in (p.get("audiences") or []) and audience not in (p.get("restricted_to") or []):
             continue
         if need and need not in (p.get("needs") or []):
+            continue
+        if region and p.get("regions") and region not in p["regions"]:
             continue
         if status == "live" and st not in ("open", "rolling"):
             continue

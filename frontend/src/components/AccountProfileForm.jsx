@@ -1,5 +1,6 @@
 import React from "react";
 import { SUGGEST, ageFromBirthday, oldestISO, todayISO } from "../lib/profile";
+import { PLACE_NAMES } from "../lib/navigator";
 import { AvatarUpload, Field, Input, PhotoGallery, TagInput, Textarea } from "./ui";
 import StartupFields, { BLANK_STARTUP, startupToApi, startupToForm } from "./StartupFields";
 
@@ -17,7 +18,9 @@ export function AccountProfileForm({ f, setF, photo, setPhoto }) {
       <p className="-mt-2 text-xs text-muted">{ageFromBirthday(f.birthday) !== null ? `You're ${ageFromBirthday(f.birthday)}. ` : ""}Your age is worked out from this and updates on its own. Other members see your age, never your birthday.</p>
       <Field label="What do you do?"><Input value={f.title} onChange={set("title")} placeholder="e.g. Physiotherapist, teacher, chef" maxLength={120} /></Field>
       <Field label="Employer or school"><Input value={f.company} onChange={set("company")} maxLength={120} /></Field>
-      <Field label="Neighbourhood or city"><Input value={f.location} onChange={set("location")} maxLength={120} /></Field>
+      <Field label="City"><Input value={f.location} onChange={set("location")} maxLength={120} list="pw-places" placeholder="e.g. Toronto, Ottawa, Kitchener" data-testid="account-profile-city" /></Field>
+      <datalist id="pw-places">{PLACE_NAMES.map((n) => <option key={n} value={n} />)}</datalist>
+      <p className="-mt-2 text-xs text-muted">Some programs only serve one city or region. Pick your city from the list so we only show the ones you can use.</p>
       <Field label="About you"><Textarea rows={3} value={f.bio} onChange={set("bio")} maxLength={1000} /></Field>
       <StartupFields value={f.startup} onChange={(v) => setF({ ...f, startup: v })} testPrefix="account-startup" />
       <PhotoGallery value={f.photos} onChange={(v) => setF({ ...f, photos: v })} />

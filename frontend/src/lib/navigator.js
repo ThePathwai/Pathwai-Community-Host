@@ -8,14 +8,27 @@
 export const STAGES = ["idea", "prototype", "launched", "revenue", "growth"];
 export const STAGE_LABEL = { idea: "idea", prototype: "prototype", launched: "just launched", revenue: "earning revenue", growth: "growing" };
 export const STAGE_HINT = { idea: "Still validating the idea", prototype: "Building a first version", launched: "Launched, first customers", revenue: "Steady revenue", growth: "Scaling a proven product" };
-export const NEEDS = ["funding", "mentorship", "space", "customers", "export", "rd", "ip", "talent", "network", "tax", "training", "visa"];
-export const NEED_LABEL = { funding: "funding", mentorship: "mentors", space: "a workspace", customers: "first customers", export: "export help", rd: "R&D support", ip: "IP protection", talent: "talent", network: "a network", tax: "tax savings", training: "training", visa: "an immigration route" };
+export const NEEDS = ["funding", "mentorship", "space", "customers", "export", "rd", "ip", "talent", "network", "tax", "training", "visa", "tools", "legal"];
+export const NEED_LABEL = { funding: "funding", mentorship: "mentors", space: "a workspace", customers: "first customers", export: "export help", rd: "R&D support", ip: "IP protection", talent: "talent", network: "a network", tax: "tax savings", training: "training", visa: "an immigration route", tools: "tool discounts", legal: "legal help" };
 export const AUDIENCES = ["women", "black", "indigenous", "newcomer", "youth", "student", "rural"];
 export const AUDIENCE_LABEL = { women: "women", black: "Black", indigenous: "Indigenous", newcomer: "newcomer", youth: "young", student: "student", rural: "rural" };
 export const SECTORS = ["tech", "hardware", "health", "cleantech", "mobility", "creative", "retail", "food", "services", "social"];
 export const PROVINCES = ["ON", "BC", "AB", "SK", "MB", "QC", "NB", "NS", "PE", "NL", "YT", "NT", "NU"];
-export const TYPES = ["grant", "loan", "tax_credit", "accelerator", "incubator", "mentorship", "competition", "investor", "immigration", "research_partnership", "resource"];
-export const TYPE_LABEL = { grant: "Grant", loan: "Loan", tax_credit: "Tax credit", accelerator: "Accelerator", incubator: "Incubator", mentorship: "Mentorship", competition: "Competition", investor: "Investor", immigration: "Immigration", research_partnership: "Research partner", resource: "Resource" };
+export const TYPES = ["grant", "loan", "tax_credit", "accelerator", "incubator", "mentorship", "competition", "investor", "immigration", "research_partnership", "resource", "perk"];
+export const TYPE_LABEL = { grant: "Grant", loan: "Loan", tax_credit: "Tax credit", accelerator: "Accelerator", incubator: "Incubator", mentorship: "Mentorship", competition: "Competition", investor: "Investor", immigration: "Immigration", research_partnership: "Research partner", resource: "Resource", perk: "Tool discount" };
+// Places in Ontario: the same table as REGION_LABEL and CITY_REGIONS in backend/navigator.py (the parity test keeps them equal).
+export const REGION_LABEL = {"toronto": "Toronto", "gta": "the Greater Toronto Area", "peel": "Peel Region", "york": "York Region", "durham": "Durham Region", "northumberland": "Northumberland", "halton": "Halton Region", "hamilton-niagara": "Hamilton and Niagara", "waterloo-region": "Waterloo Region", "guelph": "Guelph", "london": "London", "windsor": "Windsor-Essex and Chatham-Kent", "ottawa": "Ottawa", "kingston": "Kingston", "sudbury": "Greater Sudbury", "thunder-bay": "Thunder Bay", "southwestern-ontario": "southwestern Ontario", "eastern-ontario": "eastern Ontario", "northern-ontario": "northern Ontario", "southern-ontario": "southern Ontario"};
+const CITY_REGIONS = {"toronto": ["toronto", "gta", "southern-ontario"], "scarborough": ["toronto", "gta", "southern-ontario"], "north york": ["toronto", "gta", "southern-ontario"], "etobicoke": ["toronto", "gta", "southern-ontario"], "east york": ["toronto", "gta", "southern-ontario"], "york": ["toronto", "gta", "southern-ontario"], "mississauga": ["peel", "gta", "southern-ontario"], "brampton": ["peel", "gta", "southern-ontario"], "caledon": ["peel", "gta", "southern-ontario"], "markham": ["york", "gta", "southern-ontario"], "vaughan": ["york", "gta", "southern-ontario"], "richmond hill": ["york", "gta", "southern-ontario"], "newmarket": ["york", "gta", "southern-ontario"], "aurora": ["york", "gta", "southern-ontario"], "king city": ["york", "gta", "southern-ontario"], "stouffville": ["york", "gta", "southern-ontario"], "georgina": ["york", "gta", "southern-ontario"], "east gwillimbury": ["york", "gta", "southern-ontario"], "oshawa": ["durham", "gta", "southern-ontario"], "ajax": ["durham", "gta", "southern-ontario"], "pickering": ["durham", "gta", "southern-ontario"], "whitby": ["durham", "gta", "southern-ontario"], "clarington": ["durham", "gta", "southern-ontario"], "bowmanville": ["durham", "gta", "southern-ontario"], "uxbridge": ["durham", "gta", "southern-ontario"], "scugog": ["durham", "gta", "southern-ontario"], "port perry": ["durham", "gta", "southern-ontario"], "brock": ["durham", "gta", "southern-ontario"], "oakville": ["halton", "gta", "southern-ontario"], "milton": ["halton", "gta", "southern-ontario"], "halton hills": ["halton", "gta", "southern-ontario"], "georgetown": ["halton", "gta", "southern-ontario"], "acton": ["halton", "gta", "southern-ontario"], "burlington": ["halton", "hamilton-niagara", "gta", "southern-ontario"], "hamilton": ["hamilton-niagara", "southern-ontario"], "ancaster": ["hamilton-niagara", "southern-ontario"], "dundas": ["hamilton-niagara", "southern-ontario"], "stoney creek": ["hamilton-niagara", "southern-ontario"], "grimsby": ["hamilton-niagara", "southern-ontario"], "st catharines": ["hamilton-niagara", "southern-ontario"], "niagara falls": ["hamilton-niagara", "southern-ontario"], "niagara on the lake": ["hamilton-niagara", "southern-ontario"], "welland": ["hamilton-niagara", "southern-ontario"], "fort erie": ["hamilton-niagara", "southern-ontario"], "thorold": ["hamilton-niagara", "southern-ontario"], "port colborne": ["hamilton-niagara", "southern-ontario"], "lincoln": ["hamilton-niagara", "southern-ontario"], "waterloo": ["waterloo-region", "southwestern-ontario", "southern-ontario"], "kitchener": ["waterloo-region", "southwestern-ontario", "southern-ontario"], "cambridge": ["waterloo-region", "southwestern-ontario", "southern-ontario"], "elmira": ["waterloo-region", "southwestern-ontario", "southern-ontario"], "st jacobs": ["waterloo-region", "southwestern-ontario", "southern-ontario"], "guelph": ["guelph", "southwestern-ontario", "southern-ontario"], "fergus": ["guelph", "southwestern-ontario", "southern-ontario"], "elora": ["guelph", "southwestern-ontario", "southern-ontario"], "london": ["london", "southwestern-ontario", "southern-ontario"], "st thomas": ["london", "southwestern-ontario", "southern-ontario"], "strathroy": ["london", "southwestern-ontario", "southern-ontario"], "windsor": ["windsor", "southwestern-ontario", "southern-ontario"], "leamington": ["windsor", "southwestern-ontario", "southern-ontario"], "amherstburg": ["windsor", "southwestern-ontario", "southern-ontario"], "lasalle": ["windsor", "southwestern-ontario", "southern-ontario"], "tecumseh": ["windsor", "southwestern-ontario", "southern-ontario"], "essex": ["windsor", "southwestern-ontario", "southern-ontario"], "kingsville": ["windsor", "southwestern-ontario", "southern-ontario"], "chatham": ["windsor", "southwestern-ontario", "southern-ontario"], "chatham kent": ["windsor", "southwestern-ontario", "southern-ontario"], "sarnia": ["southwestern-ontario", "southern-ontario"], "stratford": ["southwestern-ontario", "southern-ontario"], "woodstock": ["southwestern-ontario", "southern-ontario"], "brantford": ["southwestern-ontario", "southern-ontario"], "tillsonburg": ["southwestern-ontario", "southern-ontario"], "ingersoll": ["southwestern-ontario", "southern-ontario"], "goderich": ["southwestern-ontario", "southern-ontario"], "owen sound": ["southwestern-ontario", "southern-ontario"], "cobourg": ["northumberland", "eastern-ontario", "southern-ontario"], "port hope": ["northumberland", "eastern-ontario", "southern-ontario"], "brighton": ["northumberland", "eastern-ontario", "southern-ontario"], "ottawa": ["ottawa", "eastern-ontario", "southern-ontario"], "kanata": ["ottawa", "eastern-ontario", "southern-ontario"], "nepean": ["ottawa", "eastern-ontario", "southern-ontario"], "orleans": ["ottawa", "eastern-ontario", "southern-ontario"], "gloucester": ["ottawa", "eastern-ontario", "southern-ontario"], "stittsville": ["ottawa", "eastern-ontario", "southern-ontario"], "barrhaven": ["ottawa", "eastern-ontario", "southern-ontario"], "kingston": ["kingston", "eastern-ontario", "southern-ontario"], "gananoque": ["kingston", "eastern-ontario", "southern-ontario"], "napanee": ["kingston", "eastern-ontario", "southern-ontario"], "belleville": ["eastern-ontario", "southern-ontario"], "quinte west": ["eastern-ontario", "southern-ontario"], "peterborough": ["eastern-ontario", "southern-ontario"], "cornwall": ["eastern-ontario", "southern-ontario"], "brockville": ["eastern-ontario", "southern-ontario"], "pembroke": ["eastern-ontario", "southern-ontario"], "smiths falls": ["eastern-ontario", "southern-ontario"], "perth": ["eastern-ontario", "southern-ontario"], "carleton place": ["eastern-ontario", "southern-ontario"], "trenton": ["eastern-ontario", "southern-ontario"], "lindsay": ["eastern-ontario", "southern-ontario"], "barrie": ["southern-ontario"], "orillia": ["southern-ontario"], "collingwood": ["southern-ontario"], "midland": ["southern-ontario"], "innisfil": ["southern-ontario"], "bradford": ["southern-ontario"], "bracebridge": ["southern-ontario"], "huntsville": ["southern-ontario"], "orangeville": ["southern-ontario"], "sudbury": ["sudbury", "northern-ontario"], "greater sudbury": ["sudbury", "northern-ontario"], "thunder bay": ["thunder-bay", "northern-ontario"], "north bay": ["northern-ontario"], "sault ste marie": ["northern-ontario"], "timmins": ["northern-ontario"], "kenora": ["northern-ontario"], "kapuskasing": ["northern-ontario"], "elliot lake": ["northern-ontario"], "gta": ["toronto", "gta", "southern-ontario"], "greater toronto area": ["toronto", "gta", "southern-ontario"], "greater toronto": ["toronto", "gta", "southern-ontario"], "waterloo region": ["waterloo-region", "southwestern-ontario", "southern-ontario"], "kitchener waterloo": ["waterloo-region", "southwestern-ontario", "southern-ontario"], "niagara": ["hamilton-niagara", "southern-ontario"], "niagara region": ["hamilton-niagara", "southern-ontario"], "windsor essex": ["windsor", "southwestern-ontario", "southern-ontario"], "durham region": ["durham", "gta", "southern-ontario"], "peel region": ["peel", "gta", "southern-ontario"], "york region": ["york", "gta", "southern-ontario"]};
+const normPlace = (text) => {
+  let t = String(text || "").toLowerCase().replace(/\u2019/g, "").replace(/'/g, "");
+  t = t.replace(/saint /g, "st ").replace(/sainte /g, "ste ");
+  t = t.replace(/[.,()/\-]/g, " ").replace(/\b(ontario|on|canada)\b/g, " ");
+  return t.split(/\s+/).filter(Boolean).join(" ");
+};
+// Every region a city sits in, narrowest first, or null when we do not know the place.
+// The towns we can place, for a "pick your city" list. Anything else typed is still saved; it just cannot narrow a local program yet.
+export const PLACE_NAMES = ["Acton", "Ajax", "Amherstburg", "Ancaster", "Aurora", "Barrhaven", "Barrie", "Belleville", "Bowmanville", "Bracebridge", "Bradford", "Brampton", "Brantford", "Brighton", "Brock", "Brockville", "Burlington", "Caledon", "Cambridge", "Carleton Place", "Chatham", "Chatham-Kent", "Clarington", "Cobourg", "Collingwood", "Cornwall", "Dundas", "East Gwillimbury", "East York", "Elliot Lake", "Elmira", "Elora", "Essex", "Etobicoke", "Fergus", "Fort Erie", "Gananoque", "Georgetown", "Georgina", "Gloucester", "Goderich", "Grimsby", "Guelph", "Halton Hills", "Hamilton", "Huntsville", "Ingersoll", "Innisfil", "Kanata", "Kapuskasing", "Kenora", "King City", "Kingston", "Kingsville", "Kitchener", "Lasalle", "Leamington", "Lincoln", "Lindsay", "London", "Markham", "Midland", "Milton", "Mississauga", "Napanee", "Nepean", "Newmarket", "Niagara Falls", "Niagara-on-the-Lake", "North Bay", "North York", "Oakville", "Orangeville", "Orillia", "Orleans", "Oshawa", "Ottawa", "Owen Sound", "Pembroke", "Perth", "Peterborough", "Pickering", "Port Colborne", "Port Hope", "Port Perry", "Quinte West", "Richmond Hill", "Sarnia", "Sault Ste. Marie", "Scarborough", "Scugog", "Smiths Falls", "St. Catharines", "St. Jacobs", "St. Thomas", "Stittsville", "Stoney Creek", "Stouffville", "Stratford", "Strathroy", "Sudbury", "Tecumseh", "Thorold", "Thunder Bay", "Tillsonburg", "Timmins", "Toronto", "Trenton", "Uxbridge", "Vaughan", "Waterloo", "Welland", "Whitby", "Windsor", "Woodstock"];
+export const placeRegions = (city) => { const r = CITY_REGIONS[normPlace(city)]; return r || null; };
 export const STATUSES = ["open", "rolling", "check", "closed", "paused"];
 // Plain words: open = taking applications now, rolling = no deadline, check = dates not published.
 export const STATUS_LABEL = { open: "Open now", rolling: "Apply anytime", check: "Dates not posted", closed: "Closed", paused: "Paused" };
@@ -106,6 +119,7 @@ const worst = (items) => items.reduce((w, i) => (SEVERITY[i.state] > SEVERITY[w]
 // A "no" on 1 or 2 is "skip", a "later" on 1 or 2 is "later", yes/yes/yes on 1 to 3 is "strong", anything else is "possible".
 // Timing never changes the match. `score` only orders programs inside a match group and is never shown.
 const PROVINCE_WORDS = { ON: "ontario", BC: "british columbia|b\\.c\\.", AB: "alberta", SK: "saskatchewan", MB: "manitoba", QC: "quebec|québec", NB: "new brunswick", NS: "nova scotia", PE: "prince edward", NL: "newfoundland|labrador", YT: "yukon", NT: "northwest territories", NU: "nunavut" };
+const escapeRx = (s) => s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 export function uncheckedRequirements(program) {
   const req = program.requires || {};
   const pats = [];
@@ -116,6 +130,7 @@ export function uncheckedRequirements(program) {
   const provs = program.provinces || ["any"];
   if (!provs.includes("any")) provs.forEach((x) => { if (PROVINCE_WORDS[x]) pats.push(PROVINCE_WORDS[x]); });
   if ((program.restricted_to || []).length) pats.push("black|women|woman|indigenous|newcomer|youth|student|owned|led by|visible minorit");
+  (program.regions || []).forEach((rg) => { pats.push(escapeRx((REGION_LABEL[rg] || rg).toLowerCase()), escapeRx(rg.replace(/-/g, " "))); });
   const rx = pats.length ? new RegExp(pats.join("|"), "i") : null;
   return (program.requirements || []).filter((r) => !(rx && rx.test(r)));
 }
@@ -135,6 +150,19 @@ export function evaluate(p, profile, today) {
   if (!provs.includes("any")) {
     if (provs.includes(profile.province)) add("yes", `Open to founders in ${profile.province}.`);
     else add("no", "Only for " + joinList(provs));
+  }
+  const regions = p.regions || [];
+  if (regions.length) {
+    const where = joinList(regions.map((r) => REGION_LABEL[r] || r));
+    const mine = profile.province === "ON" ? placeRegions(profile.city) : [];
+    if (mine === null) add("maybe", `Serves ${where}; add your city to check.`, "city");
+    else {
+      const hit = mine.find((r) => regions.includes(r));
+      if (hit) {
+        add("yes", `Serves ${REGION_LABEL[hit] || hit}, where you are.`);
+        if (hit !== "southern-ontario") focus.push(`Serves ${REGION_LABEL[hit] || hit}, where you are.`);
+      } else add("no", `Only serves ${where}`);
+    }
   }
   const age = profile.age;
   const lo = req.age_min ?? null; const hi = req.age_max ?? null;
@@ -226,7 +254,8 @@ export function evaluate(p, profile, today) {
   const live = status === "closed" || status === "paused" ? 0 : 1;
   const urgency = days !== null && days <= 60 ? 3 : status === "open" ? 2 : status === "rolling" ? 1 : 0;
   const trust = { official: 2, third_party: 1 }[p.verified || "unconfirmed"] ?? 0;
-  const score = live * 10000 + (tailored.length + focus.length) * 1000 + Math.min(3, hits.length) * 100 + urgency * 10 + trust;
+  const focused = Math.floor((9 * hits.length) / Math.max(1, provides.filter((n) => NEEDS.includes(n)).length));
+  const score = live * 100000 + (tailored.length + focus.length) * 10000 + Math.min(3, hits.length) * 1000 + focused * 100 + urgency * 10 + trust;
 
   const reasons = [...tailored, ...(needCheck.state === "yes" ? [needCheck.text] : []), ...focus, ...(timingCheck.state === "yes" ? [timingCheck.text] : []), ...(stageCheck.state === "yes" ? [stageCheck.text] : [])].filter(Boolean);
   const steps = [...facets.filter((f) => f.state === "later").map((f) => f.text), ...(stageCheck.state === "later" ? [stageCheck.text] : [])];
@@ -249,7 +278,7 @@ const verdict = (p, profile, today) => {
   return { fit: ev.fit, score: ev.score, reasons: ev.reasons, cautions: ev.cautions, checks: ev.checks };
 };
 
-const BRIEF_KEYS = ["id", "name", "org", "level", "type", "summary", "amount", "stages", "audiences", "needs", "sectors", "provinces", "requirements", "deadline", "status", "phase", "apply_url", "link_label", "link_kind", "link_note", "link_exact", "source_url", "verified", "last_checked", "restricted_to", "community"];
+const BRIEF_KEYS = ["id", "name", "org", "level", "type", "summary", "amount", "stages", "audiences", "needs", "sectors", "provinces", "regions", "requirements", "deadline", "status", "phase", "apply_url", "link_label", "link_kind", "link_note", "link_exact", "source_url", "verified", "last_checked", "restricted_to", "community"];
 const brief = (p) => { const o = {}; for (const k of BRIEF_KEYS) if (k in p) o[k] = p[k]; return o; };
 const byScore = (a, b) => (b.score - a.score) || (a.name < b.name ? -1 : a.name > b.name ? 1 : 0);
 
@@ -299,7 +328,7 @@ export const STAGE_NOW = { idea: "at the idea stage", prototype: "at the prototy
 // that are not tied to a stage (resources, anything serving four or more stages) go in "anytime".
 const isAnytime = (p) => {
   const st = (p.stages || STAGES).filter((x) => STAGES.includes(x));
-  return p.type === "resource" || st.length >= 4 || st.length === 0;
+  return p.type === "resource" || p.type === "perk" || st.length >= 4 || st.length === 0;
 };
 const cmpKey = (a, b) => { for (let k = 0; k < 3; k += 1) { if (a.key[k] < b.key[k]) return -1; if (a.key[k] > b.key[k]) return 1; } return 0; };
 
@@ -489,6 +518,7 @@ export function filterPrograms(programs, f = {}, today = todayIso()) {
     if (f.stage && !(p.stages || []).includes(f.stage)) continue;
     if (f.audience && !(p.audiences || []).includes(f.audience) && !(p.restricted_to || []).includes(f.audience)) continue;
     if (f.need && !(p.needs || []).includes(f.need)) continue;
+    if (f.region && (p.regions || []).length && !p.regions.includes(f.region)) continue;
     if (f.status === "live" && st !== "open" && st !== "rolling") continue;
     if (STATUSES.includes(f.status) && st !== f.status) continue;
     if (ql && ![p.name, p.org, p.summary, (p.requirements || []).join(" ")].join(" ").toLowerCase().includes(ql)) continue;
