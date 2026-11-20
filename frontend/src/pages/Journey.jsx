@@ -1,7 +1,7 @@
-import React, { useCallback, useEffect, useState } from "react";
-import { Link, Navigate } from "react-router-dom";
+import React, { useCallback, useEffect, useRef, useState } from "react";
+import { Link, Navigate, useSearchParams } from "react-router-dom";
 import { toast } from "sonner";
-import { ArrowRight, ArrowUpRight, Check, CheckCircle2, Flag, HelpCircle, ListChecks, MapPin, MousePointerClick, Pencil, Sparkles } from "lucide-react";
+import { ArrowLeft, ArrowRight, ArrowUpRight, Check, Flag, MapPin, Pencil, Sparkles } from "lucide-react";
 import { api } from "../lib/api";
 import { useAuth } from "../lib/auth";
 import { useTracked } from "../lib/useTracked";
@@ -85,51 +85,6 @@ function Step({ n, step, onOpen, onTrack, startId }) {
 }
 
 
-// Two columns from the lg breakpoint so widgets of different heights pack without gaps; one column (in order) below it.
-function useWide() {
-  const q = "(min-width: 1024px)";
-  const [w, setW] = useState(() => (typeof window !== "undefined" && window.matchMedia ? window.matchMedia(q).matches : false));
-  useEffect(() => {
-    if (!window.matchMedia) return undefined;
-    const m = window.matchMedia(q); const f = () => setW(m.matches);
-    f(); m.addEventListener ? m.addEventListener("change", f) : m.addListener(f);
-    return () => { m.removeEventListener ? m.removeEventListener("change", f) : m.removeListener(f); };
-  }, []);
-  return w;
-}
-
-// First visit shows a three-step "how this works"; dismissing it is remembered on this device (per-viewer convenience only).
-function useIntro() {
-  const key = "pw_path_intro_seen";
-  const [show, setShow] = useState(() => { try { return localStorage.getItem(key) !== "1"; } catch { return true; } });
-  const set = (v) => { setShow(v); if (!v) { try { localStorage.setItem(key, "1"); } catch { /* storage is optional */ } } };
-  return [show, set];
-}
-
-const HOW = [
-  { Icon: ListChecks, t: "Pick what you need", d: "Funding, mentors, first customers. Choose the one or two that matter most right now." },
-  { Icon: MousePointerClick, t: "Open the exact page", d: "Every resource says why it fits you and takes you straight to the right page, not a home page." },
-  { Icon: CheckCircle2, t: "Mark what you do", d: "Tell us when you are doing it or done. It leaves your list and the next best one moves up." },
-];
-
-function HowItWorks({ onClose }) {
-  return (
-    <Widget className="mb-4" data-testid="path-how">
-      <div className="mb-4 flex items-start justify-between gap-3">
-        <div><Label>New here?</Label><h2 className="mt-1 text-lg" style={heading}>How this page works</h2></div>
-        <button type="button" onClick={onClose} className={smallBtn} data-testid="path-how-close">Got it</button>
-      </div>
-      <ol className="grid gap-4 sm:grid-cols-3">
-        {HOW.map(({ Icon, t, d }, i) => (
-          <li key={t} className="flex gap-3">
-            <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full" style={{ background: "var(--accent)", color: "var(--on-accent)" }} aria-hidden><Icon className="h-4 w-4" /></span>
-            <div><p className="text-sm font-semibold"><span className="tabular-nums text-muted">{i + 1}. </span>{t}</p><p className="mt-0.5 text-[13px] leading-snug text-muted">{d}</p></div>
-          </li>
-        ))}
-      </ol>
-    </Widget>
-  );
-}
 
 // The one thing to do now: the best resource for the first thing you asked for, with the page to open and the reason.
 function NextMove({ r, step, then, onOpen, onTrack }) {
@@ -164,6 +119,57 @@ function NextMove({ r, step, then, onOpen, onTrack }) {
   );
 }
 
+
+// ---- the four steps, always visible (same look as the community planner's stepper) ----
+const SHORT = { story: "Story", needs: "Needs", plan: "Plan", progress: "Progress" };
+function Stepper({ states, step, onGo }) {
+  return (
+    <ol className="mb-6 grid grid-cols-4 gap-1.5 sm:gap-3" data-testid="path-steps" aria-label="Your path, in four steps">
+      {states.map((s) => {
+        const on = s.key === step;
+        return (
+          <li key={s.key}>
+            <button type="button" onClick={() => onGo(s.key)} aria-current={on ? "step" : undefined} data-testid={`pstep-${s.key}`} data-done={s.done ? "1" : "0"}
+              className={cx("flex h-full w-full flex-col items-center gap-1.5 rounded-2xl border p-2 text-center transition sm:items-stretch sm:gap-2 sm:p-4 sm:text-left", on ? "border-transparent shadow-md" : "border-line bg-surface hover:border-ink/30")}
+              style={on ? { background: "var(--accent)", color: "var(--on-accent)" } : undefined}>
+              <span className="flex flex-col items-center gap-1.5 sm:flex-row sm:gap-2">
+                <span className={cx("flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-xs font-bold", on ? "bg-white/25" : s.done ? "bg-emerald-500 text-white" : "bg-ink/10 text-ink/70")}>{s.done ? <Check className="h-3.5 w-3.5" strokeWidth={3} aria-hidden /> : s.n}</span>
+                <span className="text-[11px] font-bold sm:truncate sm:text-sm"><span className="sm:hidden">{SHORT[s.key]}</span><span className="hidden sm:inline">{s.label}</span></span>
+              </span>
+              <span className={cx("hidden text-xs leading-snug sm:block", on ? "opacity-85" : "text-muted")}>{s.detail}</span>
+            </button>
+          </li>
+        );
+      })}
+    </ol>
+  );
+}
+
+function StepHead({ n, title, sub }) {
+  return (
+    <div className="mb-5">
+      <Label>Step {n} of 4</Label>
+      <h2 className="mt-1.5 text-2xl sm:text-3xl" style={{ ...heading, letterSpacing: "-0.025em", textWrap: "balance" }}>{title}</h2>
+      <p className="mt-1.5 max-w-2xl text-sm text-muted">{sub}</p>
+    </div>
+  );
+}
+
+// Back and Continue under each step, so the next move is always at the end of what you just read.
+function StepNav({ prev, next, nextLabel, nextDisabled, onGo, hint }) {
+  return (
+    <div className="mt-6 flex flex-col gap-2" data-testid="path-nav">
+      {hint && <p className="text-sm text-muted">{hint}</p>}
+      <div className="flex items-center gap-3">
+        {prev && <button type="button" onClick={() => onGo(prev)} className="btn-ghost !py-2.5 text-sm" data-testid="path-back"><ArrowLeft className="h-4 w-4" aria-hidden />Back</button>}
+        {next && <button type="button" onClick={() => onGo(next)} disabled={nextDisabled} className="btn-primary ml-auto disabled:opacity-50" data-testid="path-continue">{nextLabel}<ArrowRight className="h-4 w-4" aria-hidden /></button>}
+      </div>
+    </div>
+  );
+}
+
+const ORDER = ["story", "needs", "plan", "progress"];
+
 export default function Journey({ embedded }) {
   const { account, loading, refresh } = useAuth();
   const { tracked, setTracked, track } = useTracked();
@@ -172,8 +178,8 @@ export default function Journey({ embedded }) {
   const [error, setError] = useState("");
   const [saving, setSaving] = useState(false);
   const [open, setOpen] = useState(null);
-  const wide = useWide();
-  const [intro, setIntro] = useIntro();
+  const [sp, setSp] = useSearchParams();
+  const firstStep = useRef("");
   useEffect(() => { document.title = "Your path · Pathwai"; }, []);
 
   const load = useCallback(async () => {
@@ -211,7 +217,7 @@ export default function Journey({ embedded }) {
     const rest = data.options.filter((o) => !data.needs.includes(o.key)).sort((a, b) => (b.common ? 1 : 0) - (a.common ? 1 : 0));
     const used = tracked.filter((t) => t.state === "done" || t.state === "in");
     const items = [];
-    items.push(<Widget key="where" data-testid="path-where">
+    const where = (<Widget data-testid="path-where">
           <div className="flex flex-wrap items-center gap-x-6 gap-y-3">
             <div className="flex items-center gap-3">
               <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full" style={{ background: "var(--accent)", color: "var(--on-accent)" }} aria-hidden><MapPin className="h-5 w-5" /></span>
@@ -241,65 +247,113 @@ export default function Journey({ embedded }) {
     const moveStep = data.steps.find((st) => st.resources.length);
     const move = moveStep ? (moveStep.resources.find((r) => r.mine === "in") || moveStep.resources[0]) : null;
     const then = data.steps.filter((st) => st !== moveStep && st.resources.length).slice(0, 2).map((st) => ({ label: st.label, r: st.resources.find((r) => r.mine === "in") || st.resources[0] }));
-    if (chosen.length) items.push(<Widget key="wants" data-testid="path-wants">
-          <h2 className="text-lg" style={heading}>Add or change what you want</h2>
-          <p className="mb-3 mt-1 text-sm text-muted">Tap to add or remove. The number is how many resources fit you. The numbered ones get a widget below, in this order.</p>
-          {chips}
-        </Widget>);
+    const doneCount = used.filter((t) => t.state === "done").length;
 
-    data.steps.forEach((s, i) => items.push(<Step key={s.need} n={i + 1} step={s} onOpen={setOpen} onTrack={mark} startId={move && !move.mine ? move.id : ""} />));
+    const states = [
+      { key: "story", n: 1, label: "Where you are", detail: `${cap(data.label)}${data.next ? ` → ${cap(STAGE_LABEL[data.next])}` : ""}`, done: !!data.stage },
+      { key: "needs", n: 2, label: "What you need", detail: chosen.length ? chosen.map((o) => cap(o.label)).join(", ") : "Pick one to three", done: chosen.length > 0 },
+      { key: "plan", n: 3, label: "Your plan", detail: chosen.length ? `${data.steps.reduce((n, st) => n + st.resources.length, 0)} resources that fit you` : "Best resources, in order", done: used.length > 0 },
+      { key: "progress", n: 4, label: "Progress", detail: used.length ? `${doneCount} done · ${used.length - doneCount} in progress` : "What you have used", done: doneCount > 0 },
+    ];
+    // Opens on the first step that still needs you, then stays wherever you go (the step is in the address, so back and refresh work).
+    if (!firstStep.current) firstStep.current = !chosen.length ? "needs" : used.length ? "progress" : "plan";
+    const asked = sp.get("step");
+    const step = ORDER.includes(asked) ? asked : firstStep.current;
+    const go = (k) => { setSp({ step: k }, { replace: true }); try { window.scrollTo({ top: 0 }); } catch { /* optional */ } };
 
-    if (data.coming_up) items.push(
-          <Widget key="coming" data-testid="path-coming">
-            <Label>Coming up</Label>
-            <h2 className="mt-1 text-lg" style={heading}>At {STAGE_LABEL[data.coming_up.stage]}</h2>
-            <p className="mb-3 mt-1 text-sm text-muted">{data.coming_up.programs.length ? "These open up when you get there. Worth knowing now so you can prepare." : "Nothing new opens up there, so the resources above are what to lean on."}</p>
-            {data.coming_up.programs.length > 0 && (
-              <ul className="grid gap-2">
-                {data.coming_up.programs.map((r) => (
-                  <li key={r.id}>
-                    <button type="button" onClick={() => setOpen(r)} className="flex h-full w-full items-start gap-3 rounded-2xl border border-line p-3 text-left transition hover:border-ink/40" data-testid={`path-soon-${r.id}`}>
-                      <TypeTile type={r.type} size={32} />
-                      <span className="min-w-0 flex-1"><span className="block text-sm font-semibold">{r.name}</span><span className="mt-0.5 line-clamp-2 block text-xs text-muted">{r.note}</span></span>
-                    </button>
-                  </li>
-                ))}
-              </ul>
-            )}
-          </Widget>);
-
-    if (used.length > 0) items.push(
-          <Widget key="used" data-testid="path-used">
-            <Label>Progress</Label>
-            <h2 className="mt-1 text-lg" style={heading}>What you have used · {used.length}</h2>
-            <ul className="mt-3 space-y-2">
-              {used.map((t) => (
-                <li key={t.id} className="flex items-center gap-2.5 text-sm">
-                  <Check className={cx("h-4 w-4 shrink-0", t.state === "done" ? "text-emerald-500" : "text-amber-500")} aria-hidden />
-                  <span className="min-w-0 flex-1 truncate font-medium">{t.name}</span>
-                  <span className="shrink-0 text-xs text-muted">{t.state === "in" ? "In progress" : `Done at ${STAGE_LABEL[t.stage] || t.stage}`}</span>
-                  {t.state === "in" && <button type="button" onClick={() => onTrack({ ...t, state: "done" })} className="shrink-0 rounded-lg border border-line px-2.5 py-1 text-xs font-semibold hover:border-ink/40">Done</button>}
-                </li>
-              ))}
-            </ul>
-          </Widget>);
-
-    body = (
-      <div>
-        {error && <p className="mb-4 rounded-xl border border-red-500/40 p-3 text-sm text-red-500" role="alert">{error}</p>}
-        {intro && <HowItWorks onClose={() => setIntro(false)} />}
-        {!chosen.length && (
-          <Widget className="mb-4 sm:p-6" data-testid="path-pickhero">
-            <Label>Step 1 · Start here</Label>
-            <h2 className="mt-1 text-2xl" style={{ ...heading, letterSpacing: "-0.02em" }}>What do you need most right now?</h2>
-            <p className="mb-4 mt-1 max-w-xl text-sm text-muted" data-testid="path-pick">Pick one to three. We will show the best resources for each, why they fit you, and the exact page to open. The outlined ones are common at your stage, and the number is how many fit you.</p>
+    let content;
+    if (step === "story") {
+      content = (
+        <div data-testid="path-step-story">
+          <StepHead n={1} title="Where you are" sub="Your stage and your goal come from your profile. Change them there, or tap the button when you reach the next stage and everything updates." />
+          {where}
+          <StepNav next="needs" nextLabel="Next: what you need" onGo={go} />
+        </div>
+      );
+    } else if (step === "needs") {
+      content = (
+        <div data-testid="path-step-needs">
+          <StepHead n={2} title="What do you need most right now?" sub="Pick one to three. Each one gets its own list of resources, best fit first. The outlined ones are common at your stage, and the number is how many fit you." />
+          <Widget data-testid={chosen.length ? "path-wants" : "path-pickhero"}>
+            {chosen.length > 0 && <p className="mb-3 text-sm text-muted" data-testid="path-pick">Tap to add or remove. The numbers show the order of your lists.</p>}
             {chips}
           </Widget>
-        )}
-        {move && <NextMove r={move} step={moveStep} then={then} onOpen={setOpen} onTrack={mark} />}
-        {wide
-          ? <div className="grid grid-cols-2 items-start gap-4"><div className="flex flex-col gap-4">{items.filter((_, i) => i % 2 === 0)}</div><div className="flex flex-col gap-4">{items.filter((_, i) => i % 2 === 1)}</div></div>
-          : <div className="flex flex-col gap-4">{items}</div>}
+          <StepNav prev="story" next="plan" nextLabel="See my plan" nextDisabled={!chosen.length} onGo={go} hint={chosen.length ? "" : "Pick at least one to build your plan."} />
+        </div>
+      );
+    } else if (step === "plan") {
+      content = (
+        <div data-testid="path-step-plan">
+          <StepHead n={3} title="Your plan" sub="Start with the first one. Each resource says why it fits you and opens the exact page. Say when you are doing it or done." />
+          {!chosen.length
+            ? <Widget data-testid="path-plan-empty"><p className="text-sm text-muted">Pick what you need first and your plan will appear here.</p><button type="button" onClick={() => go("needs")} className="btn-primary mt-4 self-start">Pick what I need<ArrowRight className="h-4 w-4" aria-hidden /></button></Widget>
+            : (
+              <>
+                {move && <NextMove r={move} step={moveStep} then={then} onOpen={setOpen} onTrack={mark} />}
+                <div className="flex flex-col gap-4">
+                  {data.steps.map((s, i) => <Step key={s.need} n={i + 1} step={s} onOpen={setOpen} onTrack={mark} startId={move && !move.mine ? move.id : ""} />)}
+                </div>
+                <p className="mt-4 text-sm text-muted">Want a different mix? <button type="button" onClick={() => go("needs")} className="font-semibold underline hover:text-ink">Change what you need</button></p>
+              </>
+            )}
+          <StepNav prev="needs" next="progress" nextLabel="See my progress" onGo={go} />
+        </div>
+      );
+    } else {
+      content = (
+        <div data-testid="path-step-progress">
+          <StepHead n={4} title="Your progress" sub="What you have used so far, and what opens up at your next stage." />
+          <div className="flex flex-col gap-4">
+            {used.length > 0
+              ? (
+                <Widget data-testid="path-used">
+                  <Label>Used so far</Label>
+                  <h3 className="mt-1 text-lg" style={heading}>{used.length} {used.length === 1 ? "resource" : "resources"} · {doneCount} done</h3>
+                  <ul className="mt-3 space-y-2">
+                    {used.map((t) => (
+                      <li key={t.id} className="flex items-center gap-2.5 text-sm">
+                        <Check className={cx("h-4 w-4 shrink-0", t.state === "done" ? "text-emerald-500" : "text-amber-500")} aria-hidden />
+                        <span className="min-w-0 flex-1 truncate font-medium">{t.name}</span>
+                        <span className="shrink-0 text-xs text-muted">{t.state === "in" ? "In progress" : `Done at ${STAGE_LABEL[t.stage] || t.stage}`}</span>
+                        {t.state === "in" && <button type="button" onClick={() => onTrack({ ...t, state: "done" })} className="shrink-0 rounded-lg border border-line px-2.5 py-1 text-xs font-semibold hover:border-ink/40">Done</button>}
+                      </li>
+                    ))}
+                  </ul>
+                </Widget>
+              )
+              : (
+                <Widget data-testid="path-used-empty"><p className="text-sm text-muted">Nothing here yet. When you tap "I am doing this" or "Mark as done" on a resource in your plan, it shows up here.</p><button type="button" onClick={() => go("plan")} className="btn-ghost mt-4 self-start !py-2 text-sm">Go to my plan</button></Widget>
+              )}
+            {data.coming_up && (
+              <Widget data-testid="path-coming">
+                <Label>Coming up</Label>
+                <h3 className="mt-1 text-lg" style={heading}>At {STAGE_LABEL[data.coming_up.stage]}</h3>
+                <p className="mb-3 mt-1 text-sm text-muted">{data.coming_up.programs.length ? "These open up when you get there. Worth knowing now so you can prepare." : "Nothing new opens up there, so the resources in your plan are what to lean on."}</p>
+                {data.coming_up.programs.length > 0 && (
+                  <ul className="grid gap-2">
+                    {data.coming_up.programs.map((r) => (
+                      <li key={r.id}>
+                        <button type="button" onClick={() => setOpen(r)} className="flex h-full w-full items-start gap-3 rounded-2xl border border-line p-3 text-left transition hover:border-ink/40" data-testid={`path-soon-${r.id}`}>
+                          <TypeTile type={r.type} size={32} />
+                          <span className="min-w-0 flex-1"><span className="block text-sm font-semibold">{r.name}</span><span className="mt-0.5 line-clamp-2 block text-xs text-muted">{r.note}</span></span>
+                        </button>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </Widget>
+            )}
+          </div>
+          <StepNav prev="plan" onGo={go} />
+        </div>
+      );
+    }
+
+    body = (
+      <div className="max-w-3xl">
+        {error && <p className="mb-4 rounded-xl border border-red-500/40 p-3 text-sm text-red-500" role="alert">{error}</p>}
+        <Stepper states={states} step={step} onGo={go} />
+        {content}
         <ProgramDrawer p={open} onClose={() => setOpen(null)} tracked={tracked} onTrack={onTrack} interest={itc} stage={data.stage} />
       </div>
     );
@@ -310,7 +364,7 @@ export default function Journey({ embedded }) {
       <div className="mb-6 max-w-3xl">
         <p className="eyebrow">Journey</p>
         <h1 className="mt-2 text-3xl sm:text-4xl" style={{ textTransform: "none", letterSpacing: "-0.03em", fontWeight: 800, textWrap: "balance" }}>{account.startup?.name ? `${account.startup.name}'s path` : "Your path"}</h1>
-        <p className="mt-2 text-sm text-muted">Pick what you need next. We show the best resources for it, why each one fits you, and the exact page to open. {!intro && data?.has_profile && <button type="button" onClick={() => setIntro(true)} className="ml-1 inline-flex items-center gap-1 font-semibold underline hover:text-ink" data-testid="path-how-open"><HelpCircle className="h-3.5 w-3.5" aria-hidden />How this works</button>}</p>
+        <p className="mt-2 text-sm text-muted">Four steps from where you are to what to do next.</p>
       </div>
       {body}
     </div>
