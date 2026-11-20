@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
-import { ArrowRight, Check, Copy, Compass, Laptop, PencilLine, ShieldCheck, Smartphone, Users } from "lucide-react";
+import { ArrowRight, Check, Copy, Compass, Laptop, PencilLine, Smartphone, Users } from "lucide-react";
 import { toast } from "sonner";
 import { Wordmark, PoweredBy, cx } from "../components/ui";
 import { demoCommunity, demoLink, startDemo } from "../lib/demo";
@@ -61,17 +61,10 @@ export default function DemoLanding() {
           <span className="inline-flex items-center gap-1.5"><Laptop className="h-4 w-4" /> Desktop</span>
         </div>
 
-        {c.noAdmin ? (
-          <div className="mt-8 grid gap-4 sm:grid-cols-2" data-testid="demo-choices">
+        <div className="mt-8 grid gap-4 sm:grid-cols-2" data-testid="demo-choices">
             <Side id="fresh" role="member" fresh Icon={PencilLine} title="Start from scratch" blurb="Tell it about your own startup and get directions, programs and a plan built around it." chips={["Your story", "Directions", "Your plan"]} slug={c.slug} accent={accent} cta="Start with my business" />
             <Side id="around" role="member" fresh={false} Icon={Users} title="Look around" blurb="Open a ready-made founder, Bright Court, and explore a finished plan, events and people." chips={c.member || ["Directions", "Events", "People"]} slug={c.slug} accent={accent} cta="Open the sample founder" />
           </div>
-        ) : (
-          <div className="mt-5 grid gap-4 sm:grid-cols-2">
-            <Side role="member" Icon={Users} title={c.memberTitle || "As a member"} chips={c.member || ["Directory", "Events", "Perks", "Intros"]} slug={c.slug} accent={accent} />
-            <Side role="admin" Icon={ShieldCheck} title={c.adminTitle || "As the admin"} chips={c.admin || ["Members", "Events", "Reports"]} slug={c.slug} accent={accent} />
-          </div>
-        )}
         {c.scale && (
           <div className="mt-5 flex flex-col gap-3 rounded-2xl border border-dashed border-line p-4 sm:flex-row sm:items-center sm:justify-between" data-testid="demo-scale">
             <div className="flex items-start gap-3">
@@ -81,7 +74,7 @@ export default function DemoLanding() {
             <button type="button" onClick={() => startDemo("founder")} className="btn-ghost shrink-0 border border-line !py-2 text-sm" data-testid="demo-scale-national">See it across Canada<ArrowRight className="h-4 w-4" aria-hidden /></button>
           </div>
         )}
-        <p className="mt-5 text-xs text-muted">Made-up people and events. Anything you type stays in this browser tab and is gone when you close it.{!c.noAdmin && " Switch sides any time from the bar at the top."}</p>
+        <p className="mt-5 text-xs text-muted">Made-up people and events. Anything you type stays in this browser tab and is gone when you close it.</p>
       </main>
       <PoweredBy className="pb-2 text-center" />
     </div>

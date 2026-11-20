@@ -2,7 +2,6 @@ import React, { useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import { toast } from "sonner";
 import { api, errMsg } from "../lib/api";
-import { EditMemberButton } from "../components/EditKit";
 import { ReachOutModal } from "../components/ReachOutModal";
 import { useAuth } from "../lib/auth";
 import { fieldLabel, fieldOn, typeLabel } from "../lib/profile";
@@ -74,7 +73,6 @@ export default function MemberProfile() {
                 <p className="mt-1 text-sm text-muted">{[u.company, u.location].filter(Boolean).join(" · ")}</p>
               </div>
               <div className="flex flex-wrap gap-2">
-                <EditMemberButton member={u} onChanged={load} />
                 {user.id !== u.id && <button className="btn-ghost" onClick={toggleSave} aria-label="Save" data-testid="member-save"><Bookmark className={`h-4 w-4 ${u.is_saved ? "fill-current" : ""}`} />{u.is_saved ? "Saved" : "Save"}</button>}
                 {user.id !== u.id ? <Button onClick={() => setOpen(true)} data-testid="connect-btn">Reach out</Button> : <Link to="/me" className="btn-ghost" data-testid="edit-my-profile">Edit my card</Link>}
               </div>

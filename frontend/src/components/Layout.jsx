@@ -10,7 +10,7 @@ const DEFAULT_LABELS = { assistant: "Ask", plan: "My plan", programs: "Programs 
 // Each primary section gets a fixed glyph so the phone tab bar reads at a glance instead of by label text alone.
 const TAB_ICONS = { "/": HomeIcon, assistant: MessageCircle, plan: Target, programs: Compass, members: Users, events: Calendar, resources: Gift };
 
-// The account menu is grouped so it can be scanned: this community, you, communities and tools, then admin. One row per place.
+// The account menu is grouped so it can be scanned: this community, you, communities and tools. One row per place.
 function MenuGroup({ label, children }) {
   return (
     <div className="border-t border-line pb-1 pt-1.5" role="group" aria-label={label}>
@@ -37,7 +37,7 @@ export default function Layout({ children }) {
   // The account menu used to stay open after you tapped a link on a phone (it only closed on mouse-leave), covering the
   // page. Close it on any tap outside it and whenever the page changes.
   // It also can't be taller than the room under the button: the menu lives in the sticky header, so on a short phone
-  // anything past the bottom edge (Admin, Sign out) could never be scrolled to. Measure the room and scroll inside it.
+  // anything past the bottom edge (Sign out) could never be scrolled to. Measure the room and scroll inside it.
   const [menuMax, setMenuMax] = useState(null);
   useEffect(() => {
     if (!menu) return undefined;

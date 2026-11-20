@@ -161,8 +161,8 @@ export default function Signup() {
       <h1 className="mb-1 text-2xl font-bold sm:text-3xl">{intent === "founder" ? "Create your founder profile" : "Create your Pathwai account"}</h1>
       <p className="mb-6 text-sm text-muted">
         {joinInfo
-          // Every community requires admin approval now -- no community can auto-approve a join request.
-          ? <>You're creating your Pathwai account to join <strong>{joinInfo.name}</strong> — an admin will need to approve you.</>
+          // Every community join request is confirmed by the Pathwai team -- no community can auto-approve one.
+          ? <>You're creating your Pathwai account to join <strong>{joinInfo.name}</strong> — we will confirm your request with them.</>
           : "First your account. Next, a short profile about you and your startup. Then your programs."}
       </p>
       <Card>

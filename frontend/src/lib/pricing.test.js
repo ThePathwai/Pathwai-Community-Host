@@ -4,7 +4,7 @@ test("price and limits only grow from tier to tier", () => {
   for (let i = 1; i < TIERS.length; i++) {
     expect(TIERS[i].monthly).toBeGreaterThan(TIERS[i - 1].monthly);
     const a = TIERS[i - 1].limits, b = TIERS[i].limits;
-    ["resources", "founders", "admins"].forEach((k) => { if (b[k] != null) expect(b[k]).toBeGreaterThan(a[k]); });
+    ["resources", "founders"].forEach((k) => { if (b[k] != null) expect(b[k]).toBeGreaterThan(a[k]); });
   }
 });
 test("each tier keeps every feature of the tier below it", () => {
@@ -37,13 +37,12 @@ test("limit states: ok, warn at 90%, over inside grace, upgrade past grace, unli
   expect(limitState(30, 25).state).toBe("upgrade");
   expect(limitState(99999, null).state).toBe("ok");
 });
-test("tierFor picks the smallest tier that fits resources, founders and admins", () => {
+test("tierFor picks the smallest tier that fits resources and founders", () => {
   expect(tierFor({ resources: 20, founders: 10 }).id).toBe("starter");
   expect(tierFor({ resources: 27, founders: 10 }).id).toBe("starter");     // 10% grace
   expect(tierFor({ resources: 60, founders: 10 }).id).toBe("community");
   expect(tierFor({ resources: 60, founders: 400 }).id).toBe("hub");        // founders push it up
   expect(tierFor({ resources: 300, founders: 10 }).id).toBe("hub");        // resources push it up
-  expect(tierFor({ resources: 60, founders: 10, admins: 4 }).id).toBe("hub");
   expect(tierFor({ resources: 5000 }).id).toBe("network");
 });
 test("comparison table has one value per tier on every row", () => {

@@ -4,7 +4,7 @@ import { api, errMsg } from "../lib/api";
 import { applyBrand } from "../lib/theme";
 import { PoweredBy, Spinner } from "../components/ui";
 
-// The external share link (GET /hub/communities/{slug}/public, no auth) -- what an admin's "Copy
+// The external share link (GET /hub/communities/{slug}/public, no auth) -- what the "Copy
 // invite link" on their own community hands to anyone, on or off Pathwai. Deliberately its own
 // full page rather than reusing the Discover card or CommunityDetailModal from Hub.jsx: those are
 // gated behind an account and a logged-in theme, where the whole point here is to look and feel
@@ -54,7 +54,7 @@ export default function CommunityLanding() {
           {info.members} member{info.members === 1 ? "" : "s"} · {info.upcoming_events} upcoming event{info.upcoming_events === 1 ? "" : "s"}
         </p>
         <div className="mt-8 flex flex-col gap-3 sm:flex-row">
-          {/* Every community requires admin approval now -- no community can auto-approve a join request. */}
+          {/* Every community join request is confirmed by the Pathwai team -- no community can auto-approve one. */}
           <button type="button" data-testid="community-landing-join" onClick={() => nav(`/signup?join=${slug}`)}
             className="px-6 py-3 text-sm font-semibold" style={{ background: col.accent, color: col.on_accent || "#fff", borderRadius: btn }}>
             Request to join

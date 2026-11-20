@@ -548,7 +548,7 @@ export function filterPrograms(programs, f = {}, today = todayIso()) {
   return out.sort((a, b) => (rank(a) - rank(b)) || (a.name < b.name ? -1 : a.name > b.name ? 1 : 0));
 }
 
-// A program a community admin lists (mirrors navigator.clean_listing). Throws an Error with a readable message.
+// A program listed for a community (mirrors navigator.clean_listing). Throws an Error with a readable message.
 export function cleanListing(body) {
   const name = String(body.name || "").trim();
   if (name.length < 3) throw new Error("Give the program a name");

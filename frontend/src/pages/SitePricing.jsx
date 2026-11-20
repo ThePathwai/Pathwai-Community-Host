@@ -32,7 +32,7 @@ function Price({ t, annual }) {
 function TierCard({ t, i, annual }) {
   const plus = added(i);
   const L = t.limits;
-  const lines = [unlimited(L.resources, "resources hosted"), L.founders == null ? "Unlimited active founders" : `Up to ${L.founders.toLocaleString("en-CA")} active founders`, unlimited(L.admins, "admin seats"), `${L.aiGuide} AI guide use`];
+  const lines = [unlimited(L.resources, "resources hosted"), L.founders == null ? "Unlimited active founders" : `Up to ${L.founders.toLocaleString("en-CA")} active founders`, `${L.aiGuide} AI guide use`];
   return (
     <article className={cx("card flex flex-col !p-6", t.popular && "ring-1 ring-ink/40")} data-testid={`plan-${t.id}`}>
       <div className="flex items-center justify-between gap-2">

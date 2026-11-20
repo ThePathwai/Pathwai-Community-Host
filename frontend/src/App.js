@@ -2,7 +2,6 @@ import React from "react";
 import { Navigate, Route, Routes, useLocation } from "react-router-dom";
 import { Toaster } from "sonner";
 import { useAuth } from "./lib/auth";
-import { EditProvider } from "./components/EditKit";
 import Layout from "./components/Layout";
 import { Spinner } from "./components/ui";
 import Login from "./pages/Login";
@@ -104,7 +103,7 @@ export default function App() {
   return (
     <>
       <Toaster position="top-right" theme={config?.brand?.mode || "dark"} />
-      <EditProvider><Routes>
+      <Routes>
         <Route path="/login" element={<Login />} />
         <Route path="/signup" element={<Signup />} />
         <Route path="/forgot-password" element={<ForgotPassword />} />
@@ -140,7 +139,7 @@ export default function App() {
         <Route path="/copilot" element={<Navigate to="/assistant" replace />} />
         <Route path="/hub" element={<Navigate to="/" replace />} />
         <Route path="*" element={<Navigate to="/" replace />} />
-      </Routes></EditProvider>
+      </Routes>
     </>
   );
 }

@@ -211,43 +211,6 @@ function CalendarView({ list, other }) {
   );
 }
 
-// For the platform admin only: which sources were read, how many events each gave, and a button to read them now.
-function SourcesPanel() {
-  const [s, setS] = useState(null);
-  const [busy, setBusy] = useState(false);
-  const load = useCallback(() => api.get("/founder-events/status").then((r) => setS(r.data)).catch(() => setS(false)), []);
-  useEffect(() => { load(); }, [load]);
-  if (!s) return null;
-  const run = async () => {
-    setBusy(true);
-    try { const r = await api.post("/founder-events/refresh"); toast.success(r.data.message); setTimeout(load, 15000); }
-    catch (e) { toast.error(e?.response?.data?.detail || "Could not start it."); }
-    finally { setBusy(false); }
-  };
-  return (
-    <details className="group rounded-2xl border border-dashed border-line" data-testid="events-admin">
-      <summary className="flex cursor-pointer items-center justify-between gap-2 p-4 text-sm font-semibold">Event sources (admin) · {s.total_events} events stored<ChevronDown className="h-4 w-4 transition group-open:rotate-180" aria-hidden /></summary>
-      <div className="space-y-3 border-t border-dashed border-line p-4">
-        <p className="text-xs text-muted">{s.enabled ? "The reader runs by itself about twice a day." : "The reader is switched off (EVENTS_SCRAPER). You can still run it by hand."} Last run: {s.last_run ? dayLabel(s.last_run) : "never"}.</p>
-        <button type="button" onClick={run} disabled={busy || s.running} className="btn-ghost !py-2 text-sm" data-testid="events-run">{s.running ? "Running now" : "Run the reader now"}</button>
-        <ul className="divide-y divide-line">
-          {s.sources.map((r) => (
-            <li key={r.id} className="py-2.5 text-sm" data-testid={`source-${r.id}`}>
-              <p className="flex flex-wrap items-center gap-2"><span className="font-semibold">{r.name}</span><Chip>{r.group}</Chip>
-                {r.ok === true && <Chip tone="bg-emerald-500/15 text-emerald-600 dark:text-emerald-400">{r.kept} kept of {r.found}</Chip>}
-                {r.ok === false && <Chip tone="bg-red-500/15 text-red-600 dark:text-red-400">Did not work</Chip>}
-                {r.ok === null && <Chip>Not run yet</Chip>}
-                {r.confirmed === false && <Chip tone="bg-amber-500/15 text-amber-700 dark:text-amber-400">Address is a guess</Chip>}</p>
-              <p className="mt-0.5 truncate text-xs text-muted">{r.url}</p>
-              {r.error && <p className="mt-0.5 text-xs text-amber-700 dark:text-amber-400">{r.error}</p>}
-            </li>
-          ))}
-        </ul>
-      </div>
-    </details>
-  );
-}
-
 export default function FounderEvents({ embedded }) {
   const { account, loading } = useAuth();
   const [data, setData] = useState(null);
@@ -332,7 +295,6 @@ export default function FounderEvents({ embedded }) {
           )}
           {list.length > limit && <button type="button" onClick={() => setLimit((l) => l + 12)} className="btn-ghost w-full !py-3 text-sm" data-testid="events-more">Show {Math.min(12, list.length - limit)} more</button>}
           <p className="text-xs text-muted" data-testid="events-note">Gathered from public event pages{data.updated_at ? `, last updated ${dayLabel(data.updated_at)}` : ""}. Details change, so confirm date, price and place on the event page.</p>
-          {account && <SourcesPanel />}
         </div>
       )}
     </div>

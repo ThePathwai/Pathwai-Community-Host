@@ -3,7 +3,6 @@ import wordmarkWhite from "../assets/wordmark-white.png";
 import stackedWhite from "../assets/logo-stacked-white.png";
 import React from "react";
 import ScrollLock from "./ScrollLock";
-import { Inline } from "./EditKit";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../lib/auth";
 import { Loader2 } from "lucide-react";
@@ -277,11 +276,11 @@ export const Empty = ({ title, hint, action }) => (
   </div>
 );
 
-export const PageHeader = ({ title, subtitle, actions, k }) => (
+export const PageHeader = ({ title, subtitle, actions }) => (
   <div className="mb-6 flex flex-wrap items-end justify-between gap-3">
     <div>
-      {k ? <Inline as="h1" field={`page_text.${k}_title`} fallback={title} className="text-2xl font-semibold sm:text-3xl" /> : <h1 className="text-2xl font-semibold sm:text-3xl">{title}</h1>}
-      {k ? <Inline as="p" field={`page_text.${k}_subtitle`} fallback={subtitle} className="mt-1 text-sm text-muted" multiline /> : subtitle && <p className="mt-1 text-sm text-muted">{subtitle}</p>}
+      <h1 className="text-2xl font-semibold sm:text-3xl">{title}</h1>
+      {subtitle && <p className="mt-1 text-sm text-muted">{subtitle}</p>}
     </div>
     <div className="flex flex-wrap gap-2">{actions}</div>
   </div>
@@ -295,7 +294,7 @@ export const Tabs = ({ tabs, value, onChange }) => {
     if (!el) return;
     // Only hint at more tabs while there's actually room to scroll further right —
     // this list can be short enough to fit (Matches' 3 tabs) or long enough to need
-    // scrolling (Admin's 11 tabs), and the fade should track real overflow, not guess.
+    // scrolling (a long row of tabs), and the fade should track real overflow, not guess.
     setOverflowing(el.scrollWidth - el.scrollLeft - el.clientWidth > 4);
   }, []);
   React.useEffect(() => { recompute(); }, [recompute, tabs]);

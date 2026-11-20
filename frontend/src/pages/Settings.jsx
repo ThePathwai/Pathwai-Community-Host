@@ -100,7 +100,7 @@ export default function SettingsPage() {
         </div>
         {del.open && (
           <div className="mt-4 space-y-3 rounded-lg border border-line p-4" data-testid="delete-account-form">
-            <p className="text-sm">This permanently deletes your account and your profile and activity in every community. It can't be undone. If you're the only admin of a community, make someone else an admin first.</p>
+            <p className="text-sm">This permanently deletes your account and your profile and activity in every community. It can't be undone.</p>
             <div className="grid gap-3 sm:grid-cols-2">
               <Field label="Your password"><Input type="password" autoComplete="current-password" value={del.password} onChange={(e) => setDel({ ...del, password: e.target.value })} data-testid="delete-password" /></Field>
               <Field label="Type DELETE to confirm"><Input value={del.confirm} onChange={(e) => setDel({ ...del, confirm: e.target.value })} data-testid="delete-confirm" /></Field>

@@ -45,7 +45,7 @@ export default function Login() {
   const [demoTab, setDemoTab] = useState("hub");
 
   useEffect(() => { api.get("/auth/demo-accounts").then((r) => setDemo(r.data)).catch(() => {}); }, []);
-  // /login?demo=member|admin|host (what the "Try the demo" buttons open) signs straight in to the in-browser demo.
+  // /login?demo=member|founder (what the "Try the demo" buttons open) signs straight in to the in-browser demo.
   // Opening the demo tab on purpose (/login?tab=demo) is a fresh choice, not a resume: ignore any demo already running in this tab.
   const autoDemo = params.get("demo") || (inDemo && params.get("tab") !== "demo" ? demoRole() : null);
   const autoDone = React.useRef(false);
@@ -54,7 +54,7 @@ export default function Login() {
   useEffect(() => { if (demoOver) leaveDemo("/login" + window.location.search); }, [demoOver]);
   useEffect(() => {
     if (!autoDemo || autoDone.current || !demo.accounts.length) return;
-    const a = autoDemo === "host" ? { email: "host@thevillage.example" } : autoDemo === "founder" ? { email: "founder@yourcommunity.app" } : demo.accounts.find((x) => x.demo_role === autoDemo);
+    const a = autoDemo === "founder" ? { email: "founder@yourcommunity.app" } : demo.accounts.find((x) => x.demo_role === autoDemo);
     if (a) { autoDone.current = true; go(a.email, demo.password); }
   }, [autoDemo, demo]); // eslint-disable-line
 
@@ -76,7 +76,7 @@ export default function Login() {
           const { data } = await api.post(`/hub/communities/${joinSlug}/apply`, {});
           await refresh();
           if (data.status === "approved") { nav("/", { replace: true }); return; }
-          toast.success(`Request sent — you'll see ${joinInfo?.name || "the community"} once an admin approves you.`);
+          toast.success(`Request sent — you'll see ${joinInfo?.name || "the community"} once we confirm you with them.`);
           nav("/", { replace: true });
           return;
         } catch { /* already a member, or the apply failed -- fall through to the usual landing */ }
@@ -158,8 +158,8 @@ export default function Login() {
         {shownTab === "signin" && (
           <div data-testid="login-pane-signin">
             <p className="mb-3 text-sm text-muted">
-              {/* Every community requires admin approval now -- no community can auto-approve a join request. */}
-              {joinInfo ? <>Sign in to join <strong>{joinInfo.name}</strong> — an admin will need to approve you.</> : "Sign in to pick up your plan."}
+              {/* Every community join request is confirmed by the Pathwai team -- no community can auto-approve one. */}
+              {joinInfo ? <>Sign in to join <strong>{joinInfo.name}</strong> — we will confirm your request with them.</> : "Sign in to pick up your plan."}
             </p>
             <Card>
               <SocialAuthButtons onSignedIn={onSocialSignedIn} disabled={busy} joinSlug={joinSlug} />

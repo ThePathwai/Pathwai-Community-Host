@@ -11,14 +11,14 @@ const set = (v) => { try { v ? window.sessionStorage.setItem(KEY, v) : window.se
 
 export const isDemo = () => process.env.REACT_APP_PREVIEW === "true" || get() === "1";
 
-// A link like /login?demo=admin starts the demo too (so it can be shared, e.g. from a website button).
+// A link like /login?demo=founder starts the demo too (so it can be shared, e.g. from a website button).
 export const demoFromUrl = () => {
-  try { const d = new URLSearchParams(window.location.search).get("demo"); return ["member", "admin", "host", "founder"].includes(d) ? d : null; } catch { return null; }
+  try { const d = new URLSearchParams(window.location.search).get("demo"); return ["member", "founder"].includes(d) ? d : null; } catch { return null; }
 };
 
 // Called once before the app starts. Returns true when this page load is a demo.
 export const prepareDemo = () => { const d = demoFromUrl(); if (d) { set("1"); setDemoRole(d); } return isDemo() || !!d; };
-// `slug` (optional) drops you straight into that community once signed in, e.g. /login?demo=admin&c=yvettabetta-pilates.
+// `slug` (optional) drops you straight into that community once signed in, e.g. /login?demo=founder&c=some-hub.
 // The static preview build (REACT_APP_PREVIEW) lives inside a page it must not navigate away from, so it moves around
 // with the in-page (#) router instead of loading a new address.
 const PREVIEW = process.env.REACT_APP_PREVIEW === "true";
@@ -43,7 +43,7 @@ export const DEMO_PATH = "/login?tab=demo";
 // The demo hubs shown on the demo page. Each opens at /demo/<short> (a page that works the same on a phone and a desktop),
 // so a link can be sent to someone as it is. Edit the hub itself in lib/demoHubConfig.js.
 export const DEMO_COMMUNITIES = [
-  { slug: HUB.slug, short: HUB.short, featured: true, noAdmin: true, name: HUB.name, accent: HUB.accent, blurb: HUB.blurb,
+  { slug: HUB.slug, short: HUB.short, featured: true, name: HUB.name, accent: HUB.accent, blurb: HUB.blurb,
     eyebrow: HUB.eyebrow, tagline: HUB.tagline, memberTitle: HUB.memberTitle,
     member: ["Next moves", "Programs & grants", "Events", "People", "Resources"] },
 ];
