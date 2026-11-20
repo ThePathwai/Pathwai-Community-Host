@@ -244,7 +244,7 @@ function Results({ res, meta, loading, generic, onOpen, tracked, onTrack, imap, 
   );
 }
 
-function Directory({ meta, onOpen, imap, eco }) {
+function Directory({ meta, onOpen, imap, eco, fitRes, account, hasProfile }) {
   const BLANK = { q: "", type: "", status: "", province: "", need: "", region: "" };
   const [f, setF] = useState(BLANK);
   const [rows, setRows] = useState(null);
@@ -260,6 +260,12 @@ function Directory({ meta, onOpen, imap, eco }) {
     return () => { live = false; clearTimeout(t); };
   }, [f]);
   const set = (k, v) => setF((o) => ({ ...o, [k]: v }));
+  // Signed in with a startup profile: every program here carries the same "why it may fit / why it may not" as For you.
+  const fitById = useMemo(() => {
+    const m = {};
+    for (const p of [...(fitRes?.matches || []), ...(fitRes?.later || []), ...(fitRes?.others || [])]) m[p.id] = { fit: p.fit, reasons: p.reasons, cautions: p.cautions, checks: p.checks, score: p.score };
+    return m;
+  }, [fitRes]);
   const counts = useMemo(() => all.reduce((m, p) => { m[p.type] = (m[p.type] || 0) + 1; return m; }, {}), [all]);
   const active = Object.values(f).some(Boolean);
   const label = "mb-1.5 block text-[11px] font-semibold uppercase text-muted";
@@ -302,8 +308,15 @@ function Directory({ meta, onOpen, imap, eco }) {
         <p className="text-sm font-medium" data-testid="dir-count">{rows ? `${rows.length} program${rows.length === 1 ? "" : "s"}` : ""}{f.region && rows ? <span className="font-normal text-muted"> in or open to {(meta.regions || []).find((r) => r.key === f.region)?.label}</span> : null}</p>
         {active && <button type="button" onClick={() => setF(BLANK)} className="text-sm font-semibold text-muted underline hover:text-ink" data-testid="dir-clear">Clear filters</button>}
       </div>
+      {!hasProfile && !ev && (
+        <Link to={account ? "/me?edit=startup" : "/signup?for=founder"} className="mb-4 flex items-center gap-3 rounded-2xl border border-dashed border-line p-4 text-sm transition hover:border-ink/40" data-testid="dir-no-profile">
+          <Compass className="h-5 w-5 shrink-0 text-muted" aria-hidden />
+          <span className="min-w-0 flex-1"><span className="block font-semibold">{account ? "Add your startup to see why each one fits you, or doesn't" : "Create a free profile to see why each one fits you, or doesn't"}</span><span className="block text-muted">Every program would then say why it may suit you and what to watch out for.</span></span>
+          <ArrowRight className="h-4 w-4 shrink-0" aria-hidden />
+        </Link>
+      )}
       {!rows ? <Spinner /> : rows.length === 0 ? <p className="rounded-2xl border border-dashed border-line p-8 text-center text-muted">Nothing matches. Try clearing a filter.</p>
-        : <div className="grid grid-cols-[minmax(0,1fr)] gap-3 md:grid-cols-[repeat(2,minmax(0,1fr))] 2xl:grid-cols-[repeat(3,minmax(0,1fr))]">{rows.map((p) => <ProgramCard key={p.id} p={p} onOpen={onOpen} mark={imap?.[p.id]} badge={badgeFor(p, eco)} />)}</div>}
+        : <div className="grid grid-cols-[minmax(0,1fr)] gap-3 md:grid-cols-[repeat(2,minmax(0,1fr))] 2xl:grid-cols-[repeat(3,minmax(0,1fr))]">{rows.map((q) => { const p = hasProfile && fitById[q.id] ? { ...q, ...fitById[q.id] } : q; return <ProgramCard key={p.id} p={p} onOpen={onOpen} mark={imap?.[p.id]} badge={badgeFor(p, eco)} />; })}</div>}
       </>}
     </div>
   );
@@ -413,7 +426,7 @@ export default function Navigator({ embedded }) {
 
       {eco?.wider && account && tab === "path" && <div className="mb-5"><ScopeSwitch eco={eco} scope={scope} onChange={setScope} total={res?.catalog_total} here={scope === "hub" ? (res ? (res.totals?.fit ?? null) : null) : null} /></div>}
       {err && <p className="mb-4 rounded-xl border border-red-500/40 p-3 text-sm text-red-500" role="alert">{err}</p>}
-      {!meta ? <Spinner /> : tab === "all" ? <Directory meta={meta} onOpen={setOpen} imap={itc.byId} eco={eco} /> : tab === "saved" && account ? <InterestedTab itc={itc} onOpen={setOpen} /> : tab === "ask" ? (
+      {!meta ? <Spinner /> : tab === "all" ? <Directory meta={meta} onOpen={setOpen} imap={itc.byId} eco={eco} fitRes={res} account={account} hasProfile={!!account && !!mine?.stage} /> : tab === "saved" && account ? <InterestedTab itc={itc} onOpen={setOpen} /> : tab === "ask" ? (
         <div className="mx-auto w-full max-w-3xl"><GuideChat className="h-[min(72dvh,680px)]" signedIn={!!account} hasProfile={!!mine?.stage} startupName={mine?.name} formProfile={account ? apiProfile : undefined} /></div>
       ) : account ? (
         <div className="space-y-6">

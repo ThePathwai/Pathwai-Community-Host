@@ -310,3 +310,37 @@ def test_a_late_evening_event_stays_on_its_own_day_with_its_own_clock_time():
     e = clean(raw)
     assert e["date"] == (TODAY + timedelta(days=3)).isoformat() and e["time"] == "21:30"
     assert clean(ev("Startup meetup", 3))["time"] == "18:00"
+
+
+# ---------------------------------------------------------------------------------------------------- relevance and the fit notes
+MEETUP = {**SRC, "id": "mu", "name": "Founders Toronto (Meetup)", "kind": "meetup", "group": "meetup", "priority": 3, "founder": True}
+
+
+def test_a_founder_group_page_does_not_let_everyday_events_through():
+    for title, desc in [("Free Spanish Conversation Practice", "Practise Spanish with other members, all levels."),
+                        ("Sunday yoga in the park", "Bring a mat."), ("Board games night", "Come play."), ("Salsa social", "Beginner lesson at 8"),
+                        ("Kids coding club", "Ages 6 to 10")]:
+        assert clean(ev(title, 3, online=True, city="", region="", country="", desc=desc), MEETUP) is None, title
+    keep = clean(ev("Small business owners networking night", 3), MEETUP)
+    assert keep and "network" in keep["topics"]
+    assert clean(ev("How to price your services", 3, desc="A workshop for freelancers and consultants."), MEETUP)
+    # an organizer page that is all about founders is still trusted for ordinary titles
+    assert clean(ev("Community breakfast", 3), ORG)
+    # but not for a hobby event
+    assert clean(ev("Pottery night for kids", 3), ORG) is None
+
+
+def test_every_event_says_why_it_may_fit_and_why_it_may_not():
+    mixer = clean(ev("Founder networking mixer", 5, price=25), ORG)
+    funding = clean(ev("Seed funding office hours with investors", 6, price=0), ORG)
+    out = ef.rank_events([mixer, funding], {"stage": "launched", "province": "ON", "city": "Ottawa", "needs": ["funding"], "audiences": []}, TODAY)
+    rows = {e["title"]: e for e in out["events"] + out["others"]}
+    for e in rows.values():
+        assert e["reasons"] and e["cautions"], e["title"]
+    m, f = rows["Founder networking mixer"], rows["Seed funding office hours with investors"]
+    assert any("Not about what you asked for" in c for c in m["cautions"]) and any("Paid" in c for c in m["cautions"]) and any("not Ottawa" in c for c in m["cautions"])
+    assert any("meeting other founders" in r for r in m["reasons"])
+    assert any("funding" in r for r in f["reasons"]) and any("Free" in r for r in f["reasons"])
+    # a visitor with no startup is told the match is general
+    anon = ef.rank_events([mixer], None, TODAY)["events"][0]
+    assert any("do not know your startup" in c for c in anon["cautions"])

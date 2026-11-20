@@ -57,9 +57,15 @@ function rank(events, raw, f) {
     const tailored = hit.length ? [`Made for ${hit.map((a) => nav.AUDIENCE_LABEL[a]).join(", ")} founders, which you are.`] : [];
     const needHits = [...new Set(e.topics.map((t) => TOPIC_NEED[t]).filter((n) => needs.includes(n)))];
     needHits.forEach((n) => reasons.push(NEED_REASON[n]));
+    if (!needHits.length && e.topics.length) reasons.push(`Covers ${e.topics.map((t) => TOPIC_LABEL[t]).filter(Boolean).slice(0, 2).join(" and ").toLowerCase()}.`);
+    if (e.price === "free") reasons.push("Free to attend.");
+    if (needs.length && !needHits.length) cautions.push(`Not about what you asked for (${needs.slice(0, 3).map((n) => nav.NEED_LABEL[n]).join(", ")}). Worth it mainly for the people you would meet.`);
+    if (e.price === "paid") cautions.push("Paid. Check the price and what it includes on the event page.");
+    if (!(raw && raw.stage)) cautions.push("We do not know your startup yet, so this is a general match. Add it to see how well this fits.");
+    if (!cautions.length) cautions.push("Details can change. Confirm the date, price and place on the event page.");
     const row = { ...e, reasons: [...tailored, ...reasons], cautions, fit: hit.length || needHits.length ? "strong" : "possible" };
-    if (!whereOk) others.push({ ...row, fit: "skip", reasons: [], cautions: [`In ${e.city || e.province}, outside your province (${profile.province}). Online events and events near you show first.`] });
-    else if (miss.length && !hit.length) others.push({ ...row, fit: "skip", reasons: [], cautions: [`Made for ${miss.map((a) => nav.AUDIENCE_LABEL[a]).join(", ")} founders. Add your group in your profile if it applies.`] });
+    if (!whereOk) others.push({ ...row, fit: "skip", cautions: [`In ${e.city || e.province}, outside your province (${profile.province}). Online events and events near you show first.`, ...cautions] });
+    else if (miss.length && !hit.length) others.push({ ...row, fit: "skip", cautions: [`Made for ${miss.map((a) => nav.AUDIENCE_LABEL[a]).join(", ")} founders. Add your group in your profile if it applies.`, ...cautions] });
     else fits.push(row);
   }
   return { fits, others, profile };

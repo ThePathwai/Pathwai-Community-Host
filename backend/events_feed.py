@@ -44,6 +44,8 @@ TOPICS = {
     "customers": r"customer|sales|go[- ]to[- ]market|\bgtm\b|procurement|buyer|pilot|marketing|growth|supplier|b2b",
 }
 TOPIC_NEED = {"network": "network", "pitch": "funding", "mentorship": "mentorship", "funding": "funding", "workshop": "training", "customers": "customers"}
+TOPIC_PHRASE = {"network": "meeting other founders and business owners", "pitch": "pitches and demos", "mentorship": "mentors and advisors", "funding": "funding and investors",
+                "workshop": "learning something (a workshop, panel or class)", "customers": "sales and finding customers"}
 TOPIC_LABEL = {"network": "Meet people", "pitch": "Pitch", "mentorship": "Mentors", "funding": "Funding", "workshop": "Learn", "customers": "Customers"}
 NEED_REASON = {
     "network": "Good for meeting people, and you asked for a network.",
@@ -54,8 +56,16 @@ NEED_REASON = {
 }
 # For listings that cover everything (Eventbrite and the like), an event has to look like a founder event before we keep it.
 FOUNDER_WORDS = re.compile(r"founder|startup|start-up|entrepreneur|small business|business owner|investor|venture|pitch|scale-?up|innovation|b2b|saas|\bvc\b|accelerator|incubator|side hustle", re.I)
-# Things that are not what we are looking for even when a keyword slips in.
-NOISE_WORDS = re.compile(r"\b(?:singles|speed dating|dating|crypto signals?|forex|mlm|multi-level|nft mint|passive income|get rich|real estate seminar|timeshare)\b", re.I)
+# Things that are not what we are looking for even when a keyword slips in, and the everyday hobby and language groups that share a Meetup page with founders.
+NOISE_WORDS = re.compile(r"\b(?:singles|speed dating|dating|crypto signals?|forex|mlm|multi-level|nft mint|passive income|get rich|real estate seminar|timeshare|"
+                         r"(?:spanish|french|english|mandarin|language) (?:conversation|practice|exchange|class|lessons?)|conversation (?:practice|exchange)|language exchange|"
+                         r"yoga|pilates|zumba|karaoke|trivia|board games?|book club|bible study|worship|salsa|bachata|hiking|bike ride|pickleball|poker|bingo|"
+                         r"wine tasting|paint(?:ing)? (?:night|and sip)|kids?|children|toddlers?|seniors?|retirees?|dog)\b", re.I)
+# Words that make an ordinary-looking event a business-owner event. Listings that cover everything (a Meetup group, a Luma calendar, Eventbrite) need one of these
+# or a founder word in the title or description; only an organizer page that is all about founders (DMZ, MaRS, a business centre) skips the check.
+BUSINESS_WORDS = re.compile(r"business|networking|entrepreneur|owners?\b|start-?ups?|founders?|funding|investors?|marketing|sales\b|customers?|e-?commerce|freelanc|consult(?:ant|ing)|"
+                            r"side hustle|grants?\b|loans?\b|pitch|b2b|saas|leadership|brand(?:ing)?|revenue|pricing|procurement|export|accelerator|incubator|mentor|small business|"
+                            r"workshop on (?:tax|hiring|bookkeeping)|bookkeeping|incorporat|go-to-market|\bgtm\b|\bvc\b|venture|scale-?up|innovation|chamber of commerce|board of trade", re.I)
 AUDIENCE_WORDS = {
     "black": r"\bblack\b(?: (?:founders?|entrepreneurs?|owned|professionals?|business|innovators?|women|led))?|african|caribbean|afro",
     "women": r"\bwomen\b|\bwoman\b|female|\bher\b founders?|ladies",
@@ -323,9 +333,11 @@ def normalize(raw: Dict[str, Any], source: Dict[str, Any], now: Optional[datetim
         return None
     day, clock = local_parts(raw.get("start"), start)
     cls = classify(title, summary)
-    if source.get("strict", True) and not (FOUNDER_WORDS.search(text) or source.get("founder")):
+    # An organizer page that is all about founders is trusted. Everything else has to look like a business-owner event by its own title or description.
+    trusted = bool(source.get("founder")) and source.get("group", "organizer") == "organizer"
+    if not trusted and not (FOUNDER_WORDS.search(text) or BUSINESS_WORDS.search(text)):
         return None
-    if not cls["topics"] and not source.get("founder"):
+    if not cls["topics"] and not trusted:
         return None
     price = raw.get("price")
     return {
@@ -402,13 +414,33 @@ def rank_events(events: List[Dict[str, Any]], raw_profile: Optional[Dict[str, An
         need_hits = [TOPIC_NEED[t] for t in e["topics"] if TOPIC_NEED[t] in needs]
         for n in dict.fromkeys(need_hits):
             reasons.append(NEED_REASON[n])
+        # Every event says why it may fit and why it may not, so nothing sits on the list as a mystery.
+        if not need_hits and e["topics"]:
+            reasons.append("Covers " + nav._join([TOPIC_PHRASE[t] for t in e["topics"] if t in TOPIC_PHRASE][:2]) + ".")
+        if e["price"] == "free":
+            reasons.append("Free to attend.")
+        if profile.get("city") and not e["online"] and e["city"] and e["city"].strip().lower() == profile["city"].strip().lower():
+            reasons.append(f"In {e['city']}, your city.")
+        have_profile = bool((raw_profile or {}).get("stage"))
+        if needs and not need_hits:
+            cautions.append("Not about what you asked for (" + nav._join([nav.NEED_LABEL[n] for n in needs[:3]]) + "). Worth it mainly for the people you would meet.")
+        if e["price"] == "paid":
+            cautions.append("Paid. Check the price and what it includes on the event page.")
+        if (profile.get("city") and not e["online"] and e["city"] and e["province"] == prov and e["city"].strip().lower() != profile["city"].strip().lower()):
+            cautions.append(f"In {e['city']}, not {profile['city']}. Check the travel.")
+        if not have_profile:
+            cautions.append("We do not know your startup yet, so this is a general match. Add it to see how well this fits.")
+        if not cautions:
+            cautions.append("Details can change. Confirm the date, price and place on the event page.")
+        if not tailored and not reasons:
+            reasons.append(f"A founder-focused event from {e['org']}.")
         row = {**e, "reasons": tailored + reasons, "cautions": cautions, "days_away": (d - today).days,
                "fit": "strong" if (group_hits or need_hits) else "possible"}
         if not where_ok:
-            others.append({**row, "fit": "skip", "reasons": [], "cautions": [f"In {e['city'] or e['province']}, outside your province ({prov}). Online events and events near you show first."]})
+            others.append({**row, "fit": "skip", "cautions": [f"In {e['city'] or e['province']}, outside your province ({prov}). Online events and events near you show first.", *cautions]})
         elif group_miss and not group_hits:
             label = nav._join([nav.AUDIENCE_LABEL[a] for a in group_miss])
-            others.append({**row, "fit": "skip", "reasons": [], "cautions": [f"Made for {label} founders. Add your group in your profile if it applies."]})
+            others.append({**row, "fit": "skip", "cautions": [f"Made for {label} founders. Add your group in your profile if it applies.", *cautions]})
         else:
             fits.append(row)
     total = len(fits) + len(others)

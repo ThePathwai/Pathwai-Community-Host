@@ -1,7 +1,7 @@
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { toast } from "sonner";
-import { ArrowRight, ArrowUpRight, CalendarDays, Check, ChevronDown, MapPin, Search, Video } from "lucide-react";
+import { ArrowRight, ArrowUpRight, CalendarDays, Check, ChevronDown, MapPin, Search, TriangleAlert, Video } from "lucide-react";
 import { api } from "../lib/api";
 import { useAuth } from "../lib/auth";
 import AccountShell from "../components/AccountShell";
@@ -38,7 +38,8 @@ const plural = (n, w) => `${n} ${w}${n === 1 ? "" : "s"}`;
 // One event inside a week widget: date tile, what and where, why it is on your list, and the link to the organizer's own page.
 function EventItem({ e, other, next }) {
   const where = e.online ? "Online" : [e.venue, e.city].filter(Boolean).join(", ") || e.province || "See the event page";
-  const lines = other ? (e.cautions || []).slice(0, 1) : [...e.reasons].slice(0, 2);
+  const good = (e.reasons || []).slice(0, 3);
+  const watch = (e.cautions || []).slice(0, other ? 3 : 2);
   return (
     <li className="py-4 first:pt-1 last:pb-0" data-testid={`event-${e.id}`} data-fit={e.fit}>
       <div className="flex items-start gap-3.5">
@@ -59,9 +60,10 @@ function EventItem({ e, other, next }) {
             {e.topic_labels.map((t) => <Chip key={t}>{t}</Chip>)}
             {e.audiences.length > 0 && <Chip tone="bg-sky-500/15 text-sky-600 dark:text-sky-400">For {e.audiences.join(", ")} founders</Chip>}
           </div>
-          {lines.length > 0 && (
+          {(good.length > 0 || watch.length > 0) && (
             <ul className="mt-2 space-y-1" data-testid="event-why">
-              {lines.map((l) => <li key={l} className="flex gap-1.5 text-[13px] leading-snug">{other ? <span className="text-muted">{l}</span> : <><Check className="mt-0.5 h-3.5 w-3.5 shrink-0 text-emerald-500" aria-hidden /><span>{l}</span></>}</li>)}
+              {good.map((l) => <li key={l} className="flex gap-1.5 text-[13px] leading-snug" data-testid="event-reason"><Check className="mt-0.5 h-3.5 w-3.5 shrink-0 text-emerald-500" aria-hidden /><span>{l}</span></li>)}
+              {watch.map((l) => <li key={l} className="flex gap-1.5 text-[13px] leading-snug text-ink/80" data-testid="event-caution"><TriangleAlert className="mt-0.5 h-3.5 w-3.5 shrink-0 text-amber-500" aria-hidden /><span>{l}</span></li>)}
             </ul>
           )}
           <div className="mt-3 flex flex-wrap items-center gap-3">
