@@ -640,3 +640,35 @@ def test_more_answered_yes_ranks_higher_among_worth_a_look():
     possible = [r for r in res["matches"] + res.get("more", []) if r["fit"] == "possible" and r["status"] not in ("closed", "paused")]
     yes = [sum(1 for c in r["checks"][:3] if c["state"] == "yes") for r in possible]
     assert yes == sorted(yes, reverse=True)
+
+
+# --------------------------------------------------------------------------- gender
+BASE_G = {"stage": "launched", "needs": ["funding", "mentorship"], "province": "ON", "city": "Toronto"}
+
+
+def test_gender_female_makes_programs_for_women_apply():
+    women = next(p for p in PROGRAMS if p["id"] == "communitech-fierce-founders")
+    ev = nav.evaluate(women, nav.normalize_profile({**BASE_G, "gender": "female"}), TODAY)
+    assert ev["checks"][0]["state"] in ("yes", "maybe") and ev["fit"] != "skip"
+
+
+def test_gender_male_or_blank_does_not_get_women_only_programs_and_blank_is_told_to_add_it():
+    women = next(p for p in PROGRAMS if p["id"] == "communitech-fierce-founders")
+    male = nav.evaluate(women, nav.normalize_profile({**BASE_G, "gender": "male"}), TODAY)
+    blank = nav.evaluate(women, nav.normalize_profile(BASE_G), TODAY)
+    assert male["fit"] == "skip" and blank["fit"] == "skip"
+    assert "Add your gender" in blank["skip"] and "Add your gender" not in male["skip"]
+
+
+def test_gender_other_sees_women_programs_as_confirm_on_the_page():
+    only_women = next(p for p in PROGRAMS if (p.get("restricted_to") or []) == ["women"])
+    ev = nav.evaluate(only_women, nav.normalize_profile({**BASE_G, "gender": "other"}), TODAY)
+    assert ev["fit"] != "skip" and ev["checks"][0]["state"] == "maybe" and "gender-diverse" in ev["checks"][0]["text"]
+
+
+def test_gender_and_the_women_group_always_agree_and_old_profiles_read_as_female():
+    assert nav.normalize_profile({**BASE_G, "audiences": ["women"]})["gender"] == "female"
+    assert "women" not in nav.normalize_profile({**BASE_G, "audiences": ["women"], "gender": "male"})["audiences"]
+    saved = nav.clean_startup({**BASE_G, "gender": "female", "audiences": ["black"]})
+    assert saved["gender"] == "female" and saved["audiences"] == ["black", "women"]
+    assert nav.clean_startup({**BASE_G, "gender": "nonsense"})["gender"] == ""

@@ -13,6 +13,8 @@ export const NEED_LABEL = { funding: "funding", mentorship: "mentors", space: "a
 // One plain line per need, for the pickers (interface only, not used by the matching rules).
 export const NEED_HINT = { funding: "Grants, loans, investors and prizes: money to start or grow.", mentorship: "Experienced people who give you advice one-on-one.", space: "Desk, office, lab or shop space you can use.", customers: "Pilots, buyers and introductions that lead to your first sales.", export: "Help selling to other countries: market advice, trade missions, export funding.", rd: "Money and partners for research and building the product.", ip: "Patents, trademarks and copyright: how to protect what you build.", talent: "Finding and paying for staff, interns and co-founders.", network: "Meeting other founders, investors and experts.", tax: "Credits and deductions that lower your tax bill.", training: "Courses and workshops that teach business skills.", visa: "A way to live or work in Canada while you build.", tools: "Free credits and discounts on software you would pay for.", legal: "Free or low-cost help with contracts, registration and legal questions." };
 export const AUDIENCES = ["women", "black", "indigenous", "newcomer", "youth", "student", "rural"];
+export const GENDERS = ["female", "male", "other"];
+export const GENDER_LABEL = { female: "Female", male: "Male", other: "Other" };
 export const AUDIENCE_LABEL = { women: "women", black: "Black", indigenous: "Indigenous", newcomer: "newcomer", youth: "young", student: "student", rural: "rural" };
 export const SECTORS = ["tech", "hardware", "health", "cleantech", "mobility", "creative", "retail", "food", "services", "social"];
 export const PROVINCES = ["ON", "BC", "AB", "SK", "MB", "QC", "NB", "NS", "PE", "NL", "YT", "NT", "NU"];
@@ -69,6 +71,17 @@ const toInt = (v, lo, hi) => {
   return n >= lo && n <= hi ? n : null;
 };
 
+// Gender is Female, Male, Other or not answered. Female is what makes programs made for women apply, so it and the "women" group always agree.
+// A profile saved before this field existed (it ticked "women") reads as Female.
+export function applyGender(rawGender, audiences) {
+  let g = String(rawGender || "").trim().toLowerCase();
+  if (!GENDERS.includes(g)) g = "";
+  if (!g && audiences.includes("women")) g = "female";
+  const out = audiences.filter((a) => a !== "women");
+  if (g === "female") out.push("women");
+  return { gender: g, audiences: out };
+}
+
 export function normalizeProfile(raw) {
   raw = raw || {};
   let stage = String(raw.stage || "idea").trim().toLowerCase();
@@ -76,13 +89,13 @@ export function normalizeProfile(raw) {
   if (typeof inc === "string") inc = { yes: true, no: false }[inc.trim().toLowerCase()] ?? null;
   else if (typeof inc !== "boolean") inc = null;
   let province = String(raw.province || "ON").trim().toUpperCase();
-  const audiences = lst(raw.audiences, AUDIENCES);
+  const { gender, audiences } = applyGender(raw.gender, lst(raw.audiences, AUDIENCES));
   const age = toInt(raw.age, 13, 110);
   const student = !!raw.student || audiences.includes("student");
   if (student && !audiences.includes("student")) audiences.push("student");
   if (age !== null && age <= 29 && !audiences.includes("youth")) audiences.push("youth");
   return {
-    stage: STAGES.includes(stage) ? stage : "idea", audiences, age, province: PROVINCES.includes(province) ? province : "ON",
+    stage: STAGES.includes(stage) ? stage : "idea", audiences, gender, age, province: PROVINCES.includes(province) ? province : "ON",
     city: String(raw.city || "").trim().slice(0, 80), sectors: lst(raw.sectors, SECTORS), incorporated: inc,
     employees: toInt(raw.employees, 0, 100000), student, needs: lst(raw.needs, NEEDS), goal: String(raw.goal || "").trim().slice(0, 500),
   };
@@ -146,6 +159,8 @@ export function evaluate(p, profile, today) {
   if (restricted.length) {
     const label = joinList(restricted.map((a) => AUDIENCE_LABEL[a] || a));
     if (restricted.some((a) => profile.audiences.includes(a))) { add("yes", `For ${label} founders only. You qualify.`); tailored.push(`For ${label} founders, which you are.`); }
+    else if (restricted.includes("women") && profile.gender === "other") add("maybe", `For ${label} founders. Some also welcome non-binary and gender-diverse founders, so confirm on the page.`);
+    else if (restricted.includes("women") && !profile.gender) add("no", `For ${label} founders. Add your gender to your profile if it applies to you.`);
     else add("no", `For ${label} founders`);
   }
   const provs = p.provinces || ["any"];

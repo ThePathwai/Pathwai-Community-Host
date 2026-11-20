@@ -29,7 +29,7 @@ def cases():
     auds = [[], ["women"], ["black"], ["indigenous", "student"], ["newcomer"]]
     for i, (st, nd, au) in enumerate(itertools.product(stages, needs, auds)):
         out.append({
-            "stage": st, "needs": nd, "audiences": au,
+            "stage": st, "needs": nd, "audiences": au, "gender": ["", "female", "male", "other", "", "female"][i % 6],
             "age": [None, 19, 27, 35, 44][i % 5], "province": ["ON", "BC", "ON", "QC", "ON"][i % 5],
             "sectors": [[], ["tech"], ["hardware", "mobility"], ["food"], ["health", "cleantech"]][(i // 3) % 5],
             "incorporated": ["yes", "no", None, "unsure", "yes"][i % 5], "employees": [None, 1, 8, 120, 600][(i // 2) % 5],

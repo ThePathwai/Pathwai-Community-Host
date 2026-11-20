@@ -16,7 +16,7 @@ import uuid
 import re
 from datetime import date
 from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, Tuple
 
 DATA_FILE = Path(__file__).parent / "data" / "programs_ca.json"
 
@@ -48,6 +48,8 @@ NEED_LABEL = {
     "legal": "legal help",
 }
 AUDIENCES = ["women", "black", "indigenous", "newcomer", "youth", "student", "rural"]
+GENDERS = ["female", "male", "other"]
+GENDER_LABEL = {"female": "Female", "male": "Male", "other": "Other"}
 AUDIENCE_LABEL = {"women": "women", "black": "Black", "indigenous": "Indigenous", "newcomer": "newcomer", "youth": "young", "student": "student", "rural": "rural"}
 SECTORS = ["tech", "hardware", "health", "cleantech", "mobility", "creative", "retail", "food", "services", "social"]
 PROVINCES = ["ON", "BC", "AB", "SK", "MB", "QC", "NB", "NS", "PE", "NL", "YT", "NT", "NU"]
@@ -271,6 +273,19 @@ def _int(v: Any, lo: int, hi: int) -> Optional[int]:
     return n if lo <= n <= hi else None
 
 
+def _gender(raw_gender: Any, audiences: List[str]) -> Tuple[str, List[str]]:
+    """Gender is Female, Male, Other or not answered. Female is what makes programs made for women apply, so it and the
+    "women" group always agree. A profile saved before this field existed (it ticked "women") reads as Female."""
+    g = str(raw_gender or "").strip().lower()
+    g = g if g in GENDERS else ""
+    if not g and "women" in audiences:
+        g = "female"
+    out = [a for a in audiences if a != "women"]
+    if g == "female":
+        out.append("women")
+    return g, out
+
+
 def normalize_profile(raw: Optional[Dict[str, Any]]) -> Dict[str, Any]:
     """Clamp whatever the browser sent into the small vocabulary the rules understand."""
     raw = raw or {}
@@ -281,7 +296,7 @@ def normalize_profile(raw: Optional[Dict[str, Any]]) -> Dict[str, Any]:
     elif not isinstance(inc, bool):
         inc = None
     province = str(raw.get("province") or "ON").strip().upper()
-    audiences = _list(raw.get("audiences"), AUDIENCES)
+    gender, audiences = _gender(raw.get("gender"), _list(raw.get("audiences"), AUDIENCES))
     age = _int(raw.get("age"), 13, 110)
     student = bool(raw.get("student")) or "student" in audiences
     if student and "student" not in audiences:
@@ -291,6 +306,7 @@ def normalize_profile(raw: Optional[Dict[str, Any]]) -> Dict[str, Any]:
     return {
         "stage": stage if stage in STAGES else "idea",
         "audiences": audiences,
+        "gender": gender,
         "age": age,
         "province": province if province in PROVINCES else "ON",
         "city": str(raw.get("city") or "").strip()[:80],
@@ -333,7 +349,7 @@ def clean_startup(raw: Optional[Dict[str, Any]], age: Optional[int] = None) -> D
     return {
         "name": str(raw.get("name") or "").strip()[:80],
         "one_liner": str(raw.get("one_liner") or "").strip()[:200],
-        "stage": p["stage"], "sectors": p["sectors"], "audiences": _list(raw.get("audiences"), AUDIENCES),
+        "stage": p["stage"], "sectors": p["sectors"], "gender": p["gender"], "audiences": _gender(raw.get("gender"), _list(raw.get("audiences"), AUDIENCES))[1],
         "incorporated": p["incorporated"], "employees": p["employees"], "student": bool(raw.get("student")),
         "needs": p["needs"], "goal": p["goal"], "province": p["province"],
         "seeking": bool(raw.get("seeking", True)),
@@ -455,6 +471,10 @@ def evaluate(program: Dict[str, Any], profile: Dict[str, Any], today: Optional[d
         if any(a in profile["audiences"] for a in restricted):
             add("yes", f"For {label} founders only. You qualify.")
             tailored.append(f"For {label} founders, which you are.")
+        elif "women" in restricted and profile.get("gender") == "other":
+            add("maybe", f"For {label} founders. Some also welcome non-binary and gender-diverse founders, so confirm on the page.")
+        elif "women" in restricted and not profile.get("gender"):
+            add("no", f"For {label} founders. Add your gender to your profile if it applies to you.")
         else:
             add("no", f"For {label} founders")
     provs = program.get("provinces") or ["any"]

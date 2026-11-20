@@ -32,6 +32,7 @@ MAX_COMMUNITY_PROGRAMS = 40
 class ProfileIn(BaseModel):
     stage: Optional[str] = None
     audiences: Optional[List[str]] = None
+    gender: Optional[str] = None
     age: Optional[int] = None
     province: Optional[str] = None
     city: Optional[str] = None

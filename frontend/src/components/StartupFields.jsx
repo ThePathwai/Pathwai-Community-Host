@@ -1,14 +1,14 @@
 import React, { useState } from "react";
 import { Plus, Rocket, X } from "lucide-react";
 import { Field, Input, Select, Textarea, cx } from "./ui";
-import { AUDIENCES, AUDIENCE_LABEL, NEEDS, NEED_HINT, NEED_LABEL, PROVINCES, SECTORS, STAGES, STAGE_HINT, STAGE_LABEL } from "../lib/navigator";
+import { AUDIENCES, AUDIENCE_LABEL, GENDERS, GENDER_LABEL, NEEDS, NEED_HINT, NEED_LABEL, PROVINCES, SECTORS, STAGES, STAGE_HINT, STAGE_LABEL } from "../lib/navigator";
 
 // The startup half of the account profile. It lives on the account (not in any one community) and is what the
 // Navigator starts from, so advice and community suggestions begin with who you are instead of a blank form.
 // Same words and options as the Navigator itself (lib/navigator.js), so the two can never disagree.
 // Backend: clean_startup() in navigator.py, saved through PATCH /hub/profile as `startup`.
 
-export const BLANK_STARTUP = { name: "", one_liner: "", stage: "idea", sectors: [], needs: ["funding", "mentorship"], audiences: [], incorporated: "unsure", employees: "", province: "ON", goal: "", pitch: {}, documents: [] };
+export const BLANK_STARTUP = { name: "", one_liner: "", stage: "idea", sectors: [], needs: ["funding", "mentorship"], gender: "", audiences: [], incorporated: "unsure", employees: "", province: "ON", goal: "", pitch: {}, documents: [] };
 
 // stored (true/false/null) <-> form ("yes"/"no"/"unsure")
 export const startupToForm = (s) => (s && Object.keys(s).length ? {
@@ -69,6 +69,9 @@ export default function StartupFields({ value, onChange, testPrefix = "su", canR
   }
   const set = (p) => onChange({ ...value, ...p });
   const tog = (k, v) => set({ [k]: value[k].includes(v) ? value[k].filter((x) => x !== v) : [...value[k], v] });
+  // Gender drives the "women" group: Female adds it, anything else (or clearing) removes it. A profile saved before this field existed, with "women" ticked, reads as Female.
+  const gender = value.gender || (value.audiences.includes("women") ? "female" : "");
+  const pickGender = (k) => { const next = gender === k ? "" : k; set({ gender: next, audiences: next === "female" ? [...new Set([...value.audiences, "women"])] : value.audiences.filter((a) => a !== "women") }); };
   return (
     <div className="space-y-4 rounded-2xl border border-line p-4" data-testid={`${testPrefix}-form`}>
       <div className="flex items-center justify-between gap-3">
@@ -94,8 +97,13 @@ export default function StartupFields({ value, onChange, testPrefix = "su", canR
         <div className="mt-1.5 flex flex-wrap gap-1.5">{SECTORS.map((s) => <Chip key={s} on={value.sectors.includes(s)} onClick={() => tog("sectors", s)} testId={`${testPrefix}-sec-${s}`}>{s}</Chip>)}</div>
       </div>
       <div>
+        <p className="label">Gender <span className="font-normal normal-case text-muted">(optional)</span></p>
+        <div className="mt-1.5 flex flex-wrap gap-1.5">{GENDERS.map((g) => <Chip key={g} on={gender === g} onClick={() => pickGender(g)} testId={`${testPrefix}-gender-${g}`}>{GENDER_LABEL[g]}</Chip>)}</div>
+        <p className="mt-1 text-xs text-muted">Used only to match programs made for one gender, such as programs for women. It is never shown to other people. Tap again to clear it.</p>
+      </div>
+      <div>
         <p className="label">I am… <span className="font-normal normal-case text-muted">(optional)</span></p>
-        <div className="mt-1.5 flex flex-wrap gap-1.5">{AUDIENCES.map((a) => <Chip key={a} on={value.audiences.includes(a)} onClick={() => tog("audiences", a)} testId={`${testPrefix}-aud-${a}`}>{AUDIENCE_LABEL[a]}</Chip>)}</div>
+        <div className="mt-1.5 flex flex-wrap gap-1.5">{AUDIENCES.filter((a) => a !== "women").map((a) => <Chip key={a} on={value.audiences.includes(a)} onClick={() => tog("audiences", a)} testId={`${testPrefix}-aud-${a}`}>{AUDIENCE_LABEL[a]}</Chip>)}</div>
         <p className="mt-1 text-xs text-muted">Some programs are only for one group. We only show those when you pick it.</p>
       </div>
       <div>
