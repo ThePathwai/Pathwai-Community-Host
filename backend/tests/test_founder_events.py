@@ -390,3 +390,33 @@ def test_old_off_topic_events_leave_when_the_page_is_read_again(one_source):
     # the source later lists only the off-topic event: the stored founder event goes, and nothing off-topic is stored
     run(job.refresh_all(db, fetch=make_fetch({"https://org.example/events": bad}), delay=0, now=NOW))
     assert run(db.founder_events.count_documents({})) == 0
+
+
+def test_a_deploy_clears_stored_events_the_rules_no_longer_keep(monkeypatch):
+    db = fake_db()
+    srcs = [{"id": "meetup-founders-toronto", "name": "Founders Toronto", "group": "meetup", "kind": "meetup", "url": "https://www.meetup.com/founders-toronto/events/", "province": "ON", "city": "Toronto", "priority": 3, "founder": True},
+            {"id": "dmz", "name": "DMZ", "group": "organizer", "kind": "auto", "url": "https://dmz.example/events", "province": "ON", "city": "Toronto", "priority": 1, "founder": True}]
+    def row(i, title, sid, summary=""):
+        return {"id": i, "title": title, "summary": summary, "source_id": sid, "date": "2026-12-01", "start": "2026-12-01T18:00:00+00:00", "end": "2026-12-01T20:00:00+00:00"}
+    for r in [row("1", "Free Spanish Conversation Practice", "meetup-founders-toronto", "Practise Spanish"), row("2", "Startup pitch night", "meetup-founders-toronto", "Founders pitch to investors"),
+              row("3", "Community breakfast", "dmz"), row("4", "Old event from a source we removed", "removed-source", "Founders")]:
+        run(db.founder_events.insert_one(r))
+    import json as _json
+    from pathlib import Path
+    tmp = Path(__file__).parent / "_tmp_sources.json"
+    tmp.write_text(_json.dumps({"sources": srcs}))
+    try:
+        monkeypatch.setattr(job, "SOURCES_FILE", tmp)
+        assert run(job.purge_irrelevant(db)) == 2
+    finally:
+        tmp.unlink()
+    assert sorted(e["id"] for e in run(job.load_events(db))) == ["2", "3"]
+
+
+def test_the_reader_runs_again_after_a_rules_change_not_only_after_eleven_hours():
+    now = datetime.now(timezone.utc)
+    fresh = {"at": (now - timedelta(hours=1)).isoformat(), "rules": job.RULES_VERSION}
+    assert job.is_due(fresh, now) is False
+    assert job.is_due({**fresh, "rules": "older"}, now) is True and job.is_due({"at": fresh["at"]}, now) is True
+    assert job.is_due({"at": (now - timedelta(hours=12)).isoformat(), "rules": job.RULES_VERSION}, now) is True
+    assert job.is_due(None, now) is True

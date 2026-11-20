@@ -310,6 +310,16 @@ def event_id(title: str, start: str, url: str) -> str:
     return hashlib.sha1(key.encode()).hexdigest()[:16]
 
 
+def relevant(title: str, summary: str, source: Dict[str, Any]) -> bool:
+    """Is this a business-owner event? An organizer page that is all about founders is trusted for ordinary titles; every other listing (a Meetup group,
+    a Luma calendar, Eventbrite) must look like one by its own title or description. Hobby, language-practice, copied and conference-mill listings never pass."""
+    text = f"{title} {summary}"
+    if NOISE_WORDS.search(text) or COPY_TITLE.search(title or ""):
+        return False
+    trusted = bool(source.get("founder")) and source.get("group", "organizer") == "organizer"
+    return trusted or bool(FOUNDER_WORDS.search(text) or BUSINESS_WORDS.search(text))
+
+
 def normalize(raw: Dict[str, Any], source: Dict[str, Any], now: Optional[datetime] = None) -> Optional[Dict[str, Any]]:
     """One clean event, or None when it is not upcoming, not in Canada or online, not a founder event, or missing a title, a date or a link."""
     now = now or datetime.now(timezone.utc)
@@ -325,7 +335,7 @@ def normalize(raw: Dict[str, Any], source: Dict[str, Any], now: Optional[datetim
         return None
     summary = _clean(raw.get("summary"), SUMMARY_MAX)
     text = f"{title} {summary}"
-    if NOISE_WORDS.search(text) or COPY_TITLE.search(title):
+    if not relevant(title, summary, source):
         return None
     online = bool(raw.get("online")) or bool(re.search(r"\b(?:online|virtual|webinar|zoom)\b", title, re.I))
     province = _province(str(raw.get("region") or ""), str(raw.get("city") or ""), str(raw.get("venue") or ""), source.get("province") or "")
@@ -336,10 +346,6 @@ def normalize(raw: Dict[str, Any], source: Dict[str, Any], now: Optional[datetim
         return None
     day, clock = local_parts(raw.get("start"), start)
     cls = classify(title, summary)
-    # An organizer page that is all about founders is trusted. Everything else has to look like a business-owner event by its own title or description.
-    trusted = bool(source.get("founder")) and source.get("group", "organizer") == "organizer"
-    if not trusted and not (FOUNDER_WORDS.search(text) or BUSINESS_WORDS.search(text)):
-        return None
     price = raw.get("price")
     return {
         "id": event_id(title, day, url), "title": title, "start": start.isoformat(), "end": end.isoformat(), "date": day, "time": clock,

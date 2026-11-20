@@ -23,12 +23,36 @@ SOURCES_FILE = Path(__file__).parent / "data" / "event_sources.json"
 REFRESH_EVERY = timedelta(hours=11)
 BOT_NAME = "PathwaiEventsBot"
 MAX_PER_SOURCE = 60
+# Bump this whenever the relevance rules or the source list change: the next server start then re-reads everything instead of waiting up to 11 hours.
+RULES_VERSION = "2026-11-20-relevance-2"
 
 
 def load_sources() -> List[Dict[str, Any]]:
     data = json.loads(SOURCES_FILE.read_text(encoding="utf-8"))
     off = {g.strip().lower() for g in os.environ.get("EVENTS_GROUPS_OFF", "").split(",") if g.strip()}
     return [s for s in data["sources"] if s.get("group", "").lower() not in off and s.get("enabled", True)]
+
+
+def is_due(last: Optional[Dict[str, Any]], now: datetime) -> bool:
+    """Read the pages when we never have, when the last good run is over eleven hours old, or when the rules changed since that run."""
+    if not last:
+        return True
+    if last.get("rules") != RULES_VERSION:
+        return True
+    return datetime.fromisoformat(last["at"]) < now - REFRESH_EVERY
+
+
+async def purge_irrelevant(db) -> int:
+    """Drop stored events that the current rules would not keep (and events of sources no longer listed), without fetching anything."""
+    data = json.loads(SOURCES_FILE.read_text(encoding="utf-8"))
+    sources = {s["id"]: s for s in data["sources"]}
+    gone = 0
+    for e in await load_events(db):
+        src = sources.get(e.get("source_id"))
+        if not src or not ef.relevant(e.get("title", ""), e.get("summary", ""), src):
+            await db.founder_events.delete_one({"id": e["id"]})
+            gone += 1
+    return gone
 
 
 def scraper_enabled() -> bool:
@@ -108,7 +132,7 @@ async def refresh_all(db, *, fetch: Callable[..., Awaitable[str]] = fetch_page, 
     await db.founder_events.delete_many({"end": {"$lt": (now - timedelta(days=1)).isoformat()}})
     if not only:   # a source taken off the list takes its events with it
         await db.founder_events.delete_many({"source_id": {"$nin": [s["id"] for s in load_sources()]}})
-    await db.founder_event_meta.update_one({"id": "last_run"}, {"$set": {"id": "last_run", "at": now.isoformat(), "sources": len(runs), "ok": sum(1 for r in runs if r["ok"]),
+    await db.founder_event_meta.update_one({"id": "last_run"}, {"$set": {"id": "last_run", "at": now.isoformat(), "sources": len(runs), "ok": sum(1 for r in runs if r["ok"]), "rules": RULES_VERSION,
                                                                            "events": await db.founder_events.count_documents({})}}, upsert=True)
     return {"ran": len(runs), "ok": sum(1 for r in runs if r["ok"]), "runs": runs}
 
@@ -119,6 +143,12 @@ async def load_events(db) -> List[Dict[str, Any]]:
 
 async def events_loop(get_db: Callable[[], Any]) -> None:
     """Background loop started with the server: a first look shortly after startup, then whenever the last good run is over eleven hours old."""
+    try:   # right after a deploy, clear anything the current rules would not keep, before anyone sees it
+        n = await purge_irrelevant(get_db())
+        if n:
+            log.info("Event reader: removed %s stored events that no longer pass the relevance check.", n)
+    except Exception:  # noqa: BLE001
+        log.exception("Could not tidy the stored events.")
     if not scraper_enabled():
         log.info("Event reader is off (EVENTS_SCRAPER).")
         return
@@ -127,8 +157,7 @@ async def events_loop(get_db: Callable[[], Any]) -> None:
         try:
             db = get_db()
             last = await db.founder_event_meta.find_one({"id": "last_run"})
-            due = not last or datetime.fromisoformat(last["at"]) < datetime.now(timezone.utc) - REFRESH_EVERY
-            if due:
+            if is_due(last, datetime.now(timezone.utc)):
                 res = await refresh_all(db)
                 log.info("Event reader: %s of %s sources worked.", res["ok"], res["ran"])
         except Exception:  # noqa: BLE001
