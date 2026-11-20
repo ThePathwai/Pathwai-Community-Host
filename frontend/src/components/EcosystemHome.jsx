@@ -261,7 +261,7 @@ function useFitScreen(ready) {
 export default function EcosystemHome() {
   const { account } = useAuth();
   const eco = useEcosystem();
-  const hub = eco.hub;
+  const hub = eco?.hub || "";
   const [d, setD] = useState(null);
   const [err, setErr] = useState(false);
   const [open, setOpen] = useState(null);
@@ -277,7 +277,21 @@ export default function EcosystemHome() {
   }, [account?.startup]); // eslint-disable-line react-hooks/exhaustive-deps
   const st = account?.startup || {};
   const first = (account?.name || "").split(/\s+/)[0];
-  if (err) return <p className="card text-sm text-muted">Your home page could not load. Please try again in a moment.</p>;
+  if (!eco) return <Spinner />;
+  // Not every community has the "next moves" feed behind it. Rather than a dead end, Home still says hello and points at the places that always work.
+  if (err) return (
+    <div className="card" data-testid="home-fallback">
+      <p className="eyebrow">Welcome{first ? `, ${first}` : ""}</p>
+      <h1 className="mt-1 text-xl font-semibold sm:text-2xl">{hub ? `Welcome to ${hub}` : "Welcome"}</h1>
+      <p className="mt-1.5 max-w-xl text-sm text-muted">Find grants, programs, mentors and events that fit your business, see who else is here, and keep your own path in one place.</p>
+      <div className="mt-4 flex flex-wrap gap-2">
+        <Link to="/navigator" className="btn-primary" data-testid="home-opportunities">Find opportunities</Link>
+        <Link to="/events" className="btn-ghost">Events</Link>
+        <Link to="/members" className="btn-ghost">People</Link>
+        <Link to="/journey" className="btn-ghost">Your journey</Link>
+      </div>
+    </div>
+  );
   if (!d) return <Spinner />;
   const L = d.lists;
   const rank = (a, b) => VRANK[a.verdict] - VRANK[b.verdict] || b.score - a.score;

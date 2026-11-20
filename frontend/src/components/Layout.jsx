@@ -106,6 +106,8 @@ export default function Layout({ children }) {
                     </MenuGroup>
                   )}
                   <MenuGroup label="You">
+                    <MenuRow to="/navigator" icon={Compass} testid="user-menu-opportunities">Opportunities</MenuRow>
+                    <MenuRow to="/journey" icon={Target} testid="user-menu-journey">Journey</MenuRow>
                     <MenuRow to="/me" icon={CircleUser} testid="user-menu-profile">My profile</MenuRow>
                     <MenuRow to="/settings" icon={Settings} testid="user-menu-settings">Settings</MenuRow>
                   </MenuGroup>

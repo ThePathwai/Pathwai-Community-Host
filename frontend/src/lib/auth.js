@@ -83,6 +83,8 @@ export function AuthProvider({ children }) {
   const applySession = (data) => {
     seen.current = { account: data.account || data.user, user: data.user || null };
     setAccount(data.account || data.user); setUser(data.user || null);
+    // A community profile needs that community's settings (name, brand) before its pages draw, so fetch them right behind the sign-in.
+    if (data.user) loadConfig();
     // Sign-in answers with just id, name and email. Fetch the whole account (profile, startup details) right behind it, so the
     // profile editor never opens half empty and then saves blanks over what is already stored.
     api.get("/hub/me").then((r) => { const a = r.data.account; if (a) { seen.current.account = a; setAccount(a); } }).catch(() => {});

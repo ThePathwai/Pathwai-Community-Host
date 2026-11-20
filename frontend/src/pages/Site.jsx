@@ -238,10 +238,10 @@ export default function Site() {
           <h1 className="mx-auto text-5xl sm:text-7xl lg:text-8xl" style={{ textWrap: "balance" }}>
             Founders find support. Advisors get time back.
           </h1>
-          <p className="mx-auto mt-5 max-w-2xl text-lg text-muted sm:text-xl">Pathwai is a personal venture planner for every founder in your incubator. It matches their business to the programs, people, investors and resources around them, and helps them leave with a decision plan.</p>
+          <p className="mx-auto mt-5 max-w-2xl text-lg text-muted sm:text-xl">Pathwai is a personal venture planner for founders, and for the incubators that serve them. It matches a business to the programs, grants, people, investors and events around it, and helps founders leave with a decision plan.</p>
           <AskBox />
           <div className="mx-auto mt-7 grid max-w-sm grid-cols-2 gap-3 sm:flex sm:max-w-none sm:flex-wrap sm:items-center sm:justify-center">
-            <a href={WAITLIST} className="btn-primary col-span-2 !px-6 !py-3 text-base sm:col-span-1" data-testid="site-waitlist">Join the waitlist<ArrowRight className="h-4 w-4" aria-hidden /></a>
+            <Link to="/navigator" className="btn-primary col-span-2 !px-6 !py-3 text-base sm:col-span-1" data-testid="site-founders">Find opportunities for my startup<ArrowRight className="h-4 w-4" aria-hidden /></Link>
             <Link to={DEMO_PATH} className="btn-ghost !px-6 !py-3 text-base" data-testid="site-demo">Try the demo</Link>
             <Link to="/about" className="btn-ghost !px-6 !py-3 text-base" data-testid="site-incubators">For incubators</Link>
           </div>
@@ -317,7 +317,8 @@ export default function Site() {
         <div className="mx-auto flex max-w-4xl flex-col items-center gap-9">
           <h2 className="text-4xl sm:text-6xl" style={{ textWrap: "balance" }}>Give every founder a way to find their next step.</h2>
           <div className="flex flex-wrap justify-center gap-3">
-            <a href={WAITLIST} className="btn-primary !px-6 !py-3" data-testid="site-waitlist-end">Join the waitlist<ArrowRight className="h-4 w-4" aria-hidden /></a>
+            <Link to="/navigator" className="btn-primary !px-6 !py-3" data-testid="site-founders-end">Find opportunities<ArrowRight className="h-4 w-4" aria-hidden /></Link>
+            <a href={WAITLIST} className="btn-ghost !px-6 !py-3" data-testid="site-waitlist-end">Join the waitlist</a>
             <Link to={DEMO_PATH} className="btn-ghost !px-6 !py-3" data-testid="site-demo-end"><Rocket className="h-4 w-4" aria-hidden />Try the demo</Link>
           </div>
         </div>

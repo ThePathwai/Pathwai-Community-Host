@@ -15,7 +15,7 @@ const SITE_BRAND = {
   colors: { accent: "#F4F4F5", on_accent: "#0A0A0A", background: "#0B0B0D", surface: "#141417", text: "#F4F4F6", muted: "#A6A6B1", border: "#2A2A30" },
 };
 
-const NAV = [["Home", "/"], ["About", "/about"], ["Pricing", "/pricing"], ["Contact", "/contact"]];
+const NAV = [["Home", "/"], ["Opportunities", "/navigator"], ["About", "/about"], ["Pricing", "/pricing"], ["Contact", "/contact"]];
 
 export const Eyebrow = ({ children, className }) => <p className={cx("eyebrow", className)}>{children}</p>;
 export const Num = ({ n }) => <span className="font-display text-sm font-bold text-muted" style={{ fontVariantNumeric: "tabular-nums" }}>{String(n).padStart(2, "0")}</span>;
@@ -104,7 +104,6 @@ export function SiteShell({ title, children }) {
           <span className="text-xl"><Wordmark name="Pathwai" brand={{}} /></span>
           <nav className="flex flex-wrap items-center justify-center gap-x-5 gap-y-2 text-sm text-muted" aria-label="Footer">
             {NAV.map(([label, to]) => <Link key={to} to={to} className="tap hover:text-ink">{label}</Link>)}
-            <Link to="/navigator" className="tap hover:text-ink">Find opportunities</Link>
             <Link to="/login" className="tap hover:text-ink">Sign in</Link>
             <Link to="/terms" className="tap hover:text-ink">Terms</Link>
             <Link to="/privacy" className="tap hover:text-ink">Privacy</Link>
