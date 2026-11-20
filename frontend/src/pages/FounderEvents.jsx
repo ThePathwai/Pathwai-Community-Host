@@ -1,7 +1,7 @@
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { toast } from "sonner";
-import { ArrowRight, ArrowUpRight, CalendarDays, Check, ChevronDown, ChevronLeft, ChevronRight, List, MapPin, Search, TriangleAlert, Video } from "lucide-react";
+import { ArrowRight, ArrowUpRight, CalendarDays, Check, ChevronDown, ChevronLeft, ChevronRight, MapPin, Search, TriangleAlert, Video } from "lucide-react";
 import { api } from "../lib/api";
 import { useAuth } from "../lib/auth";
 import AccountShell from "../components/AccountShell";
@@ -253,7 +253,6 @@ export default function FounderEvents({ embedded }) {
   const [data, setData] = useState(null);
   const [error, setError] = useState("");
   const [view, setView] = useState("fit");
-  const [layout, setLayout] = useState("calendar");   // a month calendar first; the plain list is one tap away
   const [topic, setTopic] = useState("");
   const [free, setFree] = useState(false);
   const [online, setOnline] = useState(false);
@@ -284,7 +283,7 @@ export default function FounderEvents({ embedded }) {
   const filtersOn = !!(q || topic || free || online);
 
   const page = (
-    <div className={cx("mx-auto w-full", layout === "calendar" ? "max-w-5xl" : "max-w-3xl")} data-testid="events-page">
+    <div className="mx-auto w-full max-w-5xl" data-testid="events-page">
       <p className="eyebrow">Events</p>
       <h1 className="mt-2 text-3xl sm:text-4xl" style={{ textTransform: "none", letterSpacing: "-0.03em", fontWeight: 800, textWrap: "balance" }}>Events for founders</h1>
       <p className="mt-2 max-w-2xl text-sm text-muted">Upcoming networking, pitch, mentor and learning events{prov ? ` in ${prov} and online` : ""}, picked for your stage, sector, group and what you asked for. Each one links to the organizer's own page.</p>
@@ -304,12 +303,6 @@ export default function FounderEvents({ embedded }) {
               className={cx("flex-1 whitespace-nowrap rounded-full px-3 py-2 text-sm font-medium transition sm:flex-none sm:px-4 sm:py-1.5", view === k ? "" : "text-muted hover:text-ink")} style={view === k ? { background: "var(--accent)", color: "var(--on-accent)" } : undefined}>{label}</button>
           ))}
         </div>
-        <div className="inline-flex rounded-full border border-line p-1" role="group" aria-label="Show events as">
-          {[["calendar", "Calendar", CalendarDays], ["list", "List", List]].map(([k, label, Icon]) => (
-            <button key={k} type="button" aria-pressed={layout === k} onClick={() => setLayout(k)} data-testid={`events-layout-${k}`}
-              className={cx("inline-flex items-center gap-1.5 rounded-full px-3 py-2 text-sm font-medium transition sm:py-1.5", layout === k ? "" : "text-muted hover:text-ink")} style={layout === k ? { background: "var(--accent)", color: "var(--on-accent)" } : undefined}><Icon className="h-4 w-4 sm:h-3.5 sm:w-3.5" aria-hidden /><span className="max-sm:sr-only">{label}</span></button>
-          ))}
-        </div>
         <label className="relative block min-w-0 flex-1 sm:w-64 sm:flex-none"><Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted" aria-hidden />
           <input type="search" value={q} onChange={(e) => { setQ(e.target.value); setLimit(12); }} placeholder="Search events" aria-label="Search events" data-testid="events-search" className="w-full rounded-full border border-line bg-transparent py-2 pl-9 pr-3 text-sm outline-none focus:border-ink/50" /></label>
       </div>
@@ -326,9 +319,9 @@ export default function FounderEvents({ embedded }) {
       {!data && !error ? <div className="mt-10"><Spinner /></div> : data && (
         <div className="mt-6 space-y-8">
           {view === "other" && <p className="text-sm text-muted">Real events too. They are outside your province or made for a group you have not said you belong to. Each card says why.</p>}
-          {view === "fit" && best.length > 0 && <BestWidget items={best} />}
-          {layout === "calendar" && list.length > 0 && <CalendarView list={list} other={view === "other"} />}
-          {layout === "list" && groups.length > 0 && <div className="space-y-4" data-testid="events-timeline">{groups.map((g, gi) => <WeekWidget key={g.week} g={g} other={view === "other"} first={gi === 0} later={gi > 0 && groups[gi - 1].items[0].date.slice(0, 7) === g.items[0].date.slice(0, 7)} />)}</div>}
+          {list.length > 0 && <CalendarView list={list} other={view === "other"} />}
+          {view === "fit" && best.length > 0 && <div className="max-w-3xl"><BestWidget items={best} /></div>}
+          {groups.length > 0 && <div className="max-w-3xl space-y-4" data-testid="events-timeline"><h2 className="text-lg" style={heading}>All upcoming events, by date</h2>{groups.map((g, gi) => <WeekWidget key={g.week} g={g} other={view === "other"} first={gi === 0} later={gi > 0 && groups[gi - 1].items[0].date.slice(0, 7) === g.items[0].date.slice(0, 7)} />)}</div>}
           {!list.length && (
             <div className="rounded-2xl border border-dashed border-line p-8 text-center" data-testid="events-empty">
               <CalendarDays className="mx-auto h-6 w-6 text-muted" aria-hidden />
@@ -337,7 +330,7 @@ export default function FounderEvents({ embedded }) {
               {filtersOn && <button type="button" className="btn-ghost mt-4 !py-2 text-sm" onClick={() => { setQ(""); setTopic(""); setFree(false); setOnline(false); }}>Clear filters</button>}
             </div>
           )}
-          {layout === "list" && list.length > limit && <button type="button" onClick={() => setLimit((l) => l + 12)} className="btn-ghost w-full !py-3 text-sm" data-testid="events-more">Show {Math.min(12, list.length - limit)} more</button>}
+          {list.length > limit && <button type="button" onClick={() => setLimit((l) => l + 12)} className="btn-ghost w-full !py-3 text-sm" data-testid="events-more">Show {Math.min(12, list.length - limit)} more</button>}
           <p className="text-xs text-muted" data-testid="events-note">Gathered from public event pages{data.updated_at ? `, last updated ${dayLabel(data.updated_at)}` : ""}. Details change, so confirm date, price and place on the event page.</p>
           {account && <SourcesPanel />}
         </div>
