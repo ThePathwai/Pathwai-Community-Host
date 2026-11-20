@@ -292,8 +292,12 @@ async def navigator_chat(body: ChatIn, request: Request) -> Dict[str, Any]:
 @router.post("/navigator/suggest")
 async def navigator_suggest(body: SuggestIn, request: Request) -> Dict[str, Any]:
     await rate_limit("navigator_suggest", client_ip(request), 120, 3600, "That's a lot of searches for now. Try again in a little while.")
-    raw = body.profile.model_dump()
     acc = await account_from_request(request)  # signed in: what they said no to stays out of the suggestions
+    # Signed in with a startup profile: the profile saved on the account IS the input, whatever the browser sent. This is what keeps
+    # the suggestions tied to the person (a stale tab or a hand-edited request cannot change whose answers are used). Signed out, or
+    # signed in with nothing saved yet, the form in the request is used.
+    st = (acc or {}).get("startup") or {}
+    raw = nav.navigator_profile(acc) if st.get("stage") else body.profile.model_dump()
     result = nav.suggest(await _mine_programs(acc), raw)
     result["communities"] = nav.rank_communities(await _opted_in(), raw)
     polished = await _polish(result["summary"], result)
