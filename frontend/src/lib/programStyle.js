@@ -32,3 +32,19 @@ export function deadlineInfo(p) {
 
 // The most useful reason to lead with: "built for founders at your stage" is true of almost everything, so it goes last.
 export const leadReason = (p) => [...(p.reasons || [])].sort((a, b) => isStageLine(a) - isStageLine(b))[0] || "";
+
+// Timing filters, shared by For you, Everything else and Browse all. "Closing soon" is taking applications with a posted closing date within 45 days (the same cut-off as the amber "Closes in" chip).
+export const SOON_DAYS = 45;
+export const TIMING = [
+  ["live", "Taking applications"], ["soon", "Closing soon"], ["rolling", "Apply anytime"], ["check", "Dates not posted"], ["closed", "Closed"],
+];
+export function timingMatch(key, p) {
+  if (!key) return true;
+  const st = p.status || "check";
+  if (key === "live") return st === "open" || st === "rolling";
+  if (key === "soon") { const d = deadlineInfo(p); return st === "open" && !!d && d.days <= SOON_DAYS; }
+  if (key === "rolling") return st === "rolling";
+  if (key === "check") return st === "check";
+  if (key === "closed") return st === "closed" || st === "paused";
+  return true;
+}

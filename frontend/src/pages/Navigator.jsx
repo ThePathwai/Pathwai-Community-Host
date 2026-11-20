@@ -6,7 +6,7 @@ import { useAuth } from "../lib/auth";
 import { Wordmark, PoweredBy, Spinner, cx } from "../components/ui";
 import { NEED_HINT, NEED_LABEL, TYPE_LABEL } from "../lib/navigator";
 import { startDemo } from "../lib/demo";
-import { tint, typeMeta } from "../lib/programStyle";
+import { TIMING, timingMatch, tint, typeMeta } from "../lib/programStyle";
 import { FitMeter, ProgramCard, ProgramDrawer, TypeTile } from "../components/ProgramCards";
 import { Status } from "../components/NavBits";
 import { useTracked } from "../lib/useTracked";
@@ -33,6 +33,19 @@ function Pill({ on, onClick, children, testId, color }) {
     <button type="button" onClick={onClick} aria-pressed={on} data-testid={testId}
       className={cx("inline-flex shrink-0 items-center gap-1.5 whitespace-nowrap rounded-full border px-3.5 py-1.5 text-sm transition", on ? "border-transparent font-semibold" : "border-line text-muted hover:text-ink")}
       style={on ? { background: color ? tint(color, 0.22) : "var(--accent)", color: color || "var(--on-accent)", boxShadow: color ? `inset 0 0 0 1px ${tint(color, 0.5)}` : undefined } : undefined}>{children}</button>
+  );
+}
+
+// Pick when you can apply. Each chip shows how many in the list below it would match; chips with none are hidden so you never land on an empty list.
+function TimingFilter({ value, onChange, list, testid = "nav-timing" }) {
+  const n = (k) => list.filter((p) => timingMatch(k, p)).length;
+  const opts = TIMING.map(([k, label]) => [k, label, n(k)]).filter(([k, , c]) => c > 0 || k === value);
+  if (!opts.length) return null;
+  return (
+    <div className="pw-rail -mx-4 flex gap-2 overflow-x-auto px-4 pb-1 sm:mx-0 sm:flex-wrap sm:overflow-visible sm:px-0" role="group" aria-label="Filter by timing" data-testid={testid}>
+      <Pill on={!value} onClick={() => onChange("")} testId={`${testid}-all`}>Any timing</Pill>
+      {opts.map(([k, label, c]) => <Pill key={k} on={value === k} onClick={() => onChange(value === k ? "" : k)} testId={`${testid}-${k}`}>{label}<span className="text-xs opacity-60">{c}</span></Pill>)}
+    </div>
   );
 }
 
@@ -167,6 +180,7 @@ function ScopeSwitch({ eco, scope, onChange, total, here }) {
 function Results({ res, meta, loading, generic, onOpen, tracked, onTrack, imap, eco, scope, onWiden }) {
   const [view, setView] = useState("fit");
   const [type, setType] = useState("");
+  const [timing, setTiming] = useState("");
   const [showAll, setShowAll] = useState(false);
   if (!res) return <Spinner />;
   const { matches, more, later, communities, trajectory } = res;
@@ -174,14 +188,15 @@ function Results({ res, meta, loading, generic, onOpen, tracked, onTrack, imap, 
   const fits = [...matches, ...more];
   const communityN = [...fits, ...later, ...others].filter((p) => p.community).length;
   const base = view === "fit" ? fits : others;
-  const counts = base.reduce((o, p) => ({ ...o, [p.type]: (o[p.type] || 0) + 1 }), {});
-  const shown = type ? base.filter((p) => p.type === type) : base;
+  const timed = timing ? base.filter((p) => timingMatch(timing, p)) : base;
+  const counts = timed.reduce((o, p) => ({ ...o, [p.type]: (o[p.type] || 0) + 1 }), {});
+  const shown = type ? timed.filter((p) => p.type === type) : timed;
   const LIMIT = 6;
-  const visible = showAll || type ? shown : shown.slice(0, LIMIT);
+  const visible = showAll || type || timing ? shown : shown.slice(0, LIMIT);
   const best = visible.filter((p) => p.fit === "strong");
   const worth = visible.filter((p) => p.fit !== "strong");
   const grid = "grid grid-cols-[minmax(0,1fr)] gap-3 md:grid-cols-[repeat(2,minmax(0,1fr))]";
-  const switchView = (v) => { setView(v); setType(""); setShowAll(false); };
+  const switchView = (v) => { setView(v); setType(""); setTiming(""); setShowAll(false); };
   return (
     <div className={cx("space-y-10 transition-opacity", loading && "opacity-60")} aria-busy={loading} data-testid="nav-results">
       {generic && <p className="rounded-xl bg-ink/[.05] p-3 text-sm text-muted">These are examples for an early-stage founder in Ontario. Add your startup to your profile to see yours.</p>}
@@ -207,12 +222,14 @@ function Results({ res, meta, loading, generic, onOpen, tracked, onTrack, imap, 
         <p className="mt-2 text-sm text-muted">{view === "fit" ? "Matched to your stage, needs, province and group." : "Real programs too. They are not matched to you yet because of stage, province, group or sector. Each card says why."}</p>
         <p className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1.5 text-xs text-muted" data-testid="nav-legend">{LEGEND.map(([k, t]) => <span key={k} className="inline-flex items-center gap-1.5"><Status status={k} />{t}</span>)}</p>
         <HowWeDecide />
+        <div className="mt-4"><TimingFilter value={timing} onChange={(v) => { setTiming(v); setShowAll(false); }} list={base} /></div>
         {Object.keys(counts).length > 1 && (
           <div className="pw-rail -mx-4 mt-4 flex gap-2 overflow-x-auto px-4 pb-1 sm:mx-0 sm:px-0" role="group" aria-label="Filter by type">
-            <Pill on={!type} onClick={() => setType("")} testId="nav-type-all">All<span className="text-xs opacity-60">{base.length}</span></Pill>
+            <Pill on={!type} onClick={() => setType("")} testId="nav-type-all">All<span className="text-xs opacity-60">{timed.length}</span></Pill>
             {Object.entries(counts).map(([k, n]) => { const { color, Icon } = typeMeta(k); return <Pill key={k} on={type === k} color={color} onClick={() => setType(type === k ? "" : k)} testId={`nav-type-${k}`}><Icon className="h-3.5 w-3.5" aria-hidden />{TYPE_LABEL[k] || k}<span className="text-xs opacity-60">{n}</span></Pill>; })}
           </div>
         )}
+        {shown.length === 0 && <p className="mt-6 rounded-2xl border border-dashed border-line p-6 text-center text-sm text-muted" data-testid="nav-timing-empty">Nothing here matches that. <button type="button" onClick={() => { setTiming(""); setType(""); }} className="font-semibold text-ink underline">Clear filters</button></p>}
         {view === "fit" ? (
           <>
             {best.length > 0 && <div className="mt-6"><p className="mb-1 text-sm font-semibold">Good matches</p><p className="mb-3 text-xs text-muted">Nothing in your profile rules it out, it is for your stage, and it gives you what you asked for. Confirm what each one asks for on its page.</p><div className={grid}>{best.map((p) => <ProgramCard key={p.id} p={p} onOpen={onOpen} mark={imap?.[p.id]} badge={badgeFor(p, eco)} />)}</div></div>}
@@ -221,7 +238,7 @@ function Results({ res, meta, loading, generic, onOpen, tracked, onTrack, imap, 
         ) : (
           <div className={cx("mt-6", grid)} data-testid="nav-others">{visible.map((p) => <ProgramCard key={p.id} p={p} onOpen={onOpen} mark={imap?.[p.id]} badge={badgeFor(p, eco)} />)}</div>
         )}
-        {!showAll && !type && shown.length > LIMIT && <button type="button" onClick={() => setShowAll(true)} className="btn-ghost mt-5 w-full !py-3 text-sm" data-testid="nav-show-all">Show {shown.length - LIMIT} more</button>}
+        {!showAll && !type && !timing && shown.length > LIMIT && <button type="button" onClick={() => setShowAll(true)} className="btn-ghost mt-5 w-full !py-3 text-sm" data-testid="nav-show-all">Show {shown.length - LIMIT} more</button>}
       </section>
 
       {communities?.length > 0 && (
@@ -259,20 +276,21 @@ function Results({ res, meta, loading, generic, onOpen, tracked, onTrack, imap, 
 }
 
 function Directory({ meta, onOpen, imap, eco, fitRes, account, hasProfile }) {
-  const BLANK = { q: "", type: "", status: "", province: "", need: "", region: "" };
+  const BLANK = { q: "", type: "", timing: "", province: "", need: "", region: "" };
   const [f, setF] = useState(BLANK);
-  const [rows, setRows] = useState(null);
+  const [rowsAll, setRows] = useState(null);
   const [ev, setEv] = useState(false);   // "Events" is one more kind in this list: pick it and the list below becomes upcoming events
   const [all, setAll] = useState([]);
   useEffect(() => { api.get("/navigator/programs").then((r) => setAll(r.data.programs || [])).catch(() => {}); }, []);
   useEffect(() => {
     let live = true;
     const t = setTimeout(() => {
-      const params = Object.fromEntries(Object.entries(f).filter(([, v]) => v));
+      const params = Object.fromEntries(Object.entries({ q: f.q, type: f.type, province: f.province, need: f.need, region: f.region }).filter(([, v]) => v));
       api.get("/navigator/programs", { params }).then((r) => { if (live) setRows(r.data.programs); }).catch(() => { if (live) setRows([]); });
     }, 200);
     return () => { live = false; clearTimeout(t); };
-  }, [f]);
+  }, [f.q, f.type, f.province, f.need, f.region]);
+  const rows = useMemo(() => (rowsAll && f.timing ? rowsAll.filter((p) => timingMatch(f.timing, p)) : rowsAll), [rowsAll, f.timing]);
   const set = (k, v) => setF((o) => ({ ...o, [k]: v }));
   // Signed in with a startup profile: every program here carries the same "why it may fit / why it may not" as For you.
   const fitById = useMemo(() => {
@@ -308,7 +326,7 @@ function Directory({ meta, onOpen, imap, eco, fitRes, account, hasProfile }) {
             <Pill on={ev} color="#F59E0B" onClick={() => setEv(!ev)} testId="dir-type-events"><CalendarDays className="h-3.5 w-3.5" aria-hidden />Events</Pill>
           </div>
         </div>
-        {!ev && <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+        {!ev && <div className="grid gap-3 sm:grid-cols-2">
           <label className="block"><span className={label} style={{ letterSpacing: "0.12em" }}>What you need</span>
             <select className={select} value={f.need} onChange={(e) => set("need", e.target.value)} data-testid="dir-need" aria-label="What you need">
               <option value="">Anything</option>
@@ -321,12 +339,8 @@ function Directory({ meta, onOpen, imap, eco, fitRes, account, hasProfile }) {
                 {meta.regions.map((r) => <option key={r.key} value={r.key}>{r.label.charAt(0).toUpperCase() + r.label.slice(1)}</option>)}
               </select></label>
           )}
-          <div><span className={label} style={{ letterSpacing: "0.12em" }}>Timing</span>
-            <button type="button" onClick={() => set("status", f.status === "live" ? "" : "live")} aria-pressed={f.status === "live"} data-testid="dir-live"
-              className={cx("flex w-full items-center justify-between rounded-xl border px-3.5 py-2.5 text-sm transition", f.status === "live" ? "border-transparent font-semibold" : "border-line text-muted hover:text-ink")}
-              style={f.status === "live" ? { background: "var(--accent)", color: "var(--on-accent)" } : undefined}>
-              Only taking applications now<Check className={cx("h-4 w-4", f.status === "live" ? "" : "opacity-0")} aria-hidden /></button></div>
         </div>}
+        {!ev && <div><span className={label} style={{ letterSpacing: "0.12em" }}>When you can apply</span><TimingFilter value={f.timing} onChange={(v) => set("timing", v)} list={rowsAll || []} testid="dir-timing" /></div>}
         {!ev && f.need && NEED_HINT[f.need] && <p className="text-sm text-muted" data-testid="dir-need-hint"><span className="font-semibold text-ink/80">{NEED_LABEL[f.need].charAt(0).toUpperCase() + NEED_LABEL[f.need].slice(1)}:</span> {NEED_HINT[f.need]}</p>}
       </div>
       {ev ? <div className="mt-6"><FounderEvents embedded /></div> : <>
