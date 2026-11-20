@@ -248,6 +248,36 @@ def test_every_source_is_https_and_has_a_name():
         assert s["url"].startswith("https://") and s["name"] and s["kind"] in ("auto", "ics", "luma", "meetup", "eventbrite") and s["id"]
 
 
+def test_the_source_list_is_clean_and_covers_every_kind_of_page_and_city():
+    srcs = job.load_sources()
+    ids = [s["id"] for s in srcs]
+    assert len(ids) == len(set(ids)), "two sources share an id"
+    assert len({s["url"] for s in srcs}) == len(srcs), "two sources read the same page"
+    assert {s["group"] for s in srcs} == {"organizer", "luma", "meetup", "eventbrite"}
+    for s in srcs:
+        assert s["group"] in ("organizer", "luma", "meetup", "eventbrite") and isinstance(s.get("priority"), int)
+        assert set(s.get("audiences", [])) <= set(ef.AUDIENCE_STRICT), s["id"]
+    cities = {s.get("city") for s in srcs}
+    assert {"Toronto", "Ottawa", "Hamilton", "London", "Waterloo", "Windsor", "Kingston", "Sudbury", "Thunder Bay"} <= cities
+    # Each kind of listing is read politely: a few seconds apart, so the whole round must stay under ten minutes.
+    assert len(srcs) * 3 / 60 < 10
+
+
+def test_a_groups_own_page_can_say_who_its_events_are_made_for():
+    src = {**ORG, "id": "mg", "audiences": ["women", "not-a-group"]}
+    e = clean(ev("Fireside chat with a founder", 5), src)
+    assert e and e["audiences"] == ["women"]
+    both = clean(ev("Black Founders Mixer", 5), {**ORG, "id": "x", "audiences": ["women"]})
+    assert both["audiences"] == ["black", "women"]
+    plain = clean(ev("Fireside chat with a founder", 5), ORG)
+    assert plain["audiences"] == []
+    # and such an event goes to "others" for a founder who did not say they belong to that group
+    out = ef.rank_events([e], {"stage": "launched", "province": "ON", "needs": [], "audiences": []}, TODAY)
+    assert out["events"] == [] and out["others"][0]["fit"] == "skip"
+    mine = ef.rank_events([e], {"stage": "launched", "province": "ON", "needs": [], "audiences": ["women"]}, TODAY)
+    assert len(mine["events"]) == 1
+
+
 # ---------------------------------------------------------------------------------------------------- the endpoints
 def test_the_endpoint_ranks_for_the_signed_in_founder_and_hides_admin_tools():
     with TestClient(server.app) as c:

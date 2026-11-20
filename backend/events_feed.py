@@ -334,7 +334,9 @@ def normalize(raw: Dict[str, Any], source: Dict[str, Any], now: Optional[datetim
         "venue": _clean(raw.get("venue"), 120), "city": _clean(raw.get("city"), 60) or source.get("city", ""), "province": province, "online": online,
         "price": "free" if price == 0 else "paid" if isinstance(price, (int, float)) and price > 0 else "unknown",
         "org": _clean(raw.get("org"), 80) or source.get("name", ""), "source_id": source["id"], "source_name": source.get("name", ""), "priority": int(source.get("priority", 5)),
-        "topics": cls["topics"] or ["network"], "audiences": cls["audiences"],
+        "topics": cls["topics"] or ["network"],
+        # A group's own page (Monday Girl, a Black business network) can say who all its events are made for.
+        "audiences": list(dict.fromkeys([*cls["audiences"], *[a for a in (source.get("audiences") or []) if a in AUDIENCE_STRICT]])),
     }
 
 
