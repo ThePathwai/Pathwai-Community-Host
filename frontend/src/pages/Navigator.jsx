@@ -244,10 +244,11 @@ function Results({ res, meta, loading, generic, onOpen, tracked, onTrack, imap, 
   );
 }
 
-function Directory({ meta, onOpen, imap, eco, onEvents }) {
+function Directory({ meta, onOpen, imap, eco }) {
   const BLANK = { q: "", type: "", status: "", province: "", need: "", region: "" };
   const [f, setF] = useState(BLANK);
   const [rows, setRows] = useState(null);
+  const [ev, setEv] = useState(false);   // "Events" is one more kind in this list: pick it and the list below becomes upcoming events
   const [all, setAll] = useState([]);
   useEffect(() => { api.get("/navigator/programs").then((r) => setAll(r.data.programs || [])).catch(() => {}); }, []);
   useEffect(() => {
@@ -266,16 +267,16 @@ function Directory({ meta, onOpen, imap, eco, onEvents }) {
   return (
     <div data-testid="nav-directory">
       <div className="space-y-4 rounded-3xl border border-line bg-surface p-4 sm:p-5">
-        <div className="relative"><Search className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-muted" aria-hidden />
-          <input className="input !rounded-full !py-3 !pl-11" placeholder="Search by name, organisation or what it offers" value={f.q} onChange={(e) => set("q", e.target.value)} aria-label="Search programs" data-testid="dir-search" /></div>
+        {!ev && <div className="relative"><Search className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-muted" aria-hidden />
+          <input className="input !rounded-full !py-3 !pl-11" placeholder="Search by name, organisation or what it offers" value={f.q} onChange={(e) => set("q", e.target.value)} aria-label="Search programs" data-testid="dir-search" /></div>}
         <div>
           <span className={label} style={{ letterSpacing: "0.12em" }}>What kind</span>
           <div className="flex flex-wrap gap-2">
-            {meta.types.map((t) => { const { color, Icon } = typeMeta(t.key); return <Pill key={t.key} on={f.type === t.key} color={color} onClick={() => set("type", f.type === t.key ? "" : t.key)} testId={`dir-type-${t.key}`}><Icon className="h-3.5 w-3.5" aria-hidden />{t.label}{counts[t.key] ? <span className="text-xs opacity-60">{counts[t.key]}</span> : null}</Pill>; })}
-            {onEvents && <Pill on={false} color="#F59E0B" onClick={onEvents} testId="dir-type-events"><CalendarDays className="h-3.5 w-3.5" aria-hidden />Events<ArrowRight className="h-3 w-3 opacity-60" aria-hidden /></Pill>}
+            {meta.types.map((t) => { const { color, Icon } = typeMeta(t.key); return <Pill key={t.key} on={!ev && f.type === t.key} color={color} onClick={() => { setEv(false); set("type", f.type === t.key ? "" : t.key); }} testId={`dir-type-${t.key}`}><Icon className="h-3.5 w-3.5" aria-hidden />{t.label}{counts[t.key] ? <span className="text-xs opacity-60">{counts[t.key]}</span> : null}</Pill>; })}
+            <Pill on={ev} color="#F59E0B" onClick={() => setEv(!ev)} testId="dir-type-events"><CalendarDays className="h-3.5 w-3.5" aria-hidden />Events</Pill>
           </div>
         </div>
-        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+        {!ev && <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
           <label className="block"><span className={label} style={{ letterSpacing: "0.12em" }}>What you need</span>
             <select className={select} value={f.need} onChange={(e) => set("need", e.target.value)} data-testid="dir-need" aria-label="What you need">
               <option value="">Anything</option>
@@ -293,15 +294,17 @@ function Directory({ meta, onOpen, imap, eco, onEvents }) {
               className={cx("flex w-full items-center justify-between rounded-xl border px-3.5 py-2.5 text-sm transition", f.status === "live" ? "border-transparent font-semibold" : "border-line text-muted hover:text-ink")}
               style={f.status === "live" ? { background: "var(--accent)", color: "var(--on-accent)" } : undefined}>
               Only taking applications now<Check className={cx("h-4 w-4", f.status === "live" ? "" : "opacity-0")} aria-hidden /></button></div>
-        </div>
-        {f.need && NEED_HINT[f.need] && <p className="text-sm text-muted" data-testid="dir-need-hint"><span className="font-semibold text-ink/80">{NEED_LABEL[f.need].charAt(0).toUpperCase() + NEED_LABEL[f.need].slice(1)}:</span> {NEED_HINT[f.need]}</p>}
+        </div>}
+        {!ev && f.need && NEED_HINT[f.need] && <p className="text-sm text-muted" data-testid="dir-need-hint"><span className="font-semibold text-ink/80">{NEED_LABEL[f.need].charAt(0).toUpperCase() + NEED_LABEL[f.need].slice(1)}:</span> {NEED_HINT[f.need]}</p>}
       </div>
+      {ev ? <div className="mt-6"><FounderEvents embedded /></div> : <>
       <div className="mb-3 mt-5 flex items-center justify-between gap-3">
         <p className="text-sm font-medium" data-testid="dir-count">{rows ? `${rows.length} program${rows.length === 1 ? "" : "s"}` : ""}{f.region && rows ? <span className="font-normal text-muted"> in or open to {(meta.regions || []).find((r) => r.key === f.region)?.label}</span> : null}</p>
         {active && <button type="button" onClick={() => setF(BLANK)} className="text-sm font-semibold text-muted underline hover:text-ink" data-testid="dir-clear">Clear filters</button>}
       </div>
       {!rows ? <Spinner /> : rows.length === 0 ? <p className="rounded-2xl border border-dashed border-line p-8 text-center text-muted">Nothing matches. Try clearing a filter.</p>
         : <div className="grid grid-cols-[minmax(0,1fr)] gap-3 md:grid-cols-[repeat(2,minmax(0,1fr))] 2xl:grid-cols-[repeat(3,minmax(0,1fr))]">{rows.map((p) => <ProgramCard key={p.id} p={p} onOpen={onOpen} mark={imap?.[p.id]} badge={badgeFor(p, eco)} />)}</div>}
+      </>}
     </div>
   );
 }
@@ -345,7 +348,7 @@ export default function Navigator({ embedded }) {
   const { user, account } = useAuth();
   const [meta, setMeta] = useState(null);
   const [mine, setMine] = useState(null);   // the signed-in person's saved startup profile ({} when none yet); null while loading
-  const [tab, setTab] = useState(() => (typeof window !== "undefined" && new URLSearchParams(window.location.search).get("tab") === "events" ? "events" : "path"));
+  const [tab, setTab] = useState("path");
   const [profile, setProfile] = useState(DEFAULT);
   const [res, setRes] = useState(null);
   const [loading, setLoading] = useState(false);
@@ -403,14 +406,14 @@ export default function Navigator({ embedded }) {
         <div>
           <p className="eyebrow">Programs</p>
           <h1 className="mt-2 text-3xl sm:text-4xl" style={{ textTransform: "none", letterSpacing: "-0.03em", fontWeight: 800, textWrap: "balance" }}>{eco ? (scope === "hub" ? `Programs & grants at ${eco.hub}` : `Programs & grants across ${eco.wider}`) : account ? "Programs that fit you" : "Canadian programs that fit you"}</h1>
-          <p className="mt-2 text-sm text-muted">{eco ? (scope === "hub" ? (eco.wider ? `What ${eco.hub} runs, plus the grants, loans and programs its team points founders to. Each one is checked against your startup.` : `What ${eco.hub} runs for founders. Each one is checked against your startup.`) : `Every grant, loan, accelerator and mentor we track, with ${eco.hub} programs first.`) : meta ? <>{meta.count} grants, loans, accelerators, mentors and founder communities, hand-checked. Communities you join add their own on top.{" "}Looking for something to attend? <button type="button" onClick={() => setTab("events")} className="font-semibold underline underline-offset-2" data-testid="nav-to-events">See upcoming events</button>.</> : "Loading"}</p>
+          <p className="mt-2 text-sm text-muted">{eco ? (scope === "hub" ? (eco.wider ? `What ${eco.hub} runs, plus the grants, loans and programs its team points founders to. Each one is checked against your startup.` : `What ${eco.hub} runs for founders. Each one is checked against your startup.`) : `Every grant, loan, accelerator and mentor we track, with ${eco.hub} programs first.`) : meta ? <>{meta.count} grants, loans, accelerators, mentors and founder communities, hand-checked. Communities you join add their own on top.</> : "Loading"}</p>
         </div>
-        <Segmented items={[["path", "For you"], ["all", "Browse all"], ["events", "Events"], ...(account ? [["saved", itc.interest.some((i) => i.state === "yes") ? `Interested · ${itc.interest.filter((i) => i.state === "yes").length}` : "Interested"]] : []), ["ask", <><span className="sm:hidden">Guide</span><span className="hidden sm:inline">Ask the guide</span></>]]} value={tab} onChange={setTab} />
+        <Segmented items={[["path", "For you"], ["all", "Browse all"], ...(account ? [["saved", itc.interest.some((i) => i.state === "yes") ? `Interested · ${itc.interest.filter((i) => i.state === "yes").length}` : "Interested"]] : []), ["ask", <><span className="sm:hidden">Guide</span><span className="hidden sm:inline">Ask the guide</span></>]]} value={tab} onChange={setTab} />
       </div>
 
       {eco?.wider && account && tab === "path" && <div className="mb-5"><ScopeSwitch eco={eco} scope={scope} onChange={setScope} total={res?.catalog_total} here={scope === "hub" ? (res ? (res.totals?.fit ?? null) : null) : null} /></div>}
       {err && <p className="mb-4 rounded-xl border border-red-500/40 p-3 text-sm text-red-500" role="alert">{err}</p>}
-      {!meta ? <Spinner /> : tab === "all" ? <Directory meta={meta} onOpen={setOpen} imap={itc.byId} eco={eco} onEvents={() => setTab("events")} /> : tab === "events" ? <FounderEvents embedded /> : tab === "saved" && account ? <InterestedTab itc={itc} onOpen={setOpen} /> : tab === "ask" ? (
+      {!meta ? <Spinner /> : tab === "all" ? <Directory meta={meta} onOpen={setOpen} imap={itc.byId} eco={eco} /> : tab === "saved" && account ? <InterestedTab itc={itc} onOpen={setOpen} /> : tab === "ask" ? (
         <div className="mx-auto w-full max-w-3xl"><GuideChat className="h-[min(72dvh,680px)]" signedIn={!!account} hasProfile={!!mine?.stage} startupName={mine?.name} formProfile={account ? apiProfile : undefined} /></div>
       ) : account ? (
         <div className="space-y-6">
