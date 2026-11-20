@@ -263,10 +263,22 @@ function Directory({ meta, onOpen, imap, eco, fitRes, account, hasProfile }) {
   // Signed in with a startup profile: every program here carries the same "why it may fit / why it may not" as For you.
   const fitById = useMemo(() => {
     const m = {};
-    for (const p of [...(fitRes?.matches || []), ...(fitRes?.later || []), ...(fitRes?.others || [])]) m[p.id] = { fit: p.fit, reasons: p.reasons, cautions: p.cautions, checks: p.checks, score: p.score };
+    for (const p of [...(fitRes?.matches || []), ...(fitRes?.more || []), ...(fitRes?.later || []), ...(fitRes?.others || [])]) m[p.id] = { fit: p.fit, reasons: p.reasons, cautions: p.cautions, checks: p.checks, score: p.score };
     return m;
   }, [fitRes]);
   const counts = useMemo(() => all.reduce((m, p) => { m[p.type] = (m[p.type] || 0) + 1; return m; }, {}), [all]);
+  // With a profile, the closest fits lead: good matches, then worth a look, then not yet, then not matched (nearest first); ties keep the score order.
+  const ordered = useMemo(() => {
+    if (!rows) return rows;
+    if (!hasProfile || !fitRes) return rows;
+    const rank = { strong: 0, possible: 1, later: 2, skip: 3 };
+    const near = (id) => (fitById[id]?.checks || []).slice(0, 3).filter((c) => c.state === "yes").length;
+    const live = (p) => (p.status === "closed" || p.status === "paused" ? 1 : 0);
+    return rows.map((p, i) => ({ p, i })).sort((a, b) => {
+      const A = fitById[a.p.id]; const B = fitById[b.p.id];
+      return ((rank[A?.fit] ?? 4) - (rank[B?.fit] ?? 4)) || ((B?.score || 0) - (A?.score || 0)) || (near(b.p.id) - near(a.p.id)) || (live(a.p) - live(b.p)) || (a.i - b.i);
+    }).map((x) => x.p);
+  }, [rows, fitById, hasProfile, fitRes]);
   const active = Object.values(f).some(Boolean);
   const label = "mb-1.5 block text-[11px] font-semibold uppercase text-muted";
   const select = "input !rounded-xl !py-2.5 w-full";
@@ -305,7 +317,7 @@ function Directory({ meta, onOpen, imap, eco, fitRes, account, hasProfile }) {
       </div>
       {ev ? <div className="mt-6"><FounderEvents embedded /></div> : <>
       <div className="mb-3 mt-5 flex items-center justify-between gap-3">
-        <p className="text-sm font-medium" data-testid="dir-count">{rows ? `${rows.length} program${rows.length === 1 ? "" : "s"}` : ""}{f.region && rows ? <span className="font-normal text-muted"> in or open to {(meta.regions || []).find((r) => r.key === f.region)?.label}</span> : null}</p>
+        <p className="text-sm font-medium" data-testid="dir-count">{rows ? `${rows.length} program${rows.length === 1 ? "" : "s"}` : ""}{f.region && rows ? <span className="font-normal text-muted"> in or open to {(meta.regions || []).find((r) => r.key === f.region)?.label}</span> : null}{hasProfile && fitRes && rows?.length > 1 ? <span className="font-normal text-muted"> · best fit first</span> : null}</p>
         {active && <button type="button" onClick={() => setF(BLANK)} className="text-sm font-semibold text-muted underline hover:text-ink" data-testid="dir-clear">Clear filters</button>}
       </div>
       {!hasProfile && !ev && (
@@ -316,7 +328,7 @@ function Directory({ meta, onOpen, imap, eco, fitRes, account, hasProfile }) {
         </Link>
       )}
       {!rows ? <Spinner /> : rows.length === 0 ? <p className="rounded-2xl border border-dashed border-line p-8 text-center text-muted">Nothing matches. Try clearing a filter.</p>
-        : <div className="grid grid-cols-[minmax(0,1fr)] gap-3 md:grid-cols-[repeat(2,minmax(0,1fr))] 2xl:grid-cols-[repeat(3,minmax(0,1fr))]">{rows.map((q) => { const p = hasProfile && fitById[q.id] ? { ...q, ...fitById[q.id] } : q; return <ProgramCard key={p.id} p={p} onOpen={onOpen} mark={imap?.[p.id]} badge={badgeFor(p, eco)} />; })}</div>}
+        : <div className="grid grid-cols-[minmax(0,1fr)] gap-3 md:grid-cols-[repeat(2,minmax(0,1fr))] 2xl:grid-cols-[repeat(3,minmax(0,1fr))]">{ordered.map((q) => { const p = hasProfile && fitById[q.id] ? { ...q, ...fitById[q.id] } : q; return <ProgramCard key={p.id} p={p} onOpen={onOpen} mark={imap?.[p.id]} badge={badgeFor(p, eco)} />; })}</div>}
       </>}
     </div>
   );

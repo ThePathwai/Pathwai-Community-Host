@@ -597,7 +597,9 @@ def evaluate(program: Dict[str, Any], profile: Dict[str, Any], today: Optional[d
     trust = {"official": 2, "third_party": 1}.get(program.get("verified") or "unconfirmed", 0)
     # How focused it is on what you asked for: a program that does only that beats one that does it among five other things.
     focused = (9 * len(hits)) // max(1, len([n for n in provides if n in NEEDS]))
-    score = live * 100000 + (len(tailored) + len(focus)) * 10000 + min(3, len(hits)) * 1000 + focused * 100 + urgency * 10 + trust
+    # Questions 1 to 3 answered yes: the more of them, the closer the fit (it only matters among "worth a look" programs, since every good match has all three).
+    answered_yes = sum(1 for c in (apply_check, stage_check, need_check) if c["state"] == "yes")
+    score = live * 100000 + answered_yes * 15000 + (len(tailored) + len(focus)) * 10000 + min(3, len(hits)) * 1000 + focused * 100 + urgency * 10 + trust
 
     # Reasons and cautions are the same answers, flattened to sentences for the places that show one line.
     reasons = tailored + ([need_check["text"]] if need_check["state"] == "yes" else []) + focus + ([timing_check["text"]] if timing_check["state"] == "yes" else []) + ([stage_check["text"]] if stage_check["state"] == "yes" else [])
@@ -655,7 +657,10 @@ def suggest(programs: List[Dict[str, Any]], raw_profile: Optional[Dict[str, Any]
         bucket.sort(key=lambda r: (-r["score"], r["name"]))
     ranked = strong + possible
     live_rank = {"open": 0, "rolling": 1, "check": 2, "closed": 3, "paused": 3}
-    others.sort(key=lambda r: (live_rank.get(r["status"], 2), r["name"]))
+    # Not matched, but not all equally far: the ones that clear the most of the first three questions come first, then the ones you can act on now.
+    def _closeness(r: Dict[str, Any]) -> int:
+        return sum(1 for c in (r.get("checks") or [])[:3] if c.get("state") == "yes")
+    others.sort(key=lambda r: (-_closeness(r), live_rank.get(r["status"], 2), r["name"]))
     # A three-step path: the best "start here", "fund it" and "scale" match, so the answer reads as a plan rather than a list.
     path: List[Dict[str, Any]] = []
     for phase in PHASE_ORDER:

@@ -607,3 +607,36 @@ def test_the_directory_can_be_filtered_by_place():
     ids = {r["id"] for r in here}
     assert "invest-ottawa-business-advisory" in ids and "toronto-small-business-enterprise-centre" not in ids
     assert "irap" in ids  # open to everyone, so it is still shown
+
+
+# --------------------------------------------------------------------------- closest fit first
+PROFILE_ORDER = {"stage": "prototype", "needs": ["funding", "mentors"], "province": "ON", "city": "Toronto", "audiences": ["black"], "sectors": ["tech"]}
+
+
+def test_not_matched_list_puts_the_nearest_first():
+    """Programs that are not matched are not all equally far: the ones that clear the most of the first three questions lead."""
+    res = nav.suggest(PROGRAMS, PROFILE_ORDER, TODAY, 8)
+    others = res["others"]
+    assert others, "expected some programs that are not matched"
+    near = [sum(1 for c in (r.get("checks") or [])[:3] if c.get("state") == "yes") for r in others]
+    assert near == sorted(near, reverse=True)
+
+
+def test_good_matches_come_before_worth_a_look_and_open_ones_before_closed():
+    res = nav.suggest(PROGRAMS, PROFILE_ORDER, TODAY, 500)
+    ranked = res["matches"] + res.get("more", [])
+    fits = [r["fit"] for r in ranked]
+    assert fits == sorted(fits, key=lambda f: 0 if f == "strong" else 1)
+    for group in ("strong", "possible"):
+        rows = [r for r in ranked if r["fit"] == group]
+        closed = [i for i, r in enumerate(rows) if r["status"] in ("closed", "paused")]
+        live = [i for i, r in enumerate(rows) if r["status"] not in ("closed", "paused")]
+        if closed and live:
+            assert max(live) < min(closed)
+
+
+def test_more_answered_yes_ranks_higher_among_worth_a_look():
+    res = nav.suggest(PROGRAMS, PROFILE_ORDER, TODAY, 500)
+    possible = [r for r in res["matches"] + res.get("more", []) if r["fit"] == "possible" and r["status"] not in ("closed", "paused")]
+    yes = [sum(1 for c in r["checks"][:3] if c["state"] == "yes") for r in possible]
+    assert yes == sorted(yes, reverse=True)

@@ -213,17 +213,17 @@ export function ProgramDrawer({ p, onClose, meta, tracked, onTrack, stage, inter
     <div className="fixed inset-0 z-50" role="dialog" aria-modal="true" aria-label={p.name} data-testid="program-drawer">
       <ScrollLock />
       <button type="button" aria-label="Close" onClick={onClose} className="pw-fade absolute inset-0 cursor-default bg-black/60 backdrop-blur-[2px]" />
-      <div className="pw-drawer absolute inset-x-0 bottom-0 flex max-h-[92dvh] flex-col overflow-hidden rounded-t-3xl border border-line bg-surface shadow-2xl sm:inset-x-auto sm:bottom-0 sm:right-0 sm:top-0 sm:max-h-none sm:w-[500px] sm:rounded-none sm:rounded-l-3xl sm:border-y-0 sm:border-r-0">
-        <div className="relative shrink-0 px-5 pb-5 pt-5 sm:px-7 sm:pt-7" style={{ background: `linear-gradient(160deg, ${tint(color, 0.22)} 0%, transparent 75%)` }}>
+      <div className="pw-drawer absolute inset-x-0 bottom-0 flex max-h-[92dvh] flex-col overflow-hidden rounded-t-3xl border border-line bg-surface shadow-2xl sm:inset-x-auto sm:bottom-0 sm:right-0 sm:top-0 sm:max-h-none sm:w-[min(92vw,560px)] lg:w-[min(64vw,780px)] 2xl:w-[min(52vw,900px)] sm:rounded-none sm:rounded-l-3xl sm:border-y-0 sm:border-r-0">
+        <div className="relative shrink-0 px-5 pb-5 pt-5 sm:px-7 sm:pt-7 lg:px-10 lg:pt-9" style={{ background: `linear-gradient(160deg, ${tint(color, 0.22)} 0%, transparent 75%)` }}>
           <div className="mx-auto mb-3 h-1 w-10 rounded-full bg-ink/20 sm:hidden" aria-hidden />
           <button type="button" onClick={onClose} aria-label="Close" data-testid="drawer-close" className="absolute right-4 top-4 flex h-9 w-9 items-center justify-center rounded-full bg-ink/10 hover:bg-ink/20 sm:right-5 sm:top-5"><X className="h-4 w-4" /></button>
           <div className="flex items-center gap-3 pr-10"><TypeTile type={p.type} size={48} /><div className="min-w-0"><p className="text-[11px] font-semibold uppercase text-muted" style={{ letterSpacing: "0.12em" }}>{TYPE_LABEL[p.type] || p.type}{p.level ? ` · ${p.level}` : ""}</p><p className="truncate text-sm text-muted">{p.org}</p></div></div>
-          <h2 className="mt-4 text-2xl leading-tight sm:text-[28px]" style={{ textTransform: "none", letterSpacing: "-0.02em", fontWeight: 800, textWrap: "balance" }}>{p.name}</h2>
+          <h2 className="mt-4 text-2xl leading-tight sm:text-[28px] lg:text-[34px]" style={{ textTransform: "none", letterSpacing: "-0.02em", fontWeight: 800, textWrap: "balance" }}>{p.name}</h2>
           <div className="mt-3 flex flex-wrap items-center gap-2"><Status status={p.status} /><DeadlineChip p={p} />{p.community && <Link to={`/c/${p.community.slug}`} className="chip chip-accent">From {p.community.name}</Link>}</div>
           {STATUS_HELP[p.status] && <p className="mt-2 text-xs text-muted">{STATUS_HELP[p.status]}</p>}
         </div>
 
-        <div className="min-h-0 flex-1 space-y-7 overflow-y-auto overscroll-contain px-5 pb-6 pt-2 sm:px-7">
+        <div className="min-h-0 flex-1 space-y-7 overflow-y-auto overscroll-contain px-5 pb-6 pt-2 sm:px-7 lg:space-y-8 lg:px-10 lg:text-[1.0625rem]">
           {(p.fit || dl || p.amount) && (
             <div className="grid grid-cols-2 gap-2">
               {p.fit && <div className="rounded-xl border border-line p-3"><p className="text-[11px] font-semibold uppercase text-muted" style={{ letterSpacing: "0.12em" }}>For you</p><div className="mt-2">{unmatched ? <span className="text-sm font-semibold text-muted">Not matched</span> : <FitMeter fit={p.fit} />}</div></div>}
@@ -291,7 +291,7 @@ export function ProgramDrawer({ p, onClose, meta, tracked, onTrack, stage, inter
           <p className="flex items-center gap-1.5 text-xs text-muted" title={meta?.notes || ""}><BadgeCheck className={cx("h-4 w-4", p.verified === "official" ? "text-emerald-500" : "")} aria-hidden />{VERIFIED[p.verified] || ""}{p.last_checked ? ` · checked ${dayLabel(p.last_checked)}` : ""}. Details change, so confirm on the official page.</p>
         </div>
 
-        <div className="flex shrink-0 gap-2 border-t border-line bg-surface p-4 pb-[calc(1rem+env(safe-area-inset-bottom))] sm:px-7">
+        <div className="flex shrink-0 gap-2 border-t border-line bg-surface p-4 pb-[calc(1rem+env(safe-area-inset-bottom))] sm:px-7 lg:px-10">
           {cta}
           {shell && <button type="button" onClick={() => { onClose(); shell.openGuide(`Tell me about ${p.name}`); }} className="btn-ghost !px-4 !py-3" aria-label="Ask the guide about this" data-testid="drawer-ask"><MessageCircle className="h-4 w-4" /><span className="hidden sm:inline">Ask</span></button>}
         </div>
