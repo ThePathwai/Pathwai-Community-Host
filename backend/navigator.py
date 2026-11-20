@@ -32,9 +32,20 @@ STAGE_HINT = {
 STAGE_NOW = {"idea": "at the idea stage", "prototype": "at the prototype stage", "launched": "just launched", "revenue": "earning revenue", "growth": "growing"}
 NEEDS = ["funding", "mentorship", "space", "customers", "export", "rd", "ip", "talent", "network", "tax", "training", "visa", "tools", "legal"]
 NEED_LABEL = {
-    "funding": "funding", "mentorship": "mentors", "space": "a workspace", "customers": "first customers", "export": "export help",
-    "rd": "R&D support", "ip": "IP protection", "talent": "talent", "network": "a network", "tax": "tax savings", "training": "training", "visa": "an immigration route",
-    "tools": "tool discounts", "legal": "legal help",
+    "funding": "funding",
+    "mentorship": "mentors",
+    "space": "a workspace",
+    "customers": "help finding customers",
+    "export": "help selling outside Canada",
+    "rd": "R&D funding and support",
+    "ip": "help protecting your ideas",
+    "talent": "help hiring",
+    "network": "introductions and community",
+    "tax": "tax savings",
+    "training": "courses and workshops",
+    "visa": "an immigration route",
+    "tools": "software discounts",
+    "legal": "legal help",
 }
 AUDIENCES = ["women", "black", "indigenous", "newcomer", "youth", "student", "rural"]
 AUDIENCE_LABEL = {"women": "women", "black": "Black", "indigenous": "Indigenous", "newcomer": "newcomer", "youth": "young", "student": "student", "rural": "rural"}

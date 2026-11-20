@@ -4,7 +4,7 @@ import { ArrowRight, ArrowUpRight, BadgeCheck, Bookmark, Check, Circle, CircleCh
 import { Status } from "./NavBits";
 import ScrollLock from "./ScrollLock";
 import { useShell } from "./AccountShell";
-import { isStageLine, STAGES, STATUS_HELP, TYPE_LABEL } from "../lib/navigator";
+import { AUDIENCE_LABEL, isStageLine, REGION_LABEL, STAGE_LABEL, STAGES, STATUS_HELP, TYPE_LABEL } from "../lib/navigator";
 import { deadlineInfo, leadReason, tint, typeMeta } from "../lib/programStyle";
 import { cx } from "./ui";
 
@@ -124,6 +124,24 @@ export function DeadlineChip({ p, className }) {
   return <span className={cx("inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-xs font-semibold", d.urgent ? "bg-red-500/15 text-red-500" : d.soon ? "bg-amber-500/15 text-amber-600 dark:text-amber-400" : "bg-ink/10 text-muted", className)}><Clock className="h-3 w-3" aria-hidden />{d.text}</span>;
 }
 
+// The facts people scan for before they open a program: what it is worth, where it works, who it is for, and which stages it serves.
+function Facts({ p }) {
+  const st = (p.stages || []).filter((s) => STAGES.includes(s));
+  const idx = st.map((s) => STAGES.indexOf(s));
+  const stage = !idx.length || idx.length >= 4 ? "Any stage" : idx.length === 1 ? `For ${STAGE_LABEL[STAGES[idx[0]]]}` : `${STAGE_LABEL[STAGES[Math.min(...idx)]]} to ${STAGE_LABEL[STAGES[Math.max(...idx)]]}`;
+  const place = (p.regions || []).length ? (p.regions.length > 2 ? `${REGION_LABEL[p.regions[0]] || p.regions[0]} and nearby` : p.regions.map((r) => REGION_LABEL[r] || r).join(" and ")) + " only" : (p.provinces || []).includes("any") || !(p.provinces || []).length ? "Across Canada" : p.provinces.map((x) => (x === "ON" ? "Ontario" : x)).join(", ") + " only";
+  const who = (p.restricted_to || []).length ? "For " + p.restricted_to.map((a) => AUDIENCE_LABEL[a] || a).join(" and ") + " founders" : "";
+  const chip = "inline-flex items-center rounded-md bg-ink/[.06] px-2 py-0.5 text-xs text-ink/80";
+  return (
+    <span className="mt-3 flex flex-wrap gap-1.5" data-testid="card-facts">
+      {p.amount && <span className="inline-flex max-w-full items-center rounded-md px-2 py-0.5 text-xs font-semibold" style={{ background: "var(--accent-soft, rgb(var(--c-ink) / 0.08))" }}><span className="truncate">{p.amount.length > 60 ? p.amount.slice(0, 57).trimEnd() + "..." : p.amount}</span></span>}
+      {who && <span className={chip}>{who}</span>}
+      <span className={chip}>{place}</span>
+      <span className={chip}>{stage}</span>
+    </span>
+  );
+}
+
 // A program as a card to scan. Tapping it opens the drawer.
 export function ProgramCard({ p, onOpen, mark, badge }) {
   const { color } = typeMeta(p.type);
@@ -146,7 +164,8 @@ export function ProgramCard({ p, onOpen, mark, badge }) {
       {unmatched ? <span className="mt-2 flex gap-2 text-sm text-muted" data-testid="card-unmatched"><Info className="mt-0.5 h-4 w-4 shrink-0" aria-hidden /><span className="line-clamp-2">Not matched to you: {unmatched.charAt(0).toLowerCase() + unmatched.slice(1)}</span></span>
         : gap ? <span className="mt-2 flex gap-2 text-sm text-ink/80" data-testid="card-gap">{(() => { const a = ANSWER[gap.state]; return <a.Icon className={cx("mt-0.5 h-4 w-4 shrink-0", a.cls)} aria-hidden />; })()}<span className="line-clamp-2">{gap.text}</span></span>
         : lead ? <span className="mt-2 flex gap-2 text-sm text-ink/80"><Check className="mt-0.5 h-4 w-4 shrink-0 text-emerald-500" aria-hidden /><span className="line-clamp-2">{lead}</span></span>
-        : p.summary && <span className="mt-2 line-clamp-2 text-sm text-muted">{p.summary}</span>}
+        : p.summary && <span className="mt-2 line-clamp-3 text-sm text-muted">{p.summary}</span>}
+      {!p.checks?.length && <Facts p={p} />}
       {p.checks?.length > 0 && <span className="mt-3 block"><CheckStrip checks={p.checks} /></span>}
       <span className="mt-auto flex items-center gap-2 pt-4">
         <Status status={p.status} />

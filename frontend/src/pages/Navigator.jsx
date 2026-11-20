@@ -4,7 +4,7 @@ import { ArrowRight, Bookmark, Check, ChevronDown, Compass, EyeOff, Flag, Pencil
 import { api } from "../lib/api";
 import { useAuth } from "../lib/auth";
 import { Wordmark, PoweredBy, Spinner, cx } from "../components/ui";
-import { NEED_LABEL, TYPE_LABEL } from "../lib/navigator";
+import { NEED_HINT, NEED_LABEL, TYPE_LABEL } from "../lib/navigator";
 import { startDemo } from "../lib/demo";
 import { tint, typeMeta } from "../lib/programStyle";
 import { FitMeter, ProgramCard, ProgramDrawer, TypeTile } from "../components/ProgramCards";
@@ -244,8 +244,11 @@ function Results({ res, meta, loading, generic, onOpen, tracked, onTrack, imap, 
 }
 
 function Directory({ meta, onOpen, imap, eco }) {
-  const [f, setF] = useState({ q: "", type: "", status: "", province: "", need: "", region: "" });
+  const BLANK = { q: "", type: "", status: "", province: "", need: "", region: "" };
+  const [f, setF] = useState(BLANK);
   const [rows, setRows] = useState(null);
+  const [all, setAll] = useState([]);
+  useEffect(() => { api.get("/navigator/programs").then((r) => setAll(r.data.programs || [])).catch(() => {}); }, []);
   useEffect(() => {
     let live = true;
     const t = setTimeout(() => {
@@ -255,27 +258,46 @@ function Directory({ meta, onOpen, imap, eco }) {
     return () => { live = false; clearTimeout(t); };
   }, [f]);
   const set = (k, v) => setF((o) => ({ ...o, [k]: v }));
+  const counts = useMemo(() => all.reduce((m, p) => { m[p.type] = (m[p.type] || 0) + 1; return m; }, {}), [all]);
+  const active = Object.values(f).some(Boolean);
+  const label = "mb-1.5 block text-[11px] font-semibold uppercase text-muted";
+  const select = "input !rounded-xl !py-2.5 w-full";
   return (
     <div data-testid="nav-directory">
-      <div className="space-y-3">
+      <div className="space-y-4 rounded-3xl border border-line bg-surface p-4 sm:p-5">
         <div className="relative"><Search className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-muted" aria-hidden />
-          <input className="input !rounded-full !py-3 !pl-11" placeholder="Search grants, loans, accelerators…" value={f.q} onChange={(e) => set("q", e.target.value)} aria-label="Search programs" data-testid="dir-search" /></div>
-        <div className="pw-rail -mx-4 flex gap-2 overflow-x-auto px-4 pb-1 sm:mx-0 sm:px-0">
-          <Pill on={f.status === "live"} onClick={() => set("status", f.status === "live" ? "" : "live")} testId="dir-live">Taking applications</Pill>
-          {meta.types.map((t) => { const { color, Icon } = typeMeta(t.key); return <Pill key={t.key} on={f.type === t.key} color={color} onClick={() => set("type", f.type === t.key ? "" : t.key)} testId={`dir-type-${t.key}`}><Icon className="h-3.5 w-3.5" aria-hidden />{t.label}</Pill>; })}
+          <input className="input !rounded-full !py-3 !pl-11" placeholder="Search by name, organisation or what it offers" value={f.q} onChange={(e) => set("q", e.target.value)} aria-label="Search programs" data-testid="dir-search" /></div>
+        <div>
+          <span className={label} style={{ letterSpacing: "0.12em" }}>What kind</span>
+          <div className="flex flex-wrap gap-2">
+            {meta.types.map((t) => { const { color, Icon } = typeMeta(t.key); return <Pill key={t.key} on={f.type === t.key} color={color} onClick={() => set("type", f.type === t.key ? "" : t.key)} testId={`dir-type-${t.key}`}><Icon className="h-3.5 w-3.5" aria-hidden />{t.label}{counts[t.key] ? <span className="text-xs opacity-60">{counts[t.key]}</span> : null}</Pill>; })}
+          </div>
         </div>
-        {meta.regions && (
-          <label className="flex items-center gap-2 text-sm text-muted">Near
-            <select className="input !w-auto !rounded-full !py-2" value={f.region} onChange={(e) => set("region", e.target.value)} aria-label="Show programs near" data-testid="dir-region">
-              <option value="">Anywhere in Canada</option>
-              {meta.regions.map((r) => <option key={r.key} value={r.key}>{r.label}</option>)}
-            </select>
-            <span className="text-xs">Programs for one place only show when you pick it.</span>
-          </label>
-        )}
-        <div className="pw-rail -mx-4 flex gap-2 overflow-x-auto px-4 pb-1 sm:mx-0 sm:px-0">{meta.needs.map((n) => <Pill key={n.key} on={f.need === n.key} onClick={() => set("need", f.need === n.key ? "" : n.key)} testId={`dir-need-${n.key}`}>{n.label}</Pill>)}</div>
+        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+          <label className="block"><span className={label} style={{ letterSpacing: "0.12em" }}>What you need</span>
+            <select className={select} value={f.need} onChange={(e) => set("need", e.target.value)} data-testid="dir-need" aria-label="What you need">
+              <option value="">Anything</option>
+              {meta.needs.map((n) => <option key={n.key} value={n.key}>{n.label.charAt(0).toUpperCase() + n.label.slice(1)}</option>)}
+            </select></label>
+          {meta.regions && (
+            <label className="block"><span className={label} style={{ letterSpacing: "0.12em" }}>Where you are</span>
+              <select className={select} value={f.region} onChange={(e) => set("region", e.target.value)} aria-label="Show programs near" data-testid="dir-region">
+                <option value="">Anywhere in Canada</option>
+                {meta.regions.map((r) => <option key={r.key} value={r.key}>{r.label.charAt(0).toUpperCase() + r.label.slice(1)}</option>)}
+              </select></label>
+          )}
+          <div><span className={label} style={{ letterSpacing: "0.12em" }}>Timing</span>
+            <button type="button" onClick={() => set("status", f.status === "live" ? "" : "live")} aria-pressed={f.status === "live"} data-testid="dir-live"
+              className={cx("flex w-full items-center justify-between rounded-xl border px-3.5 py-2.5 text-sm transition", f.status === "live" ? "border-transparent font-semibold" : "border-line text-muted hover:text-ink")}
+              style={f.status === "live" ? { background: "var(--accent)", color: "var(--on-accent)" } : undefined}>
+              Only taking applications now<Check className={cx("h-4 w-4", f.status === "live" ? "" : "opacity-0")} aria-hidden /></button></div>
+        </div>
+        {f.need && NEED_HINT[f.need] && <p className="text-sm text-muted" data-testid="dir-need-hint"><span className="font-semibold text-ink/80">{NEED_LABEL[f.need].charAt(0).toUpperCase() + NEED_LABEL[f.need].slice(1)}:</span> {NEED_HINT[f.need]}</p>}
       </div>
-      <p className="mb-3 mt-5 text-sm text-muted">{rows ? `${rows.length} program${rows.length === 1 ? "" : "s"}` : ""}</p>
+      <div className="mb-3 mt-5 flex items-center justify-between gap-3">
+        <p className="text-sm font-medium" data-testid="dir-count">{rows ? `${rows.length} program${rows.length === 1 ? "" : "s"}` : ""}{f.region && rows ? <span className="font-normal text-muted"> in or open to {(meta.regions || []).find((r) => r.key === f.region)?.label}</span> : null}</p>
+        {active && <button type="button" onClick={() => setF(BLANK)} className="text-sm font-semibold text-muted underline hover:text-ink" data-testid="dir-clear">Clear filters</button>}
+      </div>
       {!rows ? <Spinner /> : rows.length === 0 ? <p className="rounded-2xl border border-dashed border-line p-8 text-center text-muted">Nothing matches. Try clearing a filter.</p>
         : <div className="grid grid-cols-[minmax(0,1fr)] gap-3 md:grid-cols-[repeat(2,minmax(0,1fr))] 2xl:grid-cols-[repeat(3,minmax(0,1fr))]">{rows.map((p) => <ProgramCard key={p.id} p={p} onOpen={onOpen} mark={imap?.[p.id]} badge={badgeFor(p, eco)} />)}</div>}
     </div>

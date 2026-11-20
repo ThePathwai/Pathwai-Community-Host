@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { Plus, Rocket, X } from "lucide-react";
 import { Field, Input, Select, Textarea, cx } from "./ui";
-import { AUDIENCES, AUDIENCE_LABEL, NEEDS, NEED_LABEL, PROVINCES, SECTORS, STAGES, STAGE_HINT, STAGE_LABEL } from "../lib/navigator";
+import { AUDIENCES, AUDIENCE_LABEL, NEEDS, NEED_HINT, NEED_LABEL, PROVINCES, SECTORS, STAGES, STAGE_HINT, STAGE_LABEL } from "../lib/navigator";
 
 // The startup half of the account profile. It lives on the account (not in any one community) and is what the
 // Navigator starts from, so advice and community suggestions begin with who you are instead of a blank form.
@@ -87,6 +87,7 @@ export default function StartupFields({ value, onChange, testPrefix = "su", canR
       <div>
         <p className="label">What do you need next?</p>
         <div className="mt-1.5 flex flex-wrap gap-1.5">{NEEDS.map((n) => <Chip key={n} on={value.needs.includes(n)} onClick={() => tog("needs", n)} testId={`${testPrefix}-need-${n}`}>{NEED_LABEL[n]}</Chip>)}</div>
+        <ul className="mt-1.5 space-y-0.5 text-xs text-muted">{value.needs.filter((n) => NEED_HINT[n]).map((n) => <li key={n}><span className="font-semibold text-ink/80">{NEED_LABEL[n]}:</span> {NEED_HINT[n]}</li>)}</ul>
       </div>
       <div>
         <p className="label">What you build</p>
