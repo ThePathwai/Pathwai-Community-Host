@@ -1,7 +1,7 @@
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { toast } from "sonner";
-import { ArrowRight, ArrowUpRight, CalendarDays, Check, ChevronDown, MapPin, Search, TriangleAlert, Video } from "lucide-react";
+import { ArrowRight, ArrowUpRight, CalendarDays, Check, ChevronDown, ChevronLeft, ChevronRight, List, MapPin, Search, TriangleAlert, Video } from "lucide-react";
 import { api } from "../lib/api";
 import { useAuth } from "../lib/auth";
 import AccountShell from "../components/AccountShell";
@@ -91,6 +91,113 @@ function WeekWidget({ g, other, first, later }) {
   );
 }
 
+// ---------------------------------------------------------------------------------------------------- calendar
+const pad = (n) => String(n).padStart(2, "0");
+const isoOf = (y, m, d) => `${y}-${pad(m + 1)}-${pad(d)}`;
+const todayIso = () => { const t = new Date(); return isoOf(t.getFullYear(), t.getMonth(), t.getDate()); };
+const CELL = { background: "rgb(var(--c-surface))" };
+const CELL_BLANK = { background: "rgb(var(--c-surface) / 0.55)" };
+const WEEKDAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
+const shortTime = (t) => { if (!t) return ""; const [h, m] = t.split(":").map(Number); return `${((h + 11) % 12) + 1}${m ? ":" + pad(m) : ""}${h < 12 ? "a" : "p"}`; };
+const dayHeading = (iso) => new Date(iso + "T12:00:00").toLocaleDateString(undefined, { weekday: "long", month: "long", day: "numeric" });
+
+// A month grid with the events on their days. Tap a day to read its events underneath. Events keep their "why it fits / why it may not" notes there.
+function CalendarView({ list, other }) {
+  const today = todayIso();
+  const byDay = useMemo(() => {
+    const m = {};
+    for (const e of list) (m[e.date] = m[e.date] || []).push(e);
+    return m;
+  }, [list]);
+  const days = useMemo(() => Object.keys(byDay).sort(), [byDay]);
+  const firstDay = days.find((d) => d >= today) || days[0] || today;
+  const [month, setMonth] = useState(() => ({ y: Number(firstDay.slice(0, 4)), m: Number(firstDay.slice(5, 7)) - 1 }));
+  const [picked, setPicked] = useState(firstDay);
+  // When the list changes (a filter, the other tab), land on its first event.
+  const sig = days.join(",");
+  useEffect(() => { setPicked(firstDay); setMonth({ y: Number(firstDay.slice(0, 4)), m: Number(firstDay.slice(5, 7)) - 1 }); }, [sig]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  const first = new Date(month.y, month.m, 1);
+  const lead = (first.getDay() + 6) % 7;                       // Monday first
+  const count = new Date(month.y, month.m + 1, 0).getDate();
+  const cells = [];
+  for (let i = 0; i < lead; i++) cells.push(null);
+  for (let d = 1; d <= count; d++) cells.push(isoOf(month.y, month.m, d));
+  while (cells.length % 7) cells.push(null);
+  const inMonth = days.filter((d) => d.startsWith(`${month.y}-${pad(month.m + 1)}`));
+  const total = inMonth.reduce((n, d) => n + byDay[d].length, 0);
+  const title = first.toLocaleDateString(undefined, { month: "long", year: "numeric" });
+  const hasPrev = days.some((d) => d < isoOf(month.y, month.m, 1)) || isoOf(month.y, month.m, 1) > today.slice(0, 8) + "01";
+  const hasNext = days.some((d) => d > isoOf(month.y, month.m, count));
+  const go = (delta) => setMonth((o) => { const x = new Date(o.y, o.m + delta, 1); return { y: x.getFullYear(), m: x.getMonth() }; });
+  const dayList = byDay[picked] || [];
+  const nextAfter = days.find((d) => d > picked);
+
+  return (
+    <div className="space-y-5" data-testid="events-calendar">
+      <section className="overflow-hidden rounded-3xl border border-line bg-surface">
+        <div className="flex items-center justify-between gap-3 px-4 py-3.5 sm:px-5">
+          <div className="min-w-0">
+            <h2 className="text-lg leading-tight sm:text-xl" style={heading} data-testid="cal-title">{title}</h2>
+            <p className="text-xs text-muted" data-testid="cal-count">{total ? `${plural(total, "event")} this month` : "No events this month"}</p>
+          </div>
+          <div className="flex shrink-0 items-center gap-1.5">
+            <button type="button" onClick={() => { setMonth({ y: Number(today.slice(0, 4)), m: Number(today.slice(5, 7)) - 1 }); setPicked(today); }} className="rounded-full border border-line px-3 py-1.5 text-xs font-semibold text-muted transition hover:text-ink" data-testid="cal-today">Today</button>
+            <button type="button" onClick={() => go(-1)} disabled={!hasPrev} aria-label="Previous month" className="grid h-8 w-8 place-items-center rounded-full border border-line transition hover:border-ink/40 disabled:opacity-30" data-testid="cal-prev"><ChevronLeft className="h-4 w-4" aria-hidden /></button>
+            <button type="button" onClick={() => go(1)} disabled={!hasNext} aria-label="Next month" className="grid h-8 w-8 place-items-center rounded-full border border-line transition hover:border-ink/40 disabled:opacity-30" data-testid="cal-next"><ChevronRight className="h-4 w-4" aria-hidden /></button>
+          </div>
+        </div>
+        <div className="grid grid-cols-7 border-t border-line text-center text-[10px] font-semibold uppercase text-muted sm:text-[11px]" style={{ letterSpacing: "0.1em" }}>
+          {WEEKDAYS.map((w) => <div key={w} className="py-2"><span className="sm:hidden">{w[0]}</span><span className="hidden sm:inline">{w}</span></div>)}
+        </div>
+        <div className="grid grid-cols-7 gap-px border-t border-line" style={{ background: "rgb(var(--c-line))" }} role="grid" aria-label={title}>
+          {cells.map((iso, i) => {
+            if (!iso) return <div key={`b${i}`} className="min-h-[56px] sm:min-h-[104px]" style={CELL_BLANK} aria-hidden />;
+            const evs = byDay[iso] || [];
+            const past = iso < today; const isToday = iso === today; const sel = iso === picked;
+            const label = `${dayHeading(iso)}, ${evs.length ? plural(evs.length, "event") : "no events"}`;
+            return (
+              <button key={iso} type="button" onClick={() => setPicked(iso)} aria-label={label} aria-pressed={sel} data-testid={`cal-day-${iso}`} data-events={evs.length}
+                className={cx("group relative flex min-h-[56px] flex-col items-stretch gap-1 p-1 text-left transition sm:min-h-[104px] sm:p-1.5", past && "opacity-60", sel && "z-10")}
+                style={{ ...CELL, ...(sel ? { boxShadow: "inset 0 0 0 2px var(--accent)" } : null) }}>
+                <span className={cx("grid h-6 w-6 shrink-0 place-items-center rounded-full text-xs font-semibold tabular-nums sm:h-7 sm:w-7 sm:text-[13px]", isToday ? "" : evs.length ? "" : "text-muted")}
+                  style={isToday ? { background: "var(--accent)", color: "var(--on-accent)" } : undefined}>{Number(iso.slice(8))}</span>
+                {/* phones: dots. wider screens: the first events as little labels */}
+                {evs.length > 0 && <span className="flex flex-wrap gap-0.5 px-0.5 sm:hidden">{evs.slice(0, 3).map((e) => <span key={e.id} className="h-1.5 w-1.5 rounded-full" style={{ background: "var(--accent)" }} />)}{evs.length > 3 && <span className="text-[9px] leading-none text-muted">+{evs.length - 3}</span>}</span>}
+                <span className="hidden min-w-0 flex-col gap-1 sm:flex">
+                  {evs.slice(0, 2).map((e) => (
+                    <span key={e.id} className={cx("block truncate rounded-md px-1.5 py-0.5 text-[11px] font-medium leading-snug", other ? "bg-ink/[.06] text-muted" : e.fit === "strong" ? "" : "bg-ink/[.07]")}
+                      style={!other && e.fit === "strong" ? { background: "color-mix(in srgb, var(--accent) 22%, transparent)" } : undefined}>
+                      {e.time && <span className="mr-1 font-semibold tabular-nums">{shortTime(e.time)}</span>}{e.title}
+                    </span>
+                  ))}
+                  {evs.length > 2 && <span className="px-1.5 text-[11px] font-semibold text-muted">+{evs.length - 2} more</span>}
+                </span>
+              </button>
+            );
+          })}
+        </div>
+        <div className="flex flex-wrap items-center gap-x-4 gap-y-1 border-t border-line px-4 py-2.5 text-[11px] text-muted sm:px-5">
+          <span className="inline-flex items-center gap-1.5"><span className="h-2.5 w-4 rounded-sm" style={{ background: "color-mix(in srgb, var(--accent) 22%, transparent)" }} aria-hidden />Matches what you asked for</span>
+          <span className="inline-flex items-center gap-1.5"><span className="h-2.5 w-4 rounded-sm bg-ink/[.1]" aria-hidden />Other events</span>
+        </div>
+      </section>
+
+      <section data-testid="cal-day-panel">
+        <div className="flex flex-wrap items-baseline justify-between gap-x-3">
+          <h3 className="text-lg" style={heading} data-testid="cal-day-title">{picked === today ? "Today · " : ""}{dayHeading(picked)}</h3>
+          <Label>{dayList.length ? plural(dayList.length, "event") : "No events"}</Label>
+        </div>
+        {dayList.length > 0
+          ? <Widget className="mt-3"><ul className="divide-y divide-line">{dayList.map((e) => <EventItem key={e.id} e={e} other={other} next={false} />)}</ul></Widget>
+          : <div className="mt-3 rounded-2xl border border-dashed border-line p-6 text-center text-sm text-muted">
+              Nothing on this day.{nextAfter && <> <button type="button" className="font-semibold text-ink underline underline-offset-2" onClick={() => { setPicked(nextAfter); setMonth({ y: Number(nextAfter.slice(0, 4)), m: Number(nextAfter.slice(5, 7)) - 1 }); }} data-testid="cal-jump">Jump to the next event, {dayHeading(nextAfter)}</button>.</>}
+            </div>}
+      </section>
+    </div>
+  );
+}
+
 // For the platform admin only: which sources were read, how many events each gave, and a button to read them now.
 function SourcesPanel() {
   const [s, setS] = useState(null);
@@ -133,6 +240,7 @@ export default function FounderEvents({ embedded }) {
   const [data, setData] = useState(null);
   const [error, setError] = useState("");
   const [view, setView] = useState("fit");
+  const [layout, setLayout] = useState("calendar");   // a month calendar first; the plain list is one tap away
   const [topic, setTopic] = useState("");
   const [free, setFree] = useState(false);
   const [online, setOnline] = useState(false);
@@ -162,7 +270,7 @@ export default function FounderEvents({ embedded }) {
   const filtersOn = !!(q || topic || free || online);
 
   const page = (
-    <div className="mx-auto w-full max-w-3xl" data-testid="events-page">
+    <div className={cx("mx-auto w-full", layout === "calendar" ? "max-w-5xl" : "max-w-3xl")} data-testid="events-page">
       <p className="eyebrow">Events</p>
       <h1 className="mt-2 text-3xl sm:text-4xl" style={{ textTransform: "none", letterSpacing: "-0.03em", fontWeight: 800, textWrap: "balance" }}>Events for founders</h1>
       <p className="mt-2 max-w-2xl text-sm text-muted">Upcoming networking, pitch, mentor and learning events{prov ? ` in ${prov} and online` : ""}, picked for what you asked for. Each one links to the organizer's own page.</p>
@@ -182,6 +290,12 @@ export default function FounderEvents({ embedded }) {
               className={cx("rounded-full px-4 py-1.5 text-sm font-medium transition", view === k ? "" : "text-muted hover:text-ink")} style={view === k ? { background: "var(--accent)", color: "var(--on-accent)" } : undefined}>{label}</button>
           ))}
         </div>
+        <div className="inline-flex rounded-full border border-line p-1" role="group" aria-label="Show events as">
+          {[["calendar", "Calendar", CalendarDays], ["list", "List", List]].map(([k, label, Icon]) => (
+            <button key={k} type="button" aria-pressed={layout === k} onClick={() => setLayout(k)} data-testid={`events-layout-${k}`}
+              className={cx("inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-sm font-medium transition", layout === k ? "" : "text-muted hover:text-ink")} style={layout === k ? { background: "var(--accent)", color: "var(--on-accent)" } : undefined}><Icon className="h-3.5 w-3.5" aria-hidden />{label}</button>
+          ))}
+        </div>
         <label className="relative block w-full sm:w-64"><Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted" aria-hidden />
           <input type="search" value={q} onChange={(e) => { setQ(e.target.value); setLimit(12); }} placeholder="Search events" aria-label="Search events" data-testid="events-search" className="w-full rounded-full border border-line bg-transparent py-2 pl-9 pr-3 text-sm outline-none focus:border-ink/50" /></label>
       </div>
@@ -198,7 +312,8 @@ export default function FounderEvents({ embedded }) {
       {!data && !error ? <div className="mt-10"><Spinner /></div> : data && (
         <div className="mt-6 space-y-8">
           {view === "other" && <p className="text-sm text-muted">Real events too. They are outside your province or made for a group you have not said you belong to. Each card says why.</p>}
-          {groups.length > 0 && <div className="space-y-4" data-testid="events-timeline">{groups.map((g, gi) => <WeekWidget key={g.week} g={g} other={view === "other"} first={gi === 0} later={gi > 0 && groups[gi - 1].items[0].date.slice(0, 7) === g.items[0].date.slice(0, 7)} />)}</div>}
+          {layout === "calendar" && list.length > 0 && <CalendarView list={list} other={view === "other"} />}
+          {layout === "list" && groups.length > 0 && <div className="space-y-4" data-testid="events-timeline">{groups.map((g, gi) => <WeekWidget key={g.week} g={g} other={view === "other"} first={gi === 0} later={gi > 0 && groups[gi - 1].items[0].date.slice(0, 7) === g.items[0].date.slice(0, 7)} />)}</div>}
           {!list.length && (
             <div className="rounded-2xl border border-dashed border-line p-8 text-center" data-testid="events-empty">
               <CalendarDays className="mx-auto h-6 w-6 text-muted" aria-hidden />
@@ -207,7 +322,7 @@ export default function FounderEvents({ embedded }) {
               {filtersOn && <button type="button" className="btn-ghost mt-4 !py-2 text-sm" onClick={() => { setQ(""); setTopic(""); setFree(false); setOnline(false); }}>Clear filters</button>}
             </div>
           )}
-          {list.length > limit && <button type="button" onClick={() => setLimit((l) => l + 12)} className="btn-ghost w-full !py-3 text-sm" data-testid="events-more">Show {Math.min(12, list.length - limit)} more</button>}
+          {layout === "list" && list.length > limit && <button type="button" onClick={() => setLimit((l) => l + 12)} className="btn-ghost w-full !py-3 text-sm" data-testid="events-more">Show {Math.min(12, list.length - limit)} more</button>}
           <p className="text-xs text-muted" data-testid="events-note">Gathered from public event pages{data.updated_at ? `, last updated ${dayLabel(data.updated_at)}` : ""}. Details change, so confirm date, price and place on the event page.</p>
           {account && <SourcesPanel />}
         </div>
