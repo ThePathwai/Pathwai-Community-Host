@@ -344,3 +344,49 @@ def test_every_event_says_why_it_may_fit_and_why_it_may_not():
     # a visitor with no startup is told the match is general
     anon = ef.rank_events([mixer], None, TODAY)["events"][0]
     assert any("do not know your startup" in c for c in anon["cautions"])
+
+
+# Real listings found on the live site on 2026-11-20 (title, description, source). The first group must go, the second must stay.
+LIVE_BAD = [
+    ("meetup", "💃 Free Spanish Conversation Practice", "¡Hola! Looking for a friendly place to practise speaking Spanish and meet new people? Join us for free Spanish conversation practice."),
+    ("meetup", "🌍 English Practice | Meet Friends (Professional Host)", "Practice English online in a fun, supportive space, for free! Get real-time speaking experience, meet new people."),
+    ("luma", "Free GPU Workshop: Fine-Tune Your Own Text-to-SQL Model on an Nvidia H100 GPU", ""),
+    ("eventbrite", "Copy of Investor Connect: Pitch & Networking — Toronto", "Evening designed specifically for investors, scouts and founders"),
+    ("eventbrite", "16th Global Conf. on Entrepreneurship, Startups, Investment, & Inter Trade", "An in-person global conference on entrepreneurship, startups, investment, and international trade."),
+]
+LIVE_GOOD = [
+    ("meetup", "🚀Toronto Founder Walk Entrepreneurs, Startups & Business Owners", "What if networking was just going for a walk with interesting people? founders and business owners"),
+    ("meetup", "Transitioning from Founder-Led Sales to a Repeatable Revenue Engine", "If your leads live in spreadsheets, your startup has a bottleneck: the founder."),
+    ("eventbrite", "Toronto's Networking Night for Entrepreneurs", "A monthly in person networking event focused on marketing and sales, where business owners and entrepreneurs connect."),
+    ("luma", "AI Builder Café: Build Your AI Revenue & Operations Team", ""),
+    ("meetup", "🚀Meetup for Entrepreneurs by F4F", "Founders for Founders brings you Real conversations for Entrepreneurs building Startups around the world."),
+    ("eventbrite", "Toronto Mom Networking Group | Women Entrepreneurs + Baby-Friendly Meetup", "Toronto mompreneur networking event for women in business."),
+]
+
+
+def test_real_off_topic_listings_are_dropped_and_real_founder_listings_stay():
+    for kind, title, desc in LIVE_BAD:
+        src = {**SRC, "id": "x", "kind": kind, "group": kind, "founder": True}
+        assert clean(ev(title, 5, online=True, city="", region="", country="", desc=desc), src) is None, title
+    for kind, title, desc in LIVE_GOOD:
+        src = {**SRC, "id": "x", "kind": kind, "group": kind, "founder": True}
+        assert clean(ev(title, 5, desc=desc), src), title
+
+
+def test_a_weekly_event_is_listed_a_few_times_not_sixteen():
+    evs = [clean(ev("Founder Coffee", d, url=f"https://example.org/fc{d}"), {**ORG, "id": "s1"}) for d in range(1, 12)]
+    evs += [clean(ev("Pitch night", 4), {**ORG, "id": "s1"}), clean(ev("Founder Coffee", 2, url="https://example.org/other"), {**ORG, "id": "s2"})]
+    kept = ef.cap_series([e for e in evs if e])
+    assert sum(1 for e in kept if e["source_id"] == "s1" and e["title"] == "Founder Coffee") == 3
+    assert any(e["title"] == "Pitch night" for e in kept) and any(e["source_id"] == "s2" for e in kept)
+
+
+def test_old_off_topic_events_leave_when_the_page_is_read_again(one_source):
+    db = fake_db()
+    bad = ld(ev("Free Spanish Conversation Practice", 3, online=True, city="", region="", country="", desc="Practise speaking Spanish"))
+    good = ld(ev("Founder funding mixer", 4))
+    run(job.refresh_all(db, fetch=make_fetch({"https://org.example/events": good}), delay=0, now=NOW))
+    assert run(db.founder_events.count_documents({})) == 1
+    # the source later lists only the off-topic event: the stored founder event goes, and nothing off-topic is stored
+    run(job.refresh_all(db, fetch=make_fetch({"https://org.example/events": bad}), delay=0, now=NOW))
+    assert run(db.founder_events.count_documents({})) == 0

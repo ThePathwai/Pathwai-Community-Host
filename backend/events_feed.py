@@ -60,7 +60,10 @@ FOUNDER_WORDS = re.compile(r"founder|startup|start-up|entrepreneur|small busines
 NOISE_WORDS = re.compile(r"\b(?:singles|speed dating|dating|crypto signals?|forex|mlm|multi-level|nft mint|passive income|get rich|real estate seminar|timeshare|"
                          r"(?:spanish|french|english|mandarin|language) (?:conversation|practice|exchange|class|lessons?)|conversation (?:practice|exchange)|language exchange|"
                          r"yoga|pilates|zumba|karaoke|trivia|board games?|book club|bible study|worship|salsa|bachata|hiking|bike ride|pickleball|poker|bingo|"
-                         r"wine tasting|paint(?:ing)? (?:night|and sip)|kids?|children|toddlers?|seniors?|retirees?|dog)\b", re.I)
+                         r"wine tasting|paint(?:ing)? (?:night|and sip)|kids?|children|toddlers?|seniors?|retirees?|dog|meet friends|make friends|friendship|"
+                         r"\d+(?:st|nd|rd|th) (?:global|international|world) conf(?:erence)?|global conf(?:erence|\.)? on)\b", re.I)
+# A copied or template listing, not a real event page.
+COPY_TITLE = re.compile(r"^\s*(?:copy of|duplicate of|test event|untitled)\b", re.I)
 # Words that make an ordinary-looking event a business-owner event. Listings that cover everything (a Meetup group, a Luma calendar, Eventbrite) need one of these
 # or a founder word in the title or description; only an organizer page that is all about founders (DMZ, MaRS, a business centre) skips the check.
 BUSINESS_WORDS = re.compile(r"business|networking|entrepreneur|owners?\b|start-?ups?|founders?|funding|investors?|marketing|sales\b|customers?|e-?commerce|freelanc|consult(?:ant|ing)|"
@@ -322,7 +325,7 @@ def normalize(raw: Dict[str, Any], source: Dict[str, Any], now: Optional[datetim
         return None
     summary = _clean(raw.get("summary"), SUMMARY_MAX)
     text = f"{title} {summary}"
-    if NOISE_WORDS.search(text):
+    if NOISE_WORDS.search(text) or COPY_TITLE.search(title):
         return None
     online = bool(raw.get("online")) or bool(re.search(r"\b(?:online|virtual|webinar|zoom)\b", title, re.I))
     province = _province(str(raw.get("region") or ""), str(raw.get("city") or ""), str(raw.get("venue") or ""), source.get("province") or "")
@@ -336,8 +339,6 @@ def normalize(raw: Dict[str, Any], source: Dict[str, Any], now: Optional[datetim
     # An organizer page that is all about founders is trusted. Everything else has to look like a business-owner event by its own title or description.
     trusted = bool(source.get("founder")) and source.get("group", "organizer") == "organizer"
     if not trusted and not (FOUNDER_WORDS.search(text) or BUSINESS_WORDS.search(text)):
-        return None
-    if not cls["topics"] and not trusted:
         return None
     price = raw.get("price")
     return {
@@ -361,6 +362,18 @@ def dedupe(events: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
         if cur is None or e.get("priority", 5) < cur.get("priority", 5):
             best[key] = e
     return list(best.values())
+
+
+def cap_series(events: List[Dict[str, Any]], per: int = 3) -> List[Dict[str, Any]]:
+    """A weekly meetup is one thing, not sixteen. Keep the next few dates of each repeating event from one source."""
+    seen: Dict[str, int] = {}
+    out = []
+    for e in sorted(events, key=lambda x: (x["start"], x["title"])):
+        key = e.get("source_id", "") + "|" + re.sub(r"[^a-z]+", "", e["title"].lower())[:60]
+        seen[key] = seen.get(key, 0) + 1
+        if seen[key] <= per:
+            out.append(e)
+    return out
 
 
 # ---------------------------------------------------------------------------------------------------- ranking

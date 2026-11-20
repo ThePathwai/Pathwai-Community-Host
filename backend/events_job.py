@@ -75,7 +75,7 @@ async def refresh_source(db, src: Dict[str, Any], *, fetch: Callable[..., Awaita
         return run
     raw = ef.parse_events(src.get("kind", "auto"), body, src["url"])
     run["found"] = len(raw)
-    events = ef.dedupe([e for e in (ef.normalize(r, src, now) for r in raw) if e])[:MAX_PER_SOURCE]
+    events = ef.cap_series(ef.dedupe([e for e in (ef.normalize(r, src, now) for r in raw) if e]))[:MAX_PER_SOURCE]
     run["kept"] = len(events)
     run["ok"] = True
     if not raw:
@@ -86,7 +86,8 @@ async def refresh_source(db, src: Dict[str, Any], *, fetch: Callable[..., Awaita
         seen.append(e["id"])
         await db.founder_events.update_one({"id": e["id"]}, {"$set": {**e, "fetched_at": now.isoformat()}}, upsert=True)
     # Events this page used to list and no longer does were cancelled or moved: drop them, but only when the page clearly still works.
-    if events:
+    # (also when nothing on the page passes the relevance check any more: that is how old off-topic events leave)
+    if raw:
         await db.founder_events.delete_many({"source_id": src["id"], "id": {"$nin": seen}, "start": {"$gte": now.isoformat()}})
     return run
 
@@ -105,6 +106,8 @@ async def refresh_all(db, *, fetch: Callable[..., Awaitable[str]] = fetch_page, 
         runs.append(run)
         await db.founder_event_runs.update_one({"source_id": src["id"]}, {"$set": run}, upsert=True)
     await db.founder_events.delete_many({"end": {"$lt": (now - timedelta(days=1)).isoformat()}})
+    if not only:   # a source taken off the list takes its events with it
+        await db.founder_events.delete_many({"source_id": {"$nin": [s["id"] for s in load_sources()]}})
     await db.founder_event_meta.update_one({"id": "last_run"}, {"$set": {"id": "last_run", "at": now.isoformat(), "sources": len(runs), "ok": sum(1 for r in runs if r["ok"]),
                                                                            "events": await db.founder_events.count_documents({})}}, upsert=True)
     return {"ran": len(runs), "ok": sum(1 for r in runs if r["ok"]), "runs": runs}
