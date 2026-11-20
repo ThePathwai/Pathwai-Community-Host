@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { Link, useLocation } from "react-router-dom";
-import { ArrowRight, Bookmark, Check, ChevronDown, Compass, EyeOff, Flag, Pencil, Rocket, Search, Users } from "lucide-react";
+import { ArrowRight, Bookmark, CalendarDays, Check, ChevronDown, Compass, EyeOff, Flag, Pencil, Rocket, Search, Users } from "lucide-react";
 import { api } from "../lib/api";
 import { useAuth } from "../lib/auth";
 import { Wordmark, PoweredBy, Spinner, cx } from "../components/ui";
@@ -15,6 +15,7 @@ import { useEcosystem } from "../lib/ecosystem";
 import Trajectory from "../components/Trajectory";
 import AccountShell from "../components/AccountShell";
 import GuideChat from "../components/GuideChat";
+import FounderEvents from "./FounderEvents";
 import HubPrograms from "../components/hub/HubPrograms";
 
 // /navigator ("Programs"): the Canadian programs that fit YOU. Signed in, everything here is read from the one startup profile on your
@@ -243,7 +244,7 @@ function Results({ res, meta, loading, generic, onOpen, tracked, onTrack, imap, 
   );
 }
 
-function Directory({ meta, onOpen, imap, eco }) {
+function Directory({ meta, onOpen, imap, eco, onEvents }) {
   const BLANK = { q: "", type: "", status: "", province: "", need: "", region: "" };
   const [f, setF] = useState(BLANK);
   const [rows, setRows] = useState(null);
@@ -271,6 +272,7 @@ function Directory({ meta, onOpen, imap, eco }) {
           <span className={label} style={{ letterSpacing: "0.12em" }}>What kind</span>
           <div className="flex flex-wrap gap-2">
             {meta.types.map((t) => { const { color, Icon } = typeMeta(t.key); return <Pill key={t.key} on={f.type === t.key} color={color} onClick={() => set("type", f.type === t.key ? "" : t.key)} testId={`dir-type-${t.key}`}><Icon className="h-3.5 w-3.5" aria-hidden />{t.label}{counts[t.key] ? <span className="text-xs opacity-60">{counts[t.key]}</span> : null}</Pill>; })}
+            {onEvents && <Pill on={false} color="#F59E0B" onClick={onEvents} testId="dir-type-events"><CalendarDays className="h-3.5 w-3.5" aria-hidden />Events<ArrowRight className="h-3 w-3 opacity-60" aria-hidden /></Pill>}
           </div>
         </div>
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
@@ -343,7 +345,7 @@ export default function Navigator({ embedded }) {
   const { user, account } = useAuth();
   const [meta, setMeta] = useState(null);
   const [mine, setMine] = useState(null);   // the signed-in person's saved startup profile ({} when none yet); null while loading
-  const [tab, setTab] = useState("path");
+  const [tab, setTab] = useState(() => (typeof window !== "undefined" && new URLSearchParams(window.location.search).get("tab") === "events" ? "events" : "path"));
   const [profile, setProfile] = useState(DEFAULT);
   const [res, setRes] = useState(null);
   const [loading, setLoading] = useState(false);
@@ -401,14 +403,14 @@ export default function Navigator({ embedded }) {
         <div>
           <p className="eyebrow">Programs</p>
           <h1 className="mt-2 text-3xl sm:text-4xl" style={{ textTransform: "none", letterSpacing: "-0.03em", fontWeight: 800, textWrap: "balance" }}>{eco ? (scope === "hub" ? `Programs & grants at ${eco.hub}` : `Programs & grants across ${eco.wider}`) : account ? "Programs that fit you" : "Canadian programs that fit you"}</h1>
-          <p className="mt-2 text-sm text-muted">{eco ? (scope === "hub" ? (eco.wider ? `What ${eco.hub} runs, plus the grants, loans and programs its team points founders to. Each one is checked against your startup.` : `What ${eco.hub} runs for founders. Each one is checked against your startup.`) : `Every grant, loan, accelerator and mentor we track, with ${eco.hub} programs first.`) : meta ? <>{meta.count} grants, loans, accelerators, mentors and founder communities, hand-checked. Communities you join add their own on top.{account && <> Looking for something to attend? <Link to="/founder-events" className="font-semibold underline underline-offset-2" data-testid="nav-to-events">See upcoming events</Link>.</>}</> : "Loading"}</p>
+          <p className="mt-2 text-sm text-muted">{eco ? (scope === "hub" ? (eco.wider ? `What ${eco.hub} runs, plus the grants, loans and programs its team points founders to. Each one is checked against your startup.` : `What ${eco.hub} runs for founders. Each one is checked against your startup.`) : `Every grant, loan, accelerator and mentor we track, with ${eco.hub} programs first.`) : meta ? <>{meta.count} grants, loans, accelerators, mentors and founder communities, hand-checked. Communities you join add their own on top.{" "}Looking for something to attend? <button type="button" onClick={() => setTab("events")} className="font-semibold underline underline-offset-2" data-testid="nav-to-events">See upcoming events</button>.</> : "Loading"}</p>
         </div>
-        <Segmented items={[["path", "For you"], ["all", "Browse all"], ...(account ? [["saved", itc.interest.some((i) => i.state === "yes") ? `Interested · ${itc.interest.filter((i) => i.state === "yes").length}` : "Interested"]] : []), ["ask", <><span className="sm:hidden">Guide</span><span className="hidden sm:inline">Ask the guide</span></>]]} value={tab} onChange={setTab} />
+        <Segmented items={[["path", "For you"], ["all", "Browse all"], ["events", "Events"], ...(account ? [["saved", itc.interest.some((i) => i.state === "yes") ? `Interested · ${itc.interest.filter((i) => i.state === "yes").length}` : "Interested"]] : []), ["ask", <><span className="sm:hidden">Guide</span><span className="hidden sm:inline">Ask the guide</span></>]]} value={tab} onChange={setTab} />
       </div>
 
       {eco?.wider && account && tab === "path" && <div className="mb-5"><ScopeSwitch eco={eco} scope={scope} onChange={setScope} total={res?.catalog_total} here={scope === "hub" ? (res ? (res.totals?.fit ?? null) : null) : null} /></div>}
       {err && <p className="mb-4 rounded-xl border border-red-500/40 p-3 text-sm text-red-500" role="alert">{err}</p>}
-      {!meta ? <Spinner /> : tab === "all" ? <Directory meta={meta} onOpen={setOpen} imap={itc.byId} eco={eco} /> : tab === "saved" && account ? <InterestedTab itc={itc} onOpen={setOpen} /> : tab === "ask" ? (
+      {!meta ? <Spinner /> : tab === "all" ? <Directory meta={meta} onOpen={setOpen} imap={itc.byId} eco={eco} onEvents={() => setTab("events")} /> : tab === "events" ? <FounderEvents embedded /> : tab === "saved" && account ? <InterestedTab itc={itc} onOpen={setOpen} /> : tab === "ask" ? (
         <div className="mx-auto w-full max-w-3xl"><GuideChat className="h-[min(72dvh,680px)]" signedIn={!!account} hasProfile={!!mine?.stage} startupName={mine?.name} formProfile={account ? apiProfile : undefined} /></div>
       ) : account ? (
         <div className="space-y-6">
