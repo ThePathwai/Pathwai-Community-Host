@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useState } from "react";
-import { Link, Navigate } from "react-router-dom";
+import { Link } from "react-router-dom";
 import { toast } from "sonner";
 import { ArrowRight, ArrowUpRight, CalendarDays, Check, ChevronDown, MapPin, Search, Video } from "lucide-react";
 import { api } from "../lib/api";
@@ -139,14 +139,14 @@ export default function FounderEvents({ embedded }) {
   useEffect(() => { document.title = "Events · Pathwai"; }, []);
 
   useEffect(() => {
-    if (!account) return undefined;
+    if (loading) return undefined;
     const t = setTimeout(() => {
       api.get("/founder-events", { params: { q: q.trim() || undefined, topic: topic || undefined, free: free || undefined, online: online || undefined } })
         .then((r) => { setData(r.data); setError(""); })
         .catch((e) => setError(e?.response?.data?.detail || "Could not load events. Please try again."));
     }, 200);
     return () => clearTimeout(t);
-  }, [account, q, topic, free, online]);
+  }, [account, loading, q, topic, free, online]);
 
   const list = useMemo(() => (data ? (view === "fit" ? data.events : data.others) : []), [data, view]);
   const groups = useMemo(() => {
@@ -156,7 +156,6 @@ export default function FounderEvents({ embedded }) {
   }, [list, limit]);
 
   if (loading) return <Spinner />;
-  if (!account) return <Navigate to="/login" replace />;
   const prov = data?.profile?.province;
   const filtersOn = !!(q || topic || free || online);
 
@@ -167,9 +166,9 @@ export default function FounderEvents({ embedded }) {
       <p className="mt-2 max-w-2xl text-sm text-muted">Upcoming networking, pitch, mentor and learning events{prov ? ` in ${prov} and online` : ""}, picked for what you asked for. Each one links to the organizer's own page.</p>
 
       {data && !data.has_profile && (
-        <Link to="/me?edit=startup" className="mt-5 flex items-center gap-3 rounded-2xl border border-dashed border-line p-4 text-sm transition hover:border-ink/40" data-testid="events-no-profile">
+        <Link to={account ? "/me?edit=startup" : "/signup"} className="mt-5 flex items-center gap-3 rounded-2xl border border-dashed border-line p-4 text-sm transition hover:border-ink/40" data-testid="events-no-profile">
           <CalendarDays className="h-5 w-5 shrink-0 text-muted" aria-hidden />
-          <span className="min-w-0 flex-1"><span className="block font-semibold">Add your startup to see events that fit you</span><span className="block text-muted">These are examples for Ontario. Your province, what you need and your group sharpen the list.</span></span>
+          <span className="min-w-0 flex-1"><span className="block font-semibold">{account ? "Add your startup to see events that fit you" : "Create a free account to see events that fit you"}</span><span className="block text-muted">These are examples for Ontario. Your province, what you need and your group sharpen the list.</span></span>
           <ArrowRight className="h-4 w-4 shrink-0" aria-hidden />
         </Link>
       )}
@@ -208,10 +207,10 @@ export default function FounderEvents({ embedded }) {
           )}
           {list.length > limit && <button type="button" onClick={() => setLimit((l) => l + 12)} className="btn-ghost w-full !py-3 text-sm" data-testid="events-more">Show {Math.min(12, list.length - limit)} more</button>}
           <p className="text-xs text-muted" data-testid="events-note">Gathered from public event pages{data.updated_at ? `, last updated ${dayLabel(data.updated_at)}` : ""}. Details change, so confirm date, price and place on the event page.</p>
-          <SourcesPanel />
+          {account && <SourcesPanel />}
         </div>
       )}
     </div>
   );
-  return embedded ? page : <AccountShell active="events">{page}</AccountShell>;
+  return embedded ? page : account ? <AccountShell active="events">{page}</AccountShell> : <div className="px-4 py-10">{page}</div>;
 }

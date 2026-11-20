@@ -70,11 +70,10 @@ export function eventsCall(method, path, params, ctx) {
   const today = nav.todayIso();
   const a = ctx.account;
   if (path === "/founder-events" && method === "get") {
-    if (!a) return fail(config, 401, "Not authenticated");
-    const raw = (a.startup && Object.keys(a.startup).length) ? { ...a.startup, age: a.age ?? null } : {};
+    const raw = (a && a.startup && Object.keys(a.startup).length) ? { ...a.startup, age: a.age ?? null } : {};
     const { fits, others, profile } = rank(build(today), raw, params || {});
     return ok(config, { profile: { province: profile.province, needs: profile.needs, audiences: profile.audiences }, events: fits, others, totals: { fit: fits.length, others: others.length, all: fits.length + others.length },
-      as_of: today, signed_in: true, has_profile: !!(a.startup || {}).stage, updated_at: new Date().toISOString(), topics: Object.entries(TOPIC_LABEL).map(([key, label]) => ({ key, label })) });
+      as_of: today, signed_in: !!a, has_profile: !!(a && a.startup || {}).stage, updated_at: new Date().toISOString(), topics: Object.entries(TOPIC_LABEL).map(([key, label]) => ({ key, label })) });
   }
   if (path.startsWith("/founder-events/")) return fail(config, 403, "Only Pathwai administrators can see this.");
   return fail(config, 404, "Not found");
