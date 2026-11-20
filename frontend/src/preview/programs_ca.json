@@ -6839,6 +6839,3567 @@
    "link_kind": "apply",
    "link_note": "This goes to the application or sign-up page. Read who it is for first, then fill it in.",
    "link_exact": true
+  },
+  {
+   "id": "black-founders-network",
+   "name": "Black Founders Network",
+   "org": "University of Toronto Entrepreneurship",
+   "level": "academic",
+   "type": "community",
+   "summary": "U of T's network for Black founders, with a path from first idea to growth: BFN Core, Smart Start Awards, BFN Accelerate, BFN Scale, a career programme linking Black youth with Black-owned businesses, and BFN Be Her for Black women.",
+   "amount": "Awards and grants vary by programme; Accelerate is up to $10,000",
+   "stages": [
+    "idea",
+    "prototype",
+    "launched",
+    "revenue",
+    "growth"
+   ],
+   "audiences": [
+    "black"
+   ],
+   "needs": [
+    "network",
+    "mentorship",
+    "funding",
+    "training"
+   ],
+   "sectors": [
+    "any"
+   ],
+   "provinces": [
+    "any"
+   ],
+   "regions": [],
+   "requires": {},
+   "requirements": [
+    "Lead founder self-identifies as Black and is based in Canada",
+    "Some programmes are for U of T students, alumni and staff, or founders nominated by a BFN partner",
+    "The 2026 cycle is closed; the newsletter announces the next one"
+   ],
+   "deadline": {
+    "kind": "closed",
+    "date": null,
+    "note": "Applications for the 2026 cycle are closed; join the newsletter for the next one"
+   },
+   "status": "closed",
+   "phase": "learn",
+   "apply_url": "https://entrepreneurs.utoronto.ca/for-entrepreneurs/black-founders-network/",
+   "source_url": "https://entrepreneurs.utoronto.ca/for-entrepreneurs/black-founders-network/",
+   "verified": "official",
+   "last_checked": "2026-11-19",
+   "restricted_to": [
+    "black"
+   ],
+   "link_label": "University of Toronto Entrepreneurship: Black Founders Network",
+   "link_kind": "program",
+   "link_note": "Read what it offers and who can apply, then follow the steps on the page.",
+   "link_exact": true
+  },
+  {
+   "id": "bfn-accelerate",
+   "name": "BFN Accelerate",
+   "org": "University of Toronto Entrepreneurship (Black Founders Network)",
+   "level": "academic",
+   "type": "accelerator",
+   "summary": "Four-month cohort for early-stage Black-led startups with mentorship, workshops, co-working at the Schwartz Reisman Innovation Campus and introductions to funders. Each startup gets up to $10,000, and the cohort competes for up to $50,000 more.",
+   "amount": "Up to $10,000 per startup ($5,000 for startup services plus $5,000 for hiring); up to $50,000 more in competition",
+   "stages": [
+    "prototype",
+    "launched",
+    "revenue"
+   ],
+   "audiences": [
+    "black"
+   ],
+   "needs": [
+    "funding",
+    "mentorship",
+    "space",
+    "network"
+   ],
+   "sectors": [
+    "any"
+   ],
+   "provinces": [
+    "any"
+   ],
+   "regions": [],
+   "requires": {},
+   "requirements": [
+    "Lead applicant self-identifies as Black, is based in Canada and holds a significant equity stake",
+    "U of T student, alum or staff, or nominated by a BFN community or investment partner",
+    "Early traction such as a prototype, MVP, early revenue or grants",
+    "Complete U of T's IP Education Level 1 course before a final interview"
+   ],
+   "deadline": {
+    "kind": "closed",
+    "date": null,
+    "note": "Closed for the 2026 cycle; the page lists a January opening and a March deadline"
+   },
+   "status": "closed",
+   "phase": "learn",
+   "apply_url": "https://entrepreneurs.utoronto.ca/for-entrepreneurs/bfn-accelerate/",
+   "source_url": "https://entrepreneurs.utoronto.ca/for-entrepreneurs/bfn-accelerate/",
+   "verified": "official",
+   "last_checked": "2026-11-19",
+   "restricted_to": [
+    "black"
+   ],
+   "link_label": "University of Toronto Entrepreneurship (Black Founders Network): BFN Accelerate",
+   "link_kind": "program",
+   "link_note": "Read what it offers and who can apply, then follow the steps on the page.",
+   "link_exact": true
+  },
+  {
+   "id": "bfn-scale",
+   "name": "BFN Scale",
+   "org": "University of Toronto Entrepreneurship (Black Founders Network)",
+   "level": "academic",
+   "type": "accelerator",
+   "summary": "A light-touch, personalised programme for growth-stage Black-led companies, with support on R&D, expansion, hiring, IP, legal and accounting. Extra funding and awards when milestones are met.",
+   "amount": "Not stated",
+   "stages": [
+    "revenue",
+    "growth"
+   ],
+   "audiences": [
+    "black"
+   ],
+   "needs": [
+    "funding",
+    "mentorship",
+    "ip",
+    "legal",
+    "talent"
+   ],
+   "sectors": [
+    "any"
+   ],
+   "provinces": [
+    "any"
+   ],
+   "regions": [],
+   "requires": {},
+   "requirements": [
+    "Black-led company that has raised or earned over $250,000 since it started",
+    "Shown by growing customers and recurring revenue",
+    "Use the express-interest form; no dates are published"
+   ],
+   "deadline": {
+    "kind": "none_published",
+    "date": null,
+    "note": "No dates on the page; it shows a 2025 Scale cohort"
+   },
+   "status": "check",
+   "phase": "scale",
+   "apply_url": "https://forms.cloud.microsoft/r/mafPk2tx7B",
+   "source_url": "https://entrepreneurs.utoronto.ca/for-entrepreneurs/bfn-scale/",
+   "verified": "official",
+   "last_checked": "2026-11-19",
+   "restricted_to": [
+    "black"
+   ],
+   "link_label": "University of Toronto Entrepreneurship (Black Founders Network): BFN Scale",
+   "link_kind": "apply",
+   "link_note": "This goes to the application or sign-up page. Read who it is for first, then fill it in.",
+   "link_exact": true
+  },
+  {
+   "id": "bof-catalyst-program",
+   "name": "BOF Catalyst Program",
+   "org": "Black Opportunity Fund",
+   "level": "nonprofit",
+   "type": "accelerator",
+   "summary": "Business accelerator with training, mentorship and an entrepreneurial certification, plus one-on-one support before and after the programme and annual events. Aimed at clean tech, IT and AI, with wellness support included.",
+   "amount": "No amount stated",
+   "stages": [
+    "revenue",
+    "growth"
+   ],
+   "audiences": [
+    "black"
+   ],
+   "needs": [
+    "training",
+    "mentorship",
+    "funding",
+    "network"
+   ],
+   "sectors": [
+    "any"
+   ],
+   "provinces": [
+    "ON"
+   ],
+   "regions": [
+    "southern-ontario"
+   ],
+   "requires": {},
+   "requirements": [
+    "Self-identify as Black (African, Caribbean, Afro-Latinx, Afro-Indigenous or multiracial)",
+    "Operate in Southern Ontario",
+    "Minimum annual revenue of $250,000",
+    "Incorporated or unincorporated businesses are accepted",
+    "Commit to mentorship, training and wellness activities"
+   ],
+   "deadline": {
+    "kind": "none_published",
+    "date": null,
+    "note": "The page has an Apply Now button but no dates"
+   },
+   "status": "check",
+   "phase": "scale",
+   "apply_url": "https://forms.office.com/Pages/ResponsePage.aspx?id=JsKqeAMvTUuQN7RtVsVSEMquZC5zZ31FrVRs8Id1qptURUExUEIxWlc0MDNDWko3R0REQU9XRUMwUC4u&embed=true",
+   "source_url": "https://blackopportunityfund.ca/programs/support-for-black-entrepreneurs-programs/bof-catalyst-program/",
+   "verified": "official",
+   "last_checked": "2026-11-19",
+   "restricted_to": [
+    "black"
+   ],
+   "link_label": "Black Opportunity Fund: BOF Catalyst Program",
+   "link_kind": "apply",
+   "link_note": "This goes to the application or sign-up page. Read who it is for first, then fill it in.",
+   "link_exact": true
+  },
+  {
+   "id": "bof-black-business-loan-program",
+   "name": "BOF Black Business Loan Program",
+   "org": "Black Opportunity Fund",
+   "level": "nonprofit",
+   "type": "loan",
+   "summary": "Loans of $10,000 to $50,000 for Black entrepreneurs who were turned down by a Canadian financial institution, plus training and business support. TD funds it, and ACBN and BEBC are partners.",
+   "amount": "$10,000 to $50,000",
+   "stages": [
+    "launched",
+    "revenue",
+    "growth"
+   ],
+   "audiences": [
+    "black"
+   ],
+   "needs": [
+    "funding",
+    "training"
+   ],
+   "sectors": [
+    "any"
+   ],
+   "provinces": [
+    "any"
+   ],
+   "regions": [],
+   "requires": {},
+   "requirements": [
+    "Black Canadian entrepreneur with a sustainable business model",
+    "Declined for lending by a Canadian financial institution in the last two years",
+    "For a company, at least 51% Black ownership; owners over 18 and a citizen, permanent resident or Convention Refugee with the right to work",
+    "A web presence, taxes up to date and a personal credit check"
+   ],
+   "deadline": {
+    "kind": "none_published",
+    "date": null,
+    "note": "The page has an Apply Now button but no dates"
+   },
+   "status": "check",
+   "phase": "fund",
+   "apply_url": "https://zfrmz.com/3j3XDUKE5zHrzVuwLFap",
+   "source_url": "https://blackopportunityfund.ca/programs/support-for-black-entrepreneurs-programs/black-business-loan-program/",
+   "verified": "official",
+   "last_checked": "2026-11-19",
+   "restricted_to": [
+    "black"
+   ],
+   "link_label": "BOF Black Business Loan Program",
+   "link_kind": "apply",
+   "link_note": "This goes to the application or sign-up page. Read who it is for first, then fill it in.",
+   "link_exact": true
+  },
+  {
+   "id": "acbn-growth-pathway",
+   "name": "ACBN Growth Pathway",
+   "org": "Afro Caribbean Business Network (ACBN)",
+   "level": "nonprofit",
+   "type": "accelerator",
+   "summary": "A sponsored 12-month programme from Brampton's Afro Caribbean Business Network for coaching and funding readiness. Membership is sponsored if you qualify.",
+   "amount": "Sponsored membership; no amount stated",
+   "stages": [
+    "launched",
+    "revenue",
+    "growth"
+   ],
+   "audiences": [
+    "black"
+   ],
+   "needs": [
+    "mentorship",
+    "funding",
+    "training",
+    "network"
+   ],
+   "sectors": [
+    "any"
+   ],
+   "provinces": [
+    "ON"
+   ],
+   "regions": [
+    "southern-ontario"
+   ],
+   "requires": {},
+   "requirements": [
+    "Aimed at Black entrepreneurs; eligibility details are on the programme page",
+    "ACBN is Black-led and serves southern Ontario",
+    "Check the programme page for the current intake"
+   ],
+   "deadline": {
+    "kind": "none_published",
+    "date": null,
+    "note": "No dates stated on the homepage"
+   },
+   "status": "check",
+   "phase": "scale",
+   "apply_url": "https://acbncanada.com/growth-pathway/",
+   "source_url": "https://acbncanada.com/",
+   "verified": "official",
+   "last_checked": "2026-11-19",
+   "restricted_to": [
+    "black"
+   ],
+   "link_label": "Afro Caribbean Business Network (ACBN): ACBN Growth Pathway",
+   "link_kind": "program",
+   "link_note": "Read what it offers and who can apply, then follow the steps on the page.",
+   "link_exact": true
+  },
+  {
+   "id": "acbn-loan-readiness-program",
+   "name": "ACBN Loan Readiness Program",
+   "org": "Afro Caribbean Business Network (ACBN)",
+   "level": "nonprofit",
+   "type": "mentorship",
+   "summary": "Nine-week programme to get a loan application ready. Free for ACBN members; non-members need a two-month membership.",
+   "amount": "Free for members",
+   "stages": [
+    "launched",
+    "revenue",
+    "growth"
+   ],
+   "audiences": [
+    "black"
+   ],
+   "needs": [
+    "funding",
+    "training"
+   ],
+   "sectors": [
+    "any"
+   ],
+   "provinces": [
+    "ON"
+   ],
+   "regions": [
+    "southern-ontario"
+   ],
+   "requires": {},
+   "requirements": [
+    "A business plan and a three-year cash flow projection",
+    "At least $1,000 in revenue over the past six months",
+    "The last run posted was September 18 to November 13, 2025"
+   ],
+   "deadline": {
+    "kind": "none_published",
+    "date": null,
+    "note": "Last posted cohort ran Sept 18 to Nov 13, 2025; ask about the next one"
+   },
+   "status": "check",
+   "phase": "scale",
+   "apply_url": "https://acbncanada.com/",
+   "source_url": "https://acbncanada.com/",
+   "verified": "official",
+   "last_checked": "2026-11-19",
+   "restricted_to": [
+    "black"
+   ],
+   "link_label": "Afro Caribbean Business Network (ACBN): ACBN Loan Readiness Program",
+   "link_kind": "program",
+   "link_note": "This is the closest official page we found, not a dedicated program page.",
+   "link_exact": false
+  },
+  {
+   "id": "acbn-membership",
+   "name": "ACBN membership",
+   "org": "Afro Caribbean Business Network (ACBN)",
+   "level": "nonprofit",
+   "type": "community",
+   "summary": "Community and Inner Circle tiers for African and Caribbean entrepreneurs, with events, drop-ins, grant-writing sessions and access to ACBN programmes and the MicroLoan fund.",
+   "amount": "Free Community tier; paid Inner Circle tier",
+   "stages": [
+    "idea",
+    "prototype",
+    "launched",
+    "revenue",
+    "growth"
+   ],
+   "audiences": [
+    "black"
+   ],
+   "needs": [
+    "network",
+    "mentorship",
+    "training",
+    "funding"
+   ],
+   "sectors": [
+    "any"
+   ],
+   "provinces": [
+    "ON"
+   ],
+   "regions": [
+    "southern-ontario"
+   ],
+   "requires": {},
+   "requirements": [
+    "Run by a Black-led not-for-profit in Brampton",
+    "Free Community tier; Inner Circle is paid"
+   ],
+   "deadline": {
+    "kind": "rolling",
+    "date": null,
+    "note": "Apply any time; no deadline published"
+   },
+   "status": "rolling",
+   "phase": "learn",
+   "apply_url": "https://acbncanada.com/membership/",
+   "source_url": "https://acbncanada.com/",
+   "verified": "official",
+   "last_checked": "2026-11-19",
+   "restricted_to": [
+    "black"
+   ],
+   "link_label": "Afro Caribbean Business Network (ACBN): ACBN membership",
+   "link_kind": "program",
+   "link_note": "Read what it offers and who can apply, then follow the steps on the page.",
+   "link_exact": true
+  },
+  {
+   "id": "baids-black-business-program",
+   "name": "BAIDS Black Business Program",
+   "org": "Black Business and Professional Association (BBPA)",
+   "level": "nonprofit",
+   "type": "resource",
+   "summary": "Free, tailored advisory help for Black-owned businesses that lack expertise in areas like business and financial planning, accounting, tax filing and marketing. Delivered with volunteer service providers; RBC and FedDev Ontario fund related sessions.",
+   "amount": "Free advisory help (pro bono per BBPA)",
+   "stages": [
+    "idea",
+    "prototype",
+    "launched",
+    "revenue",
+    "growth"
+   ],
+   "audiences": [
+    "black"
+   ],
+   "needs": [
+    "mentorship",
+    "training",
+    "legal"
+   ],
+   "sectors": [
+    "any"
+   ],
+   "provinces": [
+    "any"
+   ],
+   "regions": [],
+   "requires": {},
+   "requirements": [
+    "Black-owned business; applicants are approved by BBPA",
+    "Described from BBPA's 2022 and 2023 releases; the BBPA site gives no intake dates"
+   ],
+   "deadline": {
+    "kind": "none_published",
+    "date": null,
+    "note": "No dates; ask BBPA for current intake"
+   },
+   "status": "check",
+   "phase": "learn",
+   "apply_url": "https://bbpa.org/",
+   "source_url": "https://www.newsfilecorp.com/release/173071/Black-Business-Program-BAIDS-Celebrates-Second-Anniversary-and-Launches-New-Initiatives-to-Empower-Black-Entrepreneurs",
+   "verified": "official",
+   "last_checked": "2026-11-19",
+   "restricted_to": [
+    "black"
+   ],
+   "link_label": "BAIDS Black Business Program",
+   "link_kind": "program",
+   "link_note": "This is the closest official page we found, not a dedicated program page.",
+   "link_exact": false
+  },
+  {
+   "id": "bacel-training",
+   "name": "BACEL training",
+   "org": "Black Business and Professional Association (BBPA)",
+   "level": "nonprofit",
+   "type": "resource",
+   "summary": "Free training, mentoring and networking for Black entrepreneurs, built with TMU's Diversity Institute and funded by the Future Skills Centre. It ran as a pilot for 563 people from November 2021 to June 2023; the BACEL site still lists workshops.",
+   "amount": "Free",
+   "stages": [
+    "idea",
+    "prototype",
+    "launched",
+    "revenue",
+    "growth"
+   ],
+   "audiences": [
+    "black"
+   ],
+   "needs": [
+    "training",
+    "mentorship",
+    "network"
+   ],
+   "sectors": [
+    "any"
+   ],
+   "provinces": [
+    "any"
+   ],
+   "regions": [],
+   "requires": {},
+   "requirements": [
+    "Black entrepreneurs 18 or older; no business requirements",
+    "Pilot phase ended in June 2023; check the BACEL site for current workshops"
+   ],
+   "deadline": {
+    "kind": "none_published",
+    "date": null,
+    "note": "Pilot ended June 2023; ask about current workshops"
+   },
+   "status": "check",
+   "phase": "learn",
+   "apply_url": "https://bacel.bbpa.org/",
+   "source_url": "https://fsc-ccf.ca/engage/bacel/",
+   "verified": "official",
+   "last_checked": "2026-11-19",
+   "restricted_to": [
+    "black"
+   ],
+   "link_label": "Black Business and Professional Association (BBPA): BACEL training",
+   "link_kind": "program",
+   "link_note": "This is the closest official page we found, not a dedicated program page.",
+   "link_exact": false
+  },
+  {
+   "id": "canadian-black-chamber-of-commerce",
+   "name": "Canadian Black Chamber of Commerce",
+   "org": "Canadian Black Chamber of Commerce (CBCC)",
+   "level": "nonprofit",
+   "type": "community",
+   "summary": "Toronto-based chamber for Black businesses with member discounts, events, learning and promotion. Programmes listed on its site include a personal financial literacy course, the AVRO Business Accelerator, Elevate Mentor Protégé, Propel Mastermind and Black Business Direct.",
+   "amount": "Membership fee; programme costs not stated",
+   "stages": [
+    "idea",
+    "prototype",
+    "launched",
+    "revenue",
+    "growth"
+   ],
+   "audiences": [
+    "black"
+   ],
+   "needs": [
+    "network",
+    "mentorship",
+    "training",
+    "customers"
+   ],
+   "sectors": [
+    "any"
+   ],
+   "provinces": [
+    "any"
+   ],
+   "regions": [],
+   "requires": {},
+   "requirements": [
+    "For Black Canadian businesses and entrepreneurs",
+    "Programme details and prices are on subpages"
+   ],
+   "deadline": {
+    "kind": "rolling",
+    "date": null,
+    "note": "Apply any time; no deadline published"
+   },
+   "status": "rolling",
+   "phase": "learn",
+   "apply_url": "https://blackchamber.ca/membership/",
+   "source_url": "https://www.blackchamber.ca/",
+   "verified": "official",
+   "last_checked": "2026-11-19",
+   "restricted_to": [
+    "black"
+   ],
+   "link_label": "Canadian Black Chamber of Commerce",
+   "link_kind": "program",
+   "link_note": "Read what it offers and who can apply, then follow the steps on the page.",
+   "link_exact": true
+  },
+  {
+   "id": "black-ai-venture-accelerator-baiva",
+   "name": "Black AI Venture Accelerator (BAIVA)",
+   "org": "BlackTECH Hub",
+   "level": "nonprofit",
+   "type": "accelerator",
+   "summary": "Hybrid accelerator for Black entrepreneurs building AI ventures, with applied AI programming, technical expertise, business advisory, founder coaching and investment-readiness help. No cost to selected participants.",
+   "amount": "No cost to participants",
+   "stages": [
+    "prototype",
+    "launched",
+    "revenue"
+   ],
+   "audiences": [
+    "black"
+   ],
+   "needs": [
+    "mentorship",
+    "training",
+    "network",
+    "funding"
+   ],
+   "sectors": [
+    "tech"
+   ],
+   "provinces": [
+    "ON"
+   ],
+   "regions": [
+    "southern-ontario"
+   ],
+   "requires": {},
+   "requirements": [
+    "Aimed at Black entrepreneurs in Southern Ontario",
+    "Up to 25 entrepreneurs in Cohort 1",
+    "Registration ran September 1 to 18, 2026, and Cohort 1 started October 1, 2026"
+   ],
+   "deadline": {
+    "kind": "closed",
+    "date": null,
+    "note": "Cohort 1 registration closed Sept 18, 2026; no later cohort listed"
+   },
+   "status": "closed",
+   "phase": "learn",
+   "apply_url": "https://blacktechhub.org/baiva/#apply",
+   "source_url": "https://blacktechhub.org/",
+   "verified": "official",
+   "last_checked": "2026-11-19",
+   "restricted_to": [
+    "black"
+   ],
+   "link_label": "BlackTECH Hub: Black AI Venture Accelerator (BAIVA)",
+   "link_kind": "apply",
+   "link_note": "This goes to the application or sign-up page. Read who it is for first, then fill it in.",
+   "link_exact": true
+  },
+  {
+   "id": "nobellum-idea-and-growth-programs",
+   "name": "Nobellum Idea and Growth Programs",
+   "org": "Nobellum Enterprise",
+   "level": "nonprofit",
+   "type": "accelerator",
+   "summary": "Toronto non-profit for Black-led STEM startups and other underrepresented founders: an Idea Program, a Growth Program with investment-readiness training and coaching from executives in residence, and access to non-dilutive funding. FedDev Ontario backs the CanBlack STEM Project.",
+   "amount": "Not stated per founder",
+   "stages": [
+    "idea",
+    "prototype",
+    "launched",
+    "revenue",
+    "growth"
+   ],
+   "audiences": [
+    "black"
+   ],
+   "needs": [
+    "mentorship",
+    "funding",
+    "ip",
+    "network",
+    "training"
+   ],
+   "sectors": [
+    "any"
+   ],
+   "provinces": [
+    "ON"
+   ],
+   "regions": [
+    "gta"
+   ],
+   "requires": {},
+   "requirements": [
+    "Aimed at Black-led STEM startups",
+    "The only current action on the site is the 2027 waitlist"
+   ],
+   "deadline": {
+    "kind": "closed",
+    "date": null,
+    "note": "Join the 2027 waitlist; no dates are published"
+   },
+   "status": "closed",
+   "phase": "learn",
+   "apply_url": "https://nobellum.typeform.com/waitlist",
+   "source_url": "https://www.nobellum.com/",
+   "verified": "official",
+   "last_checked": "2026-11-19",
+   "restricted_to": [
+    "black"
+   ],
+   "link_label": "Nobellum Idea and Growth Programs",
+   "link_kind": "apply",
+   "link_note": "This goes to the application or sign-up page. Read who it is for first, then fill it in.",
+   "link_exact": true
+  },
+  {
+   "id": "chnge-mker-entrepreneur-incubator",
+   "name": "Chnge Mker Entrepreneur Incubator",
+   "org": "Chnge Mker Innovation Hub",
+   "level": "nonprofit",
+   "type": "incubator",
+   "summary": "Ottawa incubator for Black founders, with business training workshops led by experienced entrepreneurs, advisors and industry leaders, culturally responsive mentorship and a business plan. Other programmes include a FutureProof AI Accelerator and a YES-Tech Program.",
+   "amount": "Not stated",
+   "stages": [
+    "idea",
+    "prototype",
+    "launched"
+   ],
+   "audiences": [
+    "black"
+   ],
+   "needs": [
+    "training",
+    "mentorship",
+    "network"
+   ],
+   "sectors": [
+    "any"
+   ],
+   "provinces": [
+    "ON"
+   ],
+   "regions": [],
+   "requires": {},
+   "requirements": [
+    "Designed for Black founders",
+    "Based in Ottawa; the page does not set a residence rule",
+    "No dates or fees stated"
+   ],
+   "deadline": {
+    "kind": "none_published",
+    "date": null,
+    "note": "No dates stated on the page"
+   },
+   "status": "check",
+   "phase": "learn",
+   "apply_url": "https://chngemkerhub.com/incubator-program/",
+   "source_url": "https://www.chngemkerhub.com",
+   "verified": "official",
+   "last_checked": "2026-11-19",
+   "restricted_to": [
+    "black"
+   ],
+   "link_label": "Chnge Mker Entrepreneur Incubator",
+   "link_kind": "apply",
+   "link_note": "This goes to the application or sign-up page. Read who it is for first, then fill it in.",
+   "link_exact": true
+  },
+  {
+   "id": "black-entrepreneurship-program-fbc",
+   "name": "Black Entrepreneurship Program (FBC)",
+   "org": "Federation of Black Canadians",
+   "level": "nonprofit",
+   "type": "accelerator",
+   "summary": "Free self-guided online programme of six on-demand courses for early-stage Black entrepreneurs, plus pitch workshops and a pitch competition with up to $5,000 in grant funding. The 2026 on-demand cohort is open and reviewed on a rolling basis.",
+   "amount": "Free; pitch winners up to $5,000",
+   "stages": [
+    "idea",
+    "prototype",
+    "launched"
+   ],
+   "audiences": [
+    "black"
+   ],
+   "needs": [
+    "training",
+    "funding",
+    "mentorship"
+   ],
+   "sectors": [
+    "any"
+   ],
+   "provinces": [
+    "any"
+   ],
+   "regions": [],
+   "requires": {},
+   "requirements": [
+    "Early-stage Black entrepreneurs (pre-idea, validating or early revenue)",
+    "The page's summary says it is for Black youth and young adults but sets no age limit",
+    "No city limit is stated"
+   ],
+   "deadline": {
+    "kind": "rolling",
+    "date": null,
+    "note": "2026 on-demand cohort; applications reviewed on a rolling basis"
+   },
+   "status": "rolling",
+   "phase": "learn",
+   "apply_url": "https://forms.zohopublic.com/fbcfcn/form/BlackEntrepreneurshipProgram/formperma/ErS99eQq_hvL_rqsJfPKviXl_vpLR0aXvK-YuzaBfJE",
+   "source_url": "https://fbcfcn.ca/programs/black-entrepreneurship-program/",
+   "verified": "official",
+   "last_checked": "2026-11-19",
+   "restricted_to": [
+    "black"
+   ],
+   "link_label": "Federation of Black Canadians: Black Entrepreneurship Program (FBC)",
+   "link_kind": "apply",
+   "link_note": "This goes to the application or sign-up page. Read who it is for first, then fill it in.",
+   "link_exact": true
+  },
+  {
+   "id": "drabpe-black-business-directory-and-networking",
+   "name": "DRABPE Black business directory and networking",
+   "org": "Durham Region Association of Black Professionals and Entrepreneurs (DRABPE)",
+   "level": "nonprofit",
+   "type": "community",
+   "summary": "Durham Region's association for Black professionals and entrepreneurs: a free listing in its Black Business Directory, paid promotion at $50 a month and networking such as First Fridays. FedDev Ontario funded a Growth Space hub in August 2026.",
+   "amount": "Free directory listing; promotion $50 a month",
+   "stages": [
+    "idea",
+    "prototype",
+    "launched",
+    "revenue",
+    "growth"
+   ],
+   "audiences": [
+    "black"
+   ],
+   "needs": [
+    "network",
+    "customers"
+   ],
+   "sectors": [
+    "any"
+   ],
+   "provinces": [
+    "ON"
+   ],
+   "regions": [
+    "durham"
+   ],
+   "requires": {},
+   "requirements": [
+    "Serves Durham Region",
+    "Programme details are limited on the site"
+   ],
+   "deadline": {
+    "kind": "rolling",
+    "date": null,
+    "note": "Apply any time; no deadline published"
+   },
+   "status": "rolling",
+   "phase": "learn",
+   "apply_url": "https://drabpe.org/",
+   "source_url": "https://drabpe.org/",
+   "verified": "official",
+   "last_checked": "2026-11-19",
+   "restricted_to": [
+    "black"
+   ],
+   "link_label": "Durham Region Association of Black Professionals and Entrepreneurs (DRABPE): DRABPE Black ",
+   "link_kind": "program",
+   "link_note": "This is the closest official page we found, not a dedicated program page.",
+   "link_exact": false
+  },
+  {
+   "id": "black-women-collective",
+   "name": "Black Women Collective",
+   "org": "Black Women Collective",
+   "level": "nonprofit",
+   "type": "community",
+   "summary": "Brampton community for Black women entrepreneurs with cohort coaching, mentor matching, networking events and an online member community. Memberships are currently full and a waitlist is open.",
+   "amount": "Membership tiers; prices not shown",
+   "stages": [
+    "idea",
+    "prototype",
+    "launched",
+    "revenue",
+    "growth"
+   ],
+   "audiences": [
+    "black",
+    "women"
+   ],
+   "needs": [
+    "network",
+    "mentorship",
+    "training"
+   ],
+   "sectors": [
+    "any"
+   ],
+   "provinces": [
+    "ON"
+   ],
+   "regions": [],
+   "requires": {},
+   "requirements": [
+    "For Black women entrepreneurs",
+    "Registered not-for-profit in Brampton",
+    "Current memberships are full; join the waitlist"
+   ],
+   "deadline": {
+    "kind": "none_published",
+    "date": null,
+    "note": "Memberships are full; waitlist open"
+   },
+   "status": "check",
+   "phase": "learn",
+   "apply_url": "https://theblackwomencollective.com/join-the-community/",
+   "source_url": "https://theblackwomencollective.com/",
+   "verified": "official",
+   "last_checked": "2026-11-19",
+   "restricted_to": [
+    "black"
+   ],
+   "link_label": "Black Women Collective",
+   "link_kind": "apply",
+   "link_note": "This goes to the application or sign-up page. Read who it is for first, then fill it in.",
+   "link_exact": true
+  },
+  {
+   "id": "ey-entrepreneurs-access-network",
+   "name": "EY Entrepreneurs Access Network",
+   "org": "EY Canada",
+   "level": "private",
+   "type": "accelerator",
+   "summary": "Free one-year learning programme for owners of private companies, with networking and a one-to-one EY relationship ambassador for coaching. In 2026 it opened to Black, Indigenous, Pan-Asian and Latino owners.",
+   "amount": "Free; no cash funding",
+   "stages": [
+    "revenue",
+    "growth"
+   ],
+   "audiences": [],
+   "needs": [
+    "mentorship",
+    "training",
+    "network"
+   ],
+   "sectors": [
+    "any"
+   ],
+   "provinces": [
+    "any"
+   ],
+   "regions": [],
+   "requires": {},
+   "requirements": [
+    "At least 51% owned by Black, Indigenous, Pan-Asian or Latino individuals",
+    "Private, scalable, for-profit company at least two years old",
+    "At least CA$1 million in annual revenue for the past two years",
+    "No deadline or apply link on the page; use its contact section"
+   ],
+   "deadline": {
+    "kind": "none_published",
+    "date": null,
+    "note": "No dates on the page"
+   },
+   "status": "check",
+   "phase": "scale",
+   "apply_url": "https://www.ey.com/en_ca/services/entrepreneurship/entrepreneurs-access-network",
+   "source_url": "https://www.ey.com/en_ca/services/entrepreneurship/entrepreneurs-access-network",
+   "verified": "official",
+   "last_checked": "2026-11-19",
+   "restricted_to": [],
+   "link_label": "EY Entrepreneurs Access Network",
+   "link_kind": "contact",
+   "link_note": "This is a contact page. Say who you are and what you are building, and ask about fit.",
+   "link_exact": true
+  },
+  {
+   "id": "tribe-accelerate-tech",
+   "name": "Tribe Accelerate Tech",
+   "org": "Tribe Network",
+   "level": "nonprofit",
+   "type": "accelerator",
+   "summary": "Milestone-based programme for racialised tech entrepreneurs across Canada, with coaching and access to capital. Tribe is a Halifax-based network that also runs Black-focused programmes.",
+   "amount": "Amount not stated",
+   "stages": [
+    "prototype",
+    "launched",
+    "revenue"
+   ],
+   "audiences": [],
+   "needs": [
+    "mentorship",
+    "funding",
+    "network"
+   ],
+   "sectors": [
+    "tech"
+   ],
+   "provinces": [
+    "any"
+   ],
+   "regions": [],
+   "requires": {},
+   "requirements": [
+    "For racialised tech entrepreneurs",
+    "The programmes page does not show which intake is open"
+   ],
+   "deadline": {
+    "kind": "none_published",
+    "date": null,
+    "note": "Check the page for the open intake"
+   },
+   "status": "check",
+   "phase": "learn",
+   "apply_url": "https://www.tribenetwork.ca/program/accelerate-tech",
+   "source_url": "https://www.tribenetwork.ca/programs",
+   "verified": "official",
+   "last_checked": "2026-11-19",
+   "restricted_to": [],
+   "link_label": "Tribe Accelerate Tech",
+   "link_kind": "program",
+   "link_note": "Read what it offers and who can apply, then follow the steps on the page.",
+   "link_exact": true
+  },
+  {
+   "id": "monday-girl",
+   "name": "Monday Girl",
+   "org": "Monday Girl",
+   "level": "private",
+   "type": "community",
+   "summary": "Private, application-based members club for professional women and marginalised genders, including founders. Members get mentorship, monthly office hours and a digital group chat, 1:1 executive coaching credits, in-person meetups (quarterly in Toronto) and a discount on the annual Monday Girl Summit.",
+   "amount": "About US$250 a year plus a one-time US$50 fee",
+   "stages": [
+    "idea",
+    "prototype",
+    "launched",
+    "revenue",
+    "growth"
+   ],
+   "audiences": [
+    "women"
+   ],
+   "needs": [
+    "network",
+    "mentorship",
+    "training"
+   ],
+   "sectors": [
+    "any"
+   ],
+   "provinces": [
+    "any"
+   ],
+   "regions": [],
+   "requires": {},
+   "requirements": [
+    "Apply and be accepted; criteria are on mondaygirl.ca",
+    "Welcomes women and marginalised genders; trans women included",
+    "Prices are in US dollars"
+   ],
+   "deadline": {
+    "kind": "rolling",
+    "date": null,
+    "note": "Apply any time; no deadline published"
+   },
+   "status": "rolling",
+   "phase": "learn",
+   "apply_url": "https://dashboard.joinmondaygirl.com/application",
+   "source_url": "https://joinmondaygirl.com/",
+   "verified": "official",
+   "last_checked": "2026-11-19",
+   "restricted_to": [
+    "women"
+   ],
+   "link_label": "Monday Girl",
+   "link_kind": "apply",
+   "link_note": "This goes to the application or sign-up page. Read who it is for first, then fill it in.",
+   "link_exact": true
+  },
+  {
+   "id": "femcity-toronto",
+   "name": "FemCity Toronto",
+   "org": "FemCity",
+   "level": "private",
+   "type": "community",
+   "summary": "Networking and social club for women entrepreneurs, professionals and creatives, with monthly chapter events and online sessions on Mondays at 1 PM and 7 PM ET. Free for 30 days, then $19.99 a month. No business needed.",
+   "amount": "Free for 30 days, then $19.99 CAD a month",
+   "stages": [
+    "idea",
+    "prototype",
+    "launched",
+    "revenue",
+    "growth"
+   ],
+   "audiences": [
+    "women"
+   ],
+   "needs": [
+    "network",
+    "training"
+   ],
+   "sectors": [
+    "any"
+   ],
+   "provinces": [
+    "ON"
+   ],
+   "regions": [],
+   "requires": {},
+   "requirements": [
+    "For women entrepreneurs, professionals and creatives",
+    "Toronto and GTA events plus online sessions"
+   ],
+   "deadline": {
+    "kind": "rolling",
+    "date": null,
+    "note": "Apply any time; no deadline published"
+   },
+   "status": "rolling",
+   "phase": "learn",
+   "apply_url": "https://femcity.com/toronto",
+   "source_url": "https://femcity.com/toronto",
+   "verified": "official",
+   "last_checked": "2026-11-19",
+   "restricted_to": [
+    "women"
+   ],
+   "link_label": "FemCity Toronto",
+   "link_kind": "program",
+   "link_note": "Read what it offers and who can apply, then follow the steps on the page.",
+   "link_exact": true
+  },
+  {
+   "id": "erapreneur",
+   "name": "Erapreneur",
+   "org": "Erapreneur",
+   "level": "private",
+   "type": "community",
+   "summary": "Paid membership community for female entrepreneurs in the GTA: weekly in-person co-working and coffee meetups, monthly networking, workshop replays, an online platform and member discounts.",
+   "amount": "$60 a month on the annual plan; $72 a month on the quarterly plan",
+   "stages": [
+    "idea",
+    "prototype",
+    "launched",
+    "revenue",
+    "growth"
+   ],
+   "audiences": [
+    "women"
+   ],
+   "needs": [
+    "network",
+    "training"
+   ],
+   "sectors": [
+    "any"
+   ],
+   "provinces": [
+    "ON"
+   ],
+   "regions": [
+    "gta"
+   ],
+   "requires": {},
+   "requirements": [
+    "For female entrepreneurs",
+    "In-person events in Toronto, Leaside, Port Credit, Thornhill and Toronto West",
+    "Prices exclude tax"
+   ],
+   "deadline": {
+    "kind": "rolling",
+    "date": null,
+    "note": "Apply any time; no deadline published"
+   },
+   "status": "rolling",
+   "phase": "learn",
+   "apply_url": "https://erapreneur.co/",
+   "source_url": "https://erapreneur.co/",
+   "verified": "official",
+   "last_checked": "2026-11-19",
+   "restricted_to": [
+    "women"
+   ],
+   "link_label": "Erapreneur",
+   "link_kind": "program",
+   "link_note": "This is the closest official page we found, not a dedicated program page.",
+   "link_exact": false
+  },
+  {
+   "id": "work-wives",
+   "name": "Work Wives",
+   "org": "Work Wives",
+   "level": "private",
+   "type": "community",
+   "summary": "Application-based membership community for Canadian women and marginalised-gender founders: a members-only portal, group chat, monthly virtual speaker series, member directory, accountability pods and a book club. A limited number of new members each quarter.",
+   "amount": "$47 CAD a month billed annually, or $57 a month billed monthly; 12-month commitment",
+   "stages": [
+    "launched",
+    "revenue",
+    "growth"
+   ],
+   "audiences": [
+    "women"
+   ],
+   "needs": [
+    "network",
+    "mentorship",
+    "customers"
+   ],
+   "sectors": [
+    "any"
+   ],
+   "provinces": [
+    "any"
+   ],
+   "regions": [],
+   "requires": {},
+   "requirements": [
+    "Women or marginalised-gender founders, CEOs or owners of a business operating in Canada",
+    "Review takes three to five business days; cohorts start every four to six weeks",
+    "Confirm pricing terms with the organisation: the page labels the annual tier both 'one-time' and 'billed annually'"
+   ],
+   "deadline": {
+    "kind": "rolling",
+    "date": null,
+    "note": "Apply any time; no deadline published"
+   },
+   "status": "rolling",
+   "phase": "learn",
+   "apply_url": "https://form.typeform.com/to/yV9pk9Th",
+   "source_url": "https://www.workwives.co/",
+   "verified": "official",
+   "last_checked": "2026-11-19",
+   "restricted_to": [
+    "women"
+   ],
+   "link_label": "Work Wives",
+   "link_kind": "apply",
+   "link_note": "This goes to the application or sign-up page. Read who it is for first, then fill it in.",
+   "link_exact": true
+  },
+  {
+   "id": "the-forum-community",
+   "name": "The Forum community",
+   "org": "The Forum",
+   "level": "nonprofit",
+   "type": "community",
+   "summary": "Free national community for self-identified women, non-binary and trans-femme entrepreneurs, with a weekly virtual connect every Wednesday, events, mentorship and access to programmes such as the E-Series and the Forum Pitch.",
+   "amount": "Free membership",
+   "stages": [
+    "idea",
+    "prototype",
+    "launched",
+    "revenue",
+    "growth"
+   ],
+   "audiences": [
+    "women"
+   ],
+   "needs": [
+    "network",
+    "mentorship",
+    "training",
+    "funding"
+   ],
+   "sectors": [
+    "any"
+   ],
+   "provinces": [
+    "any"
+   ],
+   "regions": [],
+   "requires": {},
+   "requirements": [
+    "Women, non-binary and trans-femme entrepreneurs across Canada",
+    "All industries and stages"
+   ],
+   "deadline": {
+    "kind": "rolling",
+    "date": null,
+    "note": "Apply any time; no deadline published"
+   },
+   "status": "rolling",
+   "phase": "learn",
+   "apply_url": "https://5numl5.share-na3.hsforms.com/2YBVQdOUJSSKQUrmJbtaGlA",
+   "source_url": "https://www.theforum.ca/community",
+   "verified": "official",
+   "last_checked": "2026-11-19",
+   "restricted_to": [
+    "women"
+   ],
+   "link_label": "The Forum community",
+   "link_kind": "apply",
+   "link_note": "This goes to the application or sign-up page. Read who it is for first, then fill it in.",
+   "link_exact": true
+  },
+  {
+   "id": "cawee-membership",
+   "name": "CAWEE membership",
+   "org": "Canadian Association of Women Executives and Entrepreneurs (CAWEE)",
+   "level": "nonprofit",
+   "type": "community",
+   "summary": "Membership association for women executives and entrepreneurs, now in its 50th year, with relationship-building events, a member directory and a member portal. Prices are on its membership page.",
+   "amount": "Membership fee; not shown on the homepage",
+   "stages": [
+    "idea",
+    "prototype",
+    "launched",
+    "revenue",
+    "growth"
+   ],
+   "audiences": [
+    "women"
+   ],
+   "needs": [
+    "network"
+   ],
+   "sectors": [
+    "any"
+   ],
+   "provinces": [
+    "any"
+   ],
+   "regions": [],
+   "requires": {},
+   "requirements": [
+    "For women executives and entrepreneurs",
+    "Apply on the membership page"
+   ],
+   "deadline": {
+    "kind": "rolling",
+    "date": null,
+    "note": "Apply any time; no deadline published"
+   },
+   "status": "rolling",
+   "phase": "learn",
+   "apply_url": "https://cawee.net/apply/",
+   "source_url": "https://cawee.net/",
+   "verified": "official",
+   "last_checked": "2026-11-19",
+   "restricted_to": [
+    "women"
+   ],
+   "link_label": "Canadian Association of Women Executives and Entrepreneurs (CAWEE): CAWEE membership",
+   "link_kind": "apply",
+   "link_note": "This goes to the application or sign-up page. Read who it is for first, then fill it in.",
+   "link_exact": true
+  },
+  {
+   "id": "leading-ladies-connect",
+   "name": "Leading Ladies Connect",
+   "org": "Leading Ladies Connect",
+   "level": "private",
+   "type": "community",
+   "summary": "Toronto-based community for ambitious women in business, with events and conferences, resources and a grants and funding database for women in Canada and the USA that is updated daily.",
+   "amount": "Paid membership; price not shown",
+   "stages": [
+    "idea",
+    "prototype",
+    "launched",
+    "revenue",
+    "growth"
+   ],
+   "audiences": [
+    "women"
+   ],
+   "needs": [
+    "network",
+    "funding"
+   ],
+   "sectors": [
+    "any"
+   ],
+   "provinces": [
+    "any"
+   ],
+   "regions": [],
+   "requires": {},
+   "requirements": [
+    "For women in business, careers, leadership and investing",
+    "Membership is a paid tier"
+   ],
+   "deadline": {
+    "kind": "rolling",
+    "date": null,
+    "note": "Apply any time; no deadline published"
+   },
+   "status": "rolling",
+   "phase": "learn",
+   "apply_url": "https://leadingladiesconnect.com/membership",
+   "source_url": "https://leadingladiesconnect.com/",
+   "verified": "official",
+   "last_checked": "2026-11-19",
+   "restricted_to": [
+    "women"
+   ],
+   "link_label": "Leading Ladies Connect",
+   "link_kind": "apply",
+   "link_note": "This goes to the application or sign-up page. Read who it is for first, then fill it in.",
+   "link_exact": true
+  },
+  {
+   "id": "verity-private-womens-club",
+   "name": "Verity private women's club",
+   "org": "Verity",
+   "level": "private",
+   "type": "community",
+   "summary": "Private women's club in downtown Toronto with co-working, meeting rooms, member events, speaker nights, mentorship, a MasterMIND programme and wellness facilities. Not limited to founders.",
+   "amount": "Individual and corporate memberships plus an initiation fee; prices not shown",
+   "stages": [
+    "idea",
+    "prototype",
+    "launched",
+    "revenue",
+    "growth"
+   ],
+   "audiences": [
+    "women"
+   ],
+   "needs": [
+    "network",
+    "space",
+    "mentorship"
+   ],
+   "sectors": [
+    "any"
+   ],
+   "provinces": [
+    "ON"
+   ],
+   "regions": [
+    "toronto"
+   ],
+   "requires": {},
+   "requirements": [
+    "Women across industries; over 55% of members are senior managers or C-suite",
+    "Apply and book a tour"
+   ],
+   "deadline": {
+    "kind": "rolling",
+    "date": null,
+    "note": "Apply any time; no deadline published"
+   },
+   "status": "rolling",
+   "phase": "learn",
+   "apply_url": "https://www.verity.ca/membership-application",
+   "source_url": "https://www.verity.ca/",
+   "verified": "official",
+   "last_checked": "2026-11-19",
+   "restricted_to": [
+    "women"
+   ],
+   "link_label": "Verity private women's club",
+   "link_kind": "apply",
+   "link_note": "This goes to the application or sign-up page. Read who it is for first, then fill it in.",
+   "link_exact": true
+  },
+  {
+   "id": "fresh-idea-collective",
+   "name": "Fresh Idea Collective",
+   "org": "Fresh Idea Collective",
+   "level": "private",
+   "type": "community",
+   "summary": "Perth County community for women entrepreneurs with meet-ups, masterminds and paid one-to-one mentorship, aimed at building your business voice and visibility.",
+   "amount": "Prices not shown",
+   "stages": [
+    "idea",
+    "prototype",
+    "launched",
+    "revenue",
+    "growth"
+   ],
+   "audiences": [
+    "women"
+   ],
+   "needs": [
+    "network",
+    "mentorship"
+   ],
+   "sectors": [
+    "any"
+   ],
+   "provinces": [
+    "ON"
+   ],
+   "regions": [],
+   "requires": {},
+   "requirements": [
+    "For women entrepreneurs",
+    "Apply for a mastermind through the form on the site"
+   ],
+   "deadline": {
+    "kind": "rolling",
+    "date": null,
+    "note": "Apply any time; no deadline published"
+   },
+   "status": "rolling",
+   "phase": "learn",
+   "apply_url": "https://www.freshideacollective.com/subscribe",
+   "source_url": "https://www.freshideacollective.com/",
+   "verified": "official",
+   "last_checked": "2026-11-19",
+   "restricted_to": [
+    "women"
+   ],
+   "link_label": "Fresh Idea Collective",
+   "link_kind": "program",
+   "link_note": "This is the closest official page we found, not a dedicated program page.",
+   "link_exact": false
+  },
+  {
+   "id": "sisterhood-of-women-in-business",
+   "name": "Sisterhood of Women in Business",
+   "org": "Sisterhood of Women in Business",
+   "level": "private",
+   "type": "community",
+   "summary": "Peer community for women entrepreneurs at three stages (new, established and growth), built around 'Real Talk and Real Tips' sessions with short sharing slots and open networking.",
+   "amount": "Prices not shown",
+   "stages": [
+    "idea",
+    "prototype",
+    "launched",
+    "revenue",
+    "growth"
+   ],
+   "audiences": [
+    "women"
+   ],
+   "needs": [
+    "network",
+    "mentorship"
+   ],
+   "sectors": [
+    "any"
+   ],
+   "provinces": [
+    "ON"
+   ],
+   "regions": [],
+   "requires": {},
+   "requirements": [
+    "For women entrepreneurs",
+    "Join through the form on the site"
+   ],
+   "deadline": {
+    "kind": "rolling",
+    "date": null,
+    "note": "Apply any time; no deadline published"
+   },
+   "status": "rolling",
+   "phase": "learn",
+   "apply_url": "https://forms.gle/KaGZeVP2xVRhXhcv7",
+   "source_url": "https://www.sisterhoodofwib.com/",
+   "verified": "official",
+   "last_checked": "2026-11-19",
+   "restricted_to": [
+    "women"
+   ],
+   "link_label": "Sisterhood of Women in Business",
+   "link_kind": "apply",
+   "link_note": "This is the closest official page we found, not a dedicated program page.",
+   "link_exact": false
+  },
+  {
+   "id": "high-vibe-women",
+   "name": "High Vibe Women",
+   "org": "High Vibe Women",
+   "level": "private",
+   "type": "community",
+   "summary": "Events business running intimate dinners and full-day events for female entrepreneurs across Canada, with a March 2027 event already listed. Vendor, partner and speaker applications are open.",
+   "amount": "Ticket prices not shown",
+   "stages": [
+    "idea",
+    "prototype",
+    "launched",
+    "revenue",
+    "growth"
+   ],
+   "audiences": [
+    "women"
+   ],
+   "needs": [
+    "network",
+    "training"
+   ],
+   "sectors": [
+    "any"
+   ],
+   "provinces": [
+    "any"
+   ],
+   "regions": [],
+   "requires": {},
+   "requirements": [
+    "For female entrepreneurs",
+    "Buy tickets for the next event on the site"
+   ],
+   "deadline": {
+    "kind": "rolling",
+    "date": null,
+    "note": "Apply any time; no deadline published"
+   },
+   "status": "rolling",
+   "phase": "learn",
+   "apply_url": "https://www.highvibewomen.ca/tickets-BF369",
+   "source_url": "https://www.highvibewomen.ca/",
+   "verified": "official",
+   "last_checked": "2026-11-19",
+   "restricted_to": [
+    "women"
+   ],
+   "link_label": "High Vibe Women",
+   "link_kind": "program",
+   "link_note": "Read what it offers and who can apply, then follow the steps on the page.",
+   "link_exact": true
+  },
+  {
+   "id": "brown-girl-angels",
+   "name": "Brown Girl Angels",
+   "org": "Brown Girl Angels",
+   "level": "private",
+   "type": "investor",
+   "summary": "Angel collective of South Asian women investors that reviews deals together; members invest individually. Founders apply for investment through an online form.",
+   "amount": "Cheque sizes not stated",
+   "stages": [
+    "prototype",
+    "launched",
+    "revenue"
+   ],
+   "audiences": [
+    "women"
+   ],
+   "needs": [
+    "funding",
+    "network"
+   ],
+   "sectors": [
+    "any"
+   ],
+   "provinces": [
+    "any"
+   ],
+   "regions": [],
+   "requires": {},
+   "requirements": [
+    "Startup has at least one South Asian female founder",
+    "Investors must be accredited; the collective does not pool capital",
+    "Offices and events in Toronto, New York, Vancouver and other cities"
+   ],
+   "deadline": {
+    "kind": "rolling",
+    "date": null,
+    "note": "Apply any time; no deadline published"
+   },
+   "status": "rolling",
+   "phase": "fund",
+   "apply_url": "https://app.dealum.com/#/company/application/new/239667/nlfse6z50bxnzre7wk52t8ypeocrhng4",
+   "source_url": "https://browngirlangels.com/",
+   "verified": "official",
+   "last_checked": "2026-11-19",
+   "restricted_to": [
+    "women"
+   ],
+   "link_label": "Brown Girl Angels",
+   "link_kind": "apply",
+   "link_note": "This goes to the application or sign-up page. Read who it is for first, then fill it in.",
+   "link_exact": true
+  },
+  {
+   "id": "ella-express",
+   "name": "ELLA Express",
+   "org": "YSpace, York University",
+   "level": "academic",
+   "type": "accelerator",
+   "summary": "Free, self-paced three-month online marketing programme for women entrepreneurs, with modules, a capstone workbook, a certificate and an online community. Powered by Desjardins and funded with the federal Women Entrepreneurship Strategy.",
+   "amount": "Free",
+   "stages": [
+    "idea",
+    "prototype",
+    "launched"
+   ],
+   "audiences": [
+    "women"
+   ],
+   "needs": [
+    "training",
+    "customers",
+    "network"
+   ],
+   "sectors": [
+    "any"
+   ],
+   "provinces": [
+    "any"
+   ],
+   "regions": [],
+   "requires": {},
+   "requirements": [
+    "Women entrepreneurs with a business based in Canada",
+    "Product or service business, pre-revenue or early stage",
+    "A page banner says application forms are temporarily down, so the link may not work"
+   ],
+   "deadline": {
+    "kind": "rolling",
+    "date": null,
+    "note": "Applications open all year round"
+   },
+   "status": "rolling",
+   "phase": "learn",
+   "apply_url": "https://www.yorku.ca/yspace/programs-streams/ella/ella-ascend/ella-express-application/",
+   "source_url": "https://www.yorku.ca/yspace/programs-streams/ella/ella-express-2/",
+   "verified": "official",
+   "last_checked": "2026-11-19",
+   "restricted_to": [
+    "women"
+   ],
+   "link_label": "YSpace: ELLA Express",
+   "link_kind": "apply",
+   "link_note": "This goes to the application or sign-up page. Read who it is for first, then fill it in.",
+   "link_exact": true
+  },
+  {
+   "id": "ella-ascend",
+   "name": "ELLA Ascend",
+   "org": "YSpace, York University",
+   "level": "academic",
+   "type": "accelerator",
+   "summary": "Four-month accelerator for women-led ventures with paying customers, with workshops, mentorship, over $60,000 in start-up resources and a chance at curated advisory support worth $10,000.",
+   "amount": "Over $60,000 in resources; advisory support worth $10,000 for winners",
+   "stages": [
+    "revenue",
+    "growth"
+   ],
+   "audiences": [
+    "women"
+   ],
+   "needs": [
+    "mentorship",
+    "training",
+    "funding",
+    "talent"
+   ],
+   "sectors": [
+    "any"
+   ],
+   "provinces": [
+    "any"
+   ],
+   "regions": [],
+   "requires": {},
+   "requirements": [
+    "Woman with at least 50% ownership of a registered business, non-profit or social enterprise",
+    "Full time on the venture, with at least $100,000 in annual revenue",
+    "Based in Canada; five to seven hours a week",
+    "The 2026 run is finished; applications closed March 16, 2026 and a waitlist is open"
+   ],
+   "deadline": {
+    "kind": "closed",
+    "date": null,
+    "note": "Closed March 16, 2026; join the waitlist"
+   },
+   "status": "closed",
+   "phase": "scale",
+   "apply_url": "https://www.yorku.ca/yspace/programs-streams/ella/ella-ascend/ella-ascend/",
+   "source_url": "https://www.yorku.ca/yspace/programs-streams/ella/ella-ascend/",
+   "verified": "official",
+   "last_checked": "2026-11-19",
+   "restricted_to": [
+    "women"
+   ],
+   "link_label": "YSpace: ELLA Ascend",
+   "link_kind": "apply",
+   "link_note": "This goes to the application or sign-up page. Read who it is for first, then fill it in.",
+   "link_exact": true
+  },
+  {
+   "id": "rhyze-up",
+   "name": "RHYZE UP",
+   "org": "Boundless Accelerator",
+   "level": "nonprofit",
+   "type": "accelerator",
+   "summary": "Mentorship, project support and leadership coaching for women and non-binary-led tech companies in growth mode. Discovery mentorship and coaching are free; the traction phase has a $5,600 subsidy with a $1,200 client contribution.",
+   "amount": "$5,000 to $12,000 in support",
+   "stages": [
+    "revenue",
+    "growth"
+   ],
+   "audiences": [
+    "women"
+   ],
+   "needs": [
+    "mentorship",
+    "training",
+    "funding"
+   ],
+   "sectors": [
+    "any"
+   ],
+   "provinces": [
+    "any"
+   ],
+   "regions": [],
+   "requires": {
+    "incorporated": true,
+    "max_employees": 499
+   },
+   "requirements": [
+    "Woman or non-binary led, owned or co-owned, with decision-making authority",
+    "Technology-enabled, under 500 employees, over $200,000 in annual recurring revenue, incorporated in Canada",
+    "Open across Canada; consultants and locally focused retailers are excluded",
+    "Limited spots; not cohort-based"
+   ],
+   "deadline": {
+    "kind": "none_published",
+    "date": null,
+    "note": "Apply now button is live; no dates stated"
+   },
+   "status": "check",
+   "phase": "scale",
+   "apply_url": "https://boundlessaccelerator.ca/rhyze-up-application/",
+   "source_url": "https://boundlessaccelerator.ca/programs/rhyze-up/",
+   "verified": "official",
+   "last_checked": "2026-11-19",
+   "restricted_to": [
+    "women"
+   ],
+   "link_label": "Boundless Accelerator: RHYZE UP",
+   "link_kind": "apply",
+   "link_note": "This goes to the application or sign-up page. Read who it is for first, then fill it in.",
+   "link_exact": true
+  },
+  {
+   "id": "sheboot",
+   "name": "SheBoot",
+   "org": "SheBoot (Capital Angel Network)",
+   "level": "nonprofit",
+   "type": "accelerator",
+   "summary": "Six-week bootcamp for women-led early-stage tech startups, with workshops and weekly pitch practice with investors, seven months of support from advisors, a coach and a 'ghost board', and a pitch competition for a share of $300,000 in equity investment from 30 women angels.",
+   "amount": "Share of $300,000 in equity investment",
+   "stages": [
+    "prototype",
+    "launched"
+   ],
+   "audiences": [
+    "women"
+   ],
+   "needs": [
+    "funding",
+    "mentorship",
+    "training"
+   ],
+   "sectors": [
+    "tech"
+   ],
+   "provinces": [
+    "any"
+   ],
+   "regions": [],
+   "requires": {},
+   "requirements": [
+    "Women-led early-stage startups, especially tech",
+    "Ottawa-based national non-profit; the application steps are on the for-founders page",
+    "Cost to take part is not stated"
+   ],
+   "deadline": {
+    "kind": "none_published",
+    "date": null,
+    "note": "No cohort dates on the homepage"
+   },
+   "status": "check",
+   "phase": "learn",
+   "apply_url": "https://sheboot.ca/for-founders/",
+   "source_url": "https://sheboot.ca/",
+   "verified": "official",
+   "last_checked": "2026-11-19",
+   "restricted_to": [
+    "women"
+   ],
+   "link_label": "SheBoot program page",
+   "link_kind": "program",
+   "link_note": "Read what it offers and who can apply, then follow the steps on the page.",
+   "link_exact": true
+  },
+  {
+   "id": "movement51-founder-lab",
+   "name": "Movement51 Founder Lab",
+   "org": "Movement51",
+   "level": "nonprofit",
+   "type": "accelerator",
+   "summary": "Fully funded programme for women-led ventures preparing to raise pre-seed or seed in 6 to 12 months: fundraising strategy, an investor-ready pitch deck and data room, governance and finance guidance, a mentor and Demo Day. No fee and no equity.",
+   "amount": "Fully funded; no fee or equity",
+   "stages": [
+    "prototype",
+    "launched"
+   ],
+   "audiences": [
+    "women"
+   ],
+   "needs": [
+    "funding",
+    "mentorship",
+    "network"
+   ],
+   "sectors": [
+    "any"
+   ],
+   "provinces": [
+    "any"
+   ],
+   "regions": [],
+   "requires": {},
+   "requirements": [
+    "Women-led, with a woman co-founder holding significant ownership and an active role",
+    "Incorporated and headquartered in Canada, MVP-ready or in market",
+    "Applications are closed; the next cohort is listed for early 2027"
+   ],
+   "deadline": {
+    "kind": "closed",
+    "date": null,
+    "note": "Closed; next cohort listed for early 2027; join the waitlist"
+   },
+   "status": "closed",
+   "phase": "learn",
+   "apply_url": "https://www.movement51.org/founder-lab-waitlist",
+   "source_url": "https://www.movement51.org/founder-lab",
+   "verified": "official",
+   "last_checked": "2026-11-19",
+   "restricted_to": [
+    "women"
+   ],
+   "link_label": "Movement51 Founder Lab",
+   "link_kind": "apply",
+   "link_note": "This goes to the application or sign-up page. Read who it is for first, then fill it in.",
+   "link_exact": true
+  },
+  {
+   "id": "coralus",
+   "name": "Coralus",
+   "org": "Coralus (formerly SheEO)",
+   "level": "private",
+   "type": "community",
+   "summary": "Global paid community, founded in Toronto, that directs members' money to ventures led by women and non-binary people. The page cites 260+ ventures supported and over $21 million in funding, and says the annual window to join is open.",
+   "amount": "Membership $92 a month or $1,100 a year",
+   "stages": [
+    "idea",
+    "prototype",
+    "launched",
+    "revenue",
+    "growth"
+   ],
+   "audiences": [
+    "women"
+   ],
+   "needs": [
+    "funding",
+    "network"
+   ],
+   "sectors": [
+    "any"
+   ],
+   "provinces": [
+    "any"
+   ],
+   "regions": [],
+   "requires": {},
+   "requirements": [
+    "Membership is paid, not a grant",
+    "Eligibility for ventures is not stated on the page"
+   ],
+   "deadline": {
+    "kind": "rolling",
+    "date": null,
+    "note": "Annual window to join is open; no closing date stated"
+   },
+   "status": "open",
+   "phase": "learn",
+   "apply_url": "https://www.coralus.world/",
+   "source_url": "https://www.coralus.world/",
+   "verified": "official",
+   "last_checked": "2026-11-19",
+   "restricted_to": [
+    "women"
+   ],
+   "link_label": "Coralus program page",
+   "link_kind": "program",
+   "link_note": "This is the closest official page we found, not a dedicated program page.",
+   "link_exact": false
+  },
+  {
+   "id": "femtech-canada-network",
+   "name": "Femtech Canada network",
+   "org": "Femtech Canada (Innovation Factory)",
+   "level": "nonprofit",
+   "type": "community",
+   "summary": "Free network for femtech companies with a directory listing, a Slack community, monthly founder working groups and ecosystem connections.",
+   "amount": "Free to join",
+   "stages": [
+    "idea",
+    "prototype",
+    "launched",
+    "revenue",
+    "growth"
+   ],
+   "audiences": [],
+   "needs": [
+    "network",
+    "mentorship"
+   ],
+   "sectors": [
+    "health"
+   ],
+   "provinces": [
+    "any"
+   ],
+   "regions": [],
+   "requires": {},
+   "requirements": [
+    "Femtech companies (health products for women, girls, non-binary and trans people)",
+    "The directory is Canadian"
+   ],
+   "deadline": {
+    "kind": "rolling",
+    "date": null,
+    "note": "Apply any time; no deadline published"
+   },
+   "status": "rolling",
+   "phase": "learn",
+   "apply_url": "https://femtech.ca/join/",
+   "source_url": "https://femtech.ca/",
+   "verified": "official",
+   "last_checked": "2026-11-19",
+   "restricted_to": [],
+   "link_label": "Femtech Canada network",
+   "link_kind": "apply",
+   "link_note": "This goes to the application or sign-up page. Read who it is for first, then fill it in.",
+   "link_exact": true
+  },
+  {
+   "id": "whealth-medpath",
+   "name": "wHealth MedPath",
+   "org": "Femtech Canada (Innovation Factory)",
+   "level": "nonprofit",
+   "type": "accelerator",
+   "summary": "Commercialisation services for femtech companies: a free product market assessment worth $5,000, then up to $15,000 in services from contract research and manufacturing partners with a 50% cash match.",
+   "amount": "Up to $20,000 in services; Level 2 needs a cash match of up to $7,500",
+   "stages": [
+    "launched",
+    "revenue",
+    "growth"
+   ],
+   "audiences": [],
+   "needs": [
+    "rd",
+    "funding"
+   ],
+   "sectors": [
+    "health"
+   ],
+   "provinces": [
+    "any"
+   ],
+   "regions": [],
+   "requires": {
+    "incorporated": true
+   },
+   "requirements": [
+    "Privately incorporated Canadian femtech company at technology readiness level 6 or higher with a clear clinical application",
+    "Active Femtech Canada member; Ontario firms must also be Innovation Factory clients (both free)",
+    "First come, first served until March 31, 2027 or until funds run out"
+   ],
+   "deadline": {
+    "kind": "fixed",
+    "date": "2027-03-31",
+    "note": "First come, first served until March 31, 2027 or until funding is committed"
+   },
+   "status": "open",
+   "phase": "scale",
+   "apply_url": "https://www.cognitoforms.com/InnovationFactory2/InnovationFactoryWHealthMedPathApplicationForm",
+   "source_url": "https://femtech.ca/whealth-medpath/",
+   "verified": "official",
+   "last_checked": "2026-11-19",
+   "restricted_to": [],
+   "link_label": "Femtech Canada (Innovation Factory): wHealth MedPath",
+   "link_kind": "apply",
+   "link_note": "This goes to the application or sign-up page. Read who it is for first, then fill it in.",
+   "link_exact": true
+  },
+  {
+   "id": "dmz-pre-incubator",
+   "name": "DMZ Pre-Incubator",
+   "org": "DMZ, Toronto Metropolitan University",
+   "level": "academic",
+   "type": "incubator",
+   "summary": "Nine-month programme to close sales and build traction, with a sales bootcamp, one-to-one expert coaching, fundraising prep, workspace at DMZ and over $500,000 in tech credits and discounts. No fee and no board seat, but DMZ takes a 2% common-share stake.",
+   "amount": "No fee; DMZ takes 2% equity; over $500,000 in credits",
+   "stages": [
+    "launched",
+    "revenue"
+   ],
+   "audiences": [],
+   "needs": [
+    "customers",
+    "mentorship",
+    "space",
+    "funding",
+    "tools"
+   ],
+   "sectors": [
+    "tech"
+   ],
+   "provinces": [
+    "any"
+   ],
+   "regions": [],
+   "requires": {},
+   "requirements": [
+    "Software-based, scalable tech business with an MVP ideally in market",
+    "Proven traction such as pilots, partnerships or letters of intent",
+    "At least one full-time founder and an in-house technical lead",
+    "Two intakes a year; the page's status is inconsistent, so confirm with DMZ"
+   ],
+   "deadline": {
+    "kind": "none_published",
+    "date": null,
+    "note": "Page shows both 'Ongoing' and 'Now Closed'; confirm the intake"
+   },
+   "status": "check",
+   "phase": "scale",
+   "apply_url": "https://mydmz.torontomu.ca/portal/apply",
+   "source_url": "https://dmz.torontomu.ca/pre-incubator",
+   "verified": "official",
+   "last_checked": "2026-11-19",
+   "restricted_to": [],
+   "link_label": "DMZ: DMZ Pre-Incubator",
+   "link_kind": "apply",
+   "link_note": "This goes to the application or sign-up page. Read who it is for first, then fill it in.",
+   "link_exact": true
+  },
+  {
+   "id": "amex-backing-canadian-small-businesses",
+   "name": "Amex Backing Canadian Small Businesses",
+   "org": "DMZ, Toronto Metropolitan University",
+   "level": "academic",
+   "type": "grant",
+   "summary": "A $10,000 grant plus about 12 weeks of part-time virtual mentoring from DMZ for small businesses, funded by American Express Canada.",
+   "amount": "$10,000 CAD grant",
+   "stages": [
+    "launched",
+    "revenue",
+    "growth"
+   ],
+   "audiences": [],
+   "needs": [
+    "funding",
+    "mentorship"
+   ],
+   "sectors": [
+    "any"
+   ],
+   "provinces": [
+    "any"
+   ],
+   "regions": [],
+   "requires": {
+    "incorporated": true
+   },
+   "requirements": [
+    "Independent, incorporated business run mainly from Canada, operating on or before January 1, 2026, with 2025 revenue under $1.5 million",
+    "Owner is a Canadian citizen, permanent resident or has valid work authorisation, aged 18 or older",
+    "Government bodies, non-profits and certain franchises are excluded"
+   ],
+   "deadline": {
+    "kind": "closed",
+    "date": null,
+    "note": "The 2026 intake closed May 19, 2026"
+   },
+   "status": "closed",
+   "phase": "fund",
+   "apply_url": "https://dmz.torontomu.ca/amexbackingsmall",
+   "source_url": "https://dmz.torontomu.ca/amexbackingsmall",
+   "verified": "official",
+   "last_checked": "2026-11-19",
+   "restricted_to": [],
+   "link_label": "DMZ: Amex Backing Canadian Small Businesses",
+   "link_kind": "program",
+   "link_note": "Read what it offers and who can apply, then follow the steps on the page.",
+   "link_exact": true
+  },
+  {
+   "id": "newcomer-women-entrepreneurship-program",
+   "name": "Newcomer Women Entrepreneurship Program",
+   "org": "WoodGreen Community Services",
+   "level": "nonprofit",
+   "type": "mentorship",
+   "summary": "Free training and one-on-one counselling with an entrepreneurship coach for newcomer women launching a business in Toronto, with workshops, a pitch deck template and help registering a sole-proprietor business name.",
+   "amount": "Free",
+   "stages": [
+    "idea",
+    "prototype"
+   ],
+   "audiences": [
+    "newcomer"
+   ],
+   "needs": [
+    "training",
+    "mentorship",
+    "legal"
+   ],
+   "sectors": [
+    "any"
+   ],
+   "provinces": [
+    "ON"
+   ],
+   "regions": [
+    "toronto"
+   ],
+   "requires": {},
+   "requirements": [
+    "For women 18 or older who are permanent residents, convention refugees or live-in caregivers",
+    "Focus is launching a business in Toronto",
+    "First come, first served; basic English preferred, other languages can be arranged"
+   ],
+   "deadline": {
+    "kind": "rolling",
+    "date": null,
+    "note": "Sessions run throughout the year"
+   },
+   "status": "rolling",
+   "phase": "learn",
+   "apply_url": "https://woodgreen.org/?p=3869",
+   "source_url": "https://woodgreen.org/?p=3869",
+   "verified": "official",
+   "last_checked": "2026-11-19",
+   "restricted_to": [
+    "newcomer"
+   ],
+   "link_label": "WoodGreen Community Services: Newcomer Women Entrepreneurship Program",
+   "link_kind": "program",
+   "link_note": "Read what it offers and who can apply, then follow the steps on the page.",
+   "link_exact": true
+  },
+  {
+   "id": "self-employment-for-newcomers",
+   "name": "Self-Employment for Newcomers",
+   "org": "Conestoga College",
+   "level": "academic",
+   "type": "mentorship",
+   "summary": "Free 16-week IRCC-funded project for newcomers starting a business, with weekly one-to-one mentoring, workshops and networking on market validation, pricing and legal and financial basics.",
+   "amount": "Free",
+   "stages": [
+    "idea",
+    "prototype"
+   ],
+   "audiences": [
+    "newcomer"
+   ],
+   "needs": [
+    "mentorship",
+    "training",
+    "network"
+   ],
+   "sectors": [
+    "any"
+   ],
+   "provinces": [
+    "ON"
+   ],
+   "regions": [],
+   "requires": {},
+   "requirements": [
+    "Newcomers focused on starting their own business",
+    "Complete the information form on the page; dates are not shown"
+   ],
+   "deadline": {
+    "kind": "none_published",
+    "date": null,
+    "note": "No dates on the page"
+   },
+   "status": "check",
+   "phase": "learn",
+   "apply_url": "https://www.conestogac.on.ca/subsidized-training/english-language-newcomers/self-employment-for-newcomers",
+   "source_url": "https://www.conestogac.on.ca/subsidized-training/english-language-newcomers/self-employment-for-newcomers",
+   "verified": "official",
+   "last_checked": "2026-11-19",
+   "restricted_to": [
+    "newcomer"
+   ],
+   "link_label": "Conestoga College: Self-Employment for Newcomers",
+   "link_kind": "program",
+   "link_note": "Read what it offers and who can apply, then follow the steps on the page.",
+   "link_exact": true
+  },
+  {
+   "id": "mnlc-start-your-business-exl-program",
+   "name": "MNLC start your business (EXL program)",
+   "org": "MNLC",
+   "level": "nonprofit",
+   "type": "mentorship",
+   "summary": "Training and coaching for newcomers on starting a business in Ontario, registering it, finding grants and loans and improving business English, with settlement and wellbeing support. Offices in Toronto and North York.",
+   "amount": "Cost not stated",
+   "stages": [
+    "idea",
+    "prototype"
+   ],
+   "audiences": [
+    "newcomer"
+   ],
+   "needs": [
+    "training",
+    "mentorship",
+    "funding"
+   ],
+   "sectors": [
+    "any"
+   ],
+   "provinces": [
+    "ON"
+   ],
+   "regions": [
+    "toronto"
+   ],
+   "requires": {},
+   "requirements": [
+    "For newcomers; PR, refugee and work permit rules are not stated",
+    "Contact MNLC for dates and eligibility"
+   ],
+   "deadline": {
+    "kind": "none_published",
+    "date": null,
+    "note": "No dates stated"
+   },
+   "status": "check",
+   "phase": "learn",
+   "apply_url": "https://mnlc.ca/start-your-business/",
+   "source_url": "https://mnlc.ca/start-your-business/",
+   "verified": "official",
+   "last_checked": "2026-11-19",
+   "restricted_to": [
+    "newcomer"
+   ],
+   "link_label": "MNLC start your business (EXL program)",
+   "link_kind": "contact",
+   "link_note": "This is a contact page. Say who you are and what you are building, and ask about fit.",
+   "link_exact": true
+  },
+  {
+   "id": "entrepreneuriatseo-incubator",
+   "name": "EntrepreneuriatSÉO incubator",
+   "org": "Société économique de l'Ontario (SÉO)",
+   "level": "nonprofit",
+   "type": "incubator",
+   "summary": "Virtual French-language incubator with two 14-week cohorts a year (September and January): weekly workshops, one hour of coaching a week, 200+ resources and a pitch to a jury for a $1,000 Desjardins award. It has a stream for immigrant entrepreneurs.",
+   "amount": "Cost not stated; $1,000 pitch award",
+   "stages": [
+    "idea",
+    "prototype",
+    "launched"
+   ],
+   "audiences": [],
+   "needs": [
+    "training",
+    "mentorship",
+    "funding"
+   ],
+   "sectors": [
+    "any"
+   ],
+   "provinces": [
+    "ON"
+   ],
+   "regions": [],
+   "requires": {},
+   "requirements": [
+    "Ontarians who want to start a business",
+    "The programme runs in French only",
+    "The sign-up page lists tracks by season; confirm which is open"
+   ],
+   "deadline": {
+    "kind": "none_published",
+    "date": null,
+    "note": "Cohorts start in September and January; confirm which is open"
+   },
+   "status": "check",
+   "phase": "learn",
+   "apply_url": "https://www.entrepreneuriatseo.ca/incubateur",
+   "source_url": "https://www.seo-ont.ca/en/entrepreneuriat",
+   "verified": "official",
+   "last_checked": "2026-11-19",
+   "restricted_to": [],
+   "link_label": "Société économique de l'Ontario (SÉO): EntrepreneuriatSÉO incubator",
+   "link_kind": "apply",
+   "link_note": "This goes to the application or sign-up page. Read who it is for first, then fill it in.",
+   "link_exact": true
+  },
+  {
+   "id": "rise-helps-small-business-programs",
+   "name": "Rise Helps small business programs",
+   "org": "Rise Asset Development",
+   "level": "nonprofit",
+   "type": "loan",
+   "summary": "Toronto charity with group training, loans of $500 to $10,000 for loan-ready entrepreneurs, a start-up grant at the end of the training path and mentoring from a national volunteer network. For people with mental health, substance use or addiction challenges.",
+   "amount": "Loans of $500 to $10,000",
+   "stages": [
+    "idea",
+    "prototype",
+    "launched"
+   ],
+   "audiences": [],
+   "needs": [
+    "funding",
+    "training",
+    "mentorship"
+   ],
+   "sectors": [
+    "any"
+   ],
+   "provinces": [
+    "any"
+   ],
+   "regions": [],
+   "requires": {},
+   "requirements": [
+    "For entrepreneurs with mental health, substance use or addiction-related challenges",
+    "Loans go to eligible, loan-ready entrepreneurs",
+    "Rise does not provide mental health services or crisis support"
+   ],
+   "deadline": {
+    "kind": "rolling",
+    "date": null,
+    "note": "Apply any time; no deadline published"
+   },
+   "status": "rolling",
+   "phase": "fund",
+   "apply_url": "https://www.risehelps.ca/our-programs",
+   "source_url": "https://www.risehelps.ca/",
+   "verified": "official",
+   "last_checked": "2026-11-19",
+   "restricted_to": [],
+   "link_label": "Rise Helps small business programs",
+   "link_kind": "program",
+   "link_note": "Read what it offers and who can apply, then follow the steps on the page.",
+   "link_exact": true
+  },
+  {
+   "id": "feddev-ontario-indigenous-business-funding",
+   "name": "FedDev Ontario Indigenous business funding",
+   "org": "FedDev Ontario",
+   "level": "federal",
+   "type": "grant",
+   "summary": "Contributions toward projects by Indigenous businesses and entrepreneurs in southern Ontario, such as equipment, new products, trade shows and market development. There is no deadline and no application form to complete before you contact the Indigenous team.",
+   "amount": "Not stated on the page",
+   "stages": [
+    "launched",
+    "revenue",
+    "growth"
+   ],
+   "audiences": [
+    "indigenous"
+   ],
+   "needs": [
+    "funding"
+   ],
+   "sectors": [
+    "any"
+   ],
+   "provinces": [
+    "ON"
+   ],
+   "regions": [
+    "southern-ontario"
+   ],
+   "requires": {},
+   "requirements": [
+    "Indigenous businesses and entrepreneurs, Indigenous economic development corporations and not-for-profits",
+    "Southern Ontario only (37 census divisions, Cornwall to Owen Sound and Pembroke to Windsor)",
+    "Contact indigenous-autochtones@feddevontario.gc.ca for full criteria"
+   ],
+   "deadline": {
+    "kind": "rolling",
+    "date": null,
+    "note": "No deadline; contact the team before applying"
+   },
+   "status": "rolling",
+   "phase": "fund",
+   "apply_url": "https://feddev-ontario.canada.ca/en/indigenous-businesses-and-organizations",
+   "source_url": "https://feddev-ontario.canada.ca/en/indigenous-businesses-and-organizations",
+   "verified": "official",
+   "last_checked": "2026-11-19",
+   "restricted_to": [
+    "indigenous"
+   ],
+   "link_label": "FedDev Ontario Indigenous business funding",
+   "link_kind": "contact",
+   "link_note": "This is a contact page. Say who you are and what you are building, and ask about fit.",
+   "link_exact": true
+  },
+  {
+   "id": "indigenous-women-entrepreneurship-program",
+   "name": "Indigenous Women Entrepreneurship Program",
+   "org": "Nishnawbe Aski Development Fund (NADF)",
+   "level": "nonprofit",
+   "type": "grant",
+   "summary": "Project funding up to $25,000 for Indigenous women-led businesses in Northern Ontario: 45% grant, 50% repayable loan at 5% interest over up to five years, and a 5% client contribution, with one-on-one business planning and workshops. FedNor funds it with NACCA.",
+   "amount": "Up to $25,000 (45% grant, 50% loan, 5% your contribution)",
+   "stages": [
+    "idea",
+    "prototype",
+    "launched",
+    "revenue",
+    "growth"
+   ],
+   "audiences": [
+    "indigenous"
+   ],
+   "needs": [
+    "funding",
+    "training",
+    "mentorship"
+   ],
+   "sectors": [
+    "any"
+   ],
+   "provinces": [
+    "ON"
+   ],
+   "regions": [
+    "northern-ontario"
+   ],
+   "requires": {},
+   "requirements": [
+    "Indigenous woman over 18 who owns at least 51% of the business",
+    "Business located in NADF's service area, Northern Ontario",
+    "Cannot be combined with the youth programme",
+    "Early applications are encouraged because funding is limited"
+   ],
+   "deadline": {
+    "kind": "none_published",
+    "date": null,
+    "note": "Limited funding; no dates stated"
+   },
+   "status": "check",
+   "phase": "fund",
+   "apply_url": "https://www.nadf.org/indigenous-women",
+   "source_url": "https://www.nadf.org/indigenous-women",
+   "verified": "official",
+   "last_checked": "2026-11-19",
+   "restricted_to": [
+    "indigenous"
+   ],
+   "link_label": "Nishnawbe Aski Development Fund (NADF): Indigenous Women Entrepreneurship Program",
+   "link_kind": "contact",
+   "link_note": "This is a contact page. Say who you are and what you are building, and ask about fit.",
+   "link_exact": true
+  },
+  {
+   "id": "indigenous-youth-entrepreneurship-program",
+   "name": "Indigenous Youth Entrepreneurship Program",
+   "org": "Nishnawbe Aski Development Fund (NADF)",
+   "level": "nonprofit",
+   "type": "grant",
+   "summary": "Project funding up to $25,000 for Indigenous youth businesses in Northern Ontario: 45% grant, 50% repayable loan at 5% interest and a 5% client contribution, plus business planning and training. FedNor funds it with NACCA.",
+   "amount": "Up to $25,000 (45% grant, 50% loan, 5% your contribution)",
+   "stages": [
+    "idea",
+    "prototype",
+    "launched",
+    "revenue",
+    "growth"
+   ],
+   "audiences": [
+    "indigenous"
+   ],
+   "needs": [
+    "funding",
+    "training",
+    "mentorship"
+   ],
+   "sectors": [
+    "any"
+   ],
+   "provinces": [
+    "ON"
+   ],
+   "regions": [
+    "northern-ontario"
+   ],
+   "requires": {
+    "age_min": 18,
+    "age_max": 39
+   },
+   "requirements": [
+    "Indigenous youth aged 18 to 39 who own at least 51% of the business",
+    "Business located in NADF's service area, Northern Ontario",
+    "Cannot be combined with the women's programme",
+    "Early applications are encouraged because funding is limited"
+   ],
+   "deadline": {
+    "kind": "none_published",
+    "date": null,
+    "note": "Limited funding; no dates stated"
+   },
+   "status": "check",
+   "phase": "fund",
+   "apply_url": "https://www.nadf.org/indigenous-youth",
+   "source_url": "https://www.nadf.org/indigenous-youth",
+   "verified": "official",
+   "last_checked": "2026-11-19",
+   "restricted_to": [
+    "indigenous"
+   ],
+   "link_label": "Nishnawbe Aski Development Fund (NADF): Indigenous Youth Entrepreneurship Program",
+   "link_kind": "contact",
+   "link_note": "This is a contact page. Say who you are and what you are building, and ask about fit.",
+   "link_exact": true
+  },
+  {
+   "id": "metis-voyageur-development-fund",
+   "name": "Métis Voyageur Development Fund",
+   "org": "Métis Voyageur Development Fund (MVDF)",
+   "level": "nonprofit",
+   "type": "loan",
+   "summary": "Preferential financing up to $1.5 million for Ontario Métis businesses, with help preparing a business plan and non-repayable support for the plan as part of a loan application.",
+   "amount": "Up to $1,500,000",
+   "stages": [
+    "launched",
+    "revenue",
+    "growth"
+   ],
+   "audiences": [
+    "indigenous"
+   ],
+   "needs": [
+    "funding"
+   ],
+   "sectors": [
+    "any"
+   ],
+   "provinces": [
+    "ON"
+   ],
+   "regions": [],
+   "requires": {},
+   "requirements": [
+    "At least one owner is Métis and holds 50% or more",
+    "Business operates in Ontario; Métis Nation of Ontario citizens and members of listed Métis organisations are recognised",
+    "Personal guarantees are required; less Métis ownership is considered case by case"
+   ],
+   "deadline": {
+    "kind": "none_published",
+    "date": null,
+    "note": "No dates stated"
+   },
+   "status": "check",
+   "phase": "fund",
+   "apply_url": "https://mvdf.ca/apply/",
+   "source_url": "https://www.mvdf.ca/",
+   "verified": "official",
+   "last_checked": "2026-11-19",
+   "restricted_to": [
+    "indigenous"
+   ],
+   "link_label": "Métis Voyageur Development Fund",
+   "link_kind": "contact",
+   "link_note": "This is a contact page. Say who you are and what you are building, and ask about fit.",
+   "link_exact": true
+  },
+  {
+   "id": "waubetek-business-financing",
+   "name": "Waubetek business financing",
+   "org": "Waubetek Business Development Corporation",
+   "level": "nonprofit",
+   "type": "loan",
+   "summary": "Indigenous-controlled lender in Birch Island for start-ups, expansions and acquisitions, with workshops and micro-loan programmes for Indigenous women and youth, plus an e-commerce grant programme.",
+   "amount": "Amounts not stated on the homepage",
+   "stages": [
+    "idea",
+    "prototype",
+    "launched",
+    "revenue",
+    "growth"
+   ],
+   "audiences": [
+    "indigenous"
+   ],
+   "needs": [
+    "funding",
+    "training"
+   ],
+   "sectors": [
+    "any"
+   ],
+   "provinces": [
+    "ON"
+   ],
+   "regions": [
+    "northern-ontario"
+   ],
+   "requires": {},
+   "requirements": [
+    "Documented Aboriginal ancestry and an Aboriginal-majority-owned business",
+    "Located in the Northeast Ontario service area",
+    "Full-time entrepreneur contributing 10% unencumbered equity",
+    "Of age of majority"
+   ],
+   "deadline": {
+    "kind": "none_published",
+    "date": null,
+    "note": "No dates stated"
+   },
+   "status": "check",
+   "phase": "fund",
+   "apply_url": "https://www.waubetek.com/apply-now",
+   "source_url": "https://www.waubetek.com/",
+   "verified": "official",
+   "last_checked": "2026-11-19",
+   "restricted_to": [
+    "indigenous"
+   ],
+   "link_label": "Waubetek business financing",
+   "link_kind": "apply",
+   "link_note": "This goes to the application or sign-up page. Read who it is for first, then fill it in.",
+   "link_exact": true
+  },
+  {
+   "id": "tecumseh-community-development-corporation",
+   "name": "Tecumseh Community Development Corporation",
+   "org": "Tecumseh Community Development Corporation",
+   "level": "nonprofit",
+   "type": "loan",
+   "summary": "First Nations-controlled lender serving ten First Nations in southern Ontario with loans, loan guarantees and equity investments, plus mentoring and coaching. There is a short micro-loan form for loans under $5,000 and a longer form for larger ones.",
+   "amount": "Loans under $5,000 and over $5,000; no maximum stated",
+   "stages": [
+    "idea",
+    "prototype",
+    "launched",
+    "revenue",
+    "growth"
+   ],
+   "audiences": [
+    "indigenous"
+   ],
+   "needs": [
+    "funding",
+    "mentorship"
+   ],
+   "sectors": [
+    "any"
+   ],
+   "provinces": [
+    "ON"
+   ],
+   "regions": [
+    "southern-ontario"
+   ],
+   "requires": {},
+   "requirements": [
+    "First Nations focus; the site lists ten communities served",
+    "Southern Ontario (Sarnia office)",
+    "Ownership share and age limits are not stated"
+   ],
+   "deadline": {
+    "kind": "none_published",
+    "date": null,
+    "note": "No dates stated"
+   },
+   "status": "check",
+   "phase": "fund",
+   "apply_url": "https://tcdc.on.ca/assets/files/Micro-loanapp.pdf",
+   "source_url": "https://tcdc.on.ca/",
+   "verified": "official",
+   "last_checked": "2026-11-19",
+   "restricted_to": [
+    "indigenous"
+   ],
+   "link_label": "Tecumseh Community Development Corporation",
+   "link_kind": "apply",
+   "link_note": "This goes to the application or sign-up page. Read who it is for first, then fill it in.",
+   "link_exact": true
+  },
+  {
+   "id": "two-rivers-indigenous-business-financing-program",
+   "name": "Two Rivers Indigenous Business Financing Program",
+   "org": "Two Rivers Community Development Centre",
+   "level": "nonprofit",
+   "type": "loan",
+   "summary": "Aboriginal-controlled economic development corporation in Ohsweken offering financing and support to Aboriginal-owned and controlled businesses in its service area. Details are on its Indigenous Business Financing Program page.",
+   "amount": "Not stated",
+   "stages": [
+    "idea",
+    "prototype",
+    "launched",
+    "revenue",
+    "growth"
+   ],
+   "audiences": [
+    "indigenous"
+   ],
+   "needs": [
+    "funding"
+   ],
+   "sectors": [
+    "any"
+   ],
+   "provinces": [
+    "ON"
+   ],
+   "regions": [
+    "southern-ontario"
+   ],
+   "requires": {},
+   "requirements": [
+    "Aboriginal-owned and controlled businesses in the Two Rivers service area",
+    "Call or email to start; no application link on the contact page"
+   ],
+   "deadline": {
+    "kind": "none_published",
+    "date": null,
+    "note": "No dates stated"
+   },
+   "status": "check",
+   "phase": "fund",
+   "apply_url": "https://tworivers.ca/contact/",
+   "source_url": "https://www.tworivers.ca/",
+   "verified": "official",
+   "last_checked": "2026-11-19",
+   "restricted_to": [
+    "indigenous"
+   ],
+   "link_label": "Two Rivers Indigenous Business Financing Program",
+   "link_kind": "contact",
+   "link_note": "This is the closest official page we found, not a dedicated program page.",
+   "link_exact": false
+  },
+  {
+   "id": "canadian-council-for-indigenous-business-ccib",
+   "name": "Canadian Council for Indigenous Business (CCIB)",
+   "org": "Canadian Council for Indigenous Business",
+   "level": "nonprofit",
+   "type": "community",
+   "summary": "National membership organisation with a certification programme for Indigenous businesses, a procurement programme, networks, a member directory, tools and grants, events and awards. Open to Indigenous businesses and to companies that want Indigenous partners.",
+   "amount": "Membership fees not shown",
+   "stages": [
+    "idea",
+    "prototype",
+    "launched",
+    "revenue",
+    "growth"
+   ],
+   "audiences": [],
+   "needs": [
+    "network",
+    "customers",
+    "funding",
+    "training"
+   ],
+   "sectors": [
+    "any"
+   ],
+   "provinces": [
+    "any"
+   ],
+   "regions": [],
+   "requires": {},
+   "requirements": [
+    "Certification needs a majority Indigenous-owned and controlled business",
+    "Non-Indigenous companies can join to build partnerships"
+   ],
+   "deadline": {
+    "kind": "rolling",
+    "date": null,
+    "note": "Apply any time; no deadline published"
+   },
+   "status": "rolling",
+   "phase": "learn",
+   "apply_url": "https://www.ccib.ca/membership/",
+   "source_url": "https://www.ccib.ca/",
+   "verified": "official",
+   "last_checked": "2026-11-19",
+   "restricted_to": [],
+   "link_label": "Canadian Council for Indigenous Business (CCIB)",
+   "link_kind": "program",
+   "link_note": "Read what it offers and who can apply, then follow the steps on the page.",
+   "link_exact": true
+  },
+  {
+   "id": "inuit-women-in-business-network",
+   "name": "Inuit Women in Business Network",
+   "org": "Pauktuutit Inuit Women of Canada",
+   "level": "nonprofit",
+   "type": "community",
+   "summary": "Free network and resources for Inuit women who own or want to start a business, at any stage and in any type of business. No experience is required.",
+   "amount": "Free",
+   "stages": [
+    "idea",
+    "prototype",
+    "launched",
+    "revenue",
+    "growth"
+   ],
+   "audiences": [
+    "indigenous"
+   ],
+   "needs": [
+    "network",
+    "mentorship"
+   ],
+   "sectors": [
+    "any"
+   ],
+   "provinces": [
+    "any"
+   ],
+   "regions": [],
+   "requires": {},
+   "requirements": [
+    "Any Inuk woman anywhere in Canada, whatever her age or ability",
+    "No join link appears on the page; use its contact details"
+   ],
+   "deadline": {
+    "kind": "rolling",
+    "date": null,
+    "note": "Apply any time; no deadline published"
+   },
+   "status": "rolling",
+   "phase": "learn",
+   "apply_url": "https://pauktuutit.ca/iwbn/",
+   "source_url": "https://pauktuutit.ca/iwbn/",
+   "verified": "official",
+   "last_checked": "2026-11-19",
+   "restricted_to": [
+    "indigenous"
+   ],
+   "link_label": "Pauktuutit Inuit Women of Canada: Inuit Women in Business Network",
+   "link_kind": "program",
+   "link_note": "Read what it offers and who can apply, then follow the steps on the page.",
+   "link_exact": true
+  },
+  {
+   "id": "techto",
+   "name": "TechTO",
+   "org": "TechTO",
+   "level": "private",
+   "type": "community",
+   "summary": "Toronto tech community with monthly talks, open mic, networking, a podcast and a newsletter. Paid events are discounted or free for members, and several late-2026 events are already sold out.",
+   "amount": "Membership price not shown; events from about $35",
+   "stages": [
+    "idea",
+    "prototype",
+    "launched",
+    "revenue",
+    "growth"
+   ],
+   "audiences": [],
+   "needs": [
+    "network",
+    "talent",
+    "customers"
+   ],
+   "sectors": [
+    "any"
+   ],
+   "provinces": [
+    "ON"
+   ],
+   "regions": [
+    "gta"
+   ],
+   "requires": {},
+   "requirements": [
+    "For tech leaders, founders, professionals and investors",
+    "Based in Toronto"
+   ],
+   "deadline": {
+    "kind": "rolling",
+    "date": null,
+    "note": "Apply any time; no deadline published"
+   },
+   "status": "rolling",
+   "phase": "learn",
+   "apply_url": "https://www.techto.org/memberships",
+   "source_url": "https://www.techto.org/",
+   "verified": "official",
+   "last_checked": "2026-11-19",
+   "restricted_to": [],
+   "link_label": "TechTO program page",
+   "link_kind": "program",
+   "link_note": "Read what it offers and who can apply, then follow the steps on the page.",
+   "link_exact": true
+  },
+  {
+   "id": "startup-networking-and-founder-ecosystem-toronto",
+   "name": "Startup Networking and Founder Ecosystem Toronto",
+   "org": "Ascent Valley (Meetup)",
+   "level": "private",
+   "type": "community",
+   "summary": "Meetup group with curated networking mixers, startup pitch sessions and co-founder matching for founders, investors, engineers and operators. Over 650 members, with events listed for November 24 and December 8, 2026.",
+   "amount": "Free to join; tickets for some events",
+   "stages": [
+    "idea",
+    "prototype",
+    "launched",
+    "revenue",
+    "growth"
+   ],
+   "audiences": [],
+   "needs": [
+    "network",
+    "talent",
+    "funding"
+   ],
+   "sectors": [
+    "any"
+   ],
+   "provinces": [
+    "ON"
+   ],
+   "regions": [
+    "gta"
+   ],
+   "requires": {},
+   "requirements": [
+    "Open to founders, investors, engineers, operators and job seekers",
+    "RSVP runs through Eventbrite or Luma"
+   ],
+   "deadline": {
+    "kind": "rolling",
+    "date": null,
+    "note": "Apply any time; no deadline published"
+   },
+   "status": "rolling",
+   "phase": "learn",
+   "apply_url": "https://www.meetup.com/startup-networking-founder-ecosystem-toronto/",
+   "source_url": "https://www.meetup.com/startup-networking-founder-ecosystem-toronto/",
+   "verified": "third_party",
+   "last_checked": "2026-11-19",
+   "restricted_to": [],
+   "link_label": "Ascent Valley (Meetup): Startup Networking and Founder Ecosystem Toronto",
+   "link_kind": "program",
+   "link_note": "Read what it offers and who can apply, then follow the steps on the page.",
+   "link_exact": true
+  },
+  {
+   "id": "startup-grind-toronto",
+   "name": "Startup Grind Toronto",
+   "org": "Startup Grind",
+   "level": "private",
+   "type": "community",
+   "summary": "Toronto chapter of the global Startup Grind community: monthly founder interviews, curated pitch nights and networking mixers. The global Startup Membership is described as free.",
+   "amount": "Free membership per the page",
+   "stages": [
+    "idea",
+    "prototype",
+    "launched",
+    "revenue",
+    "growth"
+   ],
+   "audiences": [],
+   "needs": [
+    "network",
+    "mentorship"
+   ],
+   "sectors": [
+    "any"
+   ],
+   "provinces": [
+    "ON"
+   ],
+   "regions": [
+    "gta"
+   ],
+   "requires": {},
+   "requirements": [
+    "For founders, builders and innovators",
+    "Over 7,800 Toronto members"
+   ],
+   "deadline": {
+    "kind": "rolling",
+    "date": null,
+    "note": "Apply any time; no deadline published"
+   },
+   "status": "rolling",
+   "phase": "learn",
+   "apply_url": "https://www.startupgrind.com/Join",
+   "source_url": "https://www.startupgrind.com/toronto/",
+   "verified": "official",
+   "last_checked": "2026-11-19",
+   "restricted_to": [],
+   "link_label": "Startup Grind Toronto",
+   "link_kind": "apply",
+   "link_note": "This goes to the application or sign-up page. Read who it is for first, then fill it in.",
+   "link_exact": true
+  },
+  {
+   "id": "foundersboost-toronto",
+   "name": "FoundersBoost Toronto",
+   "org": "FoundersBoost",
+   "level": "private",
+   "type": "accelerator",
+   "summary": "Six-week pre-accelerator for early-stage tech founders with mentorship, weekly focus sessions, a Demo Day and partner perks. Takes no equity and charges no fees.",
+   "amount": "Free; no equity",
+   "stages": [
+    "prototype",
+    "launched"
+   ],
+   "audiences": [],
+   "needs": [
+    "mentorship",
+    "network",
+    "tools"
+   ],
+   "sectors": [
+    "tech"
+   ],
+   "provinces": [
+    "ON"
+   ],
+   "regions": [
+    "gta"
+   ],
+   "requires": {},
+   "requirements": [
+    "Early-stage tech founders with initial customer traction",
+    "Diverse and underrepresented founders are encouraged to apply",
+    "The page's application window closed September 15; use the waitlist"
+   ],
+   "deadline": {
+    "kind": "none_published",
+    "date": null,
+    "note": "Window listed as open through September 15; confirm the next cohort"
+   },
+   "status": "check",
+   "phase": "learn",
+   "apply_url": "https://www.foundersboost.com/pre-accelerator#location",
+   "source_url": "https://www.foundersboost.com/programs/toronto",
+   "verified": "official",
+   "last_checked": "2026-11-19",
+   "restricted_to": [],
+   "link_label": "FoundersBoost Toronto",
+   "link_kind": "apply",
+   "link_note": "This goes to the application or sign-up page. Read who it is for first, then fill it in.",
+   "link_exact": true
+  },
+  {
+   "id": "tie-toronto",
+   "name": "TiE Toronto",
+   "org": "TiE Toronto",
+   "level": "nonprofit",
+   "type": "community",
+   "summary": "Membership network of entrepreneurs, mentors and investors with mentoring, networking and education. Flagship events include TiECon and the TiEQuest summit, and TiE runs a Startup Visa programme. Rooted in the South Asian diaspora, open to all.",
+   "amount": "Membership fee not shown",
+   "stages": [
+    "idea",
+    "prototype",
+    "launched",
+    "revenue",
+    "growth"
+   ],
+   "audiences": [],
+   "needs": [
+    "network",
+    "mentorship",
+    "training",
+    "funding"
+   ],
+   "sectors": [
+    "any"
+   ],
+   "provinces": [
+    "ON"
+   ],
+   "regions": [
+    "gta"
+   ],
+   "requires": {},
+   "requirements": [
+    "For early-stage and serial entrepreneurs, corporate professionals, VCs and angels",
+    "Use the member registration block on the page"
+   ],
+   "deadline": {
+    "kind": "rolling",
+    "date": null,
+    "note": "Apply any time; no deadline published"
+   },
+   "status": "rolling",
+   "phase": "learn",
+   "apply_url": "https://toronto.tie.org",
+   "source_url": "https://toronto.tie.org",
+   "verified": "official",
+   "last_checked": "2026-11-19",
+   "restricted_to": [],
+   "link_label": "TiE Toronto",
+   "link_kind": "program",
+   "link_note": "This is the closest official page we found, not a dedicated program page.",
+   "link_exact": false
+  },
+  {
+   "id": "indo-canada-chamber-of-commerce",
+   "name": "Indo-Canada Chamber of Commerce",
+   "org": "Indo-Canada Chamber of Commerce (ICCC)",
+   "level": "nonprofit",
+   "type": "community",
+   "summary": "Toronto-based chamber for Canada-India trade, founded 1977, with committees for startups, tech and AI, women entrepreneurs, young professionals and SMEs, plus a monthly 'Monthly Connect' (next on December 15, 2026).",
+   "amount": "Membership fees not shown",
+   "stages": [
+    "idea",
+    "prototype",
+    "launched",
+    "revenue",
+    "growth"
+   ],
+   "audiences": [],
+   "needs": [
+    "network"
+   ],
+   "sectors": [
+    "any"
+   ],
+   "provinces": [
+    "any"
+   ],
+   "regions": [],
+   "requires": {},
+   "requirements": [
+    "For the Canadian and Indian business community, SMEs, women entrepreneurs and new immigrants",
+    "Individual, corporate and associate memberships"
+   ],
+   "deadline": {
+    "kind": "rolling",
+    "date": null,
+    "note": "Apply any time; no deadline published"
+   },
+   "status": "rolling",
+   "phase": "learn",
+   "apply_url": "https://iccconline.org/membership",
+   "source_url": "https://iccconline.org/",
+   "verified": "official",
+   "last_checked": "2026-11-19",
+   "restricted_to": [],
+   "link_label": "Indo-Canada Chamber of Commerce",
+   "link_kind": "program",
+   "link_note": "Read what it offers and who can apply, then follow the steps on the page.",
+   "link_exact": true
+  },
+  {
+   "id": "interactive-ontario",
+   "name": "Interactive Ontario",
+   "org": "Interactive Ontario",
+   "level": "nonprofit",
+   "type": "community",
+   "summary": "Industry association for Ontario's video game and interactive media community, with connections, advocacy, insights and resources, including discounts and funding information. Programmes in 2026 include IO Connect and Indie Superboost.",
+   "amount": "Membership fee not shown",
+   "stages": [
+    "idea",
+    "prototype",
+    "launched",
+    "revenue",
+    "growth"
+   ],
+   "audiences": [],
+   "needs": [
+    "network",
+    "funding"
+   ],
+   "sectors": [
+    "creative",
+    "tech"
+   ],
+   "provinces": [
+    "ON"
+   ],
+   "regions": [],
+   "requires": {},
+   "requirements": [
+    "For video game and interactive studios in Ontario"
+   ],
+   "deadline": {
+    "kind": "rolling",
+    "date": null,
+    "note": "Apply any time; no deadline published"
+   },
+   "status": "rolling",
+   "phase": "learn",
+   "apply_url": "https://interactiveontario.com/become-a-member/",
+   "source_url": "https://interactiveontario.com",
+   "verified": "official",
+   "last_checked": "2026-11-19",
+   "restricted_to": [],
+   "link_label": "Interactive Ontario",
+   "link_kind": "program",
+   "link_note": "Read what it offers and who can apply, then follow the steps on the page.",
+   "link_exact": true
+  },
+  {
+   "id": "communitech",
+   "name": "Communitech",
+   "org": "Communitech",
+   "level": "nonprofit",
+   "type": "community",
+   "summary": "Waterloo Region's tech hub and membership organisation in Kitchener, with flexible workspace, programmes, events and access to growth advisors for tech companies from idea to over $1 million in revenue. Joining is by application and currently runs as a waitlist.",
+   "amount": "Membership fees not shown",
+   "stages": [
+    "idea",
+    "prototype",
+    "launched",
+    "revenue",
+    "growth"
+   ],
+   "audiences": [],
+   "needs": [
+    "space",
+    "mentorship",
+    "network",
+    "talent"
+   ],
+   "sectors": [
+    "tech"
+   ],
+   "provinces": [
+    "ON"
+   ],
+   "regions": [
+    "waterloo-region"
+   ],
+   "requires": {},
+   "requirements": [
+    "Tech companies at any of five stages",
+    "The join form is a waitlist"
+   ],
+   "deadline": {
+    "kind": "none_published",
+    "date": null,
+    "note": "Join form is a waitlist; no dates"
+   },
+   "status": "check",
+   "phase": "learn",
+   "apply_url": "https://communitech.ca/founders/apply/",
+   "source_url": "https://communitech.ca/",
+   "verified": "official",
+   "last_checked": "2026-11-19",
+   "restricted_to": [],
+   "link_label": "Communitech",
+   "link_kind": "apply",
+   "link_note": "This goes to the application or sign-up page. Read who it is for first, then fill it in.",
+   "link_exact": true
+  },
+  {
+   "id": "iion-advisory-services",
+   "name": "IION advisory services",
+   "org": "Innovation Initiatives Ontario North (IION)",
+   "level": "nonprofit",
+   "type": "mentorship",
+   "summary": "North Bay's regional innovation centre for Nipissing, Timiskaming, Parry Sound and Muskoka: business advisory services, guidance on funding, access to industry experts and market intelligence, plus a monthly AI Guardrails lunch-and-learn.",
+   "amount": "Cost not stated",
+   "stages": [
+    "idea",
+    "prototype",
+    "launched",
+    "revenue",
+    "growth"
+   ],
+   "audiences": [],
+   "needs": [
+    "mentorship",
+    "funding",
+    "network"
+   ],
+   "sectors": [
+    "any"
+   ],
+   "provinces": [
+    "ON"
+   ],
+   "regions": [
+    "northern-ontario"
+   ],
+   "requires": {},
+   "requirements": [
+    "For-profit businesses at various stages of innovation",
+    "Request a meeting through the site"
+   ],
+   "deadline": {
+    "kind": "rolling",
+    "date": null,
+    "note": "Apply any time; no deadline published"
+   },
+   "status": "rolling",
+   "phase": "learn",
+   "apply_url": "https://www.iion.ca/eligibility",
+   "source_url": "https://iion.ca/",
+   "verified": "official",
+   "last_checked": "2026-11-19",
+   "restricted_to": [],
+   "link_label": "Innovation Initiatives Ontario North (IION): IION advisory services",
+   "link_kind": "contact",
+   "link_note": "This is a contact page. Say who you are and what you are building, and ask about fit.",
+   "link_exact": true
+  },
+  {
+   "id": "norcat-innovation",
+   "name": "NORCAT Innovation",
+   "org": "NORCAT",
+   "level": "nonprofit",
+   "type": "mentorship",
+   "summary": "Sudbury's regional innovation centre for early-stage tech startups, with tailored strategic advice, mentorship from local entrepreneurs and networking events. NORCAT is a hub for Canada's Tech Network.",
+   "amount": "Cost not stated",
+   "stages": [
+    "idea",
+    "prototype",
+    "launched"
+   ],
+   "audiences": [],
+   "needs": [
+    "mentorship",
+    "network"
+   ],
+   "sectors": [
+    "tech"
+   ],
+   "provinces": [
+    "ON"
+   ],
+   "regions": [
+    "sudbury"
+   ],
+   "requires": {},
+   "requirements": [
+    "Early-stage tech startups and their founders",
+    "Start with the discovery document or the how-we-can-help page"
+   ],
+   "deadline": {
+    "kind": "rolling",
+    "date": null,
+    "note": "Apply any time; no deadline published"
+   },
+   "status": "rolling",
+   "phase": "learn",
+   "apply_url": "https://www.norcat.org/innovation/how-we-can-help.html",
+   "source_url": "https://www.norcat.org/innovation/",
+   "verified": "official",
+   "last_checked": "2026-11-19",
+   "restricted_to": [],
+   "link_label": "NORCAT Innovation",
+   "link_kind": "program",
+   "link_note": "Read what it offers and who can apply, then follow the steps on the page.",
+   "link_exact": true
+  },
+  {
+   "id": "northwestern-ontario-innovation-centre",
+   "name": "Northwestern Ontario Innovation Centre",
+   "org": "Northwestern Ontario Innovation Centre (NOIC)",
+   "level": "nonprofit",
+   "type": "incubator",
+   "summary": "Non-profit innovation centre with offices in Thunder Bay and Kenora, offering expert advice, help finding funding, meeting space at The Landing, and programmes such as FEAST (a processed-food incubator), the Boreal Springboard for forestry ventures and a youth-hire tech programme.",
+   "amount": "Cost not stated",
+   "stages": [
+    "idea",
+    "prototype",
+    "launched",
+    "revenue",
+    "growth"
+   ],
+   "audiences": [],
+   "needs": [
+    "mentorship",
+    "funding",
+    "space",
+    "training"
+   ],
+   "sectors": [
+    "any"
+   ],
+   "provinces": [
+    "ON"
+   ],
+   "regions": [
+    "northern-ontario"
+   ],
+   "requires": {},
+   "requirements": [
+    "Innovative businesses, manufacturers and entrepreneurs in Northwestern Ontario",
+    "Request a meeting through the site"
+   ],
+   "deadline": {
+    "kind": "rolling",
+    "date": null,
+    "note": "Apply any time; no deadline published"
+   },
+   "status": "rolling",
+   "phase": "learn",
+   "apply_url": "https://www.nwoinnovation.ca/request-a-meeting/",
+   "source_url": "https://nwoinnovation.ca/",
+   "verified": "official",
+   "last_checked": "2026-11-19",
+   "restricted_to": [],
+   "link_label": "Northwestern Ontario Innovation Centre",
+   "link_kind": "contact",
+   "link_note": "This is a contact page. Say who you are and what you are building, and ask about fit.",
+   "link_exact": true
+  },
+  {
+   "id": "sault-ste-marie-innovation-centre",
+   "name": "Sault Ste. Marie Innovation Centre",
+   "org": "Sault Ste. Marie Innovation Centre (SSMIC)",
+   "level": "nonprofit",
+   "type": "incubator",
+   "summary": "Sault Ste. Marie's innovation centre offering partnerships, expert advice, business incubation, youth outreach and sector development, with an online assessment to find the right programme. Sectors include agriculture, IT and science and technology.",
+   "amount": "Cost not stated",
+   "stages": [
+    "idea",
+    "prototype",
+    "launched",
+    "revenue",
+    "growth"
+   ],
+   "audiences": [],
+   "needs": [
+    "mentorship",
+    "funding",
+    "network"
+   ],
+   "sectors": [
+    "any"
+   ],
+   "provinces": [
+    "ON"
+   ],
+   "regions": [
+    "northern-ontario"
+   ],
+   "requires": {},
+   "requirements": [
+    "Businesses and entrepreneurs in the Sault Ste. Marie area",
+    "The site's newest dated news item is from October 2024"
+   ],
+   "deadline": {
+    "kind": "rolling",
+    "date": null,
+    "note": "Apply any time; no deadline published"
+   },
+   "status": "rolling",
+   "phase": "learn",
+   "apply_url": "https://www.ssmic.com/how-we-can-help",
+   "source_url": "https://www.ssmic.com/",
+   "verified": "official",
+   "last_checked": "2026-11-19",
+   "restricted_to": [],
+   "link_label": "Sault Ste. Marie Innovation Centre",
+   "link_kind": "program",
+   "link_note": "Read what it offers and who can apply, then follow the steps on the page.",
+   "link_exact": true
   }
  ]
 }

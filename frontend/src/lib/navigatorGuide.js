@@ -18,7 +18,7 @@ const ALIASES = {
 const TYPE_WORDS = [["tax credit", "tax_credit"], ["grant", "grant"], ["loan", "loan"], ["accelerator", "accelerator"], ["incubator", "incubator"],
   ["competition", "competition"], ["pitch", "competition"], ["investor", "investor"], ["venture capital", "investor"], ["visa", "immigration"], ["immigration", "immigration"],
   ["discount", "perk"], ["perk", "perk"], ["credits", "perk"]];
-const TYPE_NOUN = { grant: "grants", loan: "loans", tax_credit: "tax credits", accelerator: "accelerators", incubator: "incubators", competition: "competitions", investor: "investors", immigration: "immigration routes", perk: "tool discounts" };
+const TYPE_NOUN = { grant: "grants", loan: "loans", tax_credit: "tax credits", accelerator: "accelerators", incubator: "incubators", competition: "competitions", investor: "investors", immigration: "immigration routes", perk: "tool discounts", community: "communities and networks" };
 const W = {
   profile: ["my profile", "about me", "know about me", "where am i", "my startup", "what do you know"],
   communities: ["communit", "join", "network", "cohort"],

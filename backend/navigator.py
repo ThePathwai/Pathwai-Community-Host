@@ -51,10 +51,10 @@ AUDIENCES = ["women", "black", "indigenous", "newcomer", "youth", "student", "ru
 AUDIENCE_LABEL = {"women": "women", "black": "Black", "indigenous": "Indigenous", "newcomer": "newcomer", "youth": "young", "student": "student", "rural": "rural"}
 SECTORS = ["tech", "hardware", "health", "cleantech", "mobility", "creative", "retail", "food", "services", "social"]
 PROVINCES = ["ON", "BC", "AB", "SK", "MB", "QC", "NB", "NS", "PE", "NL", "YT", "NT", "NU"]
-TYPES = ["grant", "loan", "tax_credit", "accelerator", "incubator", "mentorship", "competition", "investor", "immigration", "research_partnership", "resource", "perk"]
+TYPES = ["grant", "loan", "tax_credit", "accelerator", "incubator", "mentorship", "competition", "investor", "immigration", "research_partnership", "resource", "perk", "community"]
 TYPE_LABEL = {
     "grant": "Grant", "loan": "Loan", "tax_credit": "Tax credit", "accelerator": "Accelerator", "incubator": "Incubator", "mentorship": "Mentorship",
-    "competition": "Competition", "investor": "Investor", "immigration": "Immigration", "research_partnership": "Research partner", "resource": "Resource", "perk": "Tool discount",
+    "competition": "Competition", "investor": "Investor", "immigration": "Immigration", "research_partnership": "Research partner", "resource": "Resource", "perk": "Tool discount", "community": "Community",
 }
 
 # ---------- places in Ontario ----------
@@ -680,7 +680,7 @@ def suggest(programs: List[Dict[str, Any]], raw_profile: Optional[Dict[str, Any]
 def _anytime(p: Dict[str, Any]) -> bool:
     """Not tied to a stage: resources, and anything that serves four or more of the five stages."""
     st = [x for x in (p.get("stages") or STAGES) if x in STAGES]
-    return p.get("type") in ("resource", "perk") or len(st) >= 4 or not st
+    return p.get("type") in ("resource", "perk", "community") or len(st) >= 4 or not st
 
 
 def trajectory(programs: List[Dict[str, Any]], raw_profile: Optional[Dict[str, Any]], today: Optional[date] = None, per_stage: int = 3, any_limit: int = 6, current_limit: int = 5) -> Dict[str, Any]:

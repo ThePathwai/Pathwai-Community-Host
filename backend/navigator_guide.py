@@ -33,7 +33,7 @@ TYPE_WORDS = [("tax credit", "tax_credit"), ("grant", "grant"), ("loan", "loan")
               ("immigration", "immigration"),
               ("discount", "perk"), ("perk", "perk"), ("credits", "perk")]
 TYPE_NOUN = {"grant": "grants", "loan": "loans", "tax_credit": "tax credits", "accelerator": "accelerators", "incubator": "incubators",
-             "competition": "competitions", "investor": "investors", "immigration": "immigration routes", "perk": "tool discounts"}
+             "competition": "competitions", "investor": "investors", "immigration": "immigration routes", "perk": "tool discounts", "community": "communities and networks"}
 W = {
     "profile": ["my profile", "about me", "know about me", "where am i", "my startup", "what do you know"],
     "communities": ["communit", "join", "network", "cohort"],

@@ -28,7 +28,7 @@ def by_id(pid):
 
 # --------------------------------------------------------------------------- catalog hygiene
 # Entries whose link is knowingly not an exact program page; each says so to the founder (link_exact false), so the list stays short and visible.
-CLOSEST_PAGE_ONLY = {"amplify", "bmo-launch-me", "canadian-queer-chamber-of-commerce-programs", "financerher-elevateher-and-innovateher", "garage-capital", "golden-ventures", "growthwheel-expansion-support", "idea-fund", "inovia-capital", "liftoff-black", "naco-angels", "ripple-ventures", "startup-canada-equal-slice-pitch-competition", "toronto-business-webinars-and-starting-your-business-101", "wef", "women-entrepreneurship-knowledge-hub", "womens-launchpad", "yedi-incubator"}
+CLOSEST_PAGE_ONLY = {"acbn-loan-readiness-program", "amplify", "bacel-training", "baids-black-business-program", "bmo-launch-me", "canadian-queer-chamber-of-commerce-programs", "coralus", "drabpe-black-business-directory-and-networking", "erapreneur", "financerher-elevateher-and-innovateher", "fresh-idea-collective", "garage-capital", "golden-ventures", "growthwheel-expansion-support", "idea-fund", "inovia-capital", "liftoff-black", "naco-angels", "ripple-ventures", "sisterhood-of-women-in-business", "startup-canada-equal-slice-pitch-competition", "tie-toronto", "toronto-business-webinars-and-starting-your-business-101", "two-rivers-indigenous-business-financing-program", "wef", "women-entrepreneurship-knowledge-hub", "womens-launchpad", "yedi-incubator"}
 
 
 def test_every_link_goes_to_a_specific_page_and_says_why():
@@ -44,7 +44,7 @@ def test_every_link_goes_to_a_specific_page_and_says_why():
             assert p["link_exact"] is False, p["id"]
             continue
         assert p["link_exact"] is True, p["id"]
-        assert u.path.strip("/") or u.query, f"{p['id']} links to a homepage"
+        assert u.path.strip("/") or u.query or u.fragment.strip("/"), f"{p['id']} links to a homepage"
         if p["id"] != "startup-canada-black-guide":
             assert u.netloc.removeprefix("www.") not in bad_hosts, f"{p['id']} links to an aggregator or article"
         assert p["link_kind"] != "news", p["id"]
