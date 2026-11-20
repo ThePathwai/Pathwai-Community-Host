@@ -47,7 +47,10 @@ COMMUNITIES = [
 
 @pytest.mark.skipif(not shutil.which("node"), reason="node is not installed")
 def test_python_and_javascript_rules_agree():
-    programs = nav.load_catalog()["programs"]
+    programs = [dict(p) for p in nav.load_catalog()["programs"]]
+    for i, p in enumerate(programs):   # some programs carry what the page reader confirmed: both sides must then stop asking the founder to re-check those
+        if i % 3 == 0 and p.get("requirements"):
+            p["page_check"] = {"ok": True, "confirmed": p["requirements"][:2]}
     cs = cases()
     with tempfile.TemporaryDirectory() as tmp:
         mjs = Path(tmp) / "navigator.mjs"

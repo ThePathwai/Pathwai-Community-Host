@@ -270,7 +270,7 @@ function Results({ res, meta, loading, generic, onOpen, tracked, onTrack, imap, 
         </div>
       )}
 
-      <p className="text-xs text-muted">Details change without notice, so always confirm on the official page. Directory checked {dayLabel(meta.version)}.</p>
+      <p className="text-xs text-muted" data-testid="nav-provenance">{meta.page_checks?.read > 0 ? `${meta.page_checks.read} of ${meta.count} programs have been read from their own official page (latest ${dayLabel(meta.page_checks.last_read)}). We re-read each one about once a day, and the rest are as last checked by hand.` : `Details change without notice, so confirm on the official page. Directory checked ${dayLabel(meta.version)}.`}</p>
     </div>
   );
 }

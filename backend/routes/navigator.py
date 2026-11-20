@@ -8,6 +8,7 @@ from __future__ import annotations
 
 import logging
 import os
+import time
 import uuid
 from typing import Any, Dict, List, Optional
 
@@ -21,6 +22,8 @@ import navigator as nav
 import navigator_guide as guide
 from auth import client_ip, rate_limit, require_role
 from database import COMMUNITY_SLUGS, db, dbfor, hub_db
+from program_check import merge_check
+from program_job import load_checks, summarize
 from ._common import audit, now_iso
 from .hub import _summary, account_from_request, require_account
 
@@ -73,8 +76,23 @@ async def _opted_in() -> List[Dict[str, Any]]:
     return out
 
 
+_CHECKS: Dict[str, Any] = {"at": 0.0, "rows": {}}
+
+
+async def _page_checks() -> Dict[str, Dict[str, Any]]:
+    """What the program-page reader has found, kept for a few minutes so a busy page does not ask the database on every request."""
+    if time.time() - _CHECKS["at"] > 300:
+        try:
+            _CHECKS["rows"] = await load_checks(hub_db())
+        except Exception:  # noqa: BLE001 - no checks yet (or the store is down): programs show as written
+            _CHECKS["rows"] = _CHECKS["rows"] or {}
+        _CHECKS["at"] = time.time()
+    return _CHECKS["rows"]
+
+
 async def _all_programs() -> List[Dict[str, Any]]:
-    progs = list(nav.load_catalog()["programs"])
+    checks = await _page_checks()
+    progs = [merge_check(p, checks.get(p["id"])) for p in nav.load_catalog()["programs"]]
     for c in await _opted_in():
         progs.extend(c["programs"])
     return progs
@@ -85,6 +103,7 @@ async def navigator_meta() -> Dict[str, Any]:
     cat = nav.load_catalog()
     return {
         "version": cat.get("version"), "notes": cat.get("notes"), "count": len(cat["programs"]),
+        "page_checks": {k: v for k, v in summarize(await _page_checks(), cat["programs"]).items() if k != "problems"},
         "stages": [{"key": k, "label": nav.STAGE_LABEL[k], "hint": nav.STAGE_HINT[k]} for k in nav.STAGES],
         "needs": [{"key": k, "label": nav.NEED_LABEL[k]} for k in nav.NEEDS],
         "audiences": [{"key": k, "label": nav.AUDIENCE_LABEL[k]} for k in nav.AUDIENCES],
@@ -99,6 +118,12 @@ async def navigator_meta() -> Dict[str, Any]:
 async def navigator_programs(q: str = "", type: str = "", province: str = "", stage: str = "", audience: str = "", status: str = "", need: str = "", region: str = "") -> Dict[str, Any]:
     rows = nav.filter_programs(await _all_programs(), q=q[:80], ptype=type, province=province, stage=stage, audience=audience, status=status, need=need, region=region)
     return {"programs": rows, "count": len(rows)}
+
+
+@router.get("/navigator/checks")
+async def navigator_checks() -> Dict[str, Any]:
+    """How the page reader is doing: how many programs it has read, how many requirements it could confirm, and the programs it could not read (with why)."""
+    return summarize(await _page_checks(), nav.load_catalog()["programs"])
 
 
 @router.get("/navigator/programs/{program_id}")

@@ -432,7 +432,8 @@ def unchecked_requirements(program: Dict[str, Any]) -> List[str]:
     for rg in program.get("regions") or []:
         pats += [re.escape(REGION_LABEL.get(rg, rg).lower()), re.escape(rg.replace("-", " "))]
     rx = re.compile("|".join(pats), re.I) if pats else None
-    return [r for r in (program.get("requirements") or []) if not (rx and rx.search(r))]
+    confirmed = set((program.get("page_check") or {}).get("confirmed") or [])   # stated on the program's own page, so the founder need not re-check them
+    return [r for r in (program.get("requirements") or []) if r not in confirmed and not (rx and rx.search(r))]
 
 
 def _worst(items: List[Dict[str, Any]]) -> str:
@@ -556,7 +557,9 @@ def evaluate(program: Dict[str, Any], profile: Dict[str, Any], today: Optional[d
     unchecked = unchecked_requirements(program)
     if a_state == "yes" and unchecked:
         # Everything the profile can answer is fine, but the program asks for things it cannot (a full-time founder, traction...). Say so.
-        apply_check["text"] = "Nothing in your profile rules you out. Confirm what they ask for on their page."
+        read = bool((program.get("page_check") or {}).get("ok"))
+        apply_check["text"] = ("Nothing in your profile rules you out. A few things they ask for are not stated on their page; they are listed below." if read
+                               else "Nothing in your profile rules you out. Confirm what they ask for on their page.")
         apply_check["caveat"] = True
         apply_check["unchecked"] = unchecked
 
@@ -643,7 +646,7 @@ def evaluate(program: Dict[str, Any], profile: Dict[str, Any], today: Optional[d
 
 def _brief(program: Dict[str, Any]) -> Dict[str, Any]:
     keys = ["id", "name", "org", "level", "type", "summary", "amount", "stages", "audiences", "needs", "sectors", "provinces", "regions", "requirements",
-            "deadline", "status", "phase", "apply_url", "link_label", "link_kind", "link_note", "link_exact", "source_url", "verified", "last_checked", "restricted_to", "community"]
+            "deadline", "status", "phase", "apply_url", "link_label", "link_kind", "link_note", "link_exact", "source_url", "verified", "last_checked", "restricted_to", "community", "base_url", "page_check"]
     return {k: program.get(k) for k in keys if k in program}
 
 

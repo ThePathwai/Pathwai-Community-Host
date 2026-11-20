@@ -147,7 +147,8 @@ export function uncheckedRequirements(program) {
   if ((program.restricted_to || []).length) pats.push("black|women|woman|indigenous|newcomer|youth|student|owned|led by|visible minorit");
   (program.regions || []).forEach((rg) => { pats.push(escapeRx((REGION_LABEL[rg] || rg).toLowerCase()), escapeRx(rg.replace(/-/g, " "))); });
   const rx = pats.length ? new RegExp(pats.join("|"), "i") : null;
-  return (program.requirements || []).filter((r) => !(rx && rx.test(r)));
+  const confirmed = new Set((program.page_check && program.page_check.confirmed) || []);   // stated on the program's own page, so the founder need not re-check them
+  return (program.requirements || []).filter((r) => !confirmed.has(r) && !(rx && rx.test(r)));
 }
 
 export function evaluate(p, profile, today) {
@@ -225,7 +226,7 @@ export function evaluate(p, profile, today) {
   const applyCheck = { key: "apply", q: CHECK_Q.apply, state: aState, text: aText, items: facets, ...(blocking && blocking.ask ? { ask: blocking.ask } : {}) };
   const unchecked = uncheckedRequirements(p);
   if (aState === "yes" && unchecked.length) {
-    applyCheck.text = "Nothing in your profile rules you out. Confirm what they ask for on their page.";
+    applyCheck.text = (p.page_check && p.page_check.ok) ? "Nothing in your profile rules you out. A few things they ask for are not stated on their page; they are listed below." : "Nothing in your profile rules you out. Confirm what they ask for on their page.";
     applyCheck.caveat = true;
     applyCheck.unchecked = unchecked;
   }
@@ -296,7 +297,7 @@ const verdict = (p, profile, today) => {
   return { fit: ev.fit, score: ev.score, reasons: ev.reasons, cautions: ev.cautions, checks: ev.checks };
 };
 
-const BRIEF_KEYS = ["id", "name", "org", "level", "type", "summary", "amount", "stages", "audiences", "needs", "sectors", "provinces", "regions", "requirements", "deadline", "status", "phase", "apply_url", "link_label", "link_kind", "link_note", "link_exact", "source_url", "verified", "last_checked", "restricted_to", "community"];
+const BRIEF_KEYS = ["id", "name", "org", "level", "type", "summary", "amount", "stages", "audiences", "needs", "sectors", "provinces", "regions", "requirements", "deadline", "status", "phase", "apply_url", "link_label", "link_kind", "link_note", "link_exact", "source_url", "verified", "last_checked", "restricted_to", "community", "base_url", "page_check"];
 const brief = (p) => { const o = {}; for (const k of BRIEF_KEYS) if (k in p) o[k] = p[k]; return o; };
 const byScore = (a, b) => (b.score - a.score) || (a.name < b.name ? -1 : a.name > b.name ? 1 : 0);
 

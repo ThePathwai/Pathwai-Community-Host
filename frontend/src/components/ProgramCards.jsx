@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import { ArrowRight, ArrowUpRight, BadgeCheck, Bookmark, Check, Circle, CircleCheck, CircleHelp, CircleX, Clock, Hourglass, Info, EyeOff, MessageCircle, TriangleAlert, X } from "lucide-react";
+import { ArrowRight, ArrowUpRight, BadgeCheck, Bookmark, Check, Circle, CircleCheck, CircleHelp, CircleX, Clock, Crosshair, Hourglass, Info, EyeOff, MessageCircle, TriangleAlert, X } from "lucide-react";
 import { Status } from "./NavBits";
 import ScrollLock from "./ScrollLock";
 import { useShell } from "./AccountShell";
@@ -35,7 +35,7 @@ export function CheckStrip({ checks }) {
 }
 
 // The answers in full: each question, yes or no, and the plain reason. Anything we could not check says what to add.
-export function CheckList({ checks }) {
+export function CheckList({ checks, pageRead = false }) {
   return (
     <ul className="space-y-3.5" data-testid="check-list">
       {checks.map((c) => {
@@ -50,7 +50,7 @@ export function CheckList({ checks }) {
               {items.length > 0 && <ul className="mt-1.5 space-y-1">{items.map((f) => { const fa = ANSWER[f.state] || ANSWER.maybe; return <li key={f.text} className="flex gap-1.5 text-xs text-muted"><fa.Icon className={cx("mt-px h-3.5 w-3.5 shrink-0", fa.cls)} aria-hidden /><span>{f.text}</span></li>; })}</ul>}
               {c.caveat && (c.unchecked || []).length > 0 && (
                 <div className="mt-2 rounded-xl bg-amber-500/10 p-3" data-testid="check-unchecked">
-                  <p className="text-xs font-semibold text-amber-700 dark:text-amber-400">We cannot check these from your profile. Confirm them on the page:</p>
+                  <p className="text-xs font-semibold text-amber-700 dark:text-amber-400">{pageRead ? "We read the page and it does not state these. Ask the program:" : "We cannot check these from your profile. Confirm them on the page:"}</p>
                   <ul className="mt-1.5 space-y-1">{c.unchecked.map((u) => <li key={u} className="flex gap-1.5 text-xs text-ink/80"><CircleHelp className="mt-px h-3.5 w-3.5 shrink-0 text-amber-500" aria-hidden /><span>{u}</span></li>)}</ul>
                 </div>
               )}
@@ -67,7 +67,7 @@ export function CheckList({ checks }) {
 export function verdictLine(p) {
   const cs = Object.fromEntries((p.checks || []).map((c) => [c.key, c]));
   if (p.fit === "skip") return (p.cautions || [])[0] || "A rule rules you out.";
-  if (p.fit === "strong") return cs.apply?.caveat ? "Nothing in your profile rules it out, it is for your stage, and it gives you what you asked for. Confirm what they ask for on the page." : "You can apply, it is for your stage, and it gives you what you asked for.";
+  if (p.fit === "strong") return cs.apply?.caveat ? "Nothing in your profile rules it out, it is for your stage, and it gives you what you asked for. " + (p.page_check?.ok ? "A few things they ask for are not stated on their page; they are listed below." : "Confirm what they ask for on the page.") : "You can apply, it is for your stage, and it gives you what you asked for.";
   if (p.fit === "later") return "A step is in the way for now: " + ((p.cautions || [])[0] || "see below").replace(/\.$/, "").replace(/^./, (m) => m.toLowerCase()) + ".";
   const gaps = [];
   if (cs.apply?.state === "maybe") gaps.push("we cannot tell yet whether you can apply");
@@ -92,7 +92,9 @@ function LinkCard({ p }) {
       <a href={p.apply_url} target="_blank" rel="noreferrer" data-testid="link-card" className="block rounded-2xl border border-line p-4 transition hover:border-ink/40">
         <span className="flex items-start justify-between gap-3"><span className="text-[15px] font-semibold leading-snug">{p.link_label}</span><ArrowUpRight className="mt-0.5 h-4 w-4 shrink-0 text-muted" aria-hidden /></span>
         <span className="mt-0.5 block text-xs text-muted">{host}</span>
+        {p.page_check?.section && <span className="mt-2 flex items-start gap-1.5 text-xs font-medium text-ink/80" data-testid="link-section"><Crosshair className="mt-0.5 h-3.5 w-3.5 shrink-0" aria-hidden />Opens straight at the “{p.page_check.section.label}” section.</span>}
         {p.link_note && <span className="mt-2 block text-sm text-ink/85" data-testid="link-note">{p.link_note}</span>}
+        {p.page_check?.timing && <span className="mt-2 block text-xs text-muted" data-testid="link-timing">On the page: “{p.page_check.timing.evidence.length > 140 ? p.page_check.timing.evidence.slice(0, 137) + "…" : p.page_check.timing.evidence}”</span>}
         {why && <span className="mt-2 block text-sm font-medium" data-testid="link-why">Why it is on your list: {why}</span>}
         {p.link_exact === false && <span className="mt-2 flex items-start gap-1.5 text-xs text-amber-600 dark:text-amber-400"><TriangleAlert className="mt-0.5 h-3.5 w-3.5 shrink-0" aria-hidden />This is the closest page we could find, not a program page.</span>}
       </a>
@@ -263,7 +265,7 @@ export function ProgramDrawer({ p, onClose, meta, tracked, onTrack, stage, inter
           {p.checks?.length > 0 ? (
             <Section title={unmatched ? "Why it is not matched to you" : "Is it right for you?"}>
               <p className="mb-4 text-sm font-semibold leading-snug" data-testid="drawer-verdict">{verdictLine(p)}</p>
-              <CheckList checks={p.checks} />
+              <CheckList checks={p.checks} pageRead={!!p.page_check?.ok} />
             </Section>
           ) : (
             <>
@@ -271,7 +273,20 @@ export function ProgramDrawer({ p, onClose, meta, tracked, onTrack, stage, inter
               {cautions.length > 0 && <Section title={unmatched ? "Why it is not matched to you" : "Watch out for"}><ul className="space-y-2.5">{cautions.map((r) => <li key={r} className="flex gap-2.5 text-sm text-ink/80"><TriangleAlert className="mt-0.5 h-4 w-4 shrink-0 text-amber-500" aria-hidden /><span>{r}</span></li>)}</ul></Section>}
             </>
           )}
-          {(p.requirements || []).length > 0 && <Section title="What they ask for"><ul className="space-y-2.5">{p.requirements.map((r) => <li key={r} className="flex gap-2.5 text-sm text-ink/80"><Circle className="mt-0.5 h-4 w-4 shrink-0 text-muted" aria-hidden /><span>{r}</span></li>)}</ul></Section>}
+          {(p.requirements || []).length > 0 && (
+            <Section title="What they ask for">
+              <ul className="space-y-2.5" data-testid="drawer-requirements">{p.requirements.map((r) => {
+                const ok = (p.page_check?.confirmed || []).includes(r); const ev = p.page_check?.evidence?.[r];
+                return (
+                  <li key={r} className="flex gap-2.5 text-sm text-ink/80" data-confirmed={ok ? "1" : "0"}>
+                    {ok ? <CircleCheck className="mt-0.5 h-4 w-4 shrink-0 text-emerald-500" aria-hidden /> : <Circle className="mt-0.5 h-4 w-4 shrink-0 text-muted" aria-hidden />}
+                    <span className="min-w-0"><span>{r}</span>{ok && ev && <span className="mt-0.5 block text-xs text-muted">On {p.page_check.host}: “{ev.length > 140 ? ev.slice(0, 137) + "…" : ev}”</span>}</span>
+                  </li>
+                );
+              })}</ul>
+              {p.page_check?.ok && <p className="mt-3 text-xs text-muted" data-testid="requirements-note">{(p.page_check.confirmed || []).length} of {p.page_check.total} confirmed on the program's own page{(p.page_check.confirmed || []).length < p.page_check.total ? ". The rest were not stated there." : "."}</p>}
+            </Section>
+          )}
 
           <LinkCard p={p} />
 
@@ -288,7 +303,7 @@ export function ProgramDrawer({ p, onClose, meta, tracked, onTrack, stage, inter
             </Section>
           )}
 
-          <p className="flex items-center gap-1.5 text-xs text-muted" title={meta?.notes || ""}><BadgeCheck className={cx("h-4 w-4", p.verified === "official" ? "text-emerald-500" : "")} aria-hidden />{VERIFIED[p.verified] || ""}{p.last_checked ? ` · checked ${dayLabel(p.last_checked)}` : ""}. Details change, so confirm on the official page.</p>
+          <p className="flex items-center gap-1.5 text-xs text-muted" title={meta?.notes || ""} data-testid="drawer-provenance"><BadgeCheck className={cx("h-4 w-4 shrink-0", p.verified === "official" ? "text-emerald-500" : "")} aria-hidden />{p.community ? `Listed and kept up to date by ${p.community.name}.` : p.page_check?.ok ? `Read from ${p.page_check.host} on ${dayLabel((p.page_check.checked_at || "").slice(0, 10))}${p.page_check.stale ? ". We could not re-read it since, so this may be out of date." : ". We re-read it about once a day."}` : `${VERIFIED[p.verified] || ""}${p.last_checked ? ` · checked ${dayLabel(p.last_checked)}` : ""}. We could not read this page automatically, so confirm the details on the official page.`}</p>
         </div>
 
         <div className="flex shrink-0 gap-2 border-t border-line bg-surface p-4 pb-[calc(1rem+env(safe-area-inset-bottom))] sm:px-7 lg:px-10">

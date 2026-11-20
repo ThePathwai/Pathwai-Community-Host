@@ -269,6 +269,9 @@ async def on_startup():
     # Upcoming founder events are read from public pages twice a day; see events_job.py. EVENTS_SCRAPER=false turns it off.
     from events_job import events_loop
     _BACKGROUND.append(asyncio.create_task(events_loop(hub_db)))
+    # Every program's official page is re-read about once a day so links go to the right section and the details match the page; see program_job.py.
+    from program_job import program_checks_loop
+    _BACKGROUND.append(asyncio.create_task(program_checks_loop(hub_db)))
     # Self-serve communities created via POST /hub/communities (see routes/hub.py) are registered
     # into COMMUNITY_SLUGS in-process at creation time; reload them here too so a restarted worker
     # still recognizes them instead of 404-ing every request into that community.
