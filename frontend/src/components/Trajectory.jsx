@@ -43,8 +43,8 @@ function Mini({ r, onPick, muted }) {
   );
 }
 
-function Grid({ rows, onPick, muted }) {
-  return <ul className="grid grid-cols-[minmax(0,1fr)] gap-2 sm:grid-cols-[repeat(2,minmax(0,1fr))]">{rows.map((r) => <li key={r.id}><Mini r={r} onPick={onPick} muted={muted} /></li>)}</ul>;
+function Grid({ rows, onPick, muted, short }) {
+  return <ul className={cx("grid grid-cols-[minmax(0,1fr)] gap-2 sm:grid-cols-[repeat(2,minmax(0,1fr))]", short && "[&>li:nth-child(n+4)]:hidden sm:[&>li:nth-child(n+4)]:block")}>{rows.map((r) => <li key={r.id}><Mini r={r} onPick={onPick} muted={muted} /></li>)}</ul>;
 }
 
 // One program the founder has marked: in it now, or done at some stage.
@@ -103,7 +103,7 @@ function Panel({ c, tracked, onPick, onTrack }) {
         <Heading state="current" label={c.label} hint={c.hint} />
         {inNow.length > 0 && <div className="mb-5"><p className="eyebrow mb-2">You're in</p><div className="space-y-2">{inNow.map((t) => <Mine key={t.id} t={t} onTrack={onTrack} />)}</div></div>}
         <p className="eyebrow mb-2">Worth your time right now</p>
-        {rows.length ? <Grid rows={rows} onPick={onPick} /> : <p className="rounded-xl border border-dashed border-line p-3 text-sm text-muted">Nothing stage-specific fits you right now. The any-stage list below still applies.</p>}
+        {rows.length ? <Grid rows={rows} onPick={onPick} short /> : <p className="rounded-xl border border-dashed border-line p-3 text-sm text-muted">Nothing stage-specific fits you right now. The any-stage list below still applies.</p>}
         {more > 0 && <p className="mt-2 text-xs text-muted">{more} more for this stage are in the full list below.</p>}
       </div>
     );

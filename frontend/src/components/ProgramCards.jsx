@@ -153,7 +153,7 @@ export function ProgramCard({ p, onOpen, mark, badge }) {
   const gap = p.fit === "possible" || p.fit === "later" ? (p.checks || []).slice(0, 3).find((c) => c.state !== "yes") : null;
   return (
     <button type="button" onClick={() => onOpen(p)} data-testid={`program-${p.id}`}
-      className="group flex h-full w-full flex-col rounded-2xl border border-line p-4 text-left transition hover:-translate-y-0.5 hover:border-ink/30 hover:shadow-lg"
+      className="group flex h-full w-full flex-col rounded-2xl border border-line p-3.5 sm:p-4 text-left transition hover:-translate-y-0.5 hover:border-ink/30 hover:shadow-lg"
       style={{ background: `linear-gradient(140deg, ${tint(color, 0.1)} 0%, transparent 52%), rgb(var(--c-surface))` }}>
       <span className="flex items-center gap-3">
         <TypeTile type={p.type} />
@@ -168,7 +168,7 @@ export function ProgramCard({ p, onOpen, mark, badge }) {
         : lead ? <span className="mt-2 flex gap-2 text-sm text-ink/80"><Check className="mt-0.5 h-4 w-4 shrink-0 text-emerald-500" aria-hidden /><span className="line-clamp-2">{lead}</span></span>
         : p.summary && <span className="mt-2 line-clamp-3 text-sm text-muted">{p.summary}</span>}
       {!p.checks?.length && <Facts p={p} />}
-      {p.checks?.length > 0 && <span className="mt-3 block"><CheckStrip checks={p.checks} /></span>}
+      {p.checks?.length > 0 && <span className="mt-3 hidden sm:block"><CheckStrip checks={p.checks} /></span>}
       <span className="mt-auto flex items-center gap-2 pt-4">
         <Status status={p.status} />
         <DeadlineChip p={p} />

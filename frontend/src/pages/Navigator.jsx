@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { Link, useLocation } from "react-router-dom";
-import { ArrowRight, Bookmark, CalendarDays, Check, ChevronDown, Compass, EyeOff, Flag, Pencil, Rocket, Search, Users } from "lucide-react";
+import { ArrowRight, Bookmark, CalendarDays, Check, ChevronDown, Compass, EyeOff, Flag, Pencil, Rocket, Search, SlidersHorizontal, Users } from "lucide-react";
 import { api } from "../lib/api";
 import { useAuth } from "../lib/auth";
 import { Wordmark, PoweredBy, Spinner, cx } from "../components/ui";
@@ -13,7 +13,7 @@ import { useTracked } from "../lib/useTracked";
 import { useInterest } from "../lib/useInterest";
 import { useEcosystem } from "../lib/ecosystem";
 import Trajectory from "../components/Trajectory";
-import AccountShell from "../components/AccountShell";
+import AccountShell, { useShell } from "../components/AccountShell";
 import GuideChat from "../components/GuideChat";
 import FounderEvents from "./FounderEvents";
 import HubPrograms from "../components/hub/HubPrograms";
@@ -271,8 +271,65 @@ function ScopeSwitch({ eco, scope, onChange, total, here }) {
   );
 }
 
-function Results({ res, meta, loading, generic, onOpen, tracked, onTrack, imap, eco, scope, onWiden }) {
+// The mentor line: what to do first. On a phone it opens to three lines with a "More" for the rest.
+function Narrative({ text }) {
+  const [open, setOpen] = useState(false);
+  if (!text) return null;
+  return (
+    <div className="flex items-start gap-3" data-testid="nav-mentor">
+      <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full" style={{ background: "var(--accent)", color: "var(--on-accent)" }}><Compass className="h-4 w-4" aria-hidden /></span>
+      <div className="min-w-0 pt-1">
+        <p className={cx("text-[15px] leading-snug text-ink/90", !open && "line-clamp-3 sm:line-clamp-none")}>{text}</p>
+        {!open && text.length > 150 && <button type="button" onClick={() => setOpen(true)} className="mt-1 text-sm font-semibold text-muted underline sm:hidden">More</button>}
+      </div>
+    </div>
+  );
+}
+
+// Wide screens only: the column beside the list. Your next step, what you saved, and what is coming up, so the width is used for things you act on.
+function NextStepRail({ res, itc, onOpen }) {
+  const shell = useShell();
+  const [evs, setEvs] = useState(null);
+  useEffect(() => { api.get("/founder-events").then((r) => setEvs((r.data.events || []).slice(0, 4))).catch(() => setEvs([])); }, []);
+  const every = [...(res.matches || []), ...(res.more || []), ...(res.later || []), ...(res.others || [])];
+  const saved = itc.interest.filter((i) => i.state === "yes").map((i) => every.find((p) => p.id === i.id)).filter(Boolean).slice(0, 4);
+  const card = "rounded-3xl border border-line bg-surface p-5";
+  return (
+    <aside className="sticky top-6 hidden space-y-4 xl:block" aria-label="Next step" data-testid="nav-rail">
+      <section className={card}>
+        <p className="eyebrow mb-3">Your next step</p>
+        <Narrative text={res.narrative || res.summary} />
+        {shell?.openGuide && <button type="button" onClick={() => shell.openGuide()} className="btn-ghost mt-4 w-full !py-2.5 text-sm">Ask the guide<ArrowRight className="h-4 w-4" /></button>}
+      </section>
+      {saved.length > 0 && (
+        <section className={card}>
+          <p className="eyebrow mb-3">Saved for later</p>
+          <ul className="space-y-1">
+            {saved.map((p) => (
+              <li key={p.id}><button type="button" onClick={() => onOpen(p)} className="flex w-full items-center gap-3 rounded-xl p-2 text-left transition hover:bg-ink/[.05]"><TypeTile type={p.type} size={32} /><span className="min-w-0 flex-1"><span className="block truncate text-sm font-semibold">{p.name}</span><span className="block truncate text-xs text-muted">{p.org}</span></span></button></li>
+            ))}
+          </ul>
+        </section>
+      )}
+      <section className={card}>
+        <p className="eyebrow mb-3">Coming up</p>
+        {evs && evs.length ? (
+          <ul className="space-y-1">
+            {evs.map((e) => { const [m, d] = monthDay(e.date); return (
+              <li key={e.id}><a href={e.url} target="_blank" rel="noreferrer" className="flex items-center gap-3 rounded-xl p-2 transition hover:bg-ink/[.05]"><span className="flex h-11 w-11 shrink-0 flex-col items-center justify-center rounded-xl bg-ink/[.06]"><span className="text-[10px] font-semibold uppercase text-muted" style={{ letterSpacing: "0.08em" }}>{m}</span><span className="text-base font-bold leading-none tabular-nums">{d}</span></span><span className="min-w-0 flex-1"><span className="block truncate text-sm font-semibold">{e.title}</span><span className="block truncate text-xs text-muted">{[e.org, e.online ? "Online" : e.city].filter(Boolean).join(" · ")}</span></span></a></li>
+            ); })}
+          </ul>
+        ) : <p className="text-sm text-muted">{evs ? "No events are listed right now." : "Loading"}</p>}
+        <Link to="/founder-events" className="mt-3 inline-flex items-center gap-1 text-sm font-semibold text-muted hover:text-ink">All events<ArrowRight className="h-3.5 w-3.5" aria-hidden /></Link>
+      </section>
+    </aside>
+  );
+}
+
+function Results({ res, meta, loading, generic, onOpen, tracked, onTrack, imap, eco, scope, onWiden, railed }) {
   const [view, setView] = useState("fit");
+  const [aboutOpen, setAboutOpen] = useState(false);     // phones: the explainer lines and the filters start folded away
+  const [filtersOpen, setFiltersOpen] = useState(false);
   const [type, setType] = useState("");
   const [timing, setTiming] = useState("");
   const [showAll, setShowAll] = useState(false);
@@ -289,7 +346,8 @@ function Results({ res, meta, loading, generic, onOpen, tracked, onTrack, imap, 
   const visible = showAll || type || timing ? shown : shown.slice(0, LIMIT);
   const best = visible.filter((p) => p.fit === "strong");
   const worth = visible.filter((p) => p.fit !== "strong");
-  const grid = "grid grid-cols-[minmax(0,1fr)] gap-3 md:grid-cols-[repeat(2,minmax(0,1fr))] 2xl:grid-cols-[repeat(3,minmax(0,1fr))]";
+  const grid = cx("grid grid-cols-[minmax(0,1fr)] gap-3 md:grid-cols-[repeat(2,minmax(0,1fr))]", !railed && "2xl:grid-cols-[repeat(3,minmax(0,1fr))]");
+  const filterCount = (type ? 1 : 0) + (timing ? 1 : 0);
   const switchView = (v) => { setView(v); setType(""); setTiming(""); setShowAll(false); };
   return (
     <div className={cx("space-y-10 transition-opacity", loading && "opacity-60")} aria-busy={loading} data-testid="nav-results">
@@ -297,12 +355,10 @@ function Results({ res, meta, loading, generic, onOpen, tracked, onTrack, imap, 
 
       {trajectory?.stages?.length > 0 && (
         <section className="rounded-3xl border border-line bg-surface p-5 sm:p-6">
-          <div className="mb-5 flex items-start gap-3" data-testid="nav-mentor">
-            <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full" style={{ background: "var(--accent)", color: "var(--on-accent)" }}><Compass className="h-4 w-4" aria-hidden /></span>
-            <p className="min-w-0 pt-1 text-[15px] leading-snug text-ink/90">{res.narrative || res.summary}</p>
-          </div>
+          <div className={cx("mb-5", railed && "xl:hidden")}><Narrative text={res.narrative || res.summary} /></div>
           <p className="eyebrow">Your trajectory</p>
-          <p className="mb-5 mt-1 text-sm text-muted">{trajectory.story}</p>
+          <p className="mb-5 mt-1 hidden text-sm text-muted sm:block">{trajectory.story}</p>
+          <div className="mb-4" />
           <Trajectory data={trajectory} tracked={tracked} onPick={onOpen} onTrack={onTrack} />
         </section>
       )}
@@ -312,10 +368,15 @@ function Results({ res, meta, loading, generic, onOpen, tracked, onTrack, imap, 
           <h2 className="text-xl" style={{ textTransform: "none", letterSpacing: "-0.01em", fontWeight: 700 }}>{view === "fit" ? (fits.length ? `${fits.length} programs that fit you` : "No clean fit yet") : `${others.length} programs not matched to you`}</h2>
           <Segmented items={[["fit", `For you · ${fits.length}`], ["other", `Everything else · ${others.length}`]]} value={view} onChange={switchView} />
         </div>
+        <button type="button" onClick={() => setAboutOpen((o) => !o)} aria-expanded={aboutOpen} className="mt-3 flex w-full items-center justify-between gap-2 rounded-xl border border-line px-4 py-2.5 text-left text-sm font-semibold text-muted sm:hidden" data-testid="nav-about-toggle">About these results<ChevronDown className={cx("h-4 w-4 transition", aboutOpen && "rotate-180")} aria-hidden /></button>
+        <div className={cx(aboutOpen ? "block" : "hidden", "sm:block")} data-testid="nav-about">
         <p className="mt-2 text-xs text-muted" data-testid="nav-totals">All {fits.length + later.length + others.length} programs: {fits.length} fit you{later.length ? `, ${later.length} are not yet` : ""}, {others.length} are not matched to you.{communityN > 0 ? ` That includes ${communityN} from communities you joined.` : ""}</p>
         <p className="mt-2 text-sm text-muted">{view === "fit" ? "Matched to your stage, needs, province and group." : "Real programs too. They are not matched to you yet because of stage, province, group or sector. Each card says why."}</p>
         <p className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1.5 text-xs text-muted" data-testid="nav-legend">{LEGEND.map(([k, t]) => <span key={k} className="inline-flex items-center gap-1.5"><Status status={k} />{t}</span>)}</p>
         <HowWeDecide />
+        </div>
+        <button type="button" onClick={() => setFiltersOpen((o) => !o)} aria-expanded={filtersOpen} className="mt-3 flex w-full items-center justify-between gap-2 rounded-xl border border-line px-4 py-2.5 text-left text-sm font-semibold sm:hidden" data-testid="nav-filters-toggle"><span className="inline-flex items-center gap-2"><SlidersHorizontal className="h-4 w-4" aria-hidden />Filter{filterCount ? ` · ${filterCount} on` : ""}</span><ChevronDown className={cx("h-4 w-4 text-muted transition", filtersOpen && "rotate-180")} aria-hidden /></button>
+        <div className={cx(filtersOpen ? "block" : "hidden", "sm:block")} data-testid="nav-filters">
         <div className="mt-4"><TimingFilter value={timing} onChange={(v) => { setTiming(v); setShowAll(false); }} list={base} /></div>
         {Object.keys(counts).length > 1 && (
           <div className="pw-rail -mx-4 mt-4 flex gap-2 overflow-x-auto px-4 pb-1 sm:mx-0 sm:px-0" role="group" aria-label="Filter by type">
@@ -323,11 +384,12 @@ function Results({ res, meta, loading, generic, onOpen, tracked, onTrack, imap, 
             {Object.entries(counts).map(([k, n]) => { const { color, Icon } = typeMeta(k); return <Pill key={k} on={type === k} color={color} onClick={() => setType(type === k ? "" : k)} testId={`nav-type-${k}`}><Icon className="h-3.5 w-3.5" aria-hidden />{TYPE_LABEL[k] || k}<span className="text-xs opacity-60">{n}</span></Pill>; })}
           </div>
         )}
+        </div>
         {shown.length === 0 && <p className="mt-6 rounded-2xl border border-dashed border-line p-6 text-center text-sm text-muted" data-testid="nav-timing-empty">Nothing here matches that. <button type="button" onClick={() => { setTiming(""); setType(""); }} className="font-semibold text-ink underline">Clear filters</button></p>}
         {view === "fit" ? (
           <>
-            {best.length > 0 && <div className="mt-6"><p className="mb-1 text-sm font-semibold">Good matches</p><p className="mb-3 text-xs text-muted">Nothing in your profile rules it out, it is for your stage, and it gives you what you asked for. Confirm what each one asks for on its page.</p><div className={grid}>{best.map((p) => <ProgramCard key={p.id} p={p} onOpen={onOpen} mark={imap?.[p.id]} badge={badgeFor(p, eco)} />)}</div></div>}
-            {worth.length > 0 && <div className="mt-8"><p className="mb-1 text-sm font-semibold">Worth a look</p><p className="mb-3 text-xs text-muted">Not ruled out, but one answer is a no or missing. The card says which.</p><div className={grid}>{worth.map((p) => <ProgramCard key={p.id} p={p} onOpen={onOpen} mark={imap?.[p.id]} badge={badgeFor(p, eco)} />)}</div></div>}
+            {best.length > 0 && <div className="mt-6"><p className="mb-1 text-sm font-semibold">Good matches</p><p className="mb-3 hidden text-xs text-muted sm:block">Nothing in your profile rules it out, it is for your stage, and it gives you what you asked for. Confirm what each one asks for on its page.</p><div className={grid}>{best.map((p) => <ProgramCard key={p.id} p={p} onOpen={onOpen} mark={imap?.[p.id]} badge={badgeFor(p, eco)} />)}</div></div>}
+            {worth.length > 0 && <div className="mt-8"><p className="mb-1 text-sm font-semibold">Worth a look</p><p className="mb-3 hidden text-xs text-muted sm:block">Not ruled out, but one answer is a no or missing. The card says which.</p><div className={grid}>{worth.map((p) => <ProgramCard key={p.id} p={p} onOpen={onOpen} mark={imap?.[p.id]} badge={badgeFor(p, eco)} />)}</div></div>}
           </>
         ) : (
           <div className={cx("mt-6", grid)} data-testid="nav-others">{visible.map((p) => <ProgramCard key={p.id} p={p} onOpen={onOpen} mark={imap?.[p.id]} badge={badgeFor(p, eco)} />)}</div>
@@ -373,6 +435,7 @@ function Directory({ meta, onOpen, imap, eco, fitRes, account, hasProfile, start
   const BLANK = { q: "", type: "", timing: "", province: "", need: "", region: "" };
   const [f, setF] = useState(() => ({ ...BLANK, type: startType || "" }));
   const [rowsAll, setRows] = useState(null);
+  const [moreOpen, setMoreOpen] = useState(false);   // phones: only search and kind show; need, place and timing fold away
   const [ev, setEv] = useState(false);   // "Events" is one more kind in this list: pick it and the list below becomes upcoming events
   const [all, setAll] = useState([]);
   useEffect(() => { api.get("/navigator/programs").then((r) => setAll(r.data.programs || [])).catch(() => {}); }, []);
@@ -415,11 +478,13 @@ function Directory({ meta, onOpen, imap, eco, fitRes, account, hasProfile, start
           <input className="input !rounded-full !py-3 !pl-11" placeholder="Search by name, organisation or what it offers" value={f.q} onChange={(e) => set("q", e.target.value)} aria-label="Search programs" data-testid="dir-search" /></div>}
         <div>
           <span className={label} style={{ letterSpacing: "0.12em" }}>What kind</span>
-          <div className="flex flex-wrap gap-2">
+          <div className="pw-rail -mx-4 flex gap-2 overflow-x-auto px-4 pb-1 sm:mx-0 sm:flex-wrap sm:overflow-visible sm:px-0">
             {meta.types.map((t) => { const { color, Icon } = typeMeta(t.key); return <Pill key={t.key} on={!ev && f.type === t.key} color={color} onClick={() => { setEv(false); set("type", f.type === t.key ? "" : t.key); }} testId={`dir-type-${t.key}`}><Icon className="h-3.5 w-3.5" aria-hidden />{t.label}{counts[t.key] ? <span className="text-xs opacity-60">{counts[t.key]}</span> : null}</Pill>; })}
             <Pill on={ev} color="#F59E0B" onClick={() => setEv(!ev)} testId="dir-type-events"><CalendarDays className="h-3.5 w-3.5" aria-hidden />Events</Pill>
           </div>
         </div>
+        {!ev && <button type="button" onClick={() => setMoreOpen((o) => !o)} aria-expanded={moreOpen} className="flex w-full items-center justify-between gap-2 rounded-xl border border-line px-4 py-2.5 text-left text-sm font-semibold sm:hidden" data-testid="dir-more-toggle"><span className="inline-flex items-center gap-2"><SlidersHorizontal className="h-4 w-4" aria-hidden />More filters{(f.need ? 1 : 0) + (f.region ? 1 : 0) + (f.timing ? 1 : 0) ? ` · ${(f.need ? 1 : 0) + (f.region ? 1 : 0) + (f.timing ? 1 : 0)} on` : ""}</span><ChevronDown className={cx("h-4 w-4 text-muted transition", moreOpen && "rotate-180")} aria-hidden /></button>}
+        <div className={cx("space-y-4", moreOpen ? "block" : "hidden", "sm:block")}>
         {!ev && <div className="grid gap-3 sm:grid-cols-2">
           <label className="block"><span className={label} style={{ letterSpacing: "0.12em" }}>What you need</span>
             <select className={select} value={f.need} onChange={(e) => set("need", e.target.value)} data-testid="dir-need" aria-label="What you need">
@@ -436,6 +501,7 @@ function Directory({ meta, onOpen, imap, eco, fitRes, account, hasProfile, start
         </div>}
         {!ev && <div><span className={label} style={{ letterSpacing: "0.12em" }}>When you can apply</span><TimingFilter value={f.timing} onChange={(v) => set("timing", v)} list={rowsAll || []} testid="dir-timing" /></div>}
         {!ev && f.need && NEED_HINT[f.need] && <p className="text-sm text-muted" data-testid="dir-need-hint"><span className="font-semibold text-ink/80">{NEED_LABEL[f.need].charAt(0).toUpperCase() + NEED_LABEL[f.need].slice(1)}:</span> {NEED_HINT[f.need]}</p>}
+        </div>
       </div>
       {ev ? <div className="mt-6"><FounderEvents embedded /></div> : <>
       <div className="mb-3 mt-5 flex items-center justify-between gap-3">
@@ -510,6 +576,7 @@ export default function Navigator({ embedded }) {
   const seq = useRef(0);
   const ready = !account || mine !== null;       // signed in: wait for the profile so we never flash results for someone else's answers
   const generic = !!account && ready && !mine?.stage;
+  const railed = !embedded;                       // on a wide screen the next step, saved programs and events sit in a side column
 
   useEffect(() => { document.title = "Opportunities · Pathwai"; api.get("/navigator/meta").then((r) => setMeta(r.data)).catch(() => setErr("The directory could not load. Please try again.")); }, []);
 
@@ -549,12 +616,12 @@ export default function Navigator({ embedded }) {
       guide={<GuideChat className="h-[min(72dvh,680px)]" signedIn hasProfile={!!mine?.stage} startupName={mine?.name} formProfile={apiProfile} />} />
   ) : null;
   const body = ecoBody || (
-    <div className="mx-auto w-full max-w-6xl 2xl:max-w-7xl">
+    <div className="mx-auto w-full max-w-6xl 2xl:max-w-[1400px]">
       <div className="mb-6 flex flex-wrap items-end justify-between gap-4">
         <div>
           <p className="eyebrow">Opportunities</p>
           <h1 className="mt-2 text-3xl sm:text-4xl" style={{ textTransform: "none", letterSpacing: "-0.03em", fontWeight: 800, textWrap: "balance" }}>{eco ? (scope === "hub" ? `Programs & grants at ${eco.hub}` : `Programs & grants across ${eco.wider}`) : account ? "Opportunities that fit your startup" : "Canadian opportunities that fit your startup"}</h1>
-          <p className="mt-2 text-sm text-muted">{eco ? (scope === "hub" ? (eco.wider ? `What ${eco.hub} runs, plus the grants, loans and programs its team points founders to. Each one is checked against your startup.` : `What ${eco.hub} runs for founders. Each one is checked against your startup.`) : `Every grant, loan, accelerator and mentor we track, with ${eco.hub} programs first.`) : meta ? <>{meta.count} grants, loans, accelerators, mentors and founder communities, each with its source, plus upcoming events. Communities you join add their own on top.</> : "Loading"}</p>
+          <p className="mt-2 hidden text-sm text-muted sm:block">{eco ? (scope === "hub" ? (eco.wider ? `What ${eco.hub} runs, plus the grants, loans and programs its team points founders to. Each one is checked against your startup.` : `What ${eco.hub} runs for founders. Each one is checked against your startup.`) : `Every grant, loan, accelerator and mentor we track, with ${eco.hub} programs first.`) : meta ? <>{meta.count} grants, loans, accelerators, mentors and founder communities, each with its source, plus upcoming events. Communities you join add their own on top.</> : "Loading"}</p>
         </div>
         <Segmented items={[["path", "For you"], ["all", "Browse all"], ...(account ? [["saved", itc.interest.some((i) => i.state === "yes") ? `Interested · ${itc.interest.filter((i) => i.state === "yes").length}` : "Interested"]] : []), ["ask", <><span className="sm:hidden">Guide</span><span className="hidden sm:inline">Ask the guide</span></>]]} value={tab} onChange={setTab} />
       </div>
@@ -566,7 +633,7 @@ export default function Navigator({ embedded }) {
       ) : account ? (
         <div className="space-y-6">
           {mine === null ? <Spinner /> : <><ProfileBar mine={mine} meta={meta} /><div className="mt-3 empty:hidden"><GenderNudge mine={mine} /></div></>}
-          {ready && <Results res={res} meta={meta} loading={loading} generic={generic} onOpen={setOpen} tracked={tracked} onTrack={track} imap={itc.byId} eco={eco} scope={scope} onWiden={() => setScope("all")} />}
+          {ready && <div className={cx(railed && "xl:grid xl:grid-cols-[minmax(0,1fr)_340px] xl:items-start xl:gap-8")}><Results railed={railed} res={res} meta={meta} loading={loading} generic={generic} onOpen={setOpen} tracked={tracked} onTrack={track} imap={itc.byId} eco={eco} scope={scope} onWiden={() => setScope("all")} />{railed && res && <NextStepRail res={res} itc={itc} onOpen={setOpen} />}</div>}
         </div>
       ) : <><SignedOutGate /><SignedOutShowcase meta={meta} onOpen={setOpen} onBrowse={(t) => { setStartType(t); setTab("all"); window.scrollTo({ top: 0 }); }} /></>}
       <ProgramDrawer p={open} onClose={() => setOpen(null)} meta={meta} tracked={tracked} onTrack={account ? track : undefined} interest={account ? itc : undefined} eco={eco} stage={res?.trajectory?.current || mine?.stage || "idea"} />
@@ -577,7 +644,7 @@ export default function Navigator({ embedded }) {
   if (account) return <AccountShell active="programs">{body}</AccountShell>;
   return (
     <div className="flex min-h-[100dvh] flex-col px-4 py-5 sm:py-8" data-testid="navigator-page">
-      <header className="mx-auto mb-8 flex w-full max-w-6xl 2xl:max-w-7xl items-center justify-between gap-3">
+      <header className="mx-auto mb-8 flex w-full max-w-6xl 2xl:max-w-[1400px] items-center justify-between gap-3">
         <Link to="/" className="text-xl" aria-label="Pathwai home"><Wordmark name="Pathwai" brand={{}} /></Link>
         <Link to={user ? "/" : "/login"} className="btn-ghost !py-2 text-sm">{user ? "Back to community" : "Sign in"}</Link>
       </header>
