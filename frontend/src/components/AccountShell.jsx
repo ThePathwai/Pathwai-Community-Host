@@ -62,7 +62,7 @@ export default function AccountShell({ active, children }) {
       <div className="min-h-screen lg:grid lg:grid-cols-[256px_minmax(0,1fr)]" data-testid="account-shell">
         {/* computer: sidebar */}
         <aside className="glass-bar sticky top-3 m-3 hidden h-[calc(100vh-1.5rem)] flex-col rounded-[1.75rem] px-3 py-5 lg:flex" aria-label="Main">
-          <Link to="/navigator" className="mb-5 px-3 text-2xl" aria-label="Pathwai home"><Wordmark name="Pathwai" brand={{}} /></Link>
+          <Link to="/" onClick={() => window.scrollTo({ top: 0 })} className="mb-5 px-3 text-2xl" aria-label="Pathwai home"><Wordmark name="Pathwai" brand={{}} /></Link>
           <button type="button" onClick={() => ctx.openGuide()} data-testid="shell-ask" className="mb-2 flex w-full items-center gap-2.5 rounded-lg border border-line bg-ink/[.04] px-3 py-2 text-left text-sm text-muted transition hover:border-ink/30 hover:text-ink">
             <Search className="h-4 w-4" aria-hidden /><span className="flex-1">Ask the guide</span><kbd className="rounded border border-line px-1.5 text-[10px] font-medium">AI</kbd>
           </button>
@@ -79,7 +79,7 @@ export default function AccountShell({ active, children }) {
         <div className="min-w-0">
           {/* phone: top bar */}
           <header className="app-topbar flex lg:hidden">
-            <Link to="/navigator" className="text-lg" aria-label="Pathwai home"><Wordmark name="Pathwai" brand={{}} /></Link>
+            <Link to="/" onClick={() => window.scrollTo({ top: 0 })} className="text-lg" aria-label="Pathwai home"><Wordmark name="Pathwai" brand={{}} /></Link>
             <div className="relative flex items-center gap-1.5">
               <button type="button" onClick={() => ctx.openGuide()} aria-label="Ask the guide" data-testid="shell-ask-fab" className="flex h-10 w-10 items-center justify-center rounded-full text-ink/85 active:bg-ink/10"><MessageCircle className="h-[22px] w-[22px]" strokeWidth={1.8} /></button>
               <button type="button" onClick={() => setMenu((o) => !o)} aria-haspopup="menu" aria-expanded={menu} title="Account" className="flex h-10 w-10 items-center justify-center rounded-full"><Avatar src={account.avatar_url} name={account.name} size={32} /></button>
