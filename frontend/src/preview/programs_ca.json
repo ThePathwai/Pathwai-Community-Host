@@ -10400,6 +10400,1919 @@
    "link_kind": "program",
    "link_note": "Read what it offers and who can apply, then follow the steps on the page.",
    "link_exact": true
+  },
+  {
+   "id": "gfs-accelerator-canada",
+   "name": "Google for Startups Accelerator: Canada",
+   "org": "Google for Startups",
+   "level": "private",
+   "type": "accelerator",
+   "summary": "Ten-week hybrid, equity-free accelerator for Canadian tech startups between Seed and Series A.",
+   "amount": "Equity-free support for the duration of the program",
+   "stages": [
+    "revenue",
+    "growth"
+   ],
+   "audiences": [],
+   "needs": [
+    "mentorship",
+    "training",
+    "network",
+    "tools"
+   ],
+   "sectors": [
+    "tech"
+   ],
+   "provinces": [
+    "any"
+   ],
+   "requires": {},
+   "requirements": [
+    "Traction, ideally between Seed and Series A",
+    "Deeply technical, preferably using machine learning and AI",
+    "At least 5 employees"
+   ],
+   "deadline": {
+    "kind": "closed",
+    "date": null,
+    "note": "Applications closed; 2027 dates to be announced"
+   },
+   "status": "closed",
+   "phase": "scale",
+   "apply_url": "https://startup.google.com/programs/accelerator/canada/",
+   "source_url": "https://startup.google.com/programs/accelerator/canada/",
+   "verified": "official",
+   "last_checked": "2026-11-21",
+   "restricted_to": [],
+   "link_label": "Google for Startups Accelerator: Canada",
+   "link_kind": "program",
+   "link_note": "Applications are closed. The page has a register-your-interest link for 2027.",
+   "link_exact": true,
+   "regions": []
+  },
+  {
+   "id": "centech-propulsion",
+   "name": "Centech Propulsion Program",
+   "org": "Centech (Montreal)",
+   "level": "academic",
+   "type": "incubator",
+   "summary": "Two-year growth program at Centech in Montreal with workspace at Ax.c and potential entry-level grant.",
+   "amount": "$3,600 + taxes per year (billed monthly); potential grant and funding support",
+   "stages": [
+    "idea",
+    "prototype",
+    "launched",
+    "revenue",
+    "growth"
+   ],
+   "audiences": [],
+   "needs": [
+    "funding",
+    "mentorship",
+    "space",
+    "network",
+    "tools"
+   ],
+   "sectors": [
+    "tech",
+    "hardware",
+    "health",
+    "cleantech",
+    "mobility"
+   ],
+   "provinces": [
+    "QC"
+   ],
+   "requires": {},
+   "requirements": [
+    "Incorporated and registered with the Registraire des entreprises du Québec",
+    "Solution validated with potential customers and industry experts",
+    "Canadian citizen or permanent resident",
+    "Defined business model and go-to-market plan"
+   ],
+   "deadline": {
+    "kind": "closed",
+    "date": "2026-10-18",
+    "note": "Call closed; next opening winter 2027"
+   },
+   "status": "closed",
+   "phase": "learn",
+   "apply_url": "https://centech.co/en/propulsion-program/",
+   "source_url": "https://centech.co/en/propulsion-program/",
+   "verified": "official",
+   "last_checked": "2026-11-21",
+   "restricted_to": [],
+   "link_label": "Centech: Propulsion Program",
+   "link_kind": "program",
+   "link_note": "Call closed; the page says the next one opens winter 2027.",
+   "link_exact": true,
+   "regions": []
+  },
+  {
+   "id": "centech-acceleration",
+   "name": "Centech Acceleration Program",
+   "org": "Centech (Montreal)",
+   "level": "academic",
+   "type": "accelerator",
+   "summary": "Free 12-week program in Montreal for deeptech, medtech or edtech startups: weekly mentoring and group workshops.",
+   "amount": "100% free",
+   "stages": [
+    "idea",
+    "prototype",
+    "launched",
+    "revenue",
+    "growth"
+   ],
+   "audiences": [],
+   "needs": [
+    "mentorship",
+    "training",
+    "space",
+    "network"
+   ],
+   "sectors": [
+    "tech",
+    "health"
+   ],
+   "provinces": [
+    "any"
+   ],
+   "requires": {},
+   "requirements": [
+    "Realistic potential for commercialization",
+    "Significant technological advance and/or patentable innovation",
+    "Fits Centech's sector and technology focus"
+   ],
+   "deadline": {
+    "kind": "none_published",
+    "date": null,
+    "note": "Call of projects open until December 1, 9 AM (year not stated; apply code suggests the 2027 cohort)"
+   },
+   "status": "check",
+   "phase": "learn",
+   "apply_url": "https://cente.ch/apply/ACC-H2027?lang=en",
+   "source_url": "https://centech.co/en/acceleration-program/",
+   "verified": "official",
+   "last_checked": "2026-11-21",
+   "restricted_to": [],
+   "link_label": "Centech: Acceleration Program",
+   "link_kind": "program",
+   "link_note": "In person in Montreal. Check the December 1 cutoff on the page.",
+   "link_exact": true,
+   "regions": []
+  },
+  {
+   "id": "investns-accelerate",
+   "name": "Invest Nova Scotia Accelerate",
+   "org": "Invest Nova Scotia",
+   "level": "provincial",
+   "type": "accelerator",
+   "summary": "Two streams for early-stage Nova Scotia tech startups: Growth ($30,000) and Development ($40,000), non-repayable and paid on reimbursement of eligible expenses.",
+   "amount": "Growth: $30,000; Development: $40,000 (non-repayable)",
+   "stages": [
+    "prototype",
+    "launched",
+    "revenue"
+   ],
+   "audiences": [],
+   "needs": [
+    "funding",
+    "mentorship",
+    "training",
+    "ip"
+   ],
+   "sectors": [
+    "tech"
+   ],
+   "provinces": [
+    "NS"
+   ],
+   "requires": {},
+   "requirements": [
+    "Nova Scotia registered business in good standing with a permanent NS address",
+    "51% or more owned by Nova Scotia-based founders",
+    "Under $1M cumulative revenue and under $250K equity raised",
+    "Has not been in Accelerate before"
+   ],
+   "deadline": {
+    "kind": "closed",
+    "date": "2027-01-29",
+    "note": "Next round launches January 12, 2027; submission deadline January 29, 2027"
+   },
+   "status": "closed",
+   "phase": "fund",
+   "apply_url": "https://investns.formtitan.com/ftproject/accelerateapplicationfy2027",
+   "source_url": "https://investnovascotia.ca/incentives-programs-services/invest-nova-scotia-accelerate",
+   "verified": "official",
+   "last_checked": "2026-11-21",
+   "restricted_to": [],
+   "link_label": "Invest Nova Scotia Accelerate",
+   "link_kind": "program",
+   "link_note": "Closed right now. The next round opens January 12, 2027.",
+   "link_exact": true,
+   "regions": []
+  },
+  {
+   "id": "innovatebc-gtm-microgrant",
+   "name": "Innovate BC Go-To-Market Microgrant",
+   "org": "Innovate BC",
+   "level": "provincial",
+   "type": "grant",
+   "summary": "Non-repayable, reimbursement-based funding for B.C. companies' early sales and marketing.",
+   "amount": "$10,000 to $50,000; covers up to 75% of project costs (25% cash from you)",
+   "stages": [
+    "launched",
+    "revenue"
+   ],
+   "audiences": [],
+   "needs": [
+    "funding",
+    "customers"
+   ],
+   "sectors": [
+    "any"
+   ],
+   "provinces": [
+    "BC"
+   ],
+   "requires": {},
+   "requirements": [
+    "For-profit company headquartered in British Columbia",
+    "Product or service in market or ready to sell",
+    "Incorporated and in good standing in B.C. or federally"
+   ],
+   "deadline": {
+    "kind": "closed",
+    "date": "2025-11-30",
+    "note": "Intake closed"
+   },
+   "status": "closed",
+   "phase": "fund",
+   "apply_url": "https://www.innovatebc.ca/go-to-market-microgrant",
+   "source_url": "https://www.innovatebc.ca/go-to-market-microgrant",
+   "verified": "official",
+   "last_checked": "2026-11-21",
+   "restricted_to": [],
+   "link_label": "Innovate BC: Go-To-Market Microgrant",
+   "link_kind": "program",
+   "link_note": "Currently closed. Watch this page for a new intake.",
+   "link_exact": true,
+   "regions": []
+  },
+  {
+   "id": "foresight-earth-tech",
+   "name": "Foresight Earth Tech",
+   "org": "Foresight Canada",
+   "level": "nonprofit",
+   "type": "accelerator",
+   "summary": "Free nine-month accelerator for Canadian cleantech ventures with 2050 (decarbonization) and Adapt (climate adaptation) streams.",
+   "amount": "Free program; no grant amount stated",
+   "stages": [
+    "idea",
+    "prototype",
+    "launched",
+    "revenue",
+    "growth"
+   ],
+   "audiences": [],
+   "needs": [
+    "funding",
+    "mentorship",
+    "network",
+    "ip"
+   ],
+   "sectors": [
+    "cleantech"
+   ],
+   "provinces": [
+    "any"
+   ],
+   "requires": {},
+   "requirements": [
+    "Canadian-incorporated business",
+    "Technology Readiness Level 6 or higher",
+    "Seeking industry expertise, investor readiness and market access"
+   ],
+   "deadline": {
+    "kind": "closed",
+    "date": null,
+    "note": "Cohorts currently full; email the team for the next cohort"
+   },
+   "status": "closed",
+   "phase": "scale",
+   "apply_url": "https://foresightcac.com/earth-tech",
+   "source_url": "https://foresightcac.com/earth-tech",
+   "verified": "official",
+   "last_checked": "2026-11-21",
+   "restricted_to": [],
+   "link_label": "Foresight: Earth Tech accelerator",
+   "link_kind": "contact",
+   "link_note": "Cohorts are full. The page gives an email for the next one.",
+   "link_exact": true,
+   "regions": []
+  },
+  {
+   "id": "ab-innovates-vdg",
+   "name": "Alberta Innovates Venture Development Grant",
+   "org": "Alberta Innovates",
+   "level": "provincial",
+   "type": "grant",
+   "summary": "Up to $150,000 for Alberta-based, high-growth technology ventures to generate evidence and take the next step toward customers, growth or investment. Replaces six earlier programs.",
+   "amount": "Up to $150,000; at least 25% cash contribution from you",
+   "stages": [
+    "idea",
+    "prototype",
+    "launched",
+    "revenue",
+    "growth"
+   ],
+   "audiences": [],
+   "needs": [
+    "funding"
+   ],
+   "sectors": [
+    "tech"
+   ],
+   "provinces": [
+    "AB"
+   ],
+   "requires": {},
+   "requirements": [
+    "Fewer than 250 employees and under $50M annual revenue",
+    "For-profit, incorporated or partnership registered in Alberta",
+    "At least 25% cash contribution",
+    "Meets minimum Innovation Readiness Levels with evidence"
+   ],
+   "deadline": {
+    "kind": "rolling",
+    "date": null,
+    "note": "Continuous intake"
+   },
+   "status": "open",
+   "phase": "fund",
+   "apply_url": "https://albertainnovates.ca/funding/venture-development-grant/",
+   "source_url": "https://albertainnovates.ca/funding/venture-development-grant/",
+   "verified": "official",
+   "last_checked": "2026-11-21",
+   "restricted_to": [],
+   "link_label": "Alberta Innovates: Venture Development Grant",
+   "link_kind": "program",
+   "link_note": "Open intake. Not for working capital or general promotion.",
+   "link_exact": true,
+   "regions": []
+  },
+  {
+   "id": "acoa-bdp",
+   "name": "ACOA Business Development Program",
+   "org": "Atlantic Canada Opportunities Agency",
+   "level": "federal",
+   "type": "loan",
+   "summary": "Interest-free funding for Atlantic Canadian businesses: repayable up to 50% of capital needed, or interest-free contributions up to 75% of training, marketing and similar costs.",
+   "amount": "Up to 50% of capital needed (repayable, interest-free); contributions up to 75% of certain costs",
+   "stages": [
+    "launched",
+    "growth"
+   ],
+   "audiences": [],
+   "needs": [
+    "funding",
+    "training"
+   ],
+   "sectors": [
+    "any"
+   ],
+   "provinces": [
+    "NB",
+    "NL",
+    "NS",
+    "PE"
+   ],
+   "requires": {},
+   "requirements": [
+    "Contact your nearest ACOA office to discuss your project"
+   ],
+   "deadline": {
+    "kind": "none_published",
+    "date": null,
+    "note": "No intake dates stated"
+   },
+   "status": "check",
+   "phase": "fund",
+   "apply_url": "https://www.canada.ca/en/atlantic-canada-opportunities/services/application-for-financial-assistance.html",
+   "source_url": "https://www.canada.ca/en/atlantic-canada-opportunities/services/business-development-program.html",
+   "verified": "official",
+   "last_checked": "2026-11-21",
+   "restricted_to": [],
+   "link_label": "ACOA: Business Development Program",
+   "link_kind": "program",
+   "link_note": "Talk to the nearest ACOA office first.",
+   "link_exact": true,
+   "regions": []
+  },
+  {
+   "id": "global-talent-stream",
+   "name": "Global Talent Stream",
+   "org": "Employment and Social Development Canada",
+   "level": "federal",
+   "type": "immigration",
+   "summary": "Employer route to hire skilled temporary foreign workers faster. Category A needs a designated referral partner; Category B covers in-demand occupations.",
+   "amount": "$1,000 fee per position requested; Category A base pay at least $38.46/hr",
+   "stages": [
+    "idea",
+    "prototype",
+    "launched",
+    "revenue",
+    "growth"
+   ],
+   "audiences": [],
+   "needs": [
+    "talent",
+    "visa"
+   ],
+   "sectors": [
+    "any"
+   ],
+   "provinces": [
+    "any"
+   ],
+   "requires": {},
+   "requirements": [
+    "Category A: referred by a designated referral partner",
+    "Category B: no referral needed",
+    "Pay $1,000 per position requested",
+    "Can't classify workers as independent contractors"
+   ],
+   "deadline": {
+    "kind": "none_published",
+    "date": null,
+    "note": "Always open to employers"
+   },
+   "status": "open",
+   "phase": "scale",
+   "apply_url": "https://www.canada.ca/en/employment-social-development/services/foreign-workers/global-talent.html",
+   "source_url": "https://www.canada.ca/en/employment-social-development/services/foreign-workers/global-talent/requirements.html",
+   "verified": "official",
+   "last_checked": "2026-11-21",
+   "restricted_to": [],
+   "link_label": "Global Talent Stream requirements",
+   "link_kind": "program",
+   "link_note": "Employer-side. Quebec has separate rules.",
+   "link_exact": true,
+   "regions": []
+  },
+  {
+   "id": "sif",
+   "name": "Strategic Innovation Fund",
+   "org": "Innovation, Science and Economic Development Canada",
+   "level": "federal",
+   "type": "grant",
+   "summary": "Large-project federal funding for innovation. Minimum ask is $10 million on a project of at least $20 million.",
+   "amount": "At least $10M requested on a project costing $20M+",
+   "stages": [
+    "idea",
+    "prototype",
+    "launched",
+    "revenue",
+    "growth"
+   ],
+   "audiences": [],
+   "needs": [
+    "funding",
+    "rd"
+   ],
+   "sectors": [
+    "any"
+   ],
+   "provinces": [
+    "any"
+   ],
+   "requires": {},
+   "requirements": [
+    "Three years of financial statements",
+    "Willing to sign a long-term Contribution Agreement",
+    "Rights to required IP secured",
+    "Mandatory pre-application consultation with SIF officials"
+   ],
+   "deadline": {
+    "kind": "none_published",
+    "date": null,
+    "note": "No deadline stated on the eligibility page"
+   },
+   "status": "check",
+   "phase": "scale",
+   "apply_url": "https://ised-isde.canada.ca/site/strategic-innovation-fund/en/check-your-eligibility-strategic-innovation-fund",
+   "source_url": "https://ised-isde.canada.ca/site/strategic-innovation-fund/en/check-your-eligibility-strategic-innovation-fund",
+   "verified": "official",
+   "last_checked": "2026-11-21",
+   "restricted_to": [],
+   "link_label": "SIF: check your eligibility",
+   "link_kind": "tool",
+   "link_note": "Only for very large projects. Take the short eligibility check first.",
+   "link_exact": true,
+   "regions": []
+  },
+  {
+   "id": "iq-programme-innovation",
+   "name": "Programme innovation (Investissement Québec)",
+   "org": "Investissement Québec",
+   "level": "provincial",
+   "type": "grant",
+   "summary": "Funding for innovation projects in Quebec: Volet 1 for companies, Volet 2 for firms working with universities and research centres. French-only page.",
+   "amount": "",
+   "stages": [
+    "idea",
+    "prototype",
+    "launched",
+    "revenue",
+    "growth"
+   ],
+   "audiences": [],
+   "needs": [
+    "funding",
+    "rd"
+   ],
+   "sectors": [
+    "any"
+   ],
+   "provinces": [
+    "QC"
+   ],
+   "requires": {},
+   "requirements": [
+    "Innovative projects in Quebec or with partners abroad (Volet 1)",
+    "Firms pooling efforts with universities, research centres and SMEs (Volet 2)"
+   ],
+   "deadline": {
+    "kind": "none_published",
+    "date": null,
+    "note": "No dates on this page"
+   },
+   "status": "check",
+   "phase": "fund",
+   "apply_url": "https://www.investquebec.com/fr/financement/programmes-gouvernementaux/programme-innovation",
+   "source_url": "https://www.investquebec.com/fr/financement/programmes-gouvernementaux/programme-innovation",
+   "verified": "official",
+   "last_checked": "2026-11-21",
+   "restricted_to": [],
+   "link_label": "Investissement Québec: Programme innovation",
+   "link_kind": "program",
+   "link_note": "French-language page. Amounts and deadlines are on the Volet pages.",
+   "link_exact": true,
+   "regions": []
+  },
+  {
+   "id": "edc-egp",
+   "name": "EDC Export Guarantee Program",
+   "org": "Export Development Canada",
+   "level": "federal",
+   "type": "loan",
+   "summary": "Guarantees to your bank of up to US$25 million to extend working capital for exports, growth or foreign investment.",
+   "amount": "Guarantees of up to US$25 million to your lender",
+   "stages": [
+    "growth"
+   ],
+   "audiences": [],
+   "needs": [
+    "funding",
+    "export"
+   ],
+   "sectors": [
+    "any"
+   ],
+   "provinces": [
+    "any"
+   ],
+   "requires": {},
+   "requirements": [
+    "Capped at US$25 million",
+    "EDC reviews your international sales and lending agreement",
+    "Best suited for complex export finance structures"
+   ],
+   "deadline": {
+    "kind": "none_published",
+    "date": null,
+    "note": "Contact EDC; no intake dates"
+   },
+   "status": "open",
+   "phase": "scale",
+   "apply_url": "https://www.edc.ca/en/form/inquiry.html",
+   "source_url": "https://www.edc.ca/en/solutions/working-capital-guarantees/export-guarantee-program.html",
+   "verified": "official",
+   "last_checked": "2026-11-21",
+   "restricted_to": [],
+   "link_label": "EDC: Export Guarantee Program",
+   "link_kind": "contact",
+   "link_note": "The link is EDC's contact form, not an application form.",
+   "link_exact": true,
+   "regions": []
+  },
+  {
+   "id": "cta",
+   "name": "Canadian Technology Accelerator",
+   "org": "Trade Commissioner Service",
+   "level": "federal",
+   "type": "accelerator",
+   "summary": "Connects Canadian tech companies with international tech hubs for mentorship, market insight and access to investors and partners.",
+   "amount": "",
+   "stages": [
+    "idea",
+    "prototype",
+    "launched",
+    "revenue",
+    "growth"
+   ],
+   "audiences": [],
+   "needs": [
+    "mentorship",
+    "network",
+    "export"
+   ],
+   "sectors": [
+    "tech"
+   ],
+   "provinces": [
+    "any"
+   ],
+   "requires": {},
+   "requirements": [
+    "Minimum viable product that shows clear progress",
+    "At least one senior member (C-level or founder)",
+    "Company can pay its own expenses in the target market",
+    "Life sciences and health: proof of concept and post-seed"
+   ],
+   "deadline": {
+    "kind": "rolling",
+    "date": null,
+    "note": "Most programs accept applications through the year; check each program for its own deadline"
+   },
+   "status": "rolling",
+   "phase": "scale",
+   "apply_url": "https://www.tradecommissioner.gc.ca/en/our-solutions/support-programs/canadian-technology-accelerators/canadian-technology-accelerator-applicants-guide.html",
+   "source_url": "https://www.tradecommissioner.gc.ca/en/our-solutions/support-programs/canadian-technology-accelerators/canadian-technology-accelerator-applicants-guide.html",
+   "verified": "official",
+   "last_checked": "2026-11-21",
+   "restricted_to": [],
+   "link_label": "CTA applicant guide",
+   "link_kind": "program",
+   "link_note": "The survey form linked on the page is hosted by a third party, so the guide is linked instead.",
+   "link_exact": true,
+   "regions": []
+  },
+  {
+   "id": "lspark-saas",
+   "name": "L-SPARK SaaS Accelerator",
+   "org": "L-SPARK",
+   "level": "private",
+   "type": "accelerator",
+   "summary": "Ottawa accelerator for SaaS startups. The apply page says the current cohort deadline has passed and submitting enters you for future cohorts.",
+   "amount": "",
+   "stages": [
+    "idea",
+    "prototype",
+    "launched",
+    "revenue",
+    "growth"
+   ],
+   "audiences": [],
+   "needs": [
+    "mentorship"
+   ],
+   "sectors": [
+    "tech"
+   ],
+   "provinces": [
+    "any"
+   ],
+   "requires": {},
+   "requirements": [
+    "Company is incorporated in Canada"
+   ],
+   "deadline": {
+    "kind": "closed",
+    "date": null,
+    "note": "Current cohort deadline has passed"
+   },
+   "status": "closed",
+   "phase": "scale",
+   "apply_url": "https://www.l-spark.com/our-accelerator/apply-now/",
+   "source_url": "https://www.l-spark.com/our-accelerator/apply-now/",
+   "verified": "official",
+   "last_checked": "2026-11-21",
+   "restricted_to": [],
+   "link_label": "L-SPARK: apply",
+   "link_kind": "program",
+   "link_note": "Current cohort has closed. The form feeds future cohorts.",
+   "link_exact": true,
+   "regions": []
+  },
+  {
+   "id": "techstars-accelerator",
+   "name": "Techstars Accelerator",
+   "org": "Techstars",
+   "level": "private",
+   "type": "accelerator",
+   "summary": "Techstars invests $220K in each accepted company: $200K on an uncapped MFN Safe plus $20K for 5% common stock. Applies to companies in all Techstars programs.",
+   "amount": "$200,000 uncapped MFN Safe + $20,000 for 5% common (CEA)",
+   "stages": [
+    "idea",
+    "prototype",
+    "launched",
+    "revenue",
+    "growth"
+   ],
+   "audiences": [],
+   "needs": [
+    "funding",
+    "mentorship",
+    "network"
+   ],
+   "sectors": [
+    "any"
+   ],
+   "provinces": [
+    "any"
+   ],
+   "requires": {},
+   "requirements": [
+    "Techstars invests in US corporations or foreign equivalents",
+    "Non-approved countries may need a reorganization"
+   ],
+   "deadline": {
+    "kind": "none_published",
+    "date": null,
+    "note": "Page does not say whether applications are open"
+   },
+   "status": "check",
+   "phase": "scale",
+   "apply_url": "https://apply.techstars.com/",
+   "source_url": "https://www.techstars.com/investment-terms",
+   "verified": "official",
+   "last_checked": "2026-11-21",
+   "restricted_to": [],
+   "link_label": "Techstars: investment terms",
+   "link_kind": "apply",
+   "link_note": "The page covers terms only. Check the apply site for open programs.",
+   "link_exact": true,
+   "regions": []
+  },
+  {
+   "id": "accel-rx",
+   "name": "Accel-Rx Health Sciences Accelerator",
+   "org": "Accel-Rx",
+   "level": "private",
+   "type": "accelerator",
+   "summary": "Canada's health sciences accelerator: mentoring, advisors, financial resources, pitch coaching, investor forums and a mentor program.",
+   "amount": "",
+   "stages": [
+    "idea",
+    "prototype",
+    "launched",
+    "revenue",
+    "growth"
+   ],
+   "audiences": [],
+   "needs": [
+    "funding",
+    "mentorship",
+    "network",
+    "training"
+   ],
+   "sectors": [
+    "health"
+   ],
+   "provinces": [
+    "any"
+   ],
+   "requires": {},
+   "requirements": [
+    "Developing a therapeutic, medical device or diagnostic",
+    "Incorporated in Canada",
+    "Seed stage or earlier",
+    "Dedicated team or champion in place"
+   ],
+   "deadline": {
+    "kind": "none_published",
+    "date": null,
+    "note": "No application link or deadline on the page"
+   },
+   "status": "check",
+   "phase": "learn",
+   "apply_url": "https://www.accel-rx.com/programs/",
+   "source_url": "https://www.accel-rx.com/programs/",
+   "verified": "official",
+   "last_checked": "2026-11-21",
+   "restricted_to": [],
+   "link_label": "Accel-Rx programs",
+   "link_kind": "contact",
+   "link_note": "The page says to contact them for application details.",
+   "link_exact": true,
+   "regions": []
+  },
+  {
+   "id": "eu-studentpreneur",
+   "name": "Studentpreneur (Edmonton Unlimited)",
+   "org": "Edmonton Unlimited",
+   "level": "nonprofit",
+   "type": "incubator",
+   "summary": "16-week program for post-secondary students with two streams: Launch for idea stage and Grow for prototype or early validation. Up to $15,000 to advance your venture.",
+   "amount": "Access up to $15,000; students must first secure $7,500",
+   "stages": [
+    "idea",
+    "prototype"
+   ],
+   "audiences": [
+    "student"
+   ],
+   "needs": [
+    "funding",
+    "mentorship",
+    "network",
+    "legal",
+    "training"
+   ],
+   "sectors": [
+    "tech"
+   ],
+   "provinces": [
+    "AB"
+   ],
+   "requires": {},
+   "requirements": [
+    "Live in Edmonton or the surrounding area",
+    "Attend an eligible post-secondary institution",
+    "Innovative, technology-focused business concept"
+   ],
+   "deadline": {
+    "kind": "fixed",
+    "date": "2027-04-09",
+    "note": "2027 dates are tentative; the page says applications open Feb 15, 2027"
+   },
+   "status": "check",
+   "phase": "learn",
+   "apply_url": "https://airtable.com/appzCm8kKWnOxE3Ft/pagAQo57vSNj5DvjW/form",
+   "source_url": "https://edmontonunlimited.com/programs/student-founders-program/",
+   "verified": "official",
+   "last_checked": "2026-11-21",
+   "restricted_to": [],
+   "link_label": "Edmonton Unlimited: Studentpreneur",
+   "link_kind": "program",
+   "link_note": "Dates are tentative and the application opens in February 2027.",
+   "link_exact": true,
+   "regions": []
+  },
+  {
+   "id": "eu-deep-tech-foundry",
+   "name": "Deep Tech Foundry",
+   "org": "Edmonton Unlimited",
+   "level": "nonprofit",
+   "type": "accelerator",
+   "summary": "Deep-tech cohort of 8 to 12 companies over 12 to 16 weeks, with weekly Edmonton sessions. No cost and no equity.",
+   "amount": "No cost, no equity; 60 merit-based stipends for Edmonton-area students",
+   "stages": [
+    "prototype"
+   ],
+   "audiences": [],
+   "needs": [
+    "mentorship",
+    "ip",
+    "customers",
+    "network",
+    "funding"
+   ],
+   "sectors": [
+    "any"
+   ],
+   "provinces": [
+    "AB"
+   ],
+   "requires": {},
+   "requirements": [
+    "Living in Alberta",
+    "Working prototype or MVP, about Technology Readiness Level 4 to 6",
+    "Early customer engagement such as pilots or letters of intent"
+   ],
+   "deadline": {
+    "kind": "none_published",
+    "date": null,
+    "note": "Page shows dates with no year; design is being finalized"
+   },
+   "status": "check",
+   "phase": "learn",
+   "apply_url": "https://edmontonunlimited.com/programs/deep-tech-foundry/",
+   "source_url": "https://edmontonunlimited.com/programs/deep-tech-foundry/",
+   "verified": "official",
+   "last_checked": "2026-11-21",
+   "restricted_to": [],
+   "link_label": "Edmonton Unlimited: Deep Tech Foundry",
+   "link_kind": "program",
+   "link_note": "The page says the design is being finalized and only has a register-interest form.",
+   "link_exact": true,
+   "regions": []
+  },
+  {
+   "id": "eu-get-ready-set-raise",
+   "name": "Insight to Investment Ready (Edmonton Unlimited)",
+   "org": "Edmonton Unlimited",
+   "level": "nonprofit",
+   "type": "mentorship",
+   "summary": "Three-session investor-readiness series for 10 selected founders raising pre-seed or seed, with 1-on-1 coaching for selected companies.",
+   "amount": "",
+   "stages": [
+    "revenue"
+   ],
+   "audiences": [],
+   "needs": [
+    "mentorship",
+    "training"
+   ],
+   "sectors": [
+    "tech"
+   ],
+   "provinces": [
+    "any"
+   ],
+   "requires": {},
+   "requirements": [
+    "Raising or planning to raise pre-seed or seed capital",
+    "Meaningful early validation: revenue, pilots, LOIs or usage",
+    "Not an idea-stage program",
+    "Building tech or tech-enabled businesses"
+   ],
+   "deadline": {
+    "kind": "closed",
+    "date": "2026-03-20",
+    "note": "Intake closed"
+   },
+   "status": "closed",
+   "phase": "fund",
+   "apply_url": "https://edmontonunlimited.com/programs/get-ready-set-raise/",
+   "source_url": "https://edmontonunlimited.com/programs/get-ready-set-raise/",
+   "verified": "official",
+   "last_checked": "2026-11-21",
+   "restricted_to": [],
+   "link_label": "Edmonton Unlimited: Insight to Investment Ready",
+   "link_kind": "program",
+   "link_note": "Intake closed. Watch the page for the next series.",
+   "link_exact": true,
+   "regions": []
+  },
+  {
+   "id": "eu-customer-discovery",
+   "name": "Customer Discovery Series (Edmonton Unlimited)",
+   "org": "Edmonton Unlimited",
+   "level": "nonprofit",
+   "type": "mentorship",
+   "summary": "Three in-person sessions for 10 early-stage tech founders on ideal customer profile, interviews and value proposition, plus two 30-minute coaching sessions.",
+   "amount": "",
+   "stages": [
+    "idea",
+    "prototype"
+   ],
+   "audiences": [],
+   "needs": [
+    "mentorship",
+    "training",
+    "customers"
+   ],
+   "sectors": [
+    "tech"
+   ],
+   "provinces": [
+    "any"
+   ],
+   "requires": {},
+   "requirements": [
+    "Early-stage tech founders, solo or teams",
+    "Working on a product concept, MVP or pivot",
+    "Willing to test assumptions with customers"
+   ],
+   "deadline": {
+    "kind": "closed",
+    "date": "2026-04-29",
+    "note": "Intake closed; this round ran May 13 to June 9, 2026"
+   },
+   "status": "closed",
+   "phase": "learn",
+   "apply_url": "https://edmontonunlimited.com/programs/customer-discovery-series/",
+   "source_url": "https://edmontonunlimited.com/programs/customer-discovery-series/",
+   "verified": "official",
+   "last_checked": "2026-11-21",
+   "restricted_to": [],
+   "link_label": "Edmonton Unlimited: Customer Discovery Series",
+   "link_kind": "program",
+   "link_note": "This round has ended. Watch the page for the next one.",
+   "link_exact": true,
+   "regions": []
+  },
+  {
+   "id": "eu-experts-on-demand",
+   "name": "Experts on Demand (Edmonton Unlimited)",
+   "org": "Edmonton Unlimited",
+   "level": "nonprofit",
+   "type": "mentorship",
+   "summary": "Matches growth-stage Edmonton-region companies with vetted experts for up to 100 hours of fractional support, funded by Alberta Innovates at no cost to companies.",
+   "amount": "Funding available up to $10,000",
+   "stages": [
+    "prototype",
+    "launched",
+    "growth"
+   ],
+   "audiences": [],
+   "needs": [
+    "funding",
+    "mentorship",
+    "training",
+    "legal"
+   ],
+   "sectors": [
+    "any"
+   ],
+   "provinces": [
+    "AB"
+   ],
+   "requires": {},
+   "requirements": [
+    "Incorporated in Alberta",
+    "Operate in the Edmonton Region",
+    "MVP with established market traction",
+    "Potential to scale"
+   ],
+   "deadline": {
+    "kind": "none_published",
+    "date": null,
+    "note": "Fully subscribed; watch the newsletter for reopening"
+   },
+   "status": "closed",
+   "phase": "scale",
+   "apply_url": "https://edmontonunlimited.com/programs/experts-on-demand/",
+   "source_url": "https://edmontonunlimited.com/programs/experts-on-demand/",
+   "verified": "official",
+   "last_checked": "2026-11-21",
+   "restricted_to": [],
+   "link_label": "Edmonton Unlimited: Experts on Demand",
+   "link_kind": "program",
+   "link_note": "Fully subscribed right now.",
+   "link_exact": true,
+   "regions": []
+  },
+  {
+   "id": "eu-alberta-accelerator-500",
+   "name": "Alberta Accelerator by 500",
+   "org": "Edmonton Unlimited (listing) with 500 Global",
+   "level": "nonprofit",
+   "type": "accelerator",
+   "summary": "Accelerator for early-stage, tech-enabled startups looking to scale in Alberta, covering clean energy, digital health and AI, with access to the 500 Global network.",
+   "amount": "",
+   "stages": [
+    "idea",
+    "prototype",
+    "launched",
+    "revenue",
+    "growth"
+   ],
+   "audiences": [],
+   "needs": [
+    "mentorship",
+    "network",
+    "training",
+    "customers"
+   ],
+   "sectors": [
+    "any"
+   ],
+   "provinces": [
+    "AB"
+   ],
+   "requires": {},
+   "requirements": [
+    "Early-stage startups looking to scale in Alberta",
+    "Tech-enabled solution across any industry"
+   ],
+   "deadline": {
+    "kind": "none_published",
+    "date": null,
+    "note": "No dates or cost on the Edmonton Unlimited page"
+   },
+   "status": "check",
+   "phase": "learn",
+   "apply_url": "https://500.co/founders/alberta/accelerator",
+   "source_url": "https://edmontonunlimited.com/accelerators/alberta-accelerator-by-500/",
+   "verified": "official",
+   "last_checked": "2026-11-21",
+   "restricted_to": [],
+   "link_label": "500 Global: Alberta Accelerator",
+   "link_kind": "program",
+   "link_note": "Details are on the 500 Global page this links to.",
+   "link_exact": true,
+   "regions": []
+  },
+  {
+   "id": "eu-business-model-101",
+   "name": "Business Model 101 (Edmonton Unlimited)",
+   "org": "Edmonton Unlimited",
+   "level": "nonprofit",
+   "type": "resource",
+   "summary": "Free two-hour Lean Canvas workshop, in person in Edmonton or online, for people with a business idea or a problem to solve.",
+   "amount": "Offered at no cost",
+   "stages": [
+    "idea"
+   ],
+   "audiences": [],
+   "needs": [
+    "training",
+    "mentorship",
+    "network"
+   ],
+   "sectors": [
+    "any"
+   ],
+   "provinces": [
+    "any"
+   ],
+   "requires": {},
+   "requirements": [
+    "Have a business idea, not necessarily tech-enabled",
+    "Or have identified a problem you want to solve"
+   ],
+   "deadline": {
+    "kind": "rolling",
+    "date": null,
+    "note": "No session dates listed; register for an upcoming workshop"
+   },
+   "status": "open",
+   "phase": "learn",
+   "apply_url": "https://airtable.com/appzCm8kKWnOxE3Ft/pagaE0IX3qjVTnXwZ/form",
+   "source_url": "https://edmontonunlimited.com/programs/business-model-101/",
+   "verified": "official",
+   "last_checked": "2026-11-21",
+   "restricted_to": [],
+   "link_label": "Edmonton Unlimited: Business Model 101",
+   "link_kind": "program",
+   "link_note": "Free workshop. Dates are shown when you register.",
+   "link_exact": true,
+   "regions": []
+  },
+  {
+   "id": "propel-eaccelerator",
+   "name": "Propel e-Accelerator",
+   "org": "Propel",
+   "level": "nonprofit",
+   "type": "accelerator",
+   "summary": "Virtual accelerator for tech and tech-enabled founders in Atlantic Canada: a Vision program for early founders and Traction & Growth for founders with over $1,000 monthly recurring revenue.",
+   "amount": "",
+   "stages": [
+    "idea",
+    "revenue",
+    "growth"
+   ],
+   "audiences": [],
+   "needs": [
+    "mentorship",
+    "network",
+    "talent",
+    "customers"
+   ],
+   "sectors": [
+    "tech"
+   ],
+   "provinces": [
+    "NB",
+    "NL",
+    "NS",
+    "PE"
+   ],
+   "requires": {},
+   "requirements": [
+    "Based in Atlantic Canada",
+    "Technology component in the business idea",
+    "Traction & Growth: over $1,000 monthly recurring revenue and working full time"
+   ],
+   "deadline": {
+    "kind": "rolling",
+    "date": null,
+    "note": "Continuous intake; the full process typically takes 3 to 4 weeks"
+   },
+   "status": "rolling",
+   "phase": "learn",
+   "apply_url": "https://www.propelict.com/apply",
+   "source_url": "https://www.propelict.com/apply",
+   "verified": "official",
+   "last_checked": "2026-11-21",
+   "restricted_to": [],
+   "link_label": "Propel: apply",
+   "link_kind": "program",
+   "link_note": "Two tracks, Vision and Traction & Growth. Intake is continuous.",
+   "link_exact": true,
+   "regions": []
+  },
+  {
+   "id": "volta-cohort",
+   "name": "Volta Cohort",
+   "org": "Volta",
+   "level": "nonprofit",
+   "type": "investor",
+   "summary": "Nova Scotia program for early-stage founders: mentorship, workspace and $25,000 investments through a microfund co-founded by Volta, BDC Capital, Innovacorp and ACOA.",
+   "amount": "$25,000 investments through a microfund",
+   "stages": [
+    "idea",
+    "prototype",
+    "launched",
+    "revenue",
+    "growth"
+   ],
+   "audiences": [],
+   "needs": [
+    "funding",
+    "mentorship",
+    "space"
+   ],
+   "sectors": [
+    "any"
+   ],
+   "provinces": [
+    "NS"
+   ],
+   "requires": {},
+   "requirements": [
+    "Early-stage, venture-ready startup"
+   ],
+   "deadline": {
+    "kind": "none_published",
+    "date": null,
+    "note": "No intake dates stated"
+   },
+   "status": "check",
+   "phase": "fund",
+   "apply_url": "https://www.startupatlantic.ca/startup-programs/volta-volta-cohort",
+   "source_url": "https://www.startupatlantic.ca/startup-programs/volta-volta-cohort",
+   "verified": "third_party",
+   "last_checked": "2026-11-21",
+   "restricted_to": [],
+   "link_label": "Startup Atlantic: Volta Cohort listing",
+   "link_kind": "directory",
+   "link_note": "Listing on Startup Atlantic; check voltaeffect.com for intake.",
+   "link_exact": true,
+   "regions": []
+  },
+  {
+   "id": "volta-academy",
+   "name": "Volta Academy",
+   "org": "Volta",
+   "level": "nonprofit",
+   "type": "incubator",
+   "summary": "Nova Scotia program that helps future founders go from a big idea to a validated, viable tech-enabled startup with Volta mentors.",
+   "amount": "",
+   "stages": [
+    "idea"
+   ],
+   "audiences": [],
+   "needs": [
+    "mentorship",
+    "training"
+   ],
+   "sectors": [
+    "tech"
+   ],
+   "provinces": [
+    "NS"
+   ],
+   "requires": {},
+   "requirements": [
+    "An idea you need support validating"
+   ],
+   "deadline": {
+    "kind": "none_published",
+    "date": null,
+    "note": "No intake dates stated"
+   },
+   "status": "check",
+   "phase": "learn",
+   "apply_url": "https://www.startupatlantic.ca/startup-programs/volta-volta-academy",
+   "source_url": "https://www.startupatlantic.ca/startup-programs/volta-volta-academy",
+   "verified": "third_party",
+   "last_checked": "2026-11-21",
+   "restricted_to": [],
+   "link_label": "Startup Atlantic: Volta Academy listing",
+   "link_kind": "directory",
+   "link_note": "Listing on Startup Atlantic; check voltaeffect.com for intake.",
+   "link_exact": true,
+   "regions": []
+  },
+  {
+   "id": "startup-zone-pei",
+   "name": "Startup Zone Accelerator (PEI)",
+   "org": "Startup Zone",
+   "level": "nonprofit",
+   "type": "accelerator",
+   "summary": "Prince Edward Island accelerator with weekly expert training, business-building assignments, office hours and partner discounts.",
+   "amount": "",
+   "stages": [
+    "idea",
+    "prototype",
+    "launched",
+    "revenue",
+    "growth"
+   ],
+   "audiences": [],
+   "needs": [
+    "training"
+   ],
+   "sectors": [
+    "any"
+   ],
+   "provinces": [
+    "PE"
+   ],
+   "requires": {},
+   "requirements": [
+    "Formally apply and interview"
+   ],
+   "deadline": {
+    "kind": "none_published",
+    "date": null,
+    "note": "No intake dates or cost stated"
+   },
+   "status": "check",
+   "phase": "learn",
+   "apply_url": "https://www.startupatlantic.ca/startup-programs/startup-zone-accelerator-program",
+   "source_url": "https://www.startupatlantic.ca/startup-programs/startup-zone-accelerator-program",
+   "verified": "third_party",
+   "last_checked": "2026-11-21",
+   "restricted_to": [],
+   "link_label": "Startup Atlantic: Startup Zone listing",
+   "link_kind": "directory",
+   "link_note": "Listing on Startup Atlantic; check startupzone.ca for intake.",
+   "link_exact": true,
+   "regions": []
+  },
+  {
+   "id": "ontario-genomics-biocreate",
+   "name": "BioCreate (Ontario Genomics)",
+   "org": "Ontario Genomics",
+   "level": "nonprofit",
+   "type": "accelerator",
+   "summary": "$11.6M accelerator for Ontario biotech companies in health, food and agriculture, and cleantech. Selected companies get seed funding, 18 months of mentorship and infrastructure access.",
+   "amount": "$150,000 in seed funding",
+   "stages": [
+    "idea",
+    "prototype",
+    "launched",
+    "revenue",
+    "growth"
+   ],
+   "audiences": [],
+   "needs": [
+    "funding",
+    "mentorship",
+    "space"
+   ],
+   "sectors": [
+    "health",
+    "food",
+    "cleantech"
+   ],
+   "provinces": [
+    "ON"
+   ],
+   "requires": {},
+   "requirements": [
+    "Ontario biotech company"
+   ],
+   "deadline": {
+    "kind": "closed",
+    "date": null,
+    "note": "Not accepting applications; all companies in this round are selected"
+   },
+   "status": "closed",
+   "phase": "fund",
+   "apply_url": "https://www.ontariogenomics.ca/funding-opportunity/biocreate-program/",
+   "source_url": "https://www.ontariogenomics.ca/funding-opportunity/biocreate-program/",
+   "verified": "official",
+   "last_checked": "2026-11-21",
+   "restricted_to": [],
+   "link_label": "Ontario Genomics: BioCreate",
+   "link_kind": "program",
+   "link_note": "Not accepting applications. Apply by email when a new round opens.",
+   "link_exact": true,
+   "regions": []
+  },
+  {
+   "id": "mila-launchpad",
+   "name": "Mila Ventures Launchpad",
+   "org": "Mila",
+   "level": "academic",
+   "type": "accelerator",
+   "summary": "Free, no-equity program for AI and deep-tech founders: co-working inside Mila, investor intros, talent pipeline, mentoring, cloud credits and software discounts. Up to 3 years.",
+   "amount": "No equity; the program is free",
+   "stages": [
+    "idea"
+   ],
+   "audiences": [],
+   "needs": [
+    "space",
+    "mentorship",
+    "network",
+    "talent",
+    "tools",
+    "training",
+    "legal"
+   ],
+   "sectors": [
+    "tech"
+   ],
+   "provinces": [
+    "QC"
+   ],
+   "requires": {},
+   "requirements": [
+    "At least one Mila member (student, alumni or professor) on the cap table",
+    "Defensible breakthrough technology and IP",
+    "Strong commercial potential"
+   ],
+   "deadline": {
+    "kind": "rolling",
+    "date": null,
+    "note": "Rolling applications; interviews every 6 weeks"
+   },
+   "status": "rolling",
+   "phase": "learn",
+   "apply_url": "https://docs.google.com/forms/d/e/1FAIpQLSdeld7vQrHeYSAZVTgoYv8KweHWztlkWS5z_0c6zf0J33bP2w/viewform",
+   "source_url": "https://mila.quebec/en/industry/mila-ventures/mila-ventures-launchpad",
+   "verified": "official",
+   "last_checked": "2026-11-21",
+   "restricted_to": [],
+   "link_label": "Mila Ventures Launchpad",
+   "link_kind": "program",
+   "link_note": "Needs a Mila member on the cap table. Applications are rolling.",
+   "link_exact": true,
+   "regions": []
+  },
+  {
+   "id": "mila-founder-in-residence",
+   "name": "Mila Ventures Founder in Residence",
+   "org": "Mila",
+   "level": "academic",
+   "type": "incubator",
+   "summary": "Residency for serial founders and domain experts building AI-first companies: co-working at Mila, talent matching, mentoring, cloud credits. Six months, extendable to a year.",
+   "amount": "Mila receives stock options on successful talent matches",
+   "stages": [
+    "idea",
+    "prototype",
+    "launched",
+    "revenue",
+    "growth"
+   ],
+   "audiences": [],
+   "needs": [
+    "space",
+    "talent",
+    "mentorship",
+    "network",
+    "tools",
+    "legal",
+    "training"
+   ],
+   "sectors": [
+    "tech"
+   ],
+   "provinces": [
+    "QC"
+   ],
+   "requires": {},
+   "requirements": [
+    "Formed a company or have a clear idea",
+    "AI is central to your product thesis",
+    "Room on the team for AI practitioners"
+   ],
+   "deadline": {
+    "kind": "none_published",
+    "date": null,
+    "note": "No intake dates stated"
+   },
+   "status": "check",
+   "phase": "learn",
+   "apply_url": "https://docs.google.com/forms/d/e/1FAIpQLScwxj1IiGZwX39cw8HU-DpeuRiqy7VukR1RiwW7NuSoaZ2MAg/viewform",
+   "source_url": "https://mila.quebec/en/industry/mila-ventures/mila-ventures-founder-in-residence",
+   "verified": "official",
+   "last_checked": "2026-11-21",
+   "restricted_to": [],
+   "link_label": "Mila Founder in Residence",
+   "link_kind": "program",
+   "link_note": "For serial founders and veteran builders. No dates on the page.",
+   "link_exact": true,
+   "regions": []
+  },
+  {
+   "id": "mila-venture-sprint",
+   "name": "Mila Venture Sprint",
+   "org": "Mila",
+   "level": "academic",
+   "type": "incubator",
+   "summary": "Part-time, four-sprint program to test whether entrepreneurship suits you. About one day a week. No idea or team needed.",
+   "amount": "",
+   "stages": [
+    "idea",
+    "prototype",
+    "launched",
+    "revenue",
+    "growth"
+   ],
+   "audiences": [],
+   "needs": [
+    "training"
+   ],
+   "sectors": [
+    "any"
+   ],
+   "provinces": [
+    "QC"
+   ],
+   "requires": {},
+   "requirements": [
+    "Anyone close to academia",
+    "Current grad students and postdocs, Mila applicants first",
+    "Anyone up to 5 years out of academia"
+   ],
+   "deadline": {
+    "kind": "none_published",
+    "date": null,
+    "note": "Listed session ran Oct 13 to Dec 4, 2026; next session not stated"
+   },
+   "status": "check",
+   "phase": "learn",
+   "apply_url": "https://mila.quebec/en/industry/mila-ventures/venture-sprint",
+   "source_url": "https://mila.quebec/en/industry/mila-ventures/venture-sprint",
+   "verified": "official",
+   "last_checked": "2026-11-21",
+   "restricted_to": [],
+   "link_label": "Mila Venture Sprint",
+   "link_kind": "program",
+   "link_note": "The listed session is already under way. Check for the next one.",
+   "link_exact": true,
+   "regions": []
+  },
+  {
+   "id": "bioenterprise-goah",
+   "name": "Grow Ontario Accelerator Hub (GOAH)",
+   "org": "Bioenterprise Canada",
+   "level": "nonprofit",
+   "type": "accelerator",
+   "summary": "Fully remote, no-funding support for Ontario agri-food and agri-tech SMEs: up to 25 hours of 1-on-1 mentorship and a service-provider network.",
+   "amount": "25 hours of expert guidance; no direct funding",
+   "stages": [
+    "idea",
+    "prototype",
+    "launched",
+    "revenue",
+    "growth"
+   ],
+   "audiences": [],
+   "needs": [
+    "mentorship",
+    "training",
+    "tools",
+    "network",
+    "export",
+    "ip",
+    "legal"
+   ],
+   "sectors": [
+    "food",
+    "tech"
+   ],
+   "provinces": [
+    "ON"
+   ],
+   "requires": {},
+   "requirements": [
+    "Located and registered in Ontario",
+    "Agriculture, agri-food and agri-based products",
+    "Fewer than 50 employees",
+    "Technology at or beyond TRL 3"
+   ],
+   "deadline": {
+    "kind": "rolling",
+    "date": null,
+    "note": "Intake continues until capacity is reached; the page has stale 2025 dates"
+   },
+   "status": "rolling",
+   "phase": "learn",
+   "apply_url": "https://bioenterprise.ca/innovators/grow-ontario-accelerator-hub-goah/grow-ontario-accelerator-hub-goah-expression-of-interest/",
+   "source_url": "https://bioenterprise.ca/innovators/grow-ontario-accelerator-hub-goah/",
+   "verified": "official",
+   "last_checked": "2026-11-21",
+   "restricted_to": [],
+   "link_label": "Bioenterprise: GOAH",
+   "link_kind": "program",
+   "link_note": "Free mentorship, no cash. The page mixes old and new dates, so confirm intake.",
+   "link_exact": true,
+   "regions": []
+  },
+  {
+   "id": "lab2market-discover",
+   "name": "Lab2Market Discover",
+   "org": "Lab2Market",
+   "level": "academic",
+   "type": "resource",
+   "summary": "Free 10-week online program for researchers (Masters, PhD, postdoc) to test whether entrepreneurship suits them. Up to 3 hours a week.",
+   "amount": "Free of cost",
+   "stages": [
+    "idea",
+    "prototype",
+    "launched",
+    "revenue",
+    "growth"
+   ],
+   "audiences": [
+    "student"
+   ],
+   "needs": [
+    "training",
+    "network"
+   ],
+   "sectors": [
+    "tech"
+   ],
+   "provinces": [
+    "any"
+   ],
+   "requires": {},
+   "requirements": [
+    "Current students and recent graduates in Canada pursuing research",
+    "Quebec applicants must apply through the QcSE program",
+    "Up to 3 hours a week"
+   ],
+   "deadline": {
+    "kind": "none_published",
+    "date": null,
+    "note": "Cohorts run through the year; only a mailing-list form for the next one"
+   },
+   "status": "check",
+   "phase": "learn",
+   "apply_url": "https://www.lab2market.ca/discover",
+   "source_url": "https://www.lab2market.ca/discover",
+   "verified": "official",
+   "last_checked": "2026-11-21",
+   "restricted_to": [],
+   "link_label": "Lab2Market: Discover",
+   "link_kind": "program",
+   "link_note": "Free. The page lists no open cohort dates.",
+   "link_exact": true,
+   "regions": []
+  },
+  {
+   "id": "amii-claude-credits",
+   "name": "Claude for Startups Program (Amii)",
+   "org": "Alberta Machine Intelligence Institute",
+   "level": "nonprofit",
+   "type": "perk",
+   "summary": "Amii startups active in ML Exploration or Level Up may get up to US$30,000 in Claude API credits, plus 3 months free Claude for Teams Tier 2 for new teams plans.",
+   "amount": "Up to US$30,000 in Claude API credits",
+   "stages": [
+    "idea",
+    "prototype",
+    "launched",
+    "revenue",
+    "growth"
+   ],
+   "audiences": [],
+   "needs": [
+    "tools"
+   ],
+   "sectors": [
+    "tech"
+   ],
+   "provinces": [
+    "any"
+   ],
+   "requires": {},
+   "requirements": [
+    "Active participant in Amii's ML Exploration or Level Up",
+    "For startups getting started with AI"
+   ],
+   "deadline": {
+    "kind": "none_published",
+    "date": null,
+    "note": "No deadline or open/closed status stated"
+   },
+   "status": "check",
+   "phase": "learn",
+   "apply_url": "https://www.amii.ca/startups-investors/claude-for-startups-program",
+   "source_url": "https://www.amii.ca/startups-investors/claude-for-startups-program",
+   "verified": "official",
+   "last_checked": "2026-11-21",
+   "restricted_to": [],
+   "link_label": "Amii: Claude for Startups Program",
+   "link_kind": "program",
+   "link_note": "Only for startups already in an Amii program.",
+   "link_exact": true,
+   "regions": []
+  },
+  {
+   "id": "windsor-scp",
+   "name": "Starter Company Plus (Windsor-Essex)",
+   "org": "Windsor-Essex Small Business & Entrepreneurship Centre",
+   "level": "nonprofit",
+   "type": "grant",
+   "summary": "Training, mentoring and grants up to $5,000 for eligible entrepreneurs 18 or older in Windsor-Essex, delivered by the local small business centre.",
+   "amount": "Up to $5,000 in grant funding",
+   "stages": [
+    "idea",
+    "prototype",
+    "launched",
+    "revenue",
+    "growth"
+   ],
+   "audiences": [],
+   "needs": [
+    "funding",
+    "mentorship",
+    "training",
+    "network"
+   ],
+   "sectors": [
+    "any"
+   ],
+   "provinces": [
+    "ON"
+   ],
+   "requires": {},
+   "requirements": [
+    "At least 18 years old",
+    "Ontario resident",
+    "Majority owner (51% or more) of the business",
+    "Not a full-time student or returning to school full-time"
+   ],
+   "deadline": {
+    "kind": "closed",
+    "date": "2026-07-31",
+    "note": "Applications are no longer being accepted for 2026"
+   },
+   "status": "closed",
+   "phase": "fund",
+   "apply_url": "https://www.webusinesscentre.com/how-we-can-help/programs-and-financial-support/starter-company-plus/",
+   "source_url": "https://www.webusinesscentre.com/how-we-can-help/programs-and-financial-support/starter-company-plus/",
+   "verified": "official",
+   "last_checked": "2026-11-21",
+   "restricted_to": [],
+   "link_label": "Windsor-Essex: Starter Company Plus",
+   "link_kind": "program",
+   "link_note": "Closed for 2026. Watch the page for next year.",
+   "link_exact": true,
+   "regions": []
+  },
+  {
+   "id": "startupcan-startup-women",
+   "name": "Startup Women (Startup Canada)",
+   "org": "Startup Canada",
+   "level": "nonprofit",
+   "type": "community",
+   "summary": "Annual program of free webinars, roundtables and in-person mentoring for women-identifying entrepreneurs across Canada. The page says Startup Canada does not offer funding or grants.",
+   "amount": "Free; no funding or grants",
+   "stages": [
+    "idea",
+    "growth"
+   ],
+   "audiences": [
+    "women"
+   ],
+   "needs": [
+    "mentorship",
+    "network",
+    "training",
+    "tools"
+   ],
+   "sectors": [
+    "creative",
+    "food",
+    "retail",
+    "tech"
+   ],
+   "provinces": [
+    "any"
+   ],
+   "requires": {},
+   "requirements": [
+    "Supports early-stage and scale-up women-identifying entrepreneurs across Canada",
+    "Virtual events are free"
+   ],
+   "deadline": {
+    "kind": "none_published",
+    "date": null,
+    "note": "2026 program ran February to November; next year's dates not stated"
+   },
+   "status": "check",
+   "phase": "learn",
+   "apply_url": "https://www.startupcan.ca/startup-women-events/",
+   "source_url": "https://www.startupcan.ca/explore/startup-women/",
+   "verified": "official",
+   "last_checked": "2026-11-21",
+   "restricted_to": [],
+   "link_label": "Startup Canada: Startup Women",
+   "link_kind": "program",
+   "link_note": "Free. The 2026 program is ending; watch for 2027.",
+   "link_exact": true,
+   "regions": []
+  },
+  {
+   "id": "startupcan-startup-global",
+   "name": "Startup Global (Startup Canada)",
+   "org": "Startup Canada",
+   "level": "nonprofit",
+   "type": "competition",
+   "summary": "Export program with free webinars and roundtables plus pitch competitions with cash prizes for Canadian businesses ready to expand abroad.",
+   "amount": "A share of $68,000 in cash prizes (the About section says $100,000)",
+   "stages": [
+    "revenue",
+    "growth"
+   ],
+   "audiences": [],
+   "needs": [
+    "funding",
+    "export",
+    "network",
+    "tools"
+   ],
+   "sectors": [
+    "any"
+   ],
+   "provinces": [
+    "any"
+   ],
+   "requires": {},
+   "requirements": [
+    "Ability to export within the next 2 years",
+    "At least one year of revenue and/or fundraising for R&D",
+    "More than $50,000 and under $1,000,000 revenue as of Feb 2, 2026",
+    "Primarily based in Canada"
+   ],
+   "deadline": {
+    "kind": "none_published",
+    "date": null,
+    "note": "No application deadline stated; 2026 webinars ran March to November"
+   },
+   "status": "check",
+   "phase": "scale",
+   "apply_url": "https://www.startupcan.ca/startup-global-national-pitch-competition/",
+   "source_url": "https://www.startupcan.ca/explore/startup-global/",
+   "verified": "official",
+   "last_checked": "2026-11-21",
+   "restricted_to": [],
+   "link_label": "Startup Canada: Startup Global",
+   "link_kind": "program",
+   "link_note": "2026 round is winding down. Check for 2027.",
+   "link_exact": true,
+   "regions": []
+  },
+  {
+   "id": "startupcan-bot",
+   "name": "Business Owner's Toolbox (Startup Canada)",
+   "org": "Startup Canada",
+   "level": "nonprofit",
+   "type": "resource",
+   "summary": "Free hub of foundational knowledge, resources and connections to start and scale a business in Canada, including training modules.",
+   "amount": "100% free",
+   "stages": [
+    "idea",
+    "prototype",
+    "launched",
+    "revenue",
+    "growth"
+   ],
+   "audiences": [],
+   "needs": [
+    "training",
+    "network",
+    "mentorship",
+    "legal"
+   ],
+   "sectors": [
+    "any"
+   ],
+   "provinces": [
+    "any"
+   ],
+   "requires": {},
+   "requirements": [
+    "Register to get free access to training modules"
+   ],
+   "deadline": {
+    "kind": "none_published",
+    "date": null,
+    "note": "No deadline; always available"
+   },
+   "status": "open",
+   "phase": "learn",
+   "apply_url": "https://www.startupcan.ca/toolbox/resources/",
+   "source_url": "https://www.startupcan.ca/business-owners-toolbox/",
+   "verified": "official",
+   "last_checked": "2026-11-21",
+   "restricted_to": [],
+   "link_label": "Startup Canada: Business Owner's Toolbox",
+   "link_kind": "program",
+   "link_note": "Free after you register.",
+   "link_exact": true,
+   "regions": []
   }
  ]
 }
