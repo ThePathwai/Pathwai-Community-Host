@@ -42,10 +42,16 @@ function TimingFilter({ value, onChange, list, testid = "nav-timing" }) {
   const opts = TIMING.map(([k, label]) => [k, label, n(k)]).filter(([k, , c]) => c > 0 || k === value);
   if (!opts.length) return null;
   return (
-    <div className="pw-rail -mx-4 flex gap-2 overflow-x-auto px-4 pb-1 sm:mx-0 sm:flex-wrap sm:overflow-visible sm:px-0" role="group" aria-label="Filter by timing" data-testid={testid}>
-      <Pill on={!value} onClick={() => onChange("")} testId={`${testid}-all`}>Any timing</Pill>
-      {opts.map(([k, label, c]) => <Pill key={k} on={value === k} onClick={() => onChange(value === k ? "" : k)} testId={`${testid}-${k}`}>{label}<span className="text-xs opacity-60">{c}</span></Pill>)}
-    </div>
+    <>
+      <select className="input !rounded-xl !py-2.5 w-full sm:hidden" value={value} onChange={(e) => onChange(e.target.value)} aria-label="When you can apply" data-testid={`${testid}-select`}>
+        <option value="">Any timing</option>
+        {opts.map(([k, label, c]) => <option key={k} value={k}>{label} · {c}</option>)}
+      </select>
+      <div className="hidden flex-wrap gap-2 sm:flex" role="group" aria-label="Filter by timing" data-testid={testid}>
+        <Pill on={!value} onClick={() => onChange("")} testId={`${testid}-all`}>Any timing</Pill>
+        {opts.map(([k, label, c]) => <Pill key={k} on={value === k} onClick={() => onChange(value === k ? "" : k)} testId={`${testid}-${k}`}>{label}<span className="text-xs opacity-60">{c}</span></Pill>)}
+      </div>
+    </>
   );
 }
 
@@ -54,7 +60,7 @@ function Segmented({ items, value, onChange }) {
     <div className="pw-rail inline-flex max-w-full overflow-x-auto rounded-full border border-line p-1" role="tablist">
       {items.map(([k, label]) => (
         <button key={k} role="tab" aria-selected={value === k} onClick={() => onChange(k)} data-testid={`nav-tab-${k}`}
-          className={cx("shrink-0 whitespace-nowrap rounded-full px-3 py-1.5 text-sm font-medium transition sm:px-4", value === k ? "" : "text-muted hover:text-ink")}
+          className={cx("shrink-0 whitespace-nowrap rounded-full px-3 py-1.5 text-[13px] font-medium transition sm:px-4 sm:text-sm", value === k ? "" : "text-muted hover:text-ink")}
           style={value === k ? { background: "var(--accent)", color: "var(--on-accent)" } : undefined}>{label}</button>
       ))}
     </div>
@@ -78,10 +84,10 @@ function CommunityCard({ c }) {
 // Signed out: there is no profile to read yet, so there is nothing to fill in here. The page says so and points at the two ways in.
 function SignedOutGate() {
   return (
-    <section className="relative overflow-hidden rounded-3xl border border-line p-6 sm:p-10" style={{ background: "radial-gradient(110% 130% at 100% 0%, rgb(var(--c-ink) / 0.10) 0%, transparent 55%), rgb(var(--c-surface))" }} aria-label="Your profile" data-testid="nav-gate">
-      <span className="flex h-12 w-12 items-center justify-center rounded-full" style={{ background: "var(--accent)", color: "var(--on-accent)" }}><Rocket className="h-6 w-6" aria-hidden /></span>
-      <h2 className="mt-5 max-w-xl text-3xl leading-tight sm:text-4xl" style={{ textWrap: "balance", textTransform: "none", letterSpacing: "-0.03em", fontWeight: 800 }}>Your profile picks the programs</h2>
-      <p className="mt-3 max-w-xl text-base text-muted">Tell Pathwai about your startup once, in your profile. This page, the communities suggested to you and the guide all follow it and update when it changes. There is no form to fill in here.</p>
+    <section className="relative overflow-hidden rounded-3xl border border-line p-4 sm:p-10" style={{ background: "radial-gradient(110% 130% at 100% 0%, rgb(var(--c-ink) / 0.10) 0%, transparent 55%), rgb(var(--c-surface))" }} aria-label="Your profile" data-testid="nav-gate">
+      <span className="flex h-10 w-10 items-center justify-center rounded-full sm:h-12 sm:w-12" style={{ background: "var(--accent)", color: "var(--on-accent)" }}><Rocket className="h-5 w-5 sm:h-6 sm:w-6" aria-hidden /></span>
+      <h2 className="mt-4 max-w-xl text-2xl leading-tight sm:mt-5 sm:text-4xl" style={{ textWrap: "balance", textTransform: "none", letterSpacing: "-0.03em", fontWeight: 800 }}>Your profile picks the programs</h2>
+      <p className="mt-2 max-w-xl text-sm text-muted sm:mt-3 sm:text-base">Tell Pathwai about your startup once, in your profile. This page, the communities suggested to you and the guide all follow it and update when it changes. There is no form to fill in here.</p>
       <div className="mt-6 flex flex-col gap-2 sm:flex-row">
         <Link to="/signup?for=founder" className="btn-primary !px-6 !py-3 text-sm" data-testid="nav-gate-signup">Create your profile<ArrowRight className="h-4 w-4" /></Link>
         <Link to="/login?next=navigator" className="btn-ghost !px-6 !py-3 text-sm" data-testid="nav-gate-signin">Sign in</Link>
@@ -107,9 +113,9 @@ const monthDay = (iso) => { try { const d = new Date(iso + "T12:00:00"); return 
 
 function Panel({ title, sub, action, children, className, testId }) {
   return (
-    <section className={cx("rounded-3xl border border-line bg-surface p-5 sm:p-6", className)} data-testid={testId}>
+    <section className={cx("rounded-3xl border border-line bg-surface p-4 sm:p-6", className)} data-testid={testId}>
       <div className="mb-4 flex flex-wrap items-end justify-between gap-3">
-        <div className="min-w-0 flex-1 basis-48"><h2 className="text-lg font-semibold" style={{ textTransform: "none", letterSpacing: "-0.02em" }}>{title}</h2>{sub && <p className="mt-0.5 text-sm text-muted">{sub}</p>}</div>
+        <div className="min-w-0 flex-1 basis-48"><h2 className="text-base font-semibold sm:text-lg" style={{ textTransform: "none", letterSpacing: "-0.02em" }}>{title}</h2>{sub && <p className="mt-0.5 text-sm text-muted">{sub}</p>}</div>
         {action}
       </div>
       {children}
@@ -148,8 +154,8 @@ function SignedOutShowcase({ meta, onOpen, onBrowse }) {
         <div className="grid grid-cols-[repeat(2,minmax(0,1fr))] gap-2.5 sm:grid-cols-[repeat(3,minmax(0,1fr))] sm:gap-3 lg:grid-cols-[repeat(4,minmax(0,1fr))]">
           {tiles.map((t) => (
             <button key={t.key} type="button" onClick={() => onBrowse(t.key)} className="flex min-w-0 items-center gap-2.5 rounded-2xl border border-line p-2.5 text-left transition hover:border-ink/40 max-sm:[&:nth-child(n+7)]:hidden sm:gap-3 sm:p-3" data-testid={`nav-tile-${t.key}`}>
-              <TypeTile type={t.key} size={40} />
-              <span className="min-w-0"><span className="block truncate font-semibold leading-tight">{t.label}</span><span className="block text-sm tabular-nums text-muted">{counts[t.key]}</span></span>
+              <TypeTile type={t.key} size={32} />
+              <span className="min-w-0"><span className="block truncate text-sm font-semibold leading-tight">{t.label}</span><span className="block text-xs tabular-nums text-muted">{counts[t.key]}</span></span>
             </button>
           ))}
         </div>
@@ -289,9 +295,9 @@ function useMedia(q) {
 function ProgramRow({ p, onOpen, mark }) {
   return (
     <button type="button" onClick={() => onOpen(p)} data-testid={`row-${p.id}`} className="flex w-full items-center gap-3 rounded-2xl border border-line bg-surface p-3 text-left transition active:bg-ink/[.05]">
-      <TypeTile type={p.type} size={40} />
+      <TypeTile type={p.type} size={34} />
       <span className="min-w-0 flex-1">
-        <span className="line-clamp-2 block text-[15px] font-semibold leading-snug">{p.name}</span>
+        <span className="line-clamp-2 block text-sm font-semibold leading-snug">{p.name}</span>
         <span className="mt-1 flex items-center gap-2 text-xs text-muted"><span className="min-w-0 truncate">{p.community ? `From ${p.community.name}` : p.org}</span><span className="shrink-0 whitespace-nowrap"><Status status={p.status} /></span>{mark === "yes" && <Bookmark className="h-3 w-3 shrink-0 text-sky-500" aria-label="Interested" />}</span>
       </span>
       {p.fit && p.fit !== "skip" && <FitMeter fit={p.fit} showLabel={false} />}
@@ -334,8 +340,8 @@ function PhoneForYou({ res, onOpen, tracked, onTrack, imap, nudge, generic, load
           {hero ? (
             <section className="rounded-3xl border border-line p-4" style={{ background: `linear-gradient(140deg, ${tint(typeMeta(hero.type).color, 0.12)} 0%, transparent 55%), rgb(var(--c-surface))` }} data-testid="phone-hero">
               <p className="eyebrow">Start here</p>
-              <div className="mt-3 flex items-center gap-3"><TypeTile type={hero.type} size={44} /><span className="min-w-0 flex-1"><span className="block text-[11px] font-semibold uppercase text-muted" style={{ letterSpacing: "0.12em" }}>{TYPE_LABEL[hero.type] || hero.type}</span><span className="block truncate text-xs text-muted">{hero.org}</span></span><FitMeter fit={hero.fit} showLabel={false} /></div>
-              <p className="mt-3 text-xl font-semibold leading-snug" style={{ textWrap: "balance" }}>{hero.name}</p>
+              <div className="mt-3 flex items-center gap-3"><TypeTile type={hero.type} size={38} /><span className="min-w-0 flex-1"><span className="block text-[11px] font-semibold uppercase text-muted" style={{ letterSpacing: "0.12em" }}>{TYPE_LABEL[hero.type] || hero.type}</span><span className="block truncate text-xs text-muted">{hero.org}</span></span><FitMeter fit={hero.fit} showLabel={false} /></div>
+              <p className="mt-3 text-lg font-semibold leading-snug" style={{ textWrap: "balance" }}>{hero.name}</p>
               {leadReason(hero) && <p className="mt-2 flex gap-2 text-sm text-ink/80"><Check className="mt-0.5 h-4 w-4 shrink-0 text-emerald-500" aria-hidden /><span className="line-clamp-3">{leadReason(hero)}</span></p>}
               <div className="mt-3 flex flex-wrap items-center gap-2"><Status status={hero.status} /><DeadlineChip p={hero} /></div>
               <button type="button" onClick={() => onOpen(hero)} className="btn-primary mt-4 w-full !py-3 text-sm" data-testid="phone-hero-open">See details<ArrowRight className="h-4 w-4" /></button>
@@ -362,13 +368,16 @@ function PhoneForYou({ res, onOpen, tracked, onTrack, imap, nudge, generic, load
       {v === "all" && (
         <div data-testid="phone-all">
           <div className="[&>div]:flex [&>div]:w-full [&_button]:flex-1"><Segmented items={[["fit", `For you · ${fits.length}`], ["other", `Everything else · ${others.length}`]]} value={view} onChange={(x) => { setView(x); setType(""); setTiming(""); setLimit(10); }} /></div>
-          <div className="mt-3"><TimingFilter value={timing} onChange={(x) => { setTiming(x); setLimit(10); }} list={base} /></div>
-          {Object.keys(counts).length > 1 && (
-            <div className="pw-rail -mx-4 mt-2 flex gap-2 overflow-x-auto px-4 pb-1" role="group" aria-label="Filter by type">
-              <Pill on={!type} onClick={() => setType("")}>All<span className="text-xs opacity-60">{timed.length}</span></Pill>
-              {Object.entries(counts).map(([k, n]) => { const { color, Icon } = typeMeta(k); return <Pill key={k} on={type === k} color={color} onClick={() => setType(type === k ? "" : k)}><Icon className="h-3.5 w-3.5" aria-hidden />{TYPE_LABEL[k] || k}<span className="text-xs opacity-60">{n}</span></Pill>; })}
-            </div>
-          )}
+          <div className="mt-3 grid grid-cols-[repeat(2,minmax(0,1fr))] gap-2" data-testid="phone-filters">
+            <select className="input !rounded-xl !py-2.5 w-full" value={timing} onChange={(e) => { setTiming(e.target.value); setLimit(10); }} aria-label="When you can apply" data-testid="phone-timing">
+              <option value="">Any timing</option>
+              {TIMING.map(([k, label]) => <option key={k} value={k}>{label} · {base.filter((p) => timingMatch(k, p)).length}</option>)}
+            </select>
+            <select className="input !rounded-xl !py-2.5 w-full" value={type} onChange={(e) => setType(e.target.value)} aria-label="Kind of program" data-testid="phone-type">
+              <option value="">All kinds · {timed.length}</option>
+              {Object.entries(counts).map(([k, n]) => <option key={k} value={k}>{TYPE_LABEL[k] || k} · {n}</option>)}
+            </select>
+          </div>
           {shown.length === 0 && <p className="mt-4 rounded-2xl border border-dashed border-line p-5 text-center text-sm text-muted">Nothing here matches that. <button type="button" onClick={() => { setTiming(""); setType(""); }} className="font-semibold text-ink underline">Clear filters</button></p>}
           {view === "fit" ? <>{group("Good matches", best.slice(0, limit))}{group("Worth a look", worth.slice(0, Math.max(0, limit - best.length)))}</> : <div className="mt-4 space-y-2">{shown.slice(0, limit).map((p) => <ProgramRow key={p.id} p={p} onOpen={onOpen} mark={imap?.[p.id]} />)}</div>}
           {shown.length > limit && <button type="button" onClick={() => setLimit((n) => n + 15)} className="btn-ghost mt-4 w-full !py-3 text-sm">Show {Math.min(15, shown.length - limit)} more</button>}
@@ -599,7 +608,12 @@ function Directory({ meta, onOpen, imap, eco, fitRes, account, hasProfile, start
           <input className="input !rounded-full !py-3 !pl-11" placeholder="Search by name, organisation or what it offers" value={f.q} onChange={(e) => set("q", e.target.value)} aria-label="Search programs" data-testid="dir-search" /></div>}
         <div>
           <span className={label} style={{ letterSpacing: "0.12em" }}>What kind</span>
-          <div className="pw-rail -mx-4 flex gap-2 overflow-x-auto px-4 pb-1 sm:mx-0 sm:flex-wrap sm:overflow-visible sm:px-0">
+          <select className="input !rounded-xl !py-2.5 w-full sm:hidden" value={ev ? "events" : f.type} onChange={(e) => { const v = e.target.value; if (v === "events") { setEv(true); } else { setEv(false); set("type", v); } }} aria-label="What kind" data-testid="dir-type-select">
+            <option value="">All kinds</option>
+            {meta.types.map((t) => <option key={t.key} value={t.key}>{t.label}{counts[t.key] ? ` · ${counts[t.key]}` : ""}</option>)}
+            <option value="events">Events</option>
+          </select>
+          <div className="hidden flex-wrap gap-2 sm:flex">
             {meta.types.map((t) => { const { color, Icon } = typeMeta(t.key); return <Pill key={t.key} on={!ev && f.type === t.key} color={color} onClick={() => { setEv(false); set("type", f.type === t.key ? "" : t.key); }} testId={`dir-type-${t.key}`}><Icon className="h-3.5 w-3.5" aria-hidden />{t.label}{counts[t.key] ? <span className="text-xs opacity-60">{counts[t.key]}</span> : null}</Pill>; })}
             <Pill on={ev} color="#F59E0B" onClick={() => setEv(!ev)} testId="dir-type-events"><CalendarDays className="h-3.5 w-3.5" aria-hidden />Events</Pill>
           </div>
@@ -745,7 +759,7 @@ export default function Navigator({ embedded }) {
           <h1 className="text-2xl sm:mt-2 sm:text-4xl" style={{ textTransform: "none", letterSpacing: "-0.03em", fontWeight: 800, textWrap: "balance" }}>{eco ? (scope === "hub" ? `Programs & grants at ${eco.hub}` : `Programs & grants across ${eco.wider}`) : account ? "Opportunities that fit your startup" : "Canadian opportunities that fit your startup"}</h1>
           <p className="mt-2 hidden text-sm text-muted sm:block">{eco ? (scope === "hub" ? (eco.wider ? `What ${eco.hub} runs, plus the grants, loans and programs its team points founders to. Each one is checked against your startup.` : `What ${eco.hub} runs for founders. Each one is checked against your startup.`) : `Every grant, loan, accelerator and mentor we track, with ${eco.hub} programs first.`) : meta ? <>{meta.count} grants, loans, accelerators, mentors and founder communities, each with its source, plus upcoming events. Communities you join add their own on top.</> : "Loading"}</p>
         </div>
-        <Segmented items={[["path", "For you"], ["all", "Browse all"], ...(account ? [["saved", itc.interest.some((i) => i.state === "yes") ? `Interested · ${itc.interest.filter((i) => i.state === "yes").length}` : "Interested"]] : []), ["ask", <><span className="sm:hidden">Guide</span><span className="hidden sm:inline">Ask the guide</span></>]]} value={tab} onChange={setTab} />
+        <div className="w-full max-sm:[&>div]:flex max-sm:[&>div]:w-full max-sm:[&>div]:overflow-visible max-sm:[&_button]:flex-1 max-sm:[&_button]:px-1.5 sm:w-auto"><Segmented items={[["path", "For you"], ["all", <><span className="sm:hidden">Browse</span><span className="hidden sm:inline">Browse all</span></>], ...(account ? [["saved", <><span className="sm:hidden">Saved{itc.interest.some((i) => i.state === "yes") ? ` · ${itc.interest.filter((i) => i.state === "yes").length}` : ""}</span><span className="hidden sm:inline">{itc.interest.some((i) => i.state === "yes") ? `Interested · ${itc.interest.filter((i) => i.state === "yes").length}` : "Interested"}</span></>]] : []), ["ask", <><span className="sm:hidden">Guide</span><span className="hidden sm:inline">Ask the guide</span></>]]} value={tab} onChange={setTab} /></div>
       </div>
 
       {eco?.wider && account && tab === "path" && <div className="mb-5"><ScopeSwitch eco={eco} scope={scope} onChange={setScope} total={res?.catalog_total} here={scope === "hub" ? (res ? (res.totals?.fit ?? null) : null) : null} /></div>}

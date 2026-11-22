@@ -304,7 +304,7 @@ h3, h4 { letter-spacing: -0.02em; }
 .app-tab[aria-current="page"] .app-tab-ico { background: rgb(var(--c-ink) / 0.14); }
 
 @media (max-width: 639px) {
-  html { -webkit-text-size-adjust: 100%; }
+  html { -webkit-text-size-adjust: 100%; font-size: 15px; } /* phones: everything sized in rem (text, icons, spacing) is 6% smaller than on a computer */
   a, button { -webkit-tap-highlight-color: transparent; }
   input:not([type="checkbox"]):not([type="radio"]), select, textarea { font-size: 16px; }
   /* the community bar (Layout) becomes the same flat docked bar */
