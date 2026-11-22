@@ -6,8 +6,8 @@ import { useAuth } from "../lib/auth";
 import { Wordmark, PoweredBy, Spinner, cx } from "../components/ui";
 import { NEED_HINT, NEED_LABEL, TYPE_LABEL } from "../lib/navigator";
 import { startDemo } from "../lib/demo";
-import { TIMING, timingMatch, tint, typeMeta } from "../lib/programStyle";
-import { FitMeter, ProgramCard, ProgramDrawer, TypeTile } from "../components/ProgramCards";
+import { TIMING, leadReason, timingMatch, tint, typeMeta } from "../lib/programStyle";
+import { DeadlineChip, FitMeter, ProgramCard, ProgramDrawer, TypeTile } from "../components/ProgramCards";
 import { Status } from "../components/NavBits";
 import { useTracked } from "../lib/useTracked";
 import { useInterest } from "../lib/useInterest";
@@ -147,7 +147,7 @@ function SignedOutShowcase({ meta, onOpen, onBrowse }) {
       <Panel title="What is in the catalog" sub={`${total} programs across Canada. Pick a kind to browse it.`} action={<button type="button" onClick={() => onBrowse("")} className="btn-ghost !py-2 text-sm" data-testid="nav-show-all">Browse all<ArrowRight className="h-4 w-4" /></button>} testId="nav-tiles">
         <div className="grid grid-cols-[repeat(2,minmax(0,1fr))] gap-2.5 sm:grid-cols-[repeat(3,minmax(0,1fr))] sm:gap-3 lg:grid-cols-[repeat(4,minmax(0,1fr))]">
           {tiles.map((t) => (
-            <button key={t.key} type="button" onClick={() => onBrowse(t.key)} className="flex min-w-0 items-center gap-2.5 rounded-2xl border border-line p-2.5 text-left transition hover:border-ink/40 sm:gap-3 sm:p-3" data-testid={`nav-tile-${t.key}`}>
+            <button key={t.key} type="button" onClick={() => onBrowse(t.key)} className="flex min-w-0 items-center gap-2.5 rounded-2xl border border-line p-2.5 text-left transition hover:border-ink/40 max-sm:[&:nth-child(n+7)]:hidden sm:gap-3 sm:p-3" data-testid={`nav-tile-${t.key}`}>
               <TypeTile type={t.key} size={40} />
               <span className="min-w-0"><span className="block truncate font-semibold leading-tight">{t.label}</span><span className="block text-sm tabular-nums text-muted">{counts[t.key]}</span></span>
             </button>
@@ -156,7 +156,7 @@ function SignedOutShowcase({ meta, onOpen, onBrowse }) {
       </Panel>
       <div className="grid grid-cols-[minmax(0,1fr)] gap-6 lg:grid-cols-[minmax(0,1.5fr)_minmax(0,1fr)]">
         <Panel title="Open for applications" sub="Taking applications now, or open all year." testId="nav-open-now">
-          <ul className="grid grid-cols-[minmax(0,1fr)] gap-2 sm:grid-cols-[repeat(2,minmax(0,1fr))]">
+          <ul className="grid grid-cols-[minmax(0,1fr)] gap-2 sm:grid-cols-[repeat(2,minmax(0,1fr))] [&>li:nth-child(n+5)]:hidden sm:[&>li:nth-child(n+5)]:block">
             {picks.map((p) => (
               <li key={p.id}>
                 <button type="button" onClick={() => onOpen(p)} className="flex h-full w-full items-start gap-3 rounded-2xl border border-line p-3 text-left transition hover:border-ink/40">
@@ -171,7 +171,7 @@ function SignedOutShowcase({ meta, onOpen, onBrowse }) {
         </Panel>
         <Panel title="Upcoming events" sub="Networking, pitch and learning events for founders." testId="nav-events">
           {evs && evs.length ? (
-            <ul className="space-y-1">
+            <ul className="space-y-1 [&>li:nth-child(n+4)]:hidden sm:[&>li:nth-child(n+4)]:block">
               {evs.map((e) => { const [m, d] = monthDay(e.date); return (
                 <li key={e.id}>
                   <a href={e.url} target="_blank" rel="noreferrer" className="flex items-center gap-3 rounded-xl p-2 transition hover:bg-ink/[.05]">
@@ -271,6 +271,125 @@ function ScopeSwitch({ eco, scope, onChange, total, here }) {
   );
 }
 
+// True on a phone-width screen. The phone gets its own, simpler layout of the same data (one view at a time), not a squeezed copy of the computer page.
+function useMedia(q) {
+  const [m, setM] = useState(() => typeof window !== "undefined" && !!window.matchMedia && window.matchMedia(q).matches);
+  useEffect(() => {
+    if (!window.matchMedia) return undefined;
+    const mq = window.matchMedia(q);
+    const h = () => setM(mq.matches);
+    mq.addEventListener ? mq.addEventListener("change", h) : mq.addListener(h);
+    h();
+    return () => (mq.removeEventListener ? mq.removeEventListener("change", h) : mq.removeListener(h));
+  }, [q]);
+  return m;
+}
+
+// One program as a single tappable row: what it is, who runs it, whether you can apply now. The detail is one tap away in the drawer.
+function ProgramRow({ p, onOpen, mark }) {
+  return (
+    <button type="button" onClick={() => onOpen(p)} data-testid={`row-${p.id}`} className="flex w-full items-center gap-3 rounded-2xl border border-line bg-surface p-3 text-left transition active:bg-ink/[.05]">
+      <TypeTile type={p.type} size={40} />
+      <span className="min-w-0 flex-1">
+        <span className="line-clamp-2 block text-[15px] font-semibold leading-snug">{p.name}</span>
+        <span className="mt-1 flex items-center gap-2 text-xs text-muted"><span className="min-w-0 truncate">{p.community ? `From ${p.community.name}` : p.org}</span><span className="shrink-0 whitespace-nowrap"><Status status={p.status} /></span>{mark === "yes" && <Bookmark className="h-3 w-3 shrink-0 text-sky-500" aria-label="Interested" />}</span>
+      </span>
+      {p.fit && p.fit !== "skip" && <FitMeter fit={p.fit} showLabel={false} />}
+      <ChevronDown className="-rotate-90 h-4 w-4 shrink-0 text-muted" aria-hidden />
+    </button>
+  );
+}
+
+// The phone version of For you: three views, one at a time. Top picks (the one thing to do, then a few more), Your path (the stages), All (the full list with filters).
+function PhoneForYou({ res, onOpen, tracked, onTrack, imap, nudge, generic, loading }) {
+  const [v, setV] = useState("picks");
+  const [view, setView] = useState("fit");
+  const [type, setType] = useState("");
+  const [timing, setTiming] = useState("");
+  const [limit, setLimit] = useState(10);
+  const { matches = [], more = [], later = [], communities = [], trajectory } = res;
+  const others = res.others || [];
+  const fits = [...matches, ...more];
+  const strong = fits.filter((p) => p.fit === "strong");
+  const picks = strong.length ? strong : fits;
+  const hero = picks[0];
+  const base = view === "fit" ? fits : others;
+  const timed = timing ? base.filter((p) => timingMatch(timing, p)) : base;
+  const counts = timed.reduce((o, p) => ({ ...o, [p.type]: (o[p.type] || 0) + 1 }), {});
+  const shown = type ? timed.filter((p) => p.type === type) : timed;
+  const go = (x) => { setV(x); if (typeof window !== "undefined") window.scrollTo({ top: 0 }); };
+  const best = shown.filter((p) => p.fit === "strong");
+  const worth = shown.filter((p) => p.fit !== "strong");
+  const group = (title, list) => list.length > 0 && (
+    <div className="mt-4"><p className="mb-2 text-sm font-semibold">{title}</p><div className="space-y-2">{list.map((p) => <ProgramRow key={p.id} p={p} onOpen={onOpen} mark={imap?.[p.id]} />)}</div></div>
+  );
+  const text = res.narrative || res.summary;
+  return (
+    <div className={cx("space-y-4 transition-opacity", loading && "opacity-60")} aria-busy={loading} data-testid="nav-results">
+      {generic && <p className="rounded-xl bg-ink/[.05] p-3 text-sm text-muted">These are examples for an early-stage founder in Ontario. Add your startup to your profile to see yours.</p>}
+      <div className="[&>div]:flex [&>div]:w-full [&_button]:flex-1"><Segmented items={[["picks", "Top picks"], ["path", "Your path"], ["all", `All · ${fits.length}`]]} value={v} onChange={go} /></div>
+
+      {v === "picks" && (
+        <div className="space-y-4" data-testid="phone-picks">
+          {hero ? (
+            <section className="rounded-3xl border border-line p-4" style={{ background: `linear-gradient(140deg, ${tint(typeMeta(hero.type).color, 0.12)} 0%, transparent 55%), rgb(var(--c-surface))` }} data-testid="phone-hero">
+              <p className="eyebrow">Start here</p>
+              <div className="mt-3 flex items-center gap-3"><TypeTile type={hero.type} size={44} /><span className="min-w-0 flex-1"><span className="block text-[11px] font-semibold uppercase text-muted" style={{ letterSpacing: "0.12em" }}>{TYPE_LABEL[hero.type] || hero.type}</span><span className="block truncate text-xs text-muted">{hero.org}</span></span><FitMeter fit={hero.fit} showLabel={false} /></div>
+              <p className="mt-3 text-xl font-semibold leading-snug" style={{ textWrap: "balance" }}>{hero.name}</p>
+              {leadReason(hero) && <p className="mt-2 flex gap-2 text-sm text-ink/80"><Check className="mt-0.5 h-4 w-4 shrink-0 text-emerald-500" aria-hidden /><span className="line-clamp-3">{leadReason(hero)}</span></p>}
+              <div className="mt-3 flex flex-wrap items-center gap-2"><Status status={hero.status} /><DeadlineChip p={hero} /></div>
+              <button type="button" onClick={() => onOpen(hero)} className="btn-primary mt-4 w-full !py-3 text-sm" data-testid="phone-hero-open">See details<ArrowRight className="h-4 w-4" /></button>
+            </section>
+          ) : <p className="rounded-2xl border border-dashed border-line p-5 text-center text-sm text-muted">No clean fit yet. Open All to see everything we track.</p>}
+          {picks.length > 1 && (
+            <section>
+              <p className="mb-2 text-sm font-semibold">Also worth your time</p>
+              <div className="space-y-2">{picks.slice(1, 5).map((p) => <ProgramRow key={p.id} p={p} onOpen={onOpen} mark={imap?.[p.id]} />)}</div>
+            </section>
+          )}
+          <button type="button" onClick={() => go("all")} className="btn-ghost w-full !py-3 text-sm" data-testid="phone-see-all">See all {fits.length} matches<ArrowRight className="h-4 w-4" /></button>
+          {text && <details className="rounded-2xl border border-line px-4 py-3 text-sm"><summary className="cursor-pointer font-semibold">Your next step, in words</summary><p className="mt-2 leading-snug text-ink/90">{text}</p></details>}
+          {nudge && <div className="empty:hidden">{nudge}</div>}
+        </div>
+      )}
+
+      {v === "path" && (
+        <section className="rounded-3xl border border-line bg-surface p-4" data-testid="phone-path">
+          {trajectory?.stages?.length > 0 ? <Trajectory data={trajectory} tracked={tracked} onPick={onOpen} onTrack={onTrack} /> : <p className="text-sm text-muted">Add your stage to your profile to see your path.</p>}
+        </section>
+      )}
+
+      {v === "all" && (
+        <div data-testid="phone-all">
+          <div className="[&>div]:flex [&>div]:w-full [&_button]:flex-1"><Segmented items={[["fit", `For you · ${fits.length}`], ["other", `Everything else · ${others.length}`]]} value={view} onChange={(x) => { setView(x); setType(""); setTiming(""); setLimit(10); }} /></div>
+          <div className="mt-3"><TimingFilter value={timing} onChange={(x) => { setTiming(x); setLimit(10); }} list={base} /></div>
+          {Object.keys(counts).length > 1 && (
+            <div className="pw-rail -mx-4 mt-2 flex gap-2 overflow-x-auto px-4 pb-1" role="group" aria-label="Filter by type">
+              <Pill on={!type} onClick={() => setType("")}>All<span className="text-xs opacity-60">{timed.length}</span></Pill>
+              {Object.entries(counts).map(([k, n]) => { const { color, Icon } = typeMeta(k); return <Pill key={k} on={type === k} color={color} onClick={() => setType(type === k ? "" : k)}><Icon className="h-3.5 w-3.5" aria-hidden />{TYPE_LABEL[k] || k}<span className="text-xs opacity-60">{n}</span></Pill>; })}
+            </div>
+          )}
+          {shown.length === 0 && <p className="mt-4 rounded-2xl border border-dashed border-line p-5 text-center text-sm text-muted">Nothing here matches that. <button type="button" onClick={() => { setTiming(""); setType(""); }} className="font-semibold text-ink underline">Clear filters</button></p>}
+          {view === "fit" ? <>{group("Good matches", best.slice(0, limit))}{group("Worth a look", worth.slice(0, Math.max(0, limit - best.length)))}</> : <div className="mt-4 space-y-2">{shown.slice(0, limit).map((p) => <ProgramRow key={p.id} p={p} onOpen={onOpen} mark={imap?.[p.id]} />)}</div>}
+          {shown.length > limit && <button type="button" onClick={() => setLimit((n) => n + 15)} className="btn-ghost mt-4 w-full !py-3 text-sm">Show {Math.min(15, shown.length - limit)} more</button>}
+          {communities.length > 0 && (
+            <details className="mt-6 rounded-2xl border border-line">
+              <summary className="flex cursor-pointer items-center justify-between gap-2 p-4 text-sm font-semibold">Communities that can help · {communities.length}<ChevronDown className="h-4 w-4 text-muted" aria-hidden /></summary>
+              <div className="space-y-3 border-t border-line p-4">{communities.map((c) => <CommunityCard key={c.slug} c={c} />)}</div>
+            </details>
+          )}
+          {later.length > 0 && (
+            <details className="mt-3 rounded-2xl border border-dashed border-line">
+              <summary className="flex cursor-pointer items-center justify-between gap-2 p-4 text-sm font-semibold">Not yet: {later.length} to come back to<ChevronDown className="h-4 w-4 text-muted" aria-hidden /></summary>
+              <div className="space-y-3 border-t border-dashed border-line p-4">{later.map((p) => <div key={p.id}><p className="font-semibold">{p.name} <span className="text-sm font-normal text-muted">· {TYPE_LABEL[p.type] || p.type}</span></p><p className="mt-0.5 flex gap-2 text-sm text-muted"><Flag className="mt-0.5 h-4 w-4 shrink-0" aria-hidden /><span>{(p.cautions || [])[0]}</span></p></div>)}</div>
+            </details>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
 // The mentor line: what to do first. On a phone it opens to three lines with a "More" for the rest.
 function Narrative({ text }) {
   const [open, setOpen] = useState(false);
@@ -326,7 +445,8 @@ function NextStepRail({ res, itc, onOpen }) {
   );
 }
 
-function Results({ res, meta, loading, generic, onOpen, tracked, onTrack, imap, eco, scope, onWiden, railed }) {
+function Results({ res, meta, loading, generic, onOpen, tracked, onTrack, imap, eco, scope, onWiden, railed, nudge }) {
+  const phone = useMedia("(max-width: 639px)");
   const [view, setView] = useState("fit");
   const [aboutOpen, setAboutOpen] = useState(false);     // phones: the explainer lines and the filters start folded away
   const [filtersOpen, setFiltersOpen] = useState(false);
@@ -334,6 +454,7 @@ function Results({ res, meta, loading, generic, onOpen, tracked, onTrack, imap, 
   const [timing, setTiming] = useState("");
   const [showAll, setShowAll] = useState(false);
   if (!res) return <Spinner />;
+  if (phone) return <PhoneForYou res={res} onOpen={onOpen} tracked={tracked} onTrack={onTrack} imap={imap} nudge={nudge} generic={generic} loading={loading} />;
   const { matches, more, later, communities, trajectory } = res;
   const others = res.others || [];
   const fits = [...matches, ...more];
@@ -576,6 +697,7 @@ export default function Navigator({ embedded }) {
   const seq = useRef(0);
   const ready = !account || mine !== null;       // signed in: wait for the profile so we never flash results for someone else's answers
   const generic = !!account && ready && !mine?.stage;
+  const phone = useMedia("(max-width: 639px)");
   const railed = !embedded;                       // on a wide screen the next step, saved programs and events sit in a side column
 
   useEffect(() => { document.title = "Opportunities · Pathwai"; api.get("/navigator/meta").then((r) => setMeta(r.data)).catch(() => setErr("The directory could not load. Please try again.")); }, []);
@@ -619,8 +741,8 @@ export default function Navigator({ embedded }) {
     <div className="mx-auto w-full max-w-6xl 2xl:max-w-[1400px]">
       <div className="mb-6 flex flex-wrap items-end justify-between gap-4">
         <div>
-          <p className="eyebrow">Opportunities</p>
-          <h1 className="mt-2 text-3xl sm:text-4xl" style={{ textTransform: "none", letterSpacing: "-0.03em", fontWeight: 800, textWrap: "balance" }}>{eco ? (scope === "hub" ? `Programs & grants at ${eco.hub}` : `Programs & grants across ${eco.wider}`) : account ? "Opportunities that fit your startup" : "Canadian opportunities that fit your startup"}</h1>
+          <p className="eyebrow hidden sm:block">Opportunities</p>
+          <h1 className="text-2xl sm:mt-2 sm:text-4xl" style={{ textTransform: "none", letterSpacing: "-0.03em", fontWeight: 800, textWrap: "balance" }}>{eco ? (scope === "hub" ? `Programs & grants at ${eco.hub}` : `Programs & grants across ${eco.wider}`) : account ? "Opportunities that fit your startup" : "Canadian opportunities that fit your startup"}</h1>
           <p className="mt-2 hidden text-sm text-muted sm:block">{eco ? (scope === "hub" ? (eco.wider ? `What ${eco.hub} runs, plus the grants, loans and programs its team points founders to. Each one is checked against your startup.` : `What ${eco.hub} runs for founders. Each one is checked against your startup.`) : `Every grant, loan, accelerator and mentor we track, with ${eco.hub} programs first.`) : meta ? <>{meta.count} grants, loans, accelerators, mentors and founder communities, each with its source, plus upcoming events. Communities you join add their own on top.</> : "Loading"}</p>
         </div>
         <Segmented items={[["path", "For you"], ["all", "Browse all"], ...(account ? [["saved", itc.interest.some((i) => i.state === "yes") ? `Interested · ${itc.interest.filter((i) => i.state === "yes").length}` : "Interested"]] : []), ["ask", <><span className="sm:hidden">Guide</span><span className="hidden sm:inline">Ask the guide</span></>]]} value={tab} onChange={setTab} />
@@ -632,8 +754,8 @@ export default function Navigator({ embedded }) {
         <div className="mx-auto w-full max-w-3xl"><GuideChat className="h-[min(72dvh,680px)]" signedIn={!!account} hasProfile={!!mine?.stage} startupName={mine?.name} formProfile={account ? apiProfile : undefined} /></div>
       ) : account ? (
         <div className="space-y-6">
-          {mine === null ? <Spinner /> : <><ProfileBar mine={mine} meta={meta} /><div className="mt-3 empty:hidden"><GenderNudge mine={mine} /></div></>}
-          {ready && <div className={cx(railed && "xl:grid xl:grid-cols-[minmax(0,1fr)_340px] xl:items-start xl:gap-8")}><Results railed={railed} res={res} meta={meta} loading={loading} generic={generic} onOpen={setOpen} tracked={tracked} onTrack={track} imap={itc.byId} eco={eco} scope={scope} onWiden={() => setScope("all")} />{railed && res && <NextStepRail res={res} itc={itc} onOpen={setOpen} />}</div>}
+          {mine === null ? <Spinner /> : <><ProfileBar mine={mine} meta={meta} />{!phone && <div className="mt-3 empty:hidden"><GenderNudge mine={mine} /></div>}</>}
+          {ready && <div className={cx(railed && "xl:grid xl:grid-cols-[minmax(0,1fr)_340px] xl:items-start xl:gap-8")}><Results nudge={phone ? <GenderNudge mine={mine} /> : null} railed={railed} res={res} meta={meta} loading={loading} generic={generic} onOpen={setOpen} tracked={tracked} onTrack={track} imap={itc.byId} eco={eco} scope={scope} onWiden={() => setScope("all")} />{railed && res && <NextStepRail res={res} itc={itc} onOpen={setOpen} />}</div>}
         </div>
       ) : <><SignedOutGate /><SignedOutShowcase meta={meta} onOpen={setOpen} onBrowse={(t) => { setStartType(t); setTab("all"); window.scrollTo({ top: 0 }); }} /></>}
       <ProgramDrawer p={open} onClose={() => setOpen(null)} meta={meta} tracked={tracked} onTrack={account ? track : undefined} interest={account ? itc : undefined} eco={eco} stage={res?.trajectory?.current || mine?.stage || "idea"} />
