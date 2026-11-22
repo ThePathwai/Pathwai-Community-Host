@@ -33,6 +33,8 @@ export default function Login() {
   // instead of the generic Hub, same spirit as the signup-time join_slug flow.
   const joinSlug = params.get("join") || null;
   const [joinInfo, setJoinInfo] = useState(null);
+  const [resources, setResources] = useState(null);   // everything on Pathwai: programs plus upcoming events
+  useEffect(() => { api.get("/navigator/meta").then((r) => setResources(r.data.resources ?? r.data.count ?? null)).catch(() => {}); }, []);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [err, setErr] = useState("");
@@ -222,7 +224,7 @@ export default function Login() {
             <span className="min-w-0 flex-1">
               <span className="block text-[11px] font-semibold uppercase text-muted" style={{ letterSpacing: "0.12em" }}>Not part of a community?</span>
               <span className="mt-0.5 block text-base font-semibold leading-snug">Find funding, programs and events for your startup</span>
-              <span className="mt-0.5 block text-sm text-muted">200+ grants, loans, accelerators, mentors and founder communities across Canada. No account needed.</span>
+              <span className="mt-0.5 block text-sm text-muted">{resources ? `${resources.toLocaleString()} grants, loans, accelerators, mentors, founder communities and events` : "Grants, loans, accelerators, mentors, founder communities and events"} across Canada. No account needed.</span>
             </span>
             <ArrowRight className="h-5 w-5 shrink-0 transition group-hover:translate-x-0.5" aria-hidden />
           </Link>

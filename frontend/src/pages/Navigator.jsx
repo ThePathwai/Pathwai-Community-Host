@@ -128,12 +128,23 @@ function Panel({ title, sub, action, children, className, testId }) {
 function SignedOutShowcase({ meta, onOpen, onBrowse }) {
   const [progs, setProgs] = useState(null);
   const [evs, setEvs] = useState(null);
+  const [evTotal, setEvTotal] = useState(0);
   useEffect(() => {
     api.get("/navigator/programs").then((r) => setProgs(r.data.programs || [])).catch(() => setProgs([]));
-    api.get("/founder-events").then((r) => setEvs((r.data.events || []).slice(0, 5))).catch(() => setEvs([]));
+    api.get("/founder-events").then((r) => { setEvs((r.data.events || []).slice(0, 5)); setEvTotal((r.data.events || []).length + (r.data.others || []).length); }).catch(() => setEvs([]));
   }, []);
+  const evN = meta.events ?? evTotal;
   const counts = useMemo(() => (progs || []).reduce((m, p) => { m[p.type] = (m[p.type] || 0) + 1; return m; }, {}), [progs]);
-  const tiles = useMemo(() => (meta.types || []).filter((t) => counts[t.key]).sort((a, b) => counts[b.key] - counts[a.key]).slice(0, 8), [meta, counts]);
+  // An event is a resource, so Events sits beside the kinds of program, with its own count.
+  const tiles = useMemo(() => {
+    const all = [...(meta.types || []).filter((t) => counts[t.key]).map((t) => ({ ...t, n: counts[t.key] })), ...(evN ? [{ key: "events", label: "Events", n: evN }] : [])].sort((a, b) => b.n - a.n);
+    const top = all.slice(0, 8);
+    const evTile = all.find((t) => t.key === "events");
+    if (evTile && !top.includes(evTile)) top[top.length - 1] = evTile;
+    const at = top.indexOf(evTile);
+    if (evTile && at > 5) { top.splice(at, 1); top.splice(5, 0, evTile); }   // Events always shows, however few there are today, and phones only show the first six tiles
+    return top;
+  }, [meta, counts, evN]);
   // Open now: taking applications or open all year, programs read on their own page first, then the ones that say what they are worth.
   const picks = useMemo(() => {
     const rank = { grant: 0, loan: 1, tax_credit: 2, accelerator: 3, incubator: 4, mentorship: 5 };
@@ -150,12 +161,12 @@ function SignedOutShowcase({ meta, onOpen, onBrowse }) {
   const STEPS = [["Tell us about your startup once", "Stage, province, what you need. It lives in your profile, so there is no form on this page."], ["Programs sort themselves", "Every program shows why it may fit you and why it may not, so you can skip the ones that do not."], ["Ask the guide", "Ask in plain words what to apply to first, and what a program wants from you."]];
   return (
     <div className="mt-6 space-y-6" data-testid="nav-showcase">
-      <Panel title="What is in the catalog" sub={`${total} programs across Canada. Pick a kind to browse it.`} action={<button type="button" onClick={() => onBrowse("")} className="btn-ghost !py-2 text-sm" data-testid="nav-show-all">Browse all<ArrowRight className="h-4 w-4" /></button>} testId="nav-tiles">
+      <Panel title="What is on Pathwai" sub={`${(total + evN).toLocaleString()} resources across Canada: ${total} programs and ${evN} upcoming events. Pick a kind to browse it.`} action={<button type="button" onClick={() => onBrowse("")} className="btn-ghost !py-2 text-sm" data-testid="nav-show-all">Browse all<ArrowRight className="h-4 w-4" /></button>} testId="nav-tiles">
         <div className="grid grid-cols-[repeat(2,minmax(0,1fr))] gap-2.5 sm:grid-cols-[repeat(3,minmax(0,1fr))] sm:gap-3 lg:grid-cols-[repeat(4,minmax(0,1fr))]">
           {tiles.map((t) => (
             <button key={t.key} type="button" onClick={() => onBrowse(t.key)} className="flex min-w-0 items-center gap-2.5 rounded-2xl border border-line p-2.5 text-left transition hover:border-ink/40 max-sm:[&:nth-child(n+7)]:hidden sm:gap-3 sm:p-3" data-testid={`nav-tile-${t.key}`}>
               <TypeTile type={t.key} size={32} />
-              <span className="min-w-0"><span className="block truncate text-sm font-semibold leading-tight">{t.label}</span><span className="block text-xs tabular-nums text-muted">{counts[t.key]}</span></span>
+              <span className="min-w-0"><span className="block truncate text-sm font-semibold leading-tight">{t.label}</span><span className="block text-xs tabular-nums text-muted">{t.n}</span></span>
             </button>
           ))}
         </div>
@@ -197,7 +208,7 @@ function SignedOutShowcase({ meta, onOpen, onBrowse }) {
             <li key={h} className="flex gap-3"><span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-ink/10 text-sm font-bold">{i + 1}</span><span><span className="block font-semibold">{h}</span><span className="mt-1 block text-sm text-muted">{d}</span></span></li>
           ))}
         </ol>
-        <p className="mt-5 border-t border-line pt-4 text-sm text-muted" data-testid="nav-trust">{official} of {total} listings were read on the program's own page. The rest come from directories, and say so. Every listing links to its source, so you can check it before you apply.</p>
+        <p className="mt-5 border-t border-line pt-4 text-sm text-muted" data-testid="nav-trust">{official} of {total} programs were read on the program's own page. The rest come from directories, and say so. Events are read from organizers' public pages. Every resource links to its source, so you can check it before you act.</p>
       </Panel>
     </div>
   );
@@ -224,7 +235,7 @@ function ProfileBar({ mine, meta }) {
   const bits = has ? [stage, ...(mine.needs || []).slice(0, 3).map((n) => NEED_LABEL[n]), mine.province].filter(Boolean) : [];
   if (!has) {
     return (
-      <Link to="/me?edit=startup" className="flex items-center gap-4 rounded-2xl border border-dashed border-ink/30 p-4 transition hover:border-ink/60" data-testid="nav-profile-bar">
+      <Link to="/me?edit=startup" className="flex items-center gap-4 rounded-2xl border border-dashed border-ink/30 p-4 transition hover:border-ink/60" data-testid="nav-profile-bar" data-tour="profile-bar">
         <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full" style={{ background: "var(--accent)", color: "var(--on-accent)" }}><Rocket className="h-5 w-5" aria-hidden /></span>
         <span className="min-w-0 flex-1"><span className="block font-semibold">Add your startup to see programs that fit you</span><span className="block text-sm text-muted">One minute, in your profile. These are examples until then.</span></span>
         <ArrowRight className="h-5 w-5 shrink-0 text-muted" aria-hidden />
@@ -232,7 +243,7 @@ function ProfileBar({ mine, meta }) {
     );
   }
   return (
-    <Link to="/me?edit=startup" className="group flex items-center gap-3 rounded-2xl border border-line bg-surface p-3 pr-4 transition hover:border-ink/30" data-testid="nav-profile-bar">
+    <Link to="/me?edit=startup" className="group flex items-center gap-3 rounded-2xl border border-line bg-surface p-3 pr-4 transition hover:border-ink/30" data-testid="nav-profile-bar" data-tour="profile-bar">
       <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full" style={{ background: "var(--accent)", color: "var(--on-accent)" }}><Rocket className="h-[18px] w-[18px]" aria-hidden /></span>
       <span className="min-w-0 flex-1"><span className="block truncate text-sm font-semibold">Matched to {mine.name || "your startup"}</span><span className="block truncate text-xs capitalize text-muted">{bits.join(" · ")}</span></span>
       <span className="inline-flex shrink-0 items-center gap-1.5 text-sm font-medium text-muted group-hover:text-ink" data-testid="nav-edit-profile"><Pencil className="h-3.5 w-3.5" aria-hidden /><span className="hidden sm:inline">Edit in your profile</span><span className="sm:hidden">Edit</span></span>
@@ -338,7 +349,7 @@ function PhoneForYou({ res, onOpen, tracked, onTrack, imap, nudge, generic, load
       {v === "picks" && (
         <div className="space-y-4" data-testid="phone-picks">
           {hero ? (
-            <section className="rounded-3xl border border-line p-4" style={{ background: `linear-gradient(140deg, ${tint(typeMeta(hero.type).color, 0.12)} 0%, transparent 55%), rgb(var(--c-surface))` }} data-testid="phone-hero">
+            <section className="rounded-3xl border border-line p-4" style={{ background: `linear-gradient(140deg, ${tint(typeMeta(hero.type).color, 0.12)} 0%, transparent 55%), rgb(var(--c-surface))` }} data-testid="phone-hero" data-tour="matches">
               <p className="eyebrow">Start here</p>
               <div className="mt-3 flex items-center gap-3"><TypeTile type={hero.type} size={38} /><span className="min-w-0 flex-1"><span className="block text-[11px] font-semibold uppercase text-muted" style={{ letterSpacing: "0.12em" }}>{TYPE_LABEL[hero.type] || hero.type}</span><span className="block truncate text-xs text-muted">{hero.org}</span></span><FitMeter fit={hero.fit} showLabel={false} /></div>
               <p className="mt-3 text-lg font-semibold leading-snug" style={{ textWrap: "balance" }}>{hero.name}</p>
@@ -494,7 +505,7 @@ function Results({ res, meta, loading, generic, onOpen, tracked, onTrack, imap, 
       )}
 
       <section data-testid="nav-list">
-        <div className="flex flex-wrap items-end justify-between gap-3">
+        <div data-tour="matches" className="flex flex-wrap items-end justify-between gap-3">
           <h2 className="text-xl" style={{ textTransform: "none", letterSpacing: "-0.01em", fontWeight: 700 }}>{view === "fit" ? (fits.length ? `${fits.length} programs that fit you` : "No clean fit yet") : `${others.length} programs not matched to you`}</h2>
           <Segmented items={[["fit", `For you · ${fits.length}`], ["other", `Everything else · ${others.length}`]]} value={view} onChange={switchView} />
         </div>
@@ -563,10 +574,10 @@ function Results({ res, meta, loading, generic, onOpen, tracked, onTrack, imap, 
 
 function Directory({ meta, onOpen, imap, eco, fitRes, account, hasProfile, startType }) {
   const BLANK = { q: "", type: "", timing: "", province: "", need: "", region: "" };
-  const [f, setF] = useState(() => ({ ...BLANK, type: startType || "" }));
+  const [f, setF] = useState(() => ({ ...BLANK, type: startType && startType !== "events" ? startType : "" }));
   const [rowsAll, setRows] = useState(null);
   const [moreOpen, setMoreOpen] = useState(false);   // phones: only search and kind show; need, place and timing fold away
-  const [ev, setEv] = useState(false);   // "Events" is one more kind in this list: pick it and the list below becomes upcoming events
+  const [ev, setEv] = useState(startType === "events");   // "Events" is one more kind in this list: pick it and the list below becomes upcoming events
   const [all, setAll] = useState([]);
   useEffect(() => { api.get("/navigator/programs").then((r) => setAll(r.data.programs || [])).catch(() => {}); }, []);
   useEffect(() => {
@@ -757,9 +768,9 @@ export default function Navigator({ embedded }) {
         <div>
           <p className="eyebrow hidden sm:block">Opportunities</p>
           <h1 className="text-2xl sm:mt-2 sm:text-4xl" style={{ textTransform: "none", letterSpacing: "-0.03em", fontWeight: 800, textWrap: "balance" }}>{eco ? (scope === "hub" ? `Programs & grants at ${eco.hub}` : `Programs & grants across ${eco.wider}`) : account ? "Opportunities that fit your startup" : "Canadian opportunities that fit your startup"}</h1>
-          <p className="mt-2 hidden text-sm text-muted sm:block">{eco ? (scope === "hub" ? (eco.wider ? `What ${eco.hub} runs, plus the grants, loans and programs its team points founders to. Each one is checked against your startup.` : `What ${eco.hub} runs for founders. Each one is checked against your startup.`) : `Every grant, loan, accelerator and mentor we track, with ${eco.hub} programs first.`) : meta ? <>{meta.count} grants, loans, accelerators, mentors and founder communities, each with its source, plus upcoming events. Communities you join add their own on top.</> : "Loading"}</p>
+          <p className="mt-2 hidden text-sm text-muted sm:block">{eco ? (scope === "hub" ? (eco.wider ? `What ${eco.hub} runs, plus the grants, loans and programs its team points founders to. Each one is checked against your startup.` : `What ${eco.hub} runs for founders. Each one is checked against your startup.`) : `Every grant, loan, accelerator and mentor we track, with ${eco.hub} programs first.`) : meta ? <>{(meta.resources ?? meta.count).toLocaleString()} resources, each with its source: {meta.programs ?? meta.count} grants, loans, accelerators, mentors and founder communities{meta.events ? `, and ${meta.events} upcoming events` : ""}. Communities you join add their own on top.</> : "Loading"}</p>
         </div>
-        <div className="w-full max-sm:[&>div]:flex max-sm:[&>div]:w-full max-sm:[&>div]:overflow-visible max-sm:[&_button]:flex-1 max-sm:[&_button]:px-1.5 sm:w-auto"><Segmented items={[["path", "For you"], ["all", <><span className="sm:hidden">Browse</span><span className="hidden sm:inline">Browse all</span></>], ...(account ? [["saved", <><span className="sm:hidden">Saved{itc.interest.some((i) => i.state === "yes") ? ` · ${itc.interest.filter((i) => i.state === "yes").length}` : ""}</span><span className="hidden sm:inline">{itc.interest.some((i) => i.state === "yes") ? `Interested · ${itc.interest.filter((i) => i.state === "yes").length}` : "Interested"}</span></>]] : []), ["ask", <><span className="sm:hidden">Guide</span><span className="hidden sm:inline">Ask the guide</span></>]]} value={tab} onChange={setTab} /></div>
+        <div data-tour="tabs" className="w-full max-sm:[&>div]:flex max-sm:[&>div]:w-full max-sm:[&>div]:overflow-visible max-sm:[&_button]:flex-1 max-sm:[&_button]:px-1.5 sm:w-auto"><Segmented items={[["path", "For you"], ["all", <><span className="sm:hidden">Browse</span><span className="hidden sm:inline">Browse all</span></>], ...(account ? [["saved", <><span className="sm:hidden">Saved{itc.interest.some((i) => i.state === "yes") ? ` · ${itc.interest.filter((i) => i.state === "yes").length}` : ""}</span><span className="hidden sm:inline">{itc.interest.some((i) => i.state === "yes") ? `Interested · ${itc.interest.filter((i) => i.state === "yes").length}` : "Interested"}</span></>]] : []), ["ask", <><span className="sm:hidden">Guide</span><span className="hidden sm:inline">Ask the guide</span></>]]} value={tab} onChange={setTab} /></div>
       </div>
 
       {eco?.wider && account && tab === "path" && <div className="mb-5"><ScopeSwitch eco={eco} scope={scope} onChange={setScope} total={res?.catalog_total} here={scope === "hub" ? (res ? (res.totals?.fit ?? null) : null) : null} /></div>}

@@ -98,11 +98,26 @@ async def _all_programs() -> List[Dict[str, Any]]:
     return progs
 
 
+async def _upcoming_events() -> int:
+    """How many upcoming founder events are listed right now: the same list the Events page shows. An event is a resource, so it counts in the total."""
+    try:
+        import events_feed as ef
+        import events_job as ejob
+        res = ef.rank_events(await ejob.load_events(hub_db()), {}, date.today(), {"q": "", "topic": "", "online": None, "free": False, "days": ef.HORIZON_DAYS})
+        return len(res["events"]) + len(res["others"])
+    except Exception:  # noqa: BLE001
+        logging.getLogger(__name__).exception("Could not count upcoming events.")
+        return 0
+
+
 @router.get("/navigator/meta")
 async def navigator_meta() -> Dict[str, Any]:
     cat = nav.load_catalog()
+    events = await _upcoming_events()
     return {
+        # count stays the number of programs (older pages read it); resources is everything on Pathwai: programs plus upcoming events.
         "version": cat.get("version"), "notes": cat.get("notes"), "count": len(cat["programs"]),
+        "programs": len(cat["programs"]), "events": events, "resources": len(cat["programs"]) + events,
         "page_checks": {k: v for k, v in summarize(await _page_checks(), cat["programs"]).items() if k != "problems"},
         "stages": [{"key": k, "label": nav.STAGE_LABEL[k], "hint": nav.STAGE_HINT[k]} for k in nav.STAGES],
         "needs": [{"key": k, "label": nav.NEED_LABEL[k]} for k in nav.NEEDS],

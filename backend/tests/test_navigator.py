@@ -186,6 +186,7 @@ def test_public_directory_needs_no_login():
     with TestClient(server.app) as c:
         meta = c.get("/api/navigator/meta").json()
         assert meta["count"] == len(PROGRAMS) and [s["key"] for s in meta["stages"]] == nav.STAGES
+        assert meta["programs"] == meta["count"] and meta["resources"] == meta["programs"] + meta["events"]   # an event is a resource
         live = c.get("/api/navigator/programs", params={"status": "live"}).json()
         assert live["count"] and all(p["status"] in ("open", "rolling") for p in live["programs"])
         assert c.get("/api/navigator/programs", params={"q": "tax credit"}).json()["count"] >= 2

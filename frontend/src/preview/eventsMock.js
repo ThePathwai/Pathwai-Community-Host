@@ -62,6 +62,8 @@ function weekLabel(iso, today) {
   return delta < 7 ? "This week" : delta < 14 ? "Next week" : d.toLocaleDateString(undefined, { month: "long", year: "numeric", timeZone: "UTC" });
 }
 
+export const upcomingEventCount = () => build(nav.todayIso()).length;
+
 function build(today) {
   const t0 = new Date(today + "T12:00:00Z");
   return SAMPLES.filter((x) => x.date >= today).map((x, i) => {

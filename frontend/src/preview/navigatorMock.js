@@ -1,6 +1,7 @@
 // The Navigator inside the in-browser demo (no server): the same rules as the real site, run on the bundled catalog.
 // See lib/navigator.js (the rules) and backend/routes/navigator.py (the real API this stands in for).
 import catalog from "./programs_ca.json";
+import { upcomingEventCount } from "./eventsMock";
 import * as nav from "../lib/navigator";
 import { hubNavigator, HUB_ECOSYSTEM } from "./demoHub";
 import { HUB } from "../lib/demoHubConfig";
@@ -45,6 +46,7 @@ const allPrograms = (ctx) => {
 
 const meta = () => ({
   version: catalog.version, notes: catalog.notes, count: catalog.programs.length,
+  programs: catalog.programs.length, events: upcomingEventCount(), resources: catalog.programs.length + upcomingEventCount(),
   stages: nav.STAGES.map((k) => ({ key: k, label: nav.STAGE_LABEL[k], hint: nav.STAGE_HINT[k] })),
   needs: nav.NEEDS.map((k) => ({ key: k, label: nav.NEED_LABEL[k] })),
   audiences: nav.AUDIENCES.map((k) => ({ key: k, label: nav.AUDIENCE_LABEL[k] })),
