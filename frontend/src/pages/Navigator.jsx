@@ -103,6 +103,100 @@ function SignedOutGate() {
   );
 }
 
+const monthDay = (iso) => { try { const d = new Date(iso + "T12:00:00"); return [d.toLocaleDateString(undefined, { month: "short" }), d.getDate()]; } catch { return ["", ""]; } };
+
+function Panel({ title, sub, action, children, className, testId }) {
+  return (
+    <section className={cx("rounded-3xl border border-line bg-surface p-5 sm:p-6", className)} data-testid={testId}>
+      <div className="mb-4 flex flex-wrap items-end justify-between gap-3">
+        <div className="min-w-0 flex-1 basis-48"><h2 className="text-lg font-semibold" style={{ textTransform: "none", letterSpacing: "-0.02em" }}>{title}</h2>{sub && <p className="mt-0.5 text-sm text-muted">{sub}</p>}</div>
+        {action}
+      </div>
+      {children}
+    </section>
+  );
+}
+
+// Signed out: the rest of the page shows what is actually in the catalog, so there is a reason to look around before signing up.
+// Everything here is real data (the public program list and the public events feed); nothing is made up for the page.
+function SignedOutShowcase({ meta, onOpen, onBrowse }) {
+  const [progs, setProgs] = useState(null);
+  const [evs, setEvs] = useState(null);
+  useEffect(() => {
+    api.get("/navigator/programs").then((r) => setProgs(r.data.programs || [])).catch(() => setProgs([]));
+    api.get("/founder-events").then((r) => setEvs((r.data.events || []).slice(0, 5))).catch(() => setEvs([]));
+  }, []);
+  const counts = useMemo(() => (progs || []).reduce((m, p) => { m[p.type] = (m[p.type] || 0) + 1; return m; }, {}), [progs]);
+  const tiles = useMemo(() => (meta.types || []).filter((t) => counts[t.key]).sort((a, b) => counts[b.key] - counts[a.key]).slice(0, 8), [meta, counts]);
+  // Open now: taking applications or open all year, programs read on their own page first, then the ones that say what they are worth.
+  const picks = useMemo(() => {
+    const rank = { grant: 0, loan: 1, tax_credit: 2, accelerator: 3, incubator: 4, mentorship: 5 };
+    const ok = (progs || []).filter((p) => (p.status === "open" || p.status === "rolling") && p.type in rank);
+    ok.sort((a, b) => (b.verified === "official") - (a.verified === "official") || (!!b.amount - !!a.amount) || rank[a.type] - rank[b.type]);
+    const seen = new Set();
+    const out = [];
+    for (const p of ok) { if (seen.has(p.org)) continue; seen.add(p.org); out.push(p); if (out.length >= 6) break; }
+    return out;
+  }, [progs]);
+  if (!progs) return null;
+  const total = progs.length;
+  const official = progs.filter((p) => p.verified === "official").length;
+  const STEPS = [["Tell us about your startup once", "Stage, province, what you need. It lives in your profile, so there is no form on this page."], ["Programs sort themselves", "Every program shows why it may fit you and why it may not, so you can skip the ones that do not."], ["Ask the guide", "Ask in plain words what to apply to first, and what a program wants from you."]];
+  return (
+    <div className="mt-6 space-y-6" data-testid="nav-showcase">
+      <Panel title="What is in the catalog" sub={`${total} programs across Canada. Pick a kind to browse it.`} action={<button type="button" onClick={() => onBrowse("")} className="btn-ghost !py-2 text-sm" data-testid="nav-show-all">Browse all<ArrowRight className="h-4 w-4" /></button>} testId="nav-tiles">
+        <div className="grid grid-cols-[repeat(2,minmax(0,1fr))] gap-2.5 sm:grid-cols-[repeat(3,minmax(0,1fr))] sm:gap-3 lg:grid-cols-[repeat(4,minmax(0,1fr))]">
+          {tiles.map((t) => (
+            <button key={t.key} type="button" onClick={() => onBrowse(t.key)} className="flex min-w-0 items-center gap-2.5 rounded-2xl border border-line p-2.5 text-left transition hover:border-ink/40 sm:gap-3 sm:p-3" data-testid={`nav-tile-${t.key}`}>
+              <TypeTile type={t.key} size={40} />
+              <span className="min-w-0"><span className="block truncate font-semibold leading-tight">{t.label}</span><span className="block text-sm tabular-nums text-muted">{counts[t.key]}</span></span>
+            </button>
+          ))}
+        </div>
+      </Panel>
+      <div className="grid grid-cols-[minmax(0,1fr)] gap-6 lg:grid-cols-[minmax(0,1.5fr)_minmax(0,1fr)]">
+        <Panel title="Open for applications" sub="Taking applications now, or open all year." testId="nav-open-now">
+          <ul className="grid grid-cols-[minmax(0,1fr)] gap-2 sm:grid-cols-[repeat(2,minmax(0,1fr))]">
+            {picks.map((p) => (
+              <li key={p.id}>
+                <button type="button" onClick={() => onOpen(p)} className="flex h-full w-full items-start gap-3 rounded-2xl border border-line p-3 text-left transition hover:border-ink/40">
+                  <TypeTile type={p.type} size={36} />
+                  <span className="min-w-0 flex-1"><span className="block font-semibold leading-snug" style={{ textWrap: "balance" }}>{p.name}</span><span className="block truncate text-sm text-muted">{p.org}</span>
+                    {p.amount && <span className="mt-1.5 inline-flex max-w-full rounded-md px-2 py-0.5 text-xs font-semibold" style={{ background: "var(--accent-soft, rgb(var(--c-ink) / 0.08))" }}><span className="truncate">{p.amount.length > 48 ? p.amount.slice(0, 45).trimEnd() + "..." : p.amount}</span></span>}
+                  </span>
+                </button>
+              </li>
+            ))}
+          </ul>
+        </Panel>
+        <Panel title="Upcoming events" sub="Networking, pitch and learning events for founders." testId="nav-events">
+          {evs && evs.length ? (
+            <ul className="space-y-1">
+              {evs.map((e) => { const [m, d] = monthDay(e.date); return (
+                <li key={e.id}>
+                  <a href={e.url} target="_blank" rel="noreferrer" className="flex items-center gap-3 rounded-xl p-2 transition hover:bg-ink/[.05]">
+                    <span className="flex h-12 w-12 shrink-0 flex-col items-center justify-center rounded-xl bg-ink/[.06]"><span className="text-[10px] font-semibold uppercase text-muted" style={{ letterSpacing: "0.08em" }}>{m}</span><span className="text-lg font-bold leading-none tabular-nums">{d}</span></span>
+                    <span className="min-w-0 flex-1"><span className="block truncate font-semibold">{e.title}</span><span className="block truncate text-sm text-muted">{[e.org, e.online ? "Online" : e.city].filter(Boolean).join(" · ")}</span></span>
+                  </a>
+                </li>
+              ); })}
+            </ul>
+          ) : <p className="text-sm text-muted">No events are listed right now. Check back soon.</p>}
+          <p className="mt-3 text-xs text-muted">Create a profile and these are picked for your stage and province.</p>
+        </Panel>
+      </div>
+      <Panel title="How it works" testId="nav-how">
+        <ol className="grid grid-cols-[minmax(0,1fr)] gap-5 sm:grid-cols-[repeat(3,minmax(0,1fr))]">
+          {STEPS.map(([h, d], i) => (
+            <li key={h} className="flex gap-3"><span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-ink/10 text-sm font-bold">{i + 1}</span><span><span className="block font-semibold">{h}</span><span className="mt-1 block text-sm text-muted">{d}</span></span></li>
+          ))}
+        </ol>
+        <p className="mt-5 border-t border-line pt-4 text-sm text-muted" data-testid="nav-trust">{official} of {total} listings were read on the program's own page. The rest come from directories, and say so. Every listing links to its source, so you can check it before you apply.</p>
+      </Panel>
+    </div>
+  );
+}
+
 // Signed in: your profile in one line, with the single way to change it.
 // Gender is optional, but programs made for women only match once it is set. One quiet line, until it is answered or put away.
 function GenderNudge({ mine }) {
@@ -195,7 +289,7 @@ function Results({ res, meta, loading, generic, onOpen, tracked, onTrack, imap, 
   const visible = showAll || type || timing ? shown : shown.slice(0, LIMIT);
   const best = visible.filter((p) => p.fit === "strong");
   const worth = visible.filter((p) => p.fit !== "strong");
-  const grid = "grid grid-cols-[minmax(0,1fr)] gap-3 md:grid-cols-[repeat(2,minmax(0,1fr))]";
+  const grid = "grid grid-cols-[minmax(0,1fr)] gap-3 md:grid-cols-[repeat(2,minmax(0,1fr))] 2xl:grid-cols-[repeat(3,minmax(0,1fr))]";
   const switchView = (v) => { setView(v); setType(""); setTiming(""); setShowAll(false); };
   return (
     <div className={cx("space-y-10 transition-opacity", loading && "opacity-60")} aria-busy={loading} data-testid="nav-results">
@@ -275,9 +369,9 @@ function Results({ res, meta, loading, generic, onOpen, tracked, onTrack, imap, 
   );
 }
 
-function Directory({ meta, onOpen, imap, eco, fitRes, account, hasProfile }) {
+function Directory({ meta, onOpen, imap, eco, fitRes, account, hasProfile, startType }) {
   const BLANK = { q: "", type: "", timing: "", province: "", need: "", region: "" };
-  const [f, setF] = useState(BLANK);
+  const [f, setF] = useState(() => ({ ...BLANK, type: startType || "" }));
   const [rowsAll, setRows] = useState(null);
   const [ev, setEv] = useState(false);   // "Events" is one more kind in this list: pick it and the list below becomes upcoming events
   const [all, setAll] = useState([]);
@@ -402,6 +496,7 @@ export default function Navigator({ embedded }) {
   const [meta, setMeta] = useState(null);
   const [mine, setMine] = useState(null);   // the signed-in person's saved startup profile ({} when none yet); null while loading
   const [tab, setTab] = useState("path");
+  const [startType, setStartType] = useState("");   // a catalog tile on the signed-out page opens Browse all with that kind already picked
   const [profile, setProfile] = useState(DEFAULT);
   const [res, setRes] = useState(null);
   const [loading, setLoading] = useState(false);
@@ -454,26 +549,26 @@ export default function Navigator({ embedded }) {
       guide={<GuideChat className="h-[min(72dvh,680px)]" signedIn hasProfile={!!mine?.stage} startupName={mine?.name} formProfile={apiProfile} />} />
   ) : null;
   const body = ecoBody || (
-    <div className="mx-auto w-full max-w-6xl">
+    <div className="mx-auto w-full max-w-6xl 2xl:max-w-7xl">
       <div className="mb-6 flex flex-wrap items-end justify-between gap-4">
         <div>
           <p className="eyebrow">Opportunities</p>
           <h1 className="mt-2 text-3xl sm:text-4xl" style={{ textTransform: "none", letterSpacing: "-0.03em", fontWeight: 800, textWrap: "balance" }}>{eco ? (scope === "hub" ? `Programs & grants at ${eco.hub}` : `Programs & grants across ${eco.wider}`) : account ? "Opportunities that fit your startup" : "Canadian opportunities that fit your startup"}</h1>
-          <p className="mt-2 text-sm text-muted">{eco ? (scope === "hub" ? (eco.wider ? `What ${eco.hub} runs, plus the grants, loans and programs its team points founders to. Each one is checked against your startup.` : `What ${eco.hub} runs for founders. Each one is checked against your startup.`) : `Every grant, loan, accelerator and mentor we track, with ${eco.hub} programs first.`) : meta ? <>{meta.count} grants, loans, accelerators, mentors and founder communities, hand-checked, plus upcoming events. Communities you join add their own on top.</> : "Loading"}</p>
+          <p className="mt-2 text-sm text-muted">{eco ? (scope === "hub" ? (eco.wider ? `What ${eco.hub} runs, plus the grants, loans and programs its team points founders to. Each one is checked against your startup.` : `What ${eco.hub} runs for founders. Each one is checked against your startup.`) : `Every grant, loan, accelerator and mentor we track, with ${eco.hub} programs first.`) : meta ? <>{meta.count} grants, loans, accelerators, mentors and founder communities, each with its source, plus upcoming events. Communities you join add their own on top.</> : "Loading"}</p>
         </div>
         <Segmented items={[["path", "For you"], ["all", "Browse all"], ...(account ? [["saved", itc.interest.some((i) => i.state === "yes") ? `Interested · ${itc.interest.filter((i) => i.state === "yes").length}` : "Interested"]] : []), ["ask", <><span className="sm:hidden">Guide</span><span className="hidden sm:inline">Ask the guide</span></>]]} value={tab} onChange={setTab} />
       </div>
 
       {eco?.wider && account && tab === "path" && <div className="mb-5"><ScopeSwitch eco={eco} scope={scope} onChange={setScope} total={res?.catalog_total} here={scope === "hub" ? (res ? (res.totals?.fit ?? null) : null) : null} /></div>}
       {err && <p className="mb-4 rounded-xl border border-red-500/40 p-3 text-sm text-red-500" role="alert">{err}</p>}
-      {!meta ? <Spinner /> : tab === "all" ? <Directory meta={meta} onOpen={setOpen} imap={itc.byId} eco={eco} fitRes={res} account={account} hasProfile={!!account && !!mine?.stage} /> : tab === "saved" && account ? <InterestedTab itc={itc} onOpen={setOpen} /> : tab === "ask" ? (
+      {!meta ? <Spinner /> : tab === "all" ? <Directory startType={startType} meta={meta} onOpen={setOpen} imap={itc.byId} eco={eco} fitRes={res} account={account} hasProfile={!!account && !!mine?.stage} /> : tab === "saved" && account ? <InterestedTab itc={itc} onOpen={setOpen} /> : tab === "ask" ? (
         <div className="mx-auto w-full max-w-3xl"><GuideChat className="h-[min(72dvh,680px)]" signedIn={!!account} hasProfile={!!mine?.stage} startupName={mine?.name} formProfile={account ? apiProfile : undefined} /></div>
       ) : account ? (
         <div className="space-y-6">
           {mine === null ? <Spinner /> : <><ProfileBar mine={mine} meta={meta} /><div className="mt-3 empty:hidden"><GenderNudge mine={mine} /></div></>}
           {ready && <Results res={res} meta={meta} loading={loading} generic={generic} onOpen={setOpen} tracked={tracked} onTrack={track} imap={itc.byId} eco={eco} scope={scope} onWiden={() => setScope("all")} />}
         </div>
-      ) : <SignedOutGate />}
+      ) : <><SignedOutGate /><SignedOutShowcase meta={meta} onOpen={setOpen} onBrowse={(t) => { setStartType(t); setTab("all"); window.scrollTo({ top: 0 }); }} /></>}
       <ProgramDrawer p={open} onClose={() => setOpen(null)} meta={meta} tracked={tracked} onTrack={account ? track : undefined} interest={account ? itc : undefined} eco={eco} stage={res?.trajectory?.current || mine?.stage || "idea"} />
     </div>
   );
@@ -481,12 +576,12 @@ export default function Navigator({ embedded }) {
   if (embedded) return body;
   if (account) return <AccountShell active="programs">{body}</AccountShell>;
   return (
-    <div className="min-h-[100dvh] px-4 py-5 sm:py-8" data-testid="navigator-page">
-      <header className="mx-auto mb-8 flex w-full max-w-6xl items-center justify-between gap-3">
+    <div className="flex min-h-[100dvh] flex-col px-4 py-5 sm:py-8" data-testid="navigator-page">
+      <header className="mx-auto mb-8 flex w-full max-w-6xl 2xl:max-w-7xl items-center justify-between gap-3">
         <Link to="/" className="text-xl" aria-label="Pathwai home"><Wordmark name="Pathwai" brand={{}} /></Link>
         <Link to={user ? "/" : "/login"} className="btn-ghost !py-2 text-sm">{user ? "Back to community" : "Sign in"}</Link>
       </header>
-      {body}
+      <div className="flex-1">{body}</div>
       <PoweredBy className="mt-10 pb-2 text-center" />
     </div>
   );
