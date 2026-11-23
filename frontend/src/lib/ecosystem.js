@@ -6,8 +6,8 @@ import { useAuth } from "./auth";
 // catalog. Without it nothing changes: a community with no `ecosystem` behaves exactly as before.
 // Every community is a hub now, so a community that has not described itself still gets the lens, with sensible defaults.
 export function useEcosystem() {
-  const { config } = useAuth();
-  if (!config) return null;
+  const { config, user } = useAuth();
+  if (!config || !user) return null;   // outside a community there is no hub: the general page shows all of Canada
   return config.ecosystem || { hub: config.community_name || "Your community", wider: "All of Canada" };
 }
 // Does this program belong to the hub's slice: one the hub runs, or one it points founders to?

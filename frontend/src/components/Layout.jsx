@@ -35,6 +35,7 @@ export default function Layout({ children }) {
   const loc = useLocation();
   const [menu, setMenu] = useState(false);
   const menuRef = useRef(null);
+  const sideRef = useRef(null);   // the account button at the bottom of the computer sidebar
   // The account menu used to stay open after you tapped a link on a phone (it only closed on mouse-leave), covering the
   // page. Close it on any tap outside it and whenever the page changes.
   // It also can't be taller than the room under the button: the menu lives in the sticky header, so on a short phone
@@ -42,7 +43,7 @@ export default function Layout({ children }) {
   const [menuMax, setMenuMax] = useState(null);
   useEffect(() => {
     if (!menu) return undefined;
-    const away = (e) => { if (!menuRef.current?.contains(e.target)) setMenu(false); };
+    const away = (e) => { if (!menuRef.current?.contains(e.target) && !sideRef.current?.contains(e.target)) setMenu(false); };
     const fit = () => {
       const r = menuRef.current?.getBoundingClientRect();
       const h = window.visualViewport?.height || window.innerHeight;
@@ -71,64 +72,91 @@ export default function Layout({ children }) {
   // The phone tab bar has room for Home plus four sections; anything past that is listed in the account menu so it stays reachable.
   const tabItems = mainItems.slice(0, 4);
   const overflowNav = [...mainItems.slice(tabItems.length), ...menuOnly];
+  // The computer sidebar lists every section (the same place Pathwai's own sidebar is), then the parts of your account.
+  const sideItems = [["/", "Home", TAB_ICONS["/"]], ...[...mainItems, ...menuOnly].map((n) => [ROUTES[n.key], n.label, TAB_ICONS[n.key]])];
+  const youItems = [["/journey", "Journey", Target], ["/me", "My profile", CircleUser], ["/communities", "Communities", Building2], ["/settings", "Settings", Settings]];
+  const toggleMode = () => { const n = mode === "dark" ? "light" : "dark"; setModePref(n); applyBrand(config); setMode(n); };
+  const SideLink = ({ to, label, Icon }) => (
+    <NavLink to={to} end={to === "/"} data-testid={`side-${to === "/" ? "home" : to.slice(1)}`}
+      className={({ isActive }) => cx("group flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition", isActive ? "bg-ink/10 text-ink" : "text-muted hover:bg-ink/5 hover:text-ink")}>
+      {Icon ? <Icon className="h-[18px] w-[18px] shrink-0" aria-hidden /> : <span className="w-[18px]" />}<span className="min-w-0 flex-1 truncate">{label}</span>
+    </NavLink>
+  );
+  // The account menu, used by the top bar on phones (opens down) and by the sidebar on a computer (opens up).
+  const AccountPanel = ({ up }) => menu && (
+    <div className={cx("absolute z-50 w-64 overflow-y-auto overscroll-contain rounded-2xl border border-line bg-surface p-1.5 shadow-lg", up ? "bottom-full left-0 mb-2" : "right-0 mt-2")} style={{ maxHeight: up ? "70vh" : menuMax || "70vh", background: "rgb(var(--c-surface))" }} data-testid="user-menu">
+      <div className="flex items-center gap-3 px-2.5 py-2.5">
+        <Avatar src={user.avatar_url} name={user.name} size={40} />
+        <div className="min-w-0"><p className="truncate text-sm font-semibold">{user.name}</p><p className="truncate text-xs text-muted">{user.email}</p>{config?.community_name && <p className="truncate text-xs font-semibold">{config.community_name}</p>}</div>
+      </div>
+      {/* On a phone: the sections that did not fit in the tab bar. A computer's sidebar already lists them all. */}
+      {overflowNav.length > 0 && (
+        <div className="lg:hidden">
+          <MenuGroup label={config?.community_name ? `In ${config.community_name}` : "In this community"}>
+            {overflowNav.map((n) => <MenuRow key={ROUTES[n.key]} to={ROUTES[n.key]} icon={TAB_ICONS[n.key]} testid={`user-menu-${n.key}`}>{n.label}</MenuRow>)}
+          </MenuGroup>
+        </div>
+      )}
+      <MenuGroup label="You">
+        <MenuRow to="/navigator" icon={Compass} testid="user-menu-opportunities">Opportunities</MenuRow>
+        <MenuRow to="/journey" icon={Target} testid="user-menu-journey">Journey</MenuRow>
+        <MenuRow to="/me" icon={CircleUser} testid="user-menu-profile">My profile</MenuRow>
+        <MenuRow to="/communities" icon={Building2} testid="user-menu-communities">Communities</MenuRow>
+        <MenuRow to="/settings" icon={Settings} testid="user-menu-settings">Settings</MenuRow>
+      </MenuGroup>
+      <div className="mt-1 border-t border-line pt-1">
+        <button className="flex w-full items-center gap-2.5 rounded-lg px-2.5 py-2 text-sm hover:bg-ink/5" data-testid="user-menu-logout" onClick={async () => { nav("/login", { replace: true }); await logout(); }}><LogOut className="h-4 w-4 text-muted" />Sign out</button>
+      </div>
+    </div>
+  );
 
   return (
-    <div className="min-h-screen">
-      <header className="glass-bar app-topbar-phone sticky top-2 z-[45] mx-2 mt-2 rounded-[1.75rem] sm:top-3 sm:mx-4 sm:mt-3 lg:mx-8">
-        <div className="mx-auto flex max-w-[1600px] items-center gap-2 px-3 py-2 sm:gap-4 sm:px-5 lg:px-6">
-          <Link to="/" className={"hit min-w-0 shrink overflow-hidden text-lg sm:text-2xl 2xl:max-w-[26rem] 2xl:text-2xl " + ((config?.community_name || "").length > 20 ? "xl:max-w-[17rem] xl:text-[1.05rem]" : "xl:max-w-[15rem] xl:text-xl")} data-testid="brand"><Wordmark name={config?.community_name || "Pathwai"} /></Link>
-          <SpaceSwitcher variant="chip" label={false} />
-          <nav className="ml-2 hidden min-w-0 flex-1 gap-1 overflow-x-auto [scrollbar-width:none] xl:flex">
-            {NAV.map(([to, label]) => (
-              <NavLink key={to} to={to} end={to === "/"} className={({ isActive }) => cx("whitespace-nowrap rounded-full px-3.5 py-1.5 text-sm 2xl:px-4", isActive ? "glass-active font-semibold text-ink" : "text-muted hover:bg-ink/5 hover:text-ink")}>{label}</NavLink>
-            ))}
-            {custom.map((l) => <a key={l.url} href={l.url} target="_blank" rel="noreferrer" className="whitespace-nowrap rounded-lg px-3 py-1.5 text-sm text-muted hover:bg-ink/5">{l.label} ↗</a>)}
-          </nav>
-          <div className="ml-auto flex shrink-0 items-center gap-0.5 sm:gap-2">
-            <Link to="/about" className="btn-ghost !px-2 sm:!px-3" data-testid="top-about" title="About Pathwai"><Info className="h-4 w-4" /><span className="hidden sm:inline xl:hidden 2xl:inline">About</span></Link>
-            <button className="btn-ghost !px-2 sm:!px-3" data-testid="mode-toggle" aria-label={mode === "dark" ? "Switch to light mode" : "Switch to dark mode"} title={mode === "dark" ? "Light mode" : "Dark mode"} onClick={() => { const n = mode === "dark" ? "light" : "dark"; setModePref(n); applyBrand(config); setMode(n); }}>{mode === "dark" ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}</button>
-            <div className="relative" ref={menuRef}>
-              <button className="flex items-center gap-2" onClick={() => setMenu(!menu)} data-testid="user-menu-trigger">
-                <span className="relative"><Avatar src={user.avatar_url} name={user.name} size={32} /></span><ChevronDown className="h-3 w-3" />
-              </button>
-              {menu && (
-                <div className="absolute right-0 z-50 mt-2 w-64 overflow-y-auto overscroll-contain rounded-2xl border border-line bg-surface p-1.5 shadow-lg" style={{ maxHeight: menuMax || "70vh" }} data-testid="user-menu">
-                  <div className="flex items-center gap-3 px-2.5 py-2.5">
-                    <Avatar src={user.avatar_url} name={user.name} size={40} />
-                    <div className="min-w-0"><p className="truncate text-sm font-semibold">{user.name}</p><p className="truncate text-xs text-muted">{user.email}</p>{config?.community_name && <p className="truncate text-xs font-semibold">{config.community_name}</p>}</div>
-                  </div>
-                  {/* In this community: the sections that did not fit in the tab bar. On a wide screen the top bar already has them, so only the menu-only ones show. */}
-                  {overflowNav.length > 0 && (
-                    <MenuGroup label={config?.community_name ? `In ${config.community_name}` : "In this community"}>
-                      {overflowNav.map((n) => {
-                        const to = ROUTES[n.key];
-                        const Icon = TAB_ICONS[n.key];
-                        return <MenuRow key={to} to={to} icon={Icon} testid={`user-menu-${n.key}`} className={menuOnly.includes(n) ? "" : "xl:hidden"}>{n.label}</MenuRow>;
-                      })}
-                    </MenuGroup>
-                  )}
-                  <MenuGroup label="You">
-                    <MenuRow to="/navigator" icon={Compass} testid="user-menu-opportunities">Opportunities</MenuRow>
-                    <MenuRow to="/journey" icon={Target} testid="user-menu-journey">Journey</MenuRow>
-                    <MenuRow to="/me" icon={CircleUser} testid="user-menu-profile">My profile</MenuRow>
-                    <MenuRow to="/communities" icon={Building2} testid="user-menu-communities">Communities</MenuRow>
-                    <MenuRow to="/settings" icon={Settings} testid="user-menu-settings">Settings</MenuRow>
-                  </MenuGroup>
-                  <div className="mt-1 border-t border-line pt-1">
-                    <button className="flex w-full items-center gap-2.5 rounded-lg px-2.5 py-2 text-sm hover:bg-ink/5" data-testid="user-menu-logout" onClick={async () => { nav("/login", { replace: true }); await logout(); }}><LogOut className="h-4 w-4 text-muted" />Sign out</button>
-                  </div>
-                </div>
-              )}
+    <div className="min-h-screen lg:grid lg:grid-cols-[256px_minmax(0,1fr)]">
+      {/* computer: sidebar, the same frame Pathwai's own pages use, so moving between all of Pathwai and a community never moves the navigation */}
+      <aside className="glass-bar sticky top-3 m-3 hidden h-[calc(100vh-1.5rem)] flex-col rounded-[1.75rem] px-3 py-5 lg:flex" aria-label="Main" data-testid="community-sidebar">
+        <Link to="/" onClick={() => window.scrollTo({ top: 0 })} className="mb-4 block min-w-0 overflow-hidden px-3 text-xl" data-testid="brand-side"><Wordmark name={config?.community_name || "Pathwai"} /></Link>
+        <div className="mb-3"><SpaceSwitcher variant="side" /></div>
+        <nav className="min-h-0 flex-1 overflow-y-auto pb-3" aria-label="Sections">
+          {sideItems.map(([to, label, Icon]) => <SideLink key={to} to={to} label={label} Icon={Icon} />)}
+          {custom.map((l) => <a key={l.url} href={l.url} target="_blank" rel="noreferrer" className="flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-muted hover:bg-ink/5 hover:text-ink"><span className="w-[18px]" /><span className="min-w-0 flex-1 truncate">{l.label} ↗</span></a>)}
+          <p className="px-3 pb-1 pt-5 text-[10px] font-semibold uppercase text-muted" style={{ letterSpacing: "0.18em" }}>You</p>
+          {youItems.map(([to, label, Icon]) => <SideLink key={to} to={to} label={label} Icon={Icon} />)}
+        </nav>
+        <div className="relative flex items-center gap-1 border-t border-line pt-3" ref={sideRef}>
+          <button type="button" onClick={() => setMenu((o) => !o)} aria-haspopup="menu" aria-expanded={menu} data-testid="user-menu-trigger" className="flex min-w-0 flex-1 items-center gap-3 rounded-lg px-2 py-2 text-left hover:bg-ink/5">
+            <Avatar src={user.avatar_url} name={user.name} size={32} />
+            <span className="min-w-0 flex-1"><span className="block truncate text-sm font-medium">{user.name}</span><span className="block truncate text-xs text-muted">{user.email}</span></span>
+          </button>
+          <button type="button" className="grid h-9 w-9 shrink-0 place-items-center rounded-lg text-muted hover:bg-ink/5 hover:text-ink" data-testid="mode-toggle" aria-label={mode === "dark" ? "Switch to light mode" : "Switch to dark mode"} title={mode === "dark" ? "Light mode" : "Dark mode"} onClick={toggleMode}>{mode === "dark" ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}</button>
+          <Link to="/about" className="grid h-9 w-9 shrink-0 place-items-center rounded-lg text-muted hover:bg-ink/5 hover:text-ink" data-testid="top-about" title="About Pathwai" aria-label="About Pathwai"><Info className="h-4 w-4" /></Link>
+          {AccountPanel({ up: true })}
+        </div>
+      </aside>
+
+      <div className="min-w-0">
+        {/* phone: top bar */}
+        <header className="glass-bar app-topbar-phone sticky top-2 z-[45] mx-2 mt-2 rounded-[1.75rem] sm:top-3 sm:mx-4 sm:mt-3 lg:hidden">
+          <div className="mx-auto flex max-w-[1600px] items-center gap-2 px-3 py-2 sm:gap-4 sm:px-5">
+            <Link to="/" className="hit min-w-0 shrink overflow-hidden text-lg sm:text-2xl" data-testid="brand"><Wordmark name={config?.community_name || "Pathwai"} /></Link>
+            <SpaceSwitcher variant="chip" label={false} />
+            <div className="ml-auto flex shrink-0 items-center gap-0.5 sm:gap-2">
+              <Link to="/about" className="btn-ghost !px-2 sm:!px-3" title="About Pathwai"><Info className="h-4 w-4" /><span className="hidden sm:inline">About</span></Link>
+              <button className="btn-ghost !px-2 sm:!px-3" aria-label={mode === "dark" ? "Switch to light mode" : "Switch to dark mode"} title={mode === "dark" ? "Light mode" : "Dark mode"} onClick={toggleMode}>{mode === "dark" ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}</button>
+              <div className="relative" ref={menuRef}>
+                <button className="flex items-center gap-2" onClick={() => setMenu(!menu)} data-testid="user-menu-trigger">
+                  <span className="relative"><Avatar src={user.avatar_url} name={user.name} size={32} /></span><ChevronDown className="h-3 w-3" />
+                </button>
+                {AccountPanel({ up: false })}
+              </div>
             </div>
           </div>
-        </div>
-        <nav className="hidden">
-          {NAV.map(([to, label]) => <NavLink key={to} to={to} end={to === "/"} className={({ isActive }) => cx("whitespace-nowrap rounded-full px-3 py-1 text-sm", isActive ? "bg-ink/10" : "text-muted")}>{label}</NavLink>)}
-          {custom.map((l) => <a key={l.url} href={l.url} target="_blank" rel="noreferrer" className="whitespace-nowrap rounded-full px-3 py-1 text-sm text-muted">{l.label} ↗</a>)}
-        </nav>
-      </header>
-      <main className="mx-auto max-w-[1600px] px-4 py-6 lg:px-10 lg:py-10 xl:py-8">{backTo && <BackButton fallback={backTo[0]} label={`Back to ${backTo[1]}`} />}{children}</main>
-      <nav className="app-tabbar grid xl:hidden"
+        </header>
+        <main className="mx-auto max-w-[1600px] px-4 py-6 lg:px-10 lg:py-10 xl:py-8">{backTo && <BackButton fallback={backTo[0]} label={`Back to ${backTo[1]}`} />}{children}</main>
+        <footer className="mx-auto flex max-w-[1600px] flex-col items-center gap-3 border-t border-line px-4 pt-6 pb-[calc(6rem+env(safe-area-inset-bottom,0px))] text-center sm:flex-row sm:justify-between sm:text-left lg:pb-6"><PoweredBy /><span className="eyebrow">Find the right next step</span></footer>
+      </div>
+
+      {/* phone: tab bar */}
+      <nav className="app-tabbar grid lg:hidden"
         style={{ gridTemplateColumns: `repeat(${Math.min(5, 1 + tabItems.length)}, minmax(0, 1fr))` }} data-testid="tabbar">
         {[["/", "Home", TAB_ICONS["/"]], ...tabItems.map((n) => [ROUTES[n.key], n.label, TAB_ICONS[n.key]])].map(([to, label, Icon]) => (
           <NavLink key={to} to={to} end={to === "/"} className="app-tab">
@@ -136,7 +164,6 @@ export default function Layout({ children }) {
           </NavLink>
         ))}
       </nav>
-      <footer className="mx-auto flex max-w-[1600px] flex-col items-center gap-3 border-t border-line px-4 pt-6 pb-[calc(6rem+env(safe-area-inset-bottom,0px))] text-center sm:flex-row sm:justify-between sm:text-left xl:pb-6"><PoweredBy /><span className="eyebrow">Find the right next step</span></footer>
     </div>
   );
 }

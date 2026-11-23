@@ -112,7 +112,7 @@ export function AuthProvider({ children }) {
   const leave = async () => {
     await api.post("/hub/leave-community");
     seen.current = { ...seen.current, user: null };
-    setUser(null); showHubTheme();
+    setUser(null); setConfig(null); showHubTheme();
   };
   const logout = async () => {
     const wasDemo = inDemoTab();
