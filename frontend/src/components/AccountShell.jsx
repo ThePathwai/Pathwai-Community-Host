@@ -84,7 +84,7 @@ export default function AccountShell({ active, children }) {
           <Link to="/" onClick={() => window.scrollTo({ top: 0 })} className="mb-5 px-3 text-2xl" aria-label="Pathwai home"><Wordmark name="Pathwai" brand={{}} /></Link>
           <div className="mb-3" data-tour="space"><SpaceSwitcher variant="side" /></div>
           <button type="button" onClick={() => ctx.openGuide()} data-testid="shell-ask" data-tour="ask" className="mb-2 flex w-full items-center gap-2.5 rounded-lg border border-line bg-ink/[.04] px-3 py-2 text-left text-sm text-muted transition hover:border-ink/30 hover:text-ink">
-            <Search className="h-4 w-4" aria-hidden /><span className="flex-1">Ask the guide</span><kbd className="rounded border border-line px-1.5 text-[10px] font-medium">AI</kbd>
+            <Search className="h-4 w-4" aria-hidden /><span className="flex-1">Ask the guide</span><kbd className="rounded border border-line px-1.5 text-[10px] font-medium">Soon</kbd>
           </button>
           <nav className="min-h-0 flex-1 overflow-y-auto pb-3" aria-label="Sections">{Items()}</nav>
           <div className="relative border-t border-line pt-3">

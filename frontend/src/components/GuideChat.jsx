@@ -11,6 +11,9 @@ import { isStageLine } from "../lib/navigator";
 // Answers are built from the program catalog by rules (backend/navigator_guide.py), so a program or date can't be made up.
 // Backend: POST /navigator/chat.
 
+// The guide is not switched on yet: every "Ask the guide" button in the app opens this panel instead of a chat. Set to false when it works.
+const UNDER_CONSTRUCTION = true;
+
 const START = ["What should I do next?", "What is closing soon?", "Which communities fit me?"];
 
 function Cards({ cards }) {
@@ -56,7 +59,7 @@ export default function GuideChat({ signedIn, hasProfile, formProfile, startupNa
 
   const send = async (q) => {
     const message = (q ?? text).trim();
-    if (!message || busy) return;
+    if (UNDER_CONSTRUCTION || !message || busy) return;
     setText(""); setBusy(true);
     setMsgs((m) => [...m, { role: "user", text: message }]);
     try {
@@ -71,6 +74,16 @@ export default function GuideChat({ signedIn, hasProfile, formProfile, startupNa
   // Opened with a question already typed (from the Home bar, or a program's "Ask" button): ask it once, right away.
   useEffect(() => { if (msgs && initialMessage && !sentInitial.current) { sentInitial.current = true; send(initialMessage); } }, [msgs]); // eslint-disable-line react-hooks/exhaustive-deps
 
+  if (UNDER_CONSTRUCTION) {
+    return (
+      <section className={cx("flex min-h-0 flex-col items-center justify-center rounded-2xl border border-line bg-surface p-8 text-center", className)} aria-label="Ask the guide" data-testid="guide-chat" data-state="under-construction">
+        <span className="flex h-12 w-12 items-center justify-center rounded-full" style={{ background: "var(--accent)", color: "var(--on-accent)" }}><Compass className="h-6 w-6" aria-hidden /></span>
+        <p className="mt-4 text-[11px] font-semibold uppercase text-muted" style={{ letterSpacing: "0.12em" }}>Coming soon</p>
+        <h3 className="mt-1 text-xl font-bold" style={{ letterSpacing: "-0.02em" }}>The guide is under construction</h3>
+        <p className="mt-2 max-w-sm text-sm leading-relaxed text-muted">We're still building it. Until then, your Opportunities, Events and People are already matched to your startup profile.</p>
+      </section>
+    );
+  }
   if (!msgs) return null;
   const last = msgs[msgs.length - 1];
   return (

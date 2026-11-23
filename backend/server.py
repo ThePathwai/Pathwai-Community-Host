@@ -102,7 +102,10 @@ from routes.member_import import router as member_import_router  # noqa: E402
 from routes.push import router as push_router, ensure_indexes as ensure_push_indexes  # noqa: E402
 from routes.hub import router as hub_router, records_for, set_community_cookie, ensure_hub_social_indexes  # noqa: E402
 
-app = FastAPI(title="Pathwai API")
+# A live deployment does not publish its own map: no Swagger page and no list of every endpoint. (Demo and local runs keep them for developers.)
+_PUBLIC_DOCS = demo_mode()
+app = FastAPI(title="Pathwai API", docs_url="/docs" if _PUBLIC_DOCS else None, redoc_url="/redoc" if _PUBLIC_DOCS else None,
+              openapi_url="/openapi.json" if _PUBLIC_DOCS else None)
 app.state.db = db
 api_router = APIRouter(prefix="/api")
 
