@@ -108,6 +108,12 @@ export function AuthProvider({ children }) {
     await loadConfig();
     return data;
   };
+  // Step out of the community you are in, back to your own Pathwai (Opportunities, Journey, Events, People, your profile).
+  const leave = async () => {
+    await api.post("/hub/leave-community");
+    seen.current = { ...seen.current, user: null };
+    setUser(null); showHubTheme();
+  };
   const logout = async () => {
     const wasDemo = inDemoTab();
     setDemoRole(null); await forgetThisDevice(); await api.post("/auth/logout"); seen.current = { account: null, user: null }; setUser(null); setAccount(null); showHubTheme();
@@ -115,7 +121,7 @@ export function AuthProvider({ children }) {
   };
 
   return (
-    <Ctx.Provider value={{ account, user, setUser, config, loading, login, applySession, signup, enter, logout, refresh, loadConfig, showHubTheme }}>
+    <Ctx.Provider value={{ account, user, setUser, config, loading, login, applySession, signup, enter, leave, logout, refresh, loadConfig, showHubTheme }}>
       {children}
     </Ctx.Provider>
   );

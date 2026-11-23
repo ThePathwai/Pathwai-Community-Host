@@ -21,7 +21,7 @@ import journey as jny
 import navigator as nav
 import navigator_guide as guide
 from auth import client_ip, rate_limit, require_role
-from database import COMMUNITY_SLUGS, db, dbfor, hub_db
+from database import COMMUNITY_SLUGS, current_community, db, dbfor, hub_db
 from program_check import merge_check
 from program_job import load_checks, summarize
 from ._common import audit, now_iso
@@ -65,7 +65,8 @@ async def _opted_in() -> List[Dict[str, Any]]:
             d = dbfor(slug)
             cfg = await d.community_config.find_one({"_key": "singleton"}) or {}
             n = cfg.get("navigator") or {}
-            if not n.get("public"):
+            # Pathwai's practice community keeps its own programs to itself: they only show to someone who has walked into it.
+            if not n.get("public") and not (cfg.get("open_demo") and current_community() == slug):
                 continue
             summ = await _summary(slug)
             rows = await d.navigator_programs.find({}, {"_id": 0}).to_list(MAX_COMMUNITY_PROGRAMS)

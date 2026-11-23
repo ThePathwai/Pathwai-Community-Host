@@ -153,6 +153,8 @@ async def _summary(slug: str) -> Dict[str, Any]:
         # Always true -- see _apply_to_community's "Policy" comment. Not read from cfg: a stale
         # community_config doc from before this policy existed could still say False.
         "require_approval": True,
+        # True only for Pathwai's own practice community (see demo_community.py): anyone with an account can walk straight in.
+        "open": bool(cfg.get("open_demo")),
         "country": cfg.get("country") or "", "interest_tags": cfg.get("interest_tags") or [],
         "brand": {"colors": brand.get("colors"), "mode": brand.get("mode"), "font": brand.get("font"), "heading_font": brand.get("heading_font"),
                   "radius": brand.get("radius"), "button_shape": brand.get("button_shape"), "logo_url": brand.get("logo_url")},
@@ -811,12 +813,17 @@ async def _apply_to_community(slug: str, acc: Dict[str, Any], title: str = "", m
     existing = await d.users.find_one({"email": acc["email"]})
     if existing:
         return {"ok": True, "status": existing.get("membership_status") or "approved"}
-    src = await hub_db().accounts.find_one({"id": acc["id"]}) or {}
     cfg = await d.community_config.find_one({"_key": "singleton"}) or {}
+    # Pathwai's practice community is shared by every account that walks in, so it never receives anyone's profile: only a name,
+    # and the card is kept out of the directory, so one real person's details can never be seen by another through it.
+    src = {} if cfg.get("open_demo") else (await hub_db().accounts.find_one({"id": acc["id"]}) or {})
+    pw_hash = (await hub_db().accounts.find_one({"id": acc["id"]}) or {}).get("password_hash")
     # Policy: every community requires admin approval, full stop -- no community can auto-approve a
     # join request, regardless of what its own `require_approval` config says. That field is kept
     # around purely for display (see _summary()) and is never allowed to skip this.
-    needs = True
+    # The one exception is Pathwai's own practice community (config.open_demo, seeded by demo_community.py): it holds only made-up
+    # sample data, so any account can enter it at once. A real community is never opened this way.
+    needs = not cfg.get("open_demo")
     now = _now()
     reason = (message or "").strip()
     if answers:
@@ -826,13 +833,13 @@ async def _apply_to_community(slug: str, acc: Dict[str, Any], title: str = "", m
     # Anything the applicant typed into this specific apply form (title) wins over the account default.
     contact = {"email": acc["email"], **{k: v for k, v in (src.get("contact") or {}).items() if v}}
     doc = {
-        "id": acc["id"], "name": acc["name"], "email": acc["email"], "password_hash": src.get("password_hash"), "role": "member", "member_type": "founder",
+        "id": acc["id"], "name": acc["name"], "email": acc["email"], "password_hash": pw_hash, "role": "member", "member_type": "founder",
         "tagline": "", "bio": src.get("bio") or "", "title": (title or "").strip() or src.get("title") or "", "company": src.get("company") or "",
         "location": src.get("location") or "", "age": age_from(src.get("birthday")) or src.get("age"), "birthday": src.get("birthday"), "avatar_url": acc.get("avatar_url") or "", "cover_url": "",
         "expertise": [], "skill_set": list(src.get("skill_set") or []), "focus_areas": [], "open_to": [], "services_offered": [], "topics_can_advise_on": [],
         "interests_hobbies": list(src.get("interests_hobbies") or []), "goals": list(src.get("goals") or []),
         "support_needs": list(src.get("support_needs") or []), "needs_seeking": [], "custom_fields": {}, "contact": contact, "contact_visibility": "members",
-        "hidden_from_directory": bool(needs), "join_reason": reason, "signup_source": "hub", "created_at": now, "updated_at": now,
+        "hidden_from_directory": bool(needs) or bool(cfg.get("open_demo")), "join_reason": reason, "signup_source": "hub", "created_at": now, "updated_at": now,
         "membership_status": "pending" if needs else "approved",
         **_startup_card(src.get("startup")),
     }

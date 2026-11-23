@@ -21,7 +21,8 @@ const S = { role: null, email: null, community: null, books: {}, extra: {} };
 const book = () => { const k = S.community || "playr"; return (S.books[k] = S.books[k] || JSON.parse(JSON.stringify(fixtures.communities[k]))); };
 const slugOf = () => S.community || "playr";
 // The active community's recorded data. `member` and `admin` both point at the signed-in person's view, so shared helpers keep working.
-Object.defineProperty(S, "data", { get() { const b = book(); const v = (S.email && b.logins[S.email]) || {}; return { public: b.public, member: v, admin: v }; } });
+// An account with no card of its own in a community (the founder demo walking into the practice hub) sees the ready-made member.
+Object.defineProperty(S, "data", { get() { const b = book(); const v = (S.email && (b.logins[S.email] || b.logins["demo@yourcommunity.app"])) || {}; return { public: b.public, member: v, admin: v }; } });
 const ACCOUNTS = { "demo@yourcommunity.app": { name: "Fife Ashley-Dejo", role: "member" }, "admin@yourcommunity.app": { name: "Fife Ashley-Dejo", role: "admin" }, "host@thevillage.example": { name: "Camille Laurent", role: "host" },
   // A founder who has not joined any community: only the account-level profile exists. Shows the Hub, /me, Navigator and the guide with nothing else around them.
   "founder@yourcommunity.app": { name: "Fife Ashley-Dejo", role: "member" } };
@@ -115,7 +116,7 @@ function blank(v) {
 // The Toronto Hyrox Crew and demo hub community (see hyrox.js, demoHub.js, demoKit.js).
 { const deps = { blank, clone, DEFAULT_CONFIG, REFERENCE_PUBLIC_KEYS };
   const hx = buildHyrox(fixtures, deps); fixtures.communities[HYROX_SLUG] = hx.book; fixtures.hub.splice(2, 0, hx.hub);
-  const hm = buildHub(fixtures, deps); fixtures.communities[HUB_SLUG] = hm.book; fixtures.hub.splice(3, 0, hm.hub);
+  const hm = buildHub(fixtures, deps); fixtures.communities[HUB_SLUG] = hm.book; fixtures.hub.splice(3, 0, { ...hm.hub, open: true });
   // Club PTO is rebuilt from its public Skill Lab summary: sponsors, a member skill exchange and both demo sides (see clubpto.js).
   const pt = buildClubPto(fixtures, deps); fixtures.communities[CLUBPTO_SLUG] = pt.book;
   const ptAt = fixtures.hub.findIndex((c) => c.slug === CLUBPTO_SLUG); if (ptAt >= 0) fixtures.hub[ptAt] = pt.hub; else fixtures.hub.splice(4, 0, pt.hub);
@@ -518,6 +519,8 @@ function communityPublicInfo(slug) {
 function applyToCommunity(slug, { title, message, answers } = {}) {
   const existing = memStatus(S.email, slug);
   if (existing !== "none") return { status: existing };
+  // The practice community has no waiting list (config.open_demo on the real server): applying opens it at once.
+  if (slug === HUB_SLUG) { (S.extra.join = S.extra.join || {})[S.email + "|" + slug] = "approved"; return { status: "approved" }; }
   const prof = (S.extra.acctProfile || {})[S.email] || {};
   const name = prof.name || (ACCOUNTS[S.email] || (S.extra.accounts || {})[S.email] || {}).name || S.email;
   const why = [message, ...Object.entries(answers || {}).map(([k, v]) => `${k}: ${v}`)].filter(Boolean).join("\n");

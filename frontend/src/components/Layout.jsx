@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from "react";
 import { Link, NavLink, useLocation, useNavigate } from "react-router-dom";
-import { Compass, MessageCircle, Target, Calendar, Gift, Info, Home as HomeIcon, LogOut, Moon, Settings, Sparkles, Sun, Users, CircleUser, ChevronDown } from "lucide-react";
+import { Building2, Compass, MessageCircle, Target, Calendar, Gift, Info, Home as HomeIcon, LogOut, Moon, Settings, Sparkles, Sun, Users, CircleUser, ChevronDown } from "lucide-react";
 import { applyBrand, effectiveMode, setModePref } from "../lib/theme";
 import { useAuth } from "../lib/auth";
 import { Avatar, BackButton, PoweredBy, Wordmark, cx } from "./ui";
@@ -109,6 +109,7 @@ export default function Layout({ children }) {
                     <MenuRow to="/navigator" icon={Compass} testid="user-menu-opportunities">Opportunities</MenuRow>
                     <MenuRow to="/journey" icon={Target} testid="user-menu-journey">Journey</MenuRow>
                     <MenuRow to="/me" icon={CircleUser} testid="user-menu-profile">My profile</MenuRow>
+                    <MenuRow to="/communities" icon={Building2} testid="user-menu-communities">Communities</MenuRow>
                     <MenuRow to="/settings" icon={Settings} testid="user-menu-settings">Settings</MenuRow>
                   </MenuGroup>
                   <div className="mt-1 border-t border-line pt-1">

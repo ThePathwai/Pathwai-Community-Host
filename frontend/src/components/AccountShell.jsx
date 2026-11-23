@@ -1,6 +1,6 @@
 import React, { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { CalendarDays, Compass, LogOut, MessageCircle, Route, Search, User, UserRound, Info, PlayCircle } from "lucide-react";
+import { Building2, CalendarDays, Compass, LogOut, MessageCircle, Route, Search, User, UserRound, Info, PlayCircle } from "lucide-react";
 import { useAuth } from "../lib/auth";
 import { Avatar, Modal, PoweredBy, Wordmark, cx } from "./ui";
 import GuideChat from "./GuideChat";
@@ -57,6 +57,7 @@ export default function AccountShell({ active, children }) {
       <NavItem to="/founder-events" icon={CalendarDays} label="Events" active={active === "events"} testId="shell-events" tour="nav-events" />
       <NavItem to="/people" icon={UserRound} label="People" active={active === "people"} testId="shell-people" tour="nav-people" />
       <NavItem to="/me" icon={User} label="Your profile" active={active === "profile"} testId="shell-profile" tour="nav-profile" />
+      <NavItem to="/communities" icon={Building2} label="Communities" active={active === "communities"} testId="shell-communities" />
     </>
   );
 
@@ -66,6 +67,7 @@ export default function AccountShell({ active, children }) {
       <div role="menu" className={cx("absolute z-50 w-60 overflow-hidden rounded-xl border border-line bg-surface shadow-xl", up ? "bottom-full left-0 mb-2" : "right-0 top-12")} data-testid="shell-menu-panel">
         <div className="border-b border-line px-4 py-3"><p className="truncate text-sm font-medium">{account.name}</p><p className="truncate text-xs text-muted">{account.email}</p></div>
         <Link role="menuitem" to="/me" onClick={() => setMenu(false)} className="flex items-center gap-2 px-4 py-2.5 text-sm hover:bg-ink/5"><User className="h-4 w-4" />Your profile</Link>
+        <Link role="menuitem" to="/communities" onClick={() => setMenu(false)} className="flex items-center gap-2 px-4 py-2.5 text-sm hover:bg-ink/5" data-testid="shell-menu-communities"><Building2 className="h-4 w-4" />Communities</Link>
         <button role="menuitem" className="flex w-full items-center gap-2 px-4 py-2.5 text-left text-sm hover:bg-ink/5" data-testid="shell-tour" onClick={() => { setMenu(false); setTour(true); }}><PlayCircle className="h-4 w-4" />Take the tour</button>
         <Link role="menuitem" to="/about" onClick={() => setMenu(false)} className="flex items-center gap-2 px-4 py-2.5 text-sm hover:bg-ink/5"><Info className="h-4 w-4" />About Pathwai</Link>
         <button role="menuitem" className="flex w-full items-center gap-2 border-t border-line px-4 py-2.5 text-left text-sm hover:bg-ink/5" data-testid="hub-logout" onClick={signOut}><LogOut className="h-4 w-4" />Sign out</button>

@@ -33,6 +33,7 @@ import FounderEvents from "./pages/FounderEvents";
 import People from "./pages/People";
 import PersonProfile from "./pages/PersonProfile";
 import MyProfile from "./pages/MyProfile";
+import Communities from "./pages/Communities";
 
 function Protected({ children }) {
   const { user, account, loading } = useAuth();
@@ -84,6 +85,15 @@ function PersonRoute() {
   return user ? <Layout><PersonProfile embedded /></Layout> : <PersonProfile />;
 }
 
+// Communities: join hubs with the one profile on your account, open one, or step back out to all of Pathwai. Works from either side.
+function CommunitiesRoute() {
+  const { user, account, loading } = useAuth();
+  const loc = useLocation();
+  if (loading) return <Spinner />;
+  if (!account) return <Navigate to="/login" state={{ from: loc.pathname }} replace />;
+  return user ? <Layout><Communities embedded /></Layout> : <Communities />;
+}
+
 // The main address: members get their Home; anyone signed out gets the Pathwai website (sign in is one click away).
 function HomeRoute() {
   const { user, account, loading } = useAuth();
@@ -117,6 +127,7 @@ export default function App() {
         <Route path="/people" element={<PeopleRoute />} />
         <Route path="/people/:key" element={<PersonRoute />} />
         <Route path="/me" element={<MyProfileRoute />} />
+        <Route path="/communities" element={<CommunitiesRoute />} />
         <Route path="/demo" element={<Navigate to={`/demo/${HUB.short}`} replace />} />
         <Route path="/install" element={<Install />} />
         <Route path="/terms" element={<Legal doc="terms" />} />

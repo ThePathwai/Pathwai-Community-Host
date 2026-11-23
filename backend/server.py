@@ -275,6 +275,13 @@ async def on_startup():
     # Self-serve communities created via POST /hub/communities (see routes/hub.py) are registered
     # into COMMUNITY_SLUGS in-process at creation time; reload them here too so a restarted worker
     # still recognizes them instead of 404-ing every request into that community.
+    if not demo_mode():
+        # Pathwai's practice community (demo_community.py): a real community, made-up content, open to any account.
+        try:
+            from demo_community import ensure_demo_community
+            await ensure_demo_community()
+        except Exception as exc:  # noqa: BLE001 -- the practice community must never stop the real site from starting
+            logger.warning("practice community setup failed: %s", exc)
     async for doc in hub_db().communities.find({}):
         if doc.get("slug"):
             register_community_slug(doc["slug"])
