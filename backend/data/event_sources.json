@@ -426,7 +426,7 @@
    "kind": "auto",
    "url": "https://enterprisecentre.ca/calendar/",
    "province": "ON",
-   "city": "Collingwood",
+   "city": "",
    "priority": 1,
    "founder": true,
    "confirmed": true
@@ -538,18 +538,6 @@
    "priority": 3,
    "founder": true,
    "confirmed": true
-  },
-  {
-   "id": "meetup-strive-networking",
-   "name": "Strive Networking (Ottawa) (Meetup)",
-   "group": "meetup",
-   "kind": "meetup",
-   "url": "https://www.meetup.com/strive-networking/events/",
-   "province": "ON",
-   "city": "Ottawa",
-   "priority": 3,
-   "founder": true,
-   "confirmed": false
   },
   {
    "id": "meetup-ottawa-master-entrepreneur",

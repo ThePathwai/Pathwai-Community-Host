@@ -24,7 +24,7 @@ REFRESH_EVERY = timedelta(hours=11)
 BOT_NAME = "PathwaiEventsBot"
 MAX_PER_SOURCE = 60
 # Bump this whenever the relevance rules or the source list change: the next server start then re-reads everything instead of waiting up to 11 hours.
-RULES_VERSION = "2026-11-20-relevance-2"
+RULES_VERSION = "2026-11-23-canada-only-1"
 
 
 def load_sources() -> List[Dict[str, Any]]:
@@ -49,7 +49,7 @@ async def purge_irrelevant(db) -> int:
     gone = 0
     for e in await load_events(db):
         src = sources.get(e.get("source_id"))
-        if not src or not ef.relevant(e.get("title", ""), e.get("summary", ""), src):
+        if not src or not ef.relevant(e.get("title", ""), e.get("summary", ""), src) or (not e.get("online") and ef.is_foreign(e.get("venue", ""), e.get("city", ""))):
             await db.founder_events.delete_one({"id": e["id"]})
             gone += 1
     return gone

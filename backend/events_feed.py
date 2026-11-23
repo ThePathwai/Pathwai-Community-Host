@@ -316,18 +316,29 @@ def _when(v: Any) -> Optional[datetime]:
 
 
 def _province(region: str, city: str, text: str, default: str) -> str:
+    """Where an event is. An address that names its province wins, then a well-known city, then the listing's own region field
+    (some listings send a wrong code, for example Nunavut for a North York cafe), then the source's usual province."""
+    m = re.search(r",\s*(ON|BC|AB|SK|MB|QC|NB|NS|PE|NL|YT|NT|NU)\b", text or "")
+    if m:
+        return m.group(1)
+    c = (city or "").strip().lower()
+    if c in CITY_PROVINCE:
+        return CITY_PROVINCE[c]
     r = (region or "").strip()
     if r.upper() in nav.PROVINCES:
         return r.upper()
     if r.lower() in PROVINCE_NAMES:
         return PROVINCE_NAMES[r.lower()]
-    c = (city or "").strip().lower()
-    if c in CITY_PROVINCE:
-        return CITY_PROVINCE[c]
-    m = re.search(r",\s*(ON|BC|AB|SK|MB|QC|NB|NS|PE|NL|YT|NT|NU)\b", text or "")
-    if m:
-        return m.group(1)
     return default
+
+
+# A street address outside Canada: a US zip code, or a country name. Founders here are looking for Canadian events, so these never pass.
+FOREIGN_PLACE = re.compile(r"\b(?:USA|U\.S\.A?\.?|United States(?: of America)?|United Kingdom|U\.K\.)\b|,\s*[A-Z]{2}\s+\d{5}(?:-\d{4})?\b")
+ONLINE_VENUE = re.compile(r"\s*(?:ms teams|microsoft teams|zoom|google meet|webex|virtual|online|webinar)\b", re.I)   # a "venue" that is really a meeting link
+
+
+def is_foreign(venue: str, city: str = "") -> bool:
+    return bool(FOREIGN_PLACE.search(f"{venue or ''} {city or ''}"))
 
 
 def classify(title: str, summary: str) -> Dict[str, List[str]]:
@@ -384,10 +395,13 @@ def normalize(raw: Dict[str, Any], source: Dict[str, Any], now: Optional[datetim
     text = f"{title} {summary}"
     if not relevant(title, summary, source):
         return None
-    online = bool(raw.get("online")) or bool(re.search(r"\b(?:online|virtual|webinar|zoom)\b", title, re.I))
+    venue_text = str(raw.get("venue") or "")
+    online = bool(raw.get("online")) or bool(re.search(r"\b(?:online|virtual|webinar|zoom)\b", title, re.I)) or bool(ONLINE_VENUE.match(venue_text))
     province = _province(str(raw.get("region") or ""), str(raw.get("city") or ""), str(raw.get("venue") or ""), source.get("province") or "")
     country = str(raw.get("country") or "").strip().lower()
     if country and country not in ("ca", "canada") and not online:
+        return None
+    if is_foreign(venue_text, str(raw.get("city") or "")) and not online:
         return None
     if not online and not province and source.get("kind") in ("eventbrite", "meetup", "luma") and not country:
         return None
@@ -397,7 +411,7 @@ def normalize(raw: Dict[str, Any], source: Dict[str, Any], now: Optional[datetim
     return {
         "id": event_id(title, day, url), "title": title, "start": start.isoformat(), "end": end.isoformat(), "date": day, "time": clock,
         "url": url, "summary": summary, "image": _https(raw.get("image")),
-        "venue": _clean(raw.get("venue"), 120), "city": _clean(raw.get("city"), 60) or source.get("city", ""), "province": province, "online": online,
+        "venue": _clean(raw.get("venue"), 120), "city": _clean(raw.get("city"), 60) or ("" if online else source.get("city", "")), "province": province, "online": online,
         "price": "free" if price == 0 else "paid" if isinstance(price, (int, float)) and price > 0 else "unknown",
         "org": _clean(raw.get("org"), 80) or source.get("name", ""), "source_id": source["id"], "source_name": source.get("name", ""), "priority": int(source.get("priority", 5)),
         "topics": cls["topics"] or ["network"],
