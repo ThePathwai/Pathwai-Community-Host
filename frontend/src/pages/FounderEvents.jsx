@@ -176,11 +176,11 @@ function CalendarView({ list, other }) {
                 <span className={cx("grid h-6 w-6 shrink-0 place-items-center rounded-full text-xs font-semibold tabular-nums sm:h-7 sm:w-7 sm:text-[13px]", isToday ? "" : evs.length ? "" : "text-muted")}
                   style={isToday ? { background: "var(--accent)", color: "var(--on-accent)" } : undefined}>{Number(iso.slice(8))}</span>
                 {/* phones: dots. wider screens: the first events as little labels */}
-                {evs.length > 0 && <span className="flex flex-wrap gap-0.5 px-0.5 sm:hidden">{evs.slice(0, 3).map((e) => <span key={e.id} className="h-1.5 w-1.5 rounded-full" style={{ background: "var(--accent)" }} />)}{evs.length > 3 && <span className="text-[9px] leading-none text-muted">+{evs.length - 3}</span>}</span>}
+                {evs.length > 0 && <span className="flex flex-wrap gap-0.5 px-0.5 sm:hidden">{evs.slice(0, 3).map((e) => <span key={e.id} className={cx("h-2 w-2 rounded-full", !(!other && e.fit === "strong") && "border border-ink/40")} style={!other && e.fit === "strong" ? { background: "var(--accent)" } : undefined} />)}{evs.length > 3 && <span className="text-[9px] leading-none text-muted">+{evs.length - 3}</span>}</span>}
                 <span className="hidden min-w-0 flex-col gap-1 sm:flex">
                   {evs.slice(0, 2).map((e) => (
-                    <span key={e.id} className={cx("block truncate rounded-md px-1.5 py-0.5 text-[11px] font-medium leading-snug", other ? "bg-ink/[.06] text-muted" : e.fit === "strong" ? "" : "bg-ink/[.07]")}
-                      style={!other && e.fit === "strong" ? { background: "color-mix(in srgb, var(--accent) 22%, transparent)" } : undefined}>
+                    <span key={e.id} className={cx("block truncate rounded-md px-1.5 py-0.5 text-[11px] leading-snug", !other && e.fit === "strong" ? "font-semibold" : "border border-dashed border-ink/30 font-medium text-muted")}
+                      style={!other && e.fit === "strong" ? { background: "var(--accent)", color: "var(--on-accent)" } : undefined}>
                       {e.time && <span className="mr-1 font-semibold tabular-nums">{shortTime(e.time)}</span>}{e.title}
                     </span>
                   ))}
@@ -191,8 +191,8 @@ function CalendarView({ list, other }) {
           })}
         </div>
         <div className="flex flex-wrap items-center gap-x-4 gap-y-1 border-t border-line px-4 py-2.5 text-[11px] text-muted sm:px-5">
-          <span className="inline-flex items-center gap-1.5"><span className="h-2.5 w-4 rounded-sm" style={{ background: "color-mix(in srgb, var(--accent) 22%, transparent)" }} aria-hidden />Matches what you asked for</span>
-          <span className="inline-flex items-center gap-1.5"><span className="h-2.5 w-4 rounded-sm bg-ink/[.1]" aria-hidden />Other events</span>
+          <span className="inline-flex items-center gap-1.5"><span className="h-3 w-5 rounded-sm" style={{ background: "var(--accent)" }} aria-hidden />Matches what you asked for</span>
+          <span className="inline-flex items-center gap-1.5"><span className="h-3 w-5 rounded-sm border border-dashed border-ink/40" aria-hidden />Other events</span>
         </div>
       </section>
 
