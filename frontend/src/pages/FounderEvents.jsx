@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useMemo, useState } from "react";
+import React, { useCallback, useContext, useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { toast } from "sonner";
 import { ArrowRight, ArrowUpRight, CalendarDays, Check, ChevronDown, ChevronLeft, ChevronRight, MapPin, Search, TriangleAlert, Video } from "lucide-react";
@@ -27,28 +27,61 @@ function Pill({ on, onClick, children, testId }) {
   );
 }
 
-function Chip({ children, tone = "" }) {
-  return <span className={cx("inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-xs font-semibold", tone || "bg-ink/[.06] text-muted")}>{children}</span>;
+function Chip({ children, tone = "", style }) {
+  return <span className={cx("inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-xs font-semibold", tone || "bg-ink/[.06] text-muted")} style={style}>{children}</span>;
 }
 
 const Widget = ({ children, className = "", ...rest }) => <section className={cx("flex flex-col rounded-3xl border border-line bg-surface p-5", className)} {...rest}>{children}</section>;
 const Label = ({ children }) => <p className="text-[11px] font-semibold uppercase text-muted" style={{ letterSpacing: "0.12em" }}>{children}</p>;
 const plural = (n, w) => `${n} ${w}${n === 1 ? "" : "s"}`;
 
+// How well an event matches what this person is looking for. One scale drives the calendar chips, the legend, the badge and the date tile on every card.
+//   best     the event fits your startup closely (your group, what you asked for, your sector)
+//   match    it matches the topic or search you picked
+//   possible it could fit, nothing says it does not
+//   plain    we cannot tell yet (no startup profile and nothing picked)
+//   other    it sits outside your list (other province, or a group you have not joined)
+const MatchCtx = React.createContext({ other: false, filtersOn: false, label: "", topicLabel: "", hasProfile: false });
+const LEVELS = { best: 0, match: 1, possible: 2, plain: 3, other: 4 };
+function levelOf(e, m) {
+  if (m.other) return "other";
+  if (e.fit === "strong") return "best";
+  if (m.filtersOn) return "match";
+  return m.hasProfile ? "possible" : "plain";
+}
+const legendName = (lv, m) => (lv === "best" ? "Best match for your startup" : lv === "match" ? (m.label ? `Matches ${m.label}` : "Matches your search") : lv === "possible" ? "Possible match" : lv === "plain" ? "Not matched yet" : "Outside your list");
+const TINT = "color-mix(in srgb, var(--accent) 16%, transparent)";
+// Solid accent = best, accent outline on a tint = matches what you picked, plain grey = possible, dashed = outside your list.
+const hiStyle = (lv) => (lv === "best" ? { background: "var(--accent)", color: "var(--on-accent)" } : lv === "match" ? { background: TINT, boxShadow: "inset 0 0 0 1.5px var(--accent)" } : undefined);
+const hiClass = (lv) => (lv === "best" ? "font-semibold" : lv === "match" ? "font-semibold text-ink" : lv === "other" ? "border border-dashed border-ink/30 font-medium text-muted" : "bg-ink/[.08] font-medium text-ink/80");
+
+function MatchBadge({ lv, m }) {
+  if (lv === "other" || lv === "plain") return null;
+  const text = lv === "best" ? "Best match" : lv === "match" ? (m.label ? `Matches ${m.label}` : "Matches your search") : "Possible match";
+  return (
+    <span className={cx("inline-flex max-w-full items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-bold uppercase", lv === "possible" && "bg-ink/[.08] text-muted")} style={{ letterSpacing: "0.06em", ...hiStyle(lv) }} data-testid="event-match" data-level={lv}>
+      {lv !== "possible" && <Check className="h-3 w-3 shrink-0" aria-hidden />}<span className="truncate">{text}</span>
+    </span>
+  );
+}
+
 // One event inside a week widget: date tile, what and where, why it is on your list, and the link to the organizer's own page.
 function EventItem({ e, other, next }) {
   const where = e.online ? "Online" : [e.venue, e.city].filter(Boolean).join(", ") || e.province || "See the event page";
   const good = (e.reasons || []).slice(0, 3);
   const watch = (e.cautions || []).slice(0, other ? 3 : 2);
+  const m = useContext(MatchCtx);
+  const lv = levelOf(e, m);
+  const hl = lv === "best" || lv === "match";
   return (
-    <li className="py-4 first:pt-1 last:pb-0" data-testid={`event-${e.id}`} data-fit={e.fit}>
+    <li className="py-4 first:pt-1 last:pb-0" data-testid={`event-${e.id}`} data-fit={e.fit} data-level={lv}>
       <div className="flex items-start gap-3.5">
-        <div className="flex h-12 w-12 shrink-0 flex-col items-center justify-center rounded-2xl bg-ink/[.06] leading-none" aria-hidden>
-          <span className="text-[10px] font-semibold uppercase text-muted" style={{ letterSpacing: "0.08em" }}>{MONTH(e.date)}</span>
+        <div className={cx("flex h-12 w-12 shrink-0 flex-col items-center justify-center rounded-2xl leading-none", !hl && "bg-ink/[.06]")} style={hiStyle(lv)} aria-hidden>
+          <span className={cx("text-[10px] font-semibold uppercase", hl ? "opacity-80" : "text-muted")} style={{ letterSpacing: "0.08em" }}>{MONTH(e.date)}</span>
           <span className="mt-0.5 text-lg font-bold tabular-nums">{DAY(e.date)}</span>
         </div>
         <div className="min-w-0 flex-1">
-          <p className="flex flex-wrap items-center gap-2 text-xs font-semibold text-muted" data-testid="event-when">{when(e)}{next && <span className="rounded-full px-2 py-0.5 text-[10px] font-bold uppercase" style={{ background: "var(--accent)", color: "var(--on-accent)", letterSpacing: "0.08em" }} data-testid="event-next">Next up</span>}</p>
+          <p className="flex flex-wrap items-center gap-2 text-xs font-semibold text-muted" data-testid="event-when">{when(e)}<MatchBadge lv={lv} m={m} />{next && <span className="rounded-full px-2 py-0.5 text-[10px] font-bold uppercase" style={{ background: "var(--accent)", color: "var(--on-accent)", letterSpacing: "0.08em" }} data-testid="event-next">Next up</span>}</p>
           <h3 className="mt-0.5 text-[16px] font-semibold leading-snug" style={{ textWrap: "balance" }}>{e.title}</h3>
           <p className="mt-0.5 flex flex-wrap items-center gap-x-1.5 text-sm text-muted">
             <span className="font-medium text-ink/80">{e.org}</span><span aria-hidden>·</span>
@@ -57,7 +90,7 @@ function EventItem({ e, other, next }) {
           <div className="mt-2 flex flex-wrap items-center gap-1.5">
             {e.price === "free" && <Chip tone="bg-emerald-500/15 text-emerald-600 dark:text-emerald-400">Free</Chip>}
             {e.price === "paid" && <Chip>Paid</Chip>}
-            {e.topic_labels.map((t) => <Chip key={t}>{t}</Chip>)}
+            {e.topic_labels.map((t) => (m.topicLabel && t === m.topicLabel ? <Chip key={t} tone="text-ink" style={{ background: TINT, boxShadow: "inset 0 0 0 1.5px var(--accent)" }}>{t}</Chip> : <Chip key={t}>{t}</Chip>))}
             {e.audiences.length > 0 && <Chip tone="bg-sky-500/15 text-sky-600 dark:text-sky-400">For {e.audiences.join(", ")} founders</Chip>}
           </div>
           {(good.length > 0 || watch.length > 0) && (
@@ -115,13 +148,18 @@ const shortTime = (t) => { if (!t) return ""; const [h, m] = t.split(":").map(Nu
 const dayHeading = (iso) => new Date(iso + "T12:00:00").toLocaleDateString(undefined, { weekday: "long", month: "long", day: "numeric" });
 
 // A month grid with the events on their days. Tap a day to read its events underneath. Events keep their "why it fits / why it may not" notes there.
-function CalendarView({ list, other }) {
+function CalendarView({ list }) {
   const today = todayIso();
+  const mc = useContext(MatchCtx);
   const byDay = useMemo(() => {
     const m = {};
     for (const e of list) (m[e.date] = m[e.date] || []).push(e);
+    // Best matches first within a day, then by start time.
+    for (const d of Object.keys(m)) m[d].sort((a, b) => LEVELS[levelOf(a, mc)] - LEVELS[levelOf(b, mc)] || (a.time || "99").localeCompare(b.time || "99"));
     return m;
-  }, [list]);
+  }, [list, mc]);
+  const counts = useMemo(() => { const c = {}; for (const e of list) { const l = levelOf(e, mc); c[l] = (c[l] || 0) + 1; } return c; }, [list, mc]);
+  const present = Object.keys(LEVELS).filter((k) => counts[k] && k !== "plain").sort((a, b) => LEVELS[a] - LEVELS[b]);
   const days = useMemo(() => Object.keys(byDay).sort(), [byDay]);
   const firstDay = days.find((d) => d >= today) || days[0] || today;
   const [month, setMonth] = useState(() => ({ y: Number(firstDay.slice(0, 4)), m: Number(firstDay.slice(5, 7)) - 1 }));
@@ -176,23 +214,27 @@ function CalendarView({ list, other }) {
                 <span className={cx("grid h-6 w-6 shrink-0 place-items-center rounded-full text-xs font-semibold tabular-nums sm:h-7 sm:w-7 sm:text-[13px]", isToday ? "" : evs.length ? "" : "text-muted")}
                   style={isToday ? { background: "var(--accent)", color: "var(--on-accent)" } : undefined}>{Number(iso.slice(8))}</span>
                 {/* phones: dots. wider screens: the first events as little labels */}
-                {evs.length > 0 && <span className="flex flex-wrap gap-0.5 px-0.5 sm:hidden">{evs.slice(0, 3).map((e) => <span key={e.id} className={cx("h-2 w-2 rounded-full", !(!other && e.fit === "strong") && "border border-ink/40")} style={!other && e.fit === "strong" ? { background: "var(--accent)" } : undefined} />)}{evs.length > 3 && <span className="text-[9px] leading-none text-muted">+{evs.length - 3}</span>}</span>}
+                {evs.length > 0 && <span className="flex flex-wrap gap-0.5 px-0.5 sm:hidden">{evs.slice(0, 3).map((e) => { const lv = levelOf(e, mc); return <span key={e.id} className={cx("h-2.5 w-2.5 rounded-full", lv === "other" && "border border-dashed border-ink/50", (lv === "possible" || lv === "plain") && "bg-ink/30")} style={lv === "best" ? { background: "var(--accent)" } : lv === "match" ? { background: TINT, boxShadow: "inset 0 0 0 2px var(--accent)" } : undefined} />; })}{evs.length > 3 && <span className="text-[9px] leading-none text-muted">+{evs.length - 3}</span>}</span>}
                 <span className="hidden min-w-0 flex-col gap-1 sm:flex">
-                  {evs.slice(0, 2).map((e) => (
-                    <span key={e.id} className={cx("block truncate rounded-md px-1.5 py-0.5 text-[11px] leading-snug", !other && e.fit === "strong" ? "font-semibold" : "border border-dashed border-ink/30 font-medium text-muted")}
-                      style={!other && e.fit === "strong" ? { background: "var(--accent)", color: "var(--on-accent)" } : undefined}>
-                      {e.time && <span className="mr-1 font-semibold tabular-nums">{shortTime(e.time)}</span>}{e.title}
+                  {evs.slice(0, 2).map((e) => { const lv = levelOf(e, mc); return (
+                    <span key={e.id} className={cx("block truncate rounded-md px-1.5 py-0.5 text-[11px] leading-snug", hiClass(lv))} style={hiStyle(lv)} data-level={lv}>
+                      {lv === "best" && <Check className="mr-0.5 inline h-3 w-3 align-[-2px]" aria-hidden />}{e.time && <span className="mr-1 font-semibold tabular-nums">{shortTime(e.time)}</span>}{e.title}
                     </span>
-                  ))}
+                  ); })}
                   {evs.length > 2 && <span className="px-1.5 text-[11px] font-semibold text-muted">+{evs.length - 2} more</span>}
                 </span>
               </button>
             );
           })}
         </div>
-        <div className="flex flex-wrap items-center gap-x-4 gap-y-1 border-t border-line px-4 py-2.5 text-[11px] text-muted sm:px-5">
-          <span className="inline-flex items-center gap-1.5"><span className="h-3 w-5 rounded-sm" style={{ background: "var(--accent)" }} aria-hidden />Matches what you asked for</span>
-          <span className="inline-flex items-center gap-1.5"><span className="h-3 w-5 rounded-sm border border-dashed border-ink/40" aria-hidden />Other events</span>
+        <div className="flex flex-wrap items-center gap-x-4 gap-y-1.5 border-t border-line px-4 py-2.5 text-[11px] text-muted sm:px-5" data-testid="cal-legend">
+          {present.length === 0 && <span>Pick a topic above to highlight the events you are looking for.</span>}
+          {present.map((lv) => (
+            <span key={lv} className="inline-flex items-center gap-1.5" data-testid={`cal-legend-${lv}`}>
+              <span className={cx("h-3 w-5 rounded-sm", lv === "other" && "border border-dashed border-ink/40", lv === "possible" && "bg-ink/[.08]")} style={hiStyle(lv)} aria-hidden />
+              <span className="text-ink/80">{legendName(lv, mc)}</span> <span className="tabular-nums">({counts[lv]})</span>
+            </span>
+          ))}
         </div>
       </section>
 
@@ -202,7 +244,7 @@ function CalendarView({ list, other }) {
           <Label>{dayList.length ? plural(dayList.length, "event") : "No events"}</Label>
         </div>
         {dayList.length > 0
-          ? <Widget className="mt-3"><ul className="divide-y divide-line">{dayList.map((e) => <EventItem key={e.id} e={e} other={other} next={false} />)}</ul></Widget>
+          ? <Widget className="mt-3"><ul className="divide-y divide-line">{dayList.map((e) => <EventItem key={e.id} e={e} other={mc.other} next={false} />)}</ul></Widget>
           : <div className="mt-3 rounded-2xl border border-dashed border-line p-6 text-center text-sm text-muted">
               Nothing on this day.{nextAfter && <> <button type="button" className="font-semibold text-ink underline underline-offset-2" onClick={() => { setPicked(nextAfter); setMonth({ y: Number(nextAfter.slice(0, 4)), m: Number(nextAfter.slice(5, 7)) - 1 }); }} data-testid="cal-jump">Jump to the next event, {dayHeading(nextAfter)}</button>.</>}
             </div>}
@@ -234,6 +276,11 @@ export default function FounderEvents({ embedded }) {
   }, [account, loading, q, topic, free, online]);
 
   const list = useMemo(() => (data ? (view === "fit" ? data.events : data.others) : []), [data, view]);
+  const hasProfile = !!data?.has_profile;
+  const topicLabel = (data?.topics || []).find((t) => t.key === topic)?.label || "";
+  const label = [topicLabel, q.trim() && `\u201c${q.trim()}\u201d`].filter(Boolean).join(" + ");
+  const mctx = useMemo(() => ({ other: view === "other", filtersOn: !!(topic || q.trim()), label, topicLabel, hasProfile }), [view, topic, q, label, topicLabel, hasProfile]);
+  const nBest = useMemo(() => list.filter((e) => e.fit === "strong").length, [list]);
   const best = useMemo(() => (data && view === "fit" && data.best ? data.best.map((id) => data.events.find((e) => e.id === id)).filter(Boolean) : []), [data, view]);
   const groups = useMemo(() => {
     const out = [];
@@ -282,7 +329,19 @@ export default function FounderEvents({ embedded }) {
       {!data && !error ? <div className="mt-10"><Spinner /></div> : data && (
         <div className="mt-6 space-y-8">
           {view === "other" && <p className="text-sm text-muted">Real events too. They are outside your province or made for a group you have not said you belong to. Each card says why.</p>}
-          {list.length > 0 && <CalendarView list={list} other={view === "other"} />}
+          {list.length > 0 && view === "fit" && (
+            <p className="flex items-start gap-2.5 rounded-2xl border border-line px-4 py-3 text-sm" data-testid="events-match-summary" style={mctx.filtersOn || nBest ? { background: TINT, borderColor: "var(--accent)" } : undefined}>
+              <Check className="mt-0.5 h-4 w-4 shrink-0" aria-hidden />
+              <span>
+                {mctx.filtersOn
+                  ? <><b>{plural(list.length, "event")}</b> {list.length === 1 ? "matches" : "match"} {label}.{" "}{hasProfile ? (nBest ? `${nBest} also ${nBest === 1 ? "fits" : "fit"} your startup closely.` : "") : "Create a free account to also see which fit your startup."}</>
+                  : hasProfile
+                    ? (nBest ? <><b>{nBest} of {list.length}</b> events are a close match for your startup. They are in solid colour. The rest are possible matches.</> : <>None of these is a close match for your startup yet. Add what you need to your profile to sharpen the list.</>)
+                    : <>These are examples, not matched to you yet. Pick a topic above to highlight the events you are looking for.</>}
+              </span>
+            </p>
+          )}
+          {list.length > 0 && <CalendarView list={list} />}
           {view === "fit" && best.length > 0 && <div className="max-w-3xl"><BestWidget items={best} /></div>}
           {groups.length > 0 && <div className="max-w-3xl space-y-4" data-testid="events-timeline"><h2 className="text-lg" style={heading}>All upcoming events, by date</h2>{groups.map((g, gi) => <WeekWidget key={g.week} g={g} other={view === "other"} first={gi === 0} later={gi > 0 && groups[gi - 1].items[0].date.slice(0, 7) === g.items[0].date.slice(0, 7)} />)}</div>}
           {!list.length && (
@@ -299,5 +358,6 @@ export default function FounderEvents({ embedded }) {
       )}
     </div>
   );
-  return embedded ? page : account ? <AccountShell active="events">{page}</AccountShell> : <div className="px-4 py-10">{page}</div>;
+  const wrapped = <MatchCtx.Provider value={mctx}>{page}</MatchCtx.Provider>;
+  return embedded ? wrapped : account ? <AccountShell active="events">{wrapped}</AccountShell> : <div className="px-4 py-10">{wrapped}</div>;
 }
