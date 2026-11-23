@@ -114,7 +114,7 @@ export default function Login() {
     nav(params.get("next") === "navigator" ? "/navigator" : "/", { replace: true });
   };
 
-  const founderAcct = { demo_role: "founder", email: "founder@yourcommunity.app", label: "Founder, no community yet", description: "Fife Ashley-Dejo has not joined any community. One profile drives the programs, the communities suggested and the guide." };
+  const founderAcct = { demo_role: "founder", email: "founder@yourcommunity.app", label: "Founder, one community", description: "Fife Ashley-Dejo has one profile and belongs to a practice community. Hop between all of Canada and the community with one tap; the same profile drives both." };
   const hostAcct = { demo_role: "host", email: "host@thevillage.example", label: "Community host demo", description: "Sign in as the host of The Village, a private dinner club, and review who has asked to join." };
   const demoItems = [...(inDemo && !PREVIEW ? [] : [["hub", "Demo hub"]]), ...(demo.accounts.length ? [["accounts", "Accounts"]] : [])];
   const demoShown = demoItems.some(([k]) => k === demoTab) ? demoTab : demoItems[0]?.[0];

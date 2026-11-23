@@ -6,6 +6,7 @@ import { api, errMsg } from "../lib/api";
 import { useAuth } from "../lib/auth";
 import AccountShell from "../components/AccountShell";
 import { Modal, Spinner, cx } from "../components/ui";
+import { isInnovation } from "../lib/communityGroup";
 
 // Communities: the hubs, accelerators and founder networks you can join with the one profile on your account.
 //   Yours      the ones you are in (open one) and the ones waiting to be confirmed
@@ -14,8 +15,6 @@ import { Modal, Spinner, cx } from "../components/ui";
 // Pathwai's practice community (c.open) has no waiting: it opens at once and only ever receives your name.
 
 const heading = { textTransform: "none", letterSpacing: "-0.01em", fontWeight: 700 };
-const INNOVATION = /innovation|entrepreneur|startup|founder|incubator|accelerator|tech|professional network|alumni/i;
-const isInnovation = (c) => (c.group ? c.group === "innovation" : INNOVATION.test(c.kind || "") || (c.interest_tags || []).some((t) => /startup|innovation|entrepreneur|tech/i.test(t)));
 const norm = (s) => String(s || "").toLowerCase().replace(/[^a-z0-9]+/g, " ").trim();
 const STAGE = { idea: "Idea", mvp: "Early product", prototype: "Prototype", launched: "Launched", early_revenue: "Early revenue", revenue: "Revenue", growth: "Growth" };
 

@@ -4,6 +4,7 @@ import { Building2, Compass, MessageCircle, Target, Calendar, Gift, Info, Home a
 import { applyBrand, effectiveMode, setModePref } from "../lib/theme";
 import { useAuth } from "../lib/auth";
 import { Avatar, BackButton, PoweredBy, Wordmark, cx } from "./ui";
+import SpaceSwitcher from "./SpaceSwitcher";
 
 const ROUTES = { assistant: "/assistant", plan: "/plan", programs: "/navigator", members: "/members", events: "/events", resources: "/resources" };
 const DEFAULT_LABELS = { assistant: "Ask", plan: "My plan", programs: "Programs & grants", members: "People", events: "Events", resources: "Resources" };
@@ -76,6 +77,7 @@ export default function Layout({ children }) {
       <header className="glass-bar app-topbar-phone sticky top-2 z-[45] mx-2 mt-2 rounded-[1.75rem] sm:top-3 sm:mx-4 sm:mt-3 lg:mx-8">
         <div className="mx-auto flex max-w-[1600px] items-center gap-2 px-3 py-2 sm:gap-4 sm:px-5 lg:px-6">
           <Link to="/" className={"hit min-w-0 shrink overflow-hidden text-lg sm:text-2xl 2xl:max-w-[26rem] 2xl:text-2xl " + ((config?.community_name || "").length > 20 ? "xl:max-w-[17rem] xl:text-[1.05rem]" : "xl:max-w-[15rem] xl:text-xl")} data-testid="brand"><Wordmark name={config?.community_name || "Pathwai"} /></Link>
+          <SpaceSwitcher variant="chip" label={false} />
           <nav className="ml-2 hidden min-w-0 flex-1 gap-1 overflow-x-auto [scrollbar-width:none] xl:flex">
             {NAV.map(([to, label]) => (
               <NavLink key={to} to={to} end={to === "/"} className={({ isActive }) => cx("whitespace-nowrap rounded-full px-3.5 py-1.5 text-sm 2xl:px-4", isActive ? "glass-active font-semibold text-ink" : "text-muted hover:bg-ink/5 hover:text-ink")}>{label}</NavLink>

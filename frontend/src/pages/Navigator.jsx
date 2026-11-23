@@ -102,7 +102,7 @@ function SignedOutGate() {
       </div>
       <div className="mt-8 rounded-2xl bg-ink/[.05] p-4 sm:max-w-xl">
         <p className="text-sm font-semibold">See it first</p>
-        <p className="mt-1 text-sm text-muted">Fife Ashley-Dejo is a founder who has not joined any community. Open the practice account to see how one profile drives everything.</p>
+        <p className="mt-1 text-sm text-muted">Fife Ashley-Dejo is a founder with one profile and one practice community. Open the demo to see how one profile drives everything, and how to hop between all of Canada and a community.</p>
         <button type="button" onClick={() => startDemo("founder")} className="btn-ghost mt-3 !py-2 text-sm" data-testid="nav-gate-demo">Open Fife's profile (demo)<ArrowRight className="h-4 w-4" /></button>
       </div>
     </section>

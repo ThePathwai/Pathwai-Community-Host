@@ -276,12 +276,12 @@ async def on_startup():
     # into COMMUNITY_SLUGS in-process at creation time; reload them here too so a restarted worker
     # still recognizes them instead of 404-ing every request into that community.
     if not demo_mode():
-        # Pathwai's practice community (demo_community.py): a real community, made-up content, open to any account.
+        # An earlier version seeded a made-up practice community into real deployments. It belongs in the demo profile only: remove it if it is there.
         try:
-            from demo_community import ensure_demo_community
-            await ensure_demo_community()
-        except Exception as exc:  # noqa: BLE001 -- the practice community must never stop the real site from starting
-            logger.warning("practice community setup failed: %s", exc)
+            from demo_community import remove_practice_community
+            await remove_practice_community()
+        except Exception as exc:  # noqa: BLE001 -- cleanup must never stop the real site from starting
+            logger.warning("practice community cleanup failed: %s", exc)
     async for doc in hub_db().communities.find({}):
         if doc.get("slug"):
             register_community_slug(doc["slug"])
