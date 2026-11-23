@@ -81,7 +81,7 @@ def test_completeness_counts_what_is_filled_in():
 def test_home_feed_needs_a_profile_then_tracks_what_is_new_and_closing():
     assert g.home_feed(PROGRAMS, [], None)["has_profile"] is False
     assert g.home_feed(PROGRAMS, [], {"startup": {}}, TODAY)["has_profile"] is False
-    acc = {"age": 31, "location": "Toronto", "startup": nav.clean_startup({"name": "Lumen", "stage": "launched", "needs": ["funding", "rd"], "sectors": ["cleantech"], "incorporated": True})}
+    acc = {"age": 31, "location": "Toronto", "startup": nav.clean_startup({"name": "Lumen", "stage": "launched", "needs": ["funding", "rd"], "sectors": ["cleantech"], "incorporated": True, "employees": 5})}
     feed = g.home_feed(PROGRAMS, [], acc, TODAY)
     assert feed["has_profile"] and feed["top"] and feed["startup"]["stage_label"] == "just launched" and feed["new_count"] == 0
     assert any(m["id"] == "ovin-rd" and m["days_left"] == 8 for m in feed["closing_soon"])

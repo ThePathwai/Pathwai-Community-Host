@@ -319,6 +319,11 @@ def decide_timing(program: Dict[str, Any], sig: Dict[str, Any], today: date) -> 
 
 
 # ---------------------------------------------------------------- put it together
+# Which version of the timing rules produced a stored reading. A reading made under older rules (one that could call a program
+# "open" after its close date) is not trusted for status or deadline until the page has been read again; the catalog entry stands meanwhile.
+TIMING_RULES = "2026-11-23-pagecheck-2"
+
+
 def check_page(program: Dict[str, Any], html: str, url: str, now: datetime) -> Dict[str, Any]:
     """Everything we learn from one page. `ok` is False when the page does not appear to be about this program at all."""
     model = parse_page(html)
@@ -333,7 +338,7 @@ def check_page(program: Dict[str, Any], html: str, url: str, now: datetime) -> D
         "checked_at": now.isoformat(), "title": model["title"][:160], "hash": model["hash"], "named": named, "ok": ok,
         **({} if ok else {"problem": "The page loaded but does not mention this program, so we left the entry as written." if len(model["text"]) > 400 else "The page loaded but has almost no readable text (it may need a browser to show its content)."}),
         "section": links["primary"], "sections": links["sections"],
-        "requirements": reqs, "signals": sig, "timing": decide_timing(program, sig, today) if ok else None,
+        "requirements": reqs, "signals": sig, "timing": decide_timing(program, sig, today) if ok else None, "timing_rules": TIMING_RULES,
     }
 
 
@@ -355,7 +360,7 @@ def merge_check(program: Dict[str, Any], chk: Optional[Dict[str, Any]]) -> Dict[
         pc["confirmed"] = [r["requirement"] for r in confirmed]
         pc["evidence"] = {r["requirement"]: r["evidence"] for r in confirmed[:8]}
         pc["total"] = len(chk.get("requirements", []))
-        t = chk.get("timing")
+        t = chk.get("timing") if chk.get("timing_rules") == TIMING_RULES else None
         if t:
             out["status"], out["deadline"] = t["status"], t["deadline"]
             pc["timing"] = {"status": t["status"], "evidence": t["evidence"]}

@@ -263,9 +263,9 @@ function HowWeDecide() {
         <li><span className="font-semibold text-ink">Good match:</span> yes to questions 1, 2 and 3.</li>
         <li><span className="font-semibold text-ink">Worth a look:</span> not ruled out, but one answer is a no or not sure.</li>
         <li><span className="font-semibold text-ink">Not yet:</span> a step is in the way, so keep it in view.</li>
-        <li><span className="font-semibold text-ink">Not matched:</span> a rule rules you out, like your province or stage. It is still listed under Everything else.</li>
+        <li><span className="font-semibold text-ink">Not matched:</span> a rule rules you out, like your province or stage, or the program is closed right now. It is still listed under Everything else.</li>
       </ul>
-      <p className="mt-3 text-muted">Question 4 never changes the label. A program that fits you stays a match when it is closed, and sinks to the bottom of its group.</p>
+      <p className="mt-3 text-muted">Question 4 decides whether we suggest it. A program that is closed or paused is never suggested, even when it fits you. It stays under Everything else, marked Closed, so you can plan for its next intake.</p>
     </details>
   );
 }

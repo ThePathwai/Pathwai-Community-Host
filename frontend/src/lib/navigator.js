@@ -135,7 +135,7 @@ const worst = (items) => items.reduce((w, i) => (SEVERITY[i.state] > SEVERITY[w]
 //   1. Can I apply?  2. Is it for my stage?  3. Does it give me what I need?  4. Can I apply now?
 // Each is "yes", "maybe" (an answer is missing from the profile), "later" (a step not taken yet) or "no". No points.
 // A "no" on 1 or 2 is "skip", a "later" on 1 or 2 is "later", yes/yes/yes on 1 to 3 is "strong", anything else is "possible".
-// Timing never changes the match. `score` only orders programs inside a match group and is never shown.
+// Timing decides whether we suggest it: closed or paused right now is "skip" with the reason "Closed right now" (still listed under Browse all). `score` only orders programs inside a match group and is never shown.
 const PROVINCE_WORDS = { ON: "ontario", BC: "british columbia|b\\.c\\.", AB: "alberta", SK: "saskatchewan", MB: "manitoba", QC: "quebec|québec", NB: "new brunswick", NS: "nova scotia", PE: "prince edward", NL: "newfoundland|labrador", YT: "yukon", NT: "northwest territories", NU: "nunavut" };
 const escapeRx = (s) => s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 export function uncheckedRequirements(program) {
@@ -303,6 +303,7 @@ export function evaluate(p, profile, today) {
 
   const stopper = [applyCheck, stageCheck].find((c) => c.state === "no");
   if (stopper) return { ...out, fit: "skip", score: 0, reasons: [], cautions: [], skip: stopper === applyCheck ? blocking.text : stopper.text };
+  if (status === "closed" || status === "paused") return { ...out, fit: "skip", score: 0, reasons: [], cautions: [], skip: timingCheck.text };
   if (aState === "later" || stageCheck.state === "later") return { ...out, fit: "later" };
   if (aState === "yes" && stageCheck.state === "yes" && needCheck.state === "yes") return { ...out, fit: "strong" };
   return { ...out, fit: "possible" };

@@ -111,14 +111,19 @@ def test_not_incorporated_means_later_not_never():
     assert ev["fit"] == "later" and "incorporated" in ev["cautions"][0].lower()
 
 
-def test_closed_and_paused_programs_carry_a_warning_and_rank_below_open_ones():
+def test_closed_and_paused_programs_are_never_suggested_but_say_why():
     p = nav.normalize_profile({"stage": "idea", "audiences": ["newcomer"], "needs": ["visa"]})
     ev = nav.evaluate(by_id("startup-visa"), p, TODAY)
-    assert any("Paused" in c for c in ev["cautions"])
+    assert ev["fit"] == "skip" and ev["skip"].startswith("Paused")
     women = nav.normalize_profile({"stage": "revenue", "audiences": ["women"], "needs": ["funding"], "employees": 8})
     wef = nav.evaluate(by_id("wef"), women, TODAY)
-    csb = nav.evaluate(by_id("csbfp"), women, TODAY)
-    assert wef["score"] < csb["score"] and any("Closed" in c for c in wef["cautions"])
+    assert wef["fit"] == "skip" and wef["skip"].startswith("Closed")
+    # in the full answer they are listed under "others" with the reason first, and never in a suggested group
+    res = nav.suggest(PROGRAMS, {"stage": "revenue", "audiences": ["women"], "needs": ["funding"], "employees": 8}, TODAY, 500)
+    suggested = res["matches"] + res.get("more", []) + res.get("later", [])
+    assert all(r["status"] not in ("closed", "paused") for r in suggested)
+    row = next(r for r in res["others"] if r["id"] == "wef")
+    assert row["cautions"][0].startswith("Closed")
 
 
 def test_no_published_deadline_is_said_out_loud_not_invented():
@@ -391,6 +396,8 @@ def test_the_match_follows_from_the_four_answers_with_no_hidden_points():
             st = {c["key"]: c["state"] for c in ev["checks"]}
             if "no" in (st["apply"], st["stage"]):
                 want = "skip"
+            elif st["timing"] == "no":
+                want = "skip"   # closed or paused right now: never suggested
             elif "later" in (st["apply"], st["stage"]):
                 want = "later"
             elif st["apply"] == st["stage"] == st["need"] == "yes":
@@ -404,20 +411,20 @@ def test_the_match_follows_from_the_four_answers_with_no_hidden_points():
     assert seen == {"strong", "possible", "later", "skip"}
 
 
-def test_a_closed_program_that_fits_you_is_still_a_match_and_says_it_is_closed():
+def test_a_closed_program_that_fits_you_is_not_suggested_and_says_it_is_closed():
     p = nav.normalize_profile({"stage": "revenue", "province": "ON", "needs": ["mentorship"], "sectors": ["services"], "age": 35, "incorporated": True})
     ev = nav.evaluate(by_id("starter-company-plus"), p, TODAY)
     st = {c["key"]: c["state"] for c in ev["checks"]}
-    assert ev["fit"] in ("strong", "possible") and st["stage"] == "yes" and st["need"] == "yes" and st["timing"] == "no"
-    assert any("Closed" in c for c in ev["cautions"])
+    assert ev["fit"] == "skip" and ev["skip"].startswith("Closed") and st["stage"] == "yes" and st["need"] == "yes" and st["timing"] == "no"
 
 
-def test_timing_only_changes_the_order_not_the_match():
+def test_a_passed_fixed_deadline_means_not_suggested():
     p = nav.normalize_profile({"stage": "idea", "province": "ON", "needs": ["funding"], "age": 30})
     live = next(g for g in PROGRAMS if g["status"] == "rolling" and nav.evaluate(g, p, TODAY)["fit"] != "skip")
+    gone = {**live, "status": "open", "deadline": {"kind": "fixed", "date": "2026-10-06", "note": "Cohort registration closed"}}
+    assert nav.evaluate(gone, p, TODAY)["fit"] == "skip"
     closed = {**live, "status": "closed", "deadline": {"kind": "rolling", "note": "Closed for now"}}
-    a, b = nav.evaluate(live, p, TODAY), nav.evaluate(closed, p, TODAY)
-    assert a["fit"] == b["fit"] and a["score"] > b["score"]
+    assert nav.evaluate(live, p, TODAY)["fit"] != "skip" and nav.evaluate(closed, p, TODAY)["fit"] == "skip"
 
 
 def test_missing_answers_are_asked_for_not_guessed():
@@ -623,17 +630,12 @@ def test_not_matched_list_puts_the_nearest_first():
     assert near == sorted(near, reverse=True)
 
 
-def test_good_matches_come_before_worth_a_look_and_open_ones_before_closed():
+def test_good_matches_come_before_worth_a_look_and_nothing_closed_is_suggested():
     res = nav.suggest(PROGRAMS, PROFILE_ORDER, TODAY, 500)
     ranked = res["matches"] + res.get("more", [])
     fits = [r["fit"] for r in ranked]
     assert fits == sorted(fits, key=lambda f: 0 if f == "strong" else 1)
-    for group in ("strong", "possible"):
-        rows = [r for r in ranked if r["fit"] == group]
-        closed = [i for i, r in enumerate(rows) if r["status"] in ("closed", "paused")]
-        live = [i for i, r in enumerate(rows) if r["status"] not in ("closed", "paused")]
-        if closed and live:
-            assert max(live) < min(closed)
+    assert all(r["status"] not in ("closed", "paused") for r in ranked + res.get("later", []))
 
 
 def test_more_answered_yes_ranks_higher_among_worth_a_look():
@@ -662,7 +664,7 @@ def test_gender_male_or_blank_does_not_get_women_only_programs_and_blank_is_told
 
 
 def test_gender_other_sees_women_programs_as_confirm_on_the_page():
-    only_women = next(p for p in PROGRAMS if (p.get("restricted_to") or []) == ["women"])
+    only_women = next(p for p in PROGRAMS if (p.get("restricted_to") or []) == ["women"] and nav.effective_status(p, TODAY) in ("open", "rolling", "check"))
     ev = nav.evaluate(only_women, nav.normalize_profile({**BASE_G, "gender": "other"}), TODAY)
     assert ev["fit"] != "skip" and ev["checks"][0]["state"] == "maybe" and "gender-diverse" in ev["checks"][0]["text"]
 

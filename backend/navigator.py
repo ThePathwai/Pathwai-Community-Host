@@ -462,7 +462,8 @@ def evaluate(program: Dict[str, Any], profile: Dict[str, Any], today: Optional[d
       - a "no" on question 1 or 2 means "skip" (not matched, with that reason)
       - a "later" on question 1 or 2 means "later" (not yet)
       - yes, yes, yes on questions 1 to 3 means "strong" (good match); anything else left means "possible" (worth a look)
-    Timing (question 4) never changes the match: a closed program that fits you is still a match, shown as closed.
+    Timing (question 4) decides whether we suggest it: a program that is closed or paused right now is never suggested, it is "skip"
+    with the reason "Closed right now" (still listed under Browse all, marked Closed). Open, rolling and unchecked ones are matched as above.
     `score` only orders programs inside a match group; it is never shown."""
     today = today or date.today()
     req = program.get("requires") or {}
@@ -665,6 +666,8 @@ def evaluate(program: Dict[str, Any], profile: Dict[str, Any], today: Optional[d
     if stopper:
         why = blocking["text"] if stopper is apply_check else stopper["text"]
         return {**out, "fit": "skip", "score": 0, "reasons": [], "cautions": [], "skip": why}
+    if status in ("closed", "paused"):
+        return {**out, "fit": "skip", "score": 0, "reasons": [], "cautions": [], "skip": timing_check["text"]}
     if "later" in (apply_check["state"], stage_check["state"]):
         return {**out, "fit": "later"}
     if apply_check["state"] == "yes" and stage_check["state"] == "yes" and need_check["state"] == "yes":

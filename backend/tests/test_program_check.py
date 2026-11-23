@@ -123,3 +123,13 @@ def test_open_with_no_date_that_nobody_has_confirmed_for_three_weeks_is_not_call
     assert nav.effective_status({**p, "status": "rolling"}, date(2026, 11, 23)) == "rolling"
     future = {**p, "deadline": {"kind": "fixed", "date": "2026-12-15", "note": ""}}
     assert nav.effective_status(future, date(2026, 11, 23)) == "open"
+
+
+def test_a_stored_reading_made_under_older_timing_rules_does_not_override_the_catalog():
+    prog = {"id": "x", "name": "X Accelerator", "apply_url": "https://x.example/apply", "status": "closed", "deadline": {"kind": "closed", "note": "Closed"}}
+    old = {"ok": True, "checked_at": "2026-11-20T00:00:00+00:00", "host": "x.example", "requirements": [],
+           "timing": {"status": "open", "deadline": {"kind": "rolling", "note": "Open"}, "evidence": "Open now"}}
+    out = pc.merge_check(prog, old)
+    assert out["status"] == "closed" and "timing" not in out["page_check"]
+    new = {**old, "timing_rules": pc.TIMING_RULES}
+    assert pc.merge_check(prog, new)["status"] == "open"

@@ -164,7 +164,7 @@ export function ProgramCard({ p, onOpen, mark, badge }) {
       </span>
       <span className="mt-3 block text-[17px] font-semibold leading-snug" style={{ textWrap: "balance" }}>{p.name}</span>
       {p.community && <span className="mt-0.5 block truncate text-xs text-muted">{p.org}</span>}
-      {unmatched ? <span className="mt-2 flex gap-2 text-sm text-muted" data-testid="card-unmatched"><Info className="mt-0.5 h-4 w-4 shrink-0" aria-hidden /><span className="line-clamp-2">Not matched to you: {unmatched.charAt(0).toLowerCase() + unmatched.slice(1)}</span></span>
+      {unmatched ? <span className="mt-2 flex gap-2 text-sm text-muted" data-testid="card-unmatched"><Info className="mt-0.5 h-4 w-4 shrink-0" aria-hidden /><span className="line-clamp-2">{/^(Closed|Paused)/.test(unmatched) ? unmatched : "Not matched to you: " + unmatched.charAt(0).toLowerCase() + unmatched.slice(1)}</span></span>
         : gap ? <span className="mt-2 flex gap-2 text-sm text-ink/80" data-testid="card-gap">{(() => { const a = ANSWER[gap.state]; return <a.Icon className={cx("mt-0.5 h-4 w-4 shrink-0", a.cls)} aria-hidden />; })()}<span className="line-clamp-2">{gap.text}</span></span>
         : lead ? <span className="mt-2 flex gap-2 text-sm text-ink/80"><Check className="mt-0.5 h-4 w-4 shrink-0 text-emerald-500" aria-hidden /><span className="line-clamp-2">{lead}</span></span>
         : p.summary && <span className="mt-2 line-clamp-3 text-sm text-muted">{p.summary}</span>}
@@ -229,7 +229,7 @@ export function ProgramDrawer({ p, onClose, meta, tracked, onTrack, stage, inter
         <div className="min-h-0 flex-1 space-y-7 overflow-y-auto overscroll-contain px-5 pb-6 pt-2 sm:px-7 lg:space-y-8 lg:px-10 lg:text-[1.0625rem]">
           {(p.fit || dl || p.amount) && (
             <div className="grid grid-cols-2 gap-2">
-              {p.fit && <div className="rounded-xl border border-line p-3"><p className="text-[11px] font-semibold uppercase text-muted" style={{ letterSpacing: "0.12em" }}>For you</p><div className="mt-2">{unmatched ? <span className="text-sm font-semibold text-muted">Not matched</span> : <FitMeter fit={p.fit} />}</div></div>}
+              {p.fit && <div className="rounded-xl border border-line p-3"><p className="text-[11px] font-semibold uppercase text-muted" style={{ letterSpacing: "0.12em" }}>For you</p><div className="mt-2">{unmatched ? <span className="text-sm font-semibold text-muted">{p.status === "closed" ? "Closed" : p.status === "paused" ? "Paused" : "Not matched"}</span> : <FitMeter fit={p.fit} />}</div></div>}
               <div className="rounded-xl border border-line p-3"><p className="text-[11px] font-semibold uppercase text-muted" style={{ letterSpacing: "0.12em" }}>Deadline</p>
                 <p className="mt-1.5 text-sm font-semibold">{dl ? `${dl.date} · ${dl.days}d left` : p.status === "closed" || p.deadline?.kind === "closed" ? "Closed" : p.deadline?.kind === "rolling" ? "No deadline" : p.deadline?.kind === "annual" ? "Yearly" : "Not published"}</p>
                 {(p.status === "closed" || p.deadline?.kind === "closed") && p.deadline?.note && <p className="mt-1 text-xs text-muted">{p.deadline.note}</p>}</div>
@@ -265,7 +265,7 @@ export function ProgramDrawer({ p, onClose, meta, tracked, onTrack, stage, inter
           )}
 
           {p.checks?.length > 0 ? (
-            <Section title={unmatched ? "Why it is not matched to you" : "Is it right for you?"}>
+            <Section title={unmatched ? (/^(Closed|Paused)/.test((p.cautions || [])[0] || "") ? "Why we are not suggesting it" : "Why it is not matched to you") : "Is it right for you?"}>
               <p className="mb-4 text-sm font-semibold leading-snug" data-testid="drawer-verdict">{verdictLine(p)}</p>
               <CheckList checks={p.checks} pageRead={!!p.page_check?.ok} />
             </Section>
