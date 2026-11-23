@@ -6400,6 +6400,198 @@
    "link_exact": true
   },
   {
+   "id": "aws-activate",
+   "name": "AWS Activate",
+   "org": "Amazon Web Services",
+   "level": "private",
+   "type": "perk",
+   "summary": "Cloud credits by tier: up to US$5,000 for self-funded founders, and up to US$200,000 for startups backed by an accelerator or investor (before Series B).",
+   "amount": "Up to US$5,000 (founders); up to US$200,000 (portfolio)",
+   "stages": [
+    "prototype",
+    "launched",
+    "revenue"
+   ],
+   "audiences": [],
+   "needs": [
+    "tools"
+   ],
+   "sectors": [
+    "any"
+   ],
+   "provinces": [
+    "any"
+   ],
+   "regions": [],
+   "requires": {},
+   "requirements": [
+    "The higher tier needs an Org ID from an accelerator, angel or VC partner",
+    "Pre-Series B and founded within the last 10 years",
+    "Needs an AWS account on a paid tier",
+    "Page does not state country limits"
+   ],
+   "deadline": {
+    "kind": "rolling",
+    "date": null,
+    "note": "Review takes 5 to 10 business days"
+   },
+   "status": "rolling",
+   "phase": "learn",
+   "apply_url": "https://aws.amazon.com/startups/join?destination=/credits/apply",
+   "source_url": "https://aws.amazon.com/startups/credits/",
+   "verified": "official",
+   "last_checked": "2026-11-19",
+   "restricted_to": [],
+   "link_label": "Amazon Web Services: AWS Activate",
+   "link_kind": "apply",
+   "link_note": "This goes to the application or sign-up page. Read who it is for first, then fill it in.",
+   "link_exact": true
+  },
+  {
+   "id": "google-for-startups-cloud-program",
+   "name": "Google for Startups Cloud Program",
+   "org": "Google Cloud",
+   "level": "private",
+   "type": "perk",
+   "summary": "Google Cloud credits over two years. Funded tiers need pre-seed to Series A funding, and a US$2,000 Start tier exists for early startups with a working MVP.",
+   "amount": "Up to US$350,000 over two years (AI startups); other startups up to US$100,000 in year one",
+   "stages": [
+    "prototype",
+    "launched",
+    "revenue"
+   ],
+   "audiences": [],
+   "needs": [
+    "tools"
+   ],
+   "sectors": [
+    "any"
+   ],
+   "provinces": [
+    "any"
+   ],
+   "regions": [],
+   "requires": {},
+   "requirements": [
+    "Funded tiers need verifiable pre-seed to Series A funding from a known investor",
+    "Start tier: founded in the past 2 years with a working MVP",
+    "Business email domain must match the company website",
+    "Page does not name Canada; credits cover pay-as-you-go products only"
+   ],
+   "deadline": {
+    "kind": "rolling",
+    "date": null,
+    "note": "Decision usually in 5 to 7 days"
+   },
+   "status": "rolling",
+   "phase": "learn",
+   "apply_url": "https://cloud.google.com/startup",
+   "source_url": "https://cloud.google.com/startup",
+   "verified": "official",
+   "last_checked": "2026-11-19",
+   "restricted_to": [],
+   "link_label": "Google for Startups Cloud Program",
+   "link_kind": "apply",
+   "link_note": "This goes to the application or sign-up page. Read who it is for first, then fill it in.",
+   "link_exact": true
+  },
+  {
+   "id": "microsoft-for-startups-founders-hub",
+   "name": "Microsoft for Startups Founders Hub",
+   "org": "Microsoft",
+   "level": "private",
+   "type": "perk",
+   "summary": "Azure credits plus AI tools and technical resources for startups from first prototype to scale. The pages we read do not state who qualifies.",
+   "amount": "Up to US$150,000 in credits",
+   "stages": [
+    "prototype",
+    "launched",
+    "revenue",
+    "growth"
+   ],
+   "audiences": [],
+   "needs": [
+    "tools"
+   ],
+   "sectors": [
+    "any"
+   ],
+   "provinces": [
+    "any"
+   ],
+   "regions": [],
+   "requires": {},
+   "requirements": [
+    "Eligibility and referral rules not stated on the pages we read",
+    "Apply through the sign-up link on the startups page",
+    "Canada eligibility not verified"
+   ],
+   "deadline": {
+    "kind": "none_published",
+    "date": null,
+    "note": "No dates published on the page"
+   },
+   "status": "check",
+   "phase": "learn",
+   "apply_url": "https://www.microsoft.com/en-us/startups",
+   "source_url": "https://www.microsoft.com/en-us/startups",
+   "verified": "official",
+   "last_checked": "2026-11-19",
+   "restricted_to": [],
+   "link_label": "Microsoft for Startups Founders Hub",
+   "link_kind": "apply",
+   "link_note": "This goes to the application or sign-up page. Read who it is for first, then fill it in.",
+   "link_exact": true
+  },
+  {
+   "id": "stripe-atlas-perks",
+   "name": "Stripe Atlas perks",
+   "org": "Stripe",
+   "level": "private",
+   "type": "perk",
+   "summary": "Incorporate a Delaware company through Atlas and get US$2,500 in Stripe credits in year one, plus partner offers from other vendors.",
+   "amount": "US$2,500 in Stripe credits (first year)",
+   "stages": [
+    "idea",
+    "prototype",
+    "launched"
+   ],
+   "audiences": [],
+   "needs": [
+    "tools",
+    "legal"
+   ],
+   "sectors": [
+    "any"
+   ],
+   "provinces": [
+    "any"
+   ],
+   "regions": [],
+   "requires": {},
+   "requirements": [
+    "The company must be formed through Atlas (Delaware C corp or LLC); the Atlas fee is US$500",
+    "No US citizenship or residency needed",
+    "Atlas files documents but gives no legal or tax advice"
+   ],
+   "deadline": {
+    "kind": "rolling",
+    "date": null,
+    "note": "Incorporation usually within one business day"
+   },
+   "status": "rolling",
+   "phase": "learn",
+   "apply_url": "https://dashboard.stripe.com/register/atlas",
+   "source_url": "https://stripe.com/atlas/perks",
+   "verified": "official",
+   "last_checked": "2026-11-19",
+   "restricted_to": [],
+   "link_label": "Stripe Atlas perks",
+   "link_kind": "apply",
+   "link_note": "This goes to the application or sign-up page. Read who it is for first, then fill it in.",
+   "link_exact": true
+  },
+  {
    "id": "notion-for-startups",
    "name": "Notion for Startups",
    "org": "Notion",
@@ -10805,6 +10997,56 @@
    "link_label": "L-SPARK: apply",
    "link_kind": "program",
    "link_note": "Current cohort has closed. The form feeds future cohorts.",
+   "link_exact": true,
+   "regions": []
+  },
+  {
+   "id": "techstars-accelerator",
+   "name": "Techstars Accelerator",
+   "org": "Techstars",
+   "level": "private",
+   "type": "accelerator",
+   "summary": "Techstars invests $220K in each accepted company: $200K on an uncapped MFN Safe plus $20K for 5% common stock. Applies to companies in all Techstars programs.",
+   "amount": "$200,000 uncapped MFN Safe + $20,000 for 5% common (CEA)",
+   "stages": [
+    "idea",
+    "prototype",
+    "launched",
+    "revenue",
+    "growth"
+   ],
+   "audiences": [],
+   "needs": [
+    "funding",
+    "mentorship",
+    "network"
+   ],
+   "sectors": [
+    "any"
+   ],
+   "provinces": [
+    "any"
+   ],
+   "requires": {},
+   "requirements": [
+    "Techstars invests in US corporations or foreign equivalents",
+    "Non-approved countries may need a reorganization"
+   ],
+   "deadline": {
+    "kind": "none_published",
+    "date": null,
+    "note": "Page does not say whether applications are open"
+   },
+   "status": "check",
+   "phase": "scale",
+   "apply_url": "https://apply.techstars.com/",
+   "source_url": "https://www.techstars.com/investment-terms",
+   "verified": "official",
+   "last_checked": "2026-11-21",
+   "restricted_to": [],
+   "link_label": "Techstars: investment terms",
+   "link_kind": "apply",
+   "link_note": "The page covers terms only. Check the apply site for open programs.",
    "link_exact": true,
    "regions": []
   },

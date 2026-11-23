@@ -99,3 +99,17 @@ def test_a_deploy_clears_stored_foreign_events_and_events_of_removed_sources():
     db = FakeDb(rows)
     n = asyncio.run(job.purge_irrelevant(db))
     assert n == 2 and sorted(db.founder_events.gone) == ["a", "b"]
+
+
+def test_online_events_from_abroad_stay_because_a_canadian_can_join_them():
+    e = ef.normalize(raw(title="Founder fundraising webinar", venue="Zoom", city="Austin", region="TX", country="US", online=True), SRC, NOW)
+    assert e is not None and e["online"] is True
+    e = ef.normalize(raw(title="Virtual founder networking", venue="Online, Houston, TX 77002", online=True), SRC, NOW)
+    assert e is not None
+    assert ef.normalize(raw(venue="Hotel, Houston, TX 77002"), SRC, NOW) is None     # in person abroad: not usable from here
+
+
+def test_a_deploy_keeps_stored_online_events_from_abroad():
+    rows = [{"id": "o", "source_id": "dmz", "title": "Founder networking night", "summary": "", "venue": "Zoom, Austin, TX 78701", "city": "Austin", "online": True}]
+    db = FakeDb(rows)
+    assert asyncio.run(job.purge_irrelevant(db)) == 0
