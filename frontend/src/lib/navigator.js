@@ -112,10 +112,13 @@ const daysUntil = (iso, today) => {
 export { daysUntil, why, joinList, brief };
 export const todayIso = () => new Date().toISOString().slice(0, 10);
 
+const STALE_OPEN_AFTER_DAYS = 21;
+// A fixed deadline that has passed means closed. An "open" with no closing date that nobody has confirmed for three weeks is shown as "dates not posted".
 export function effectiveStatus(p, today) {
   const status = STATUSES.includes(p.status) ? p.status : "check";
   const dl = p.deadline || {};
   if (dl.kind === "fixed") { const d = daysUntil(dl.date, today); if (d !== null && d < 0) return "closed"; }
+  else if (status === "open") { const seen = daysUntil(p.last_checked, today); if (seen !== null && seen < -STALE_OPEN_AFTER_DAYS) return "check"; }
   return status;
 }
 

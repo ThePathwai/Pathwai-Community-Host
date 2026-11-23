@@ -369,6 +369,9 @@ def navigator_profile(account: Optional[Dict[str, Any]]) -> Dict[str, Any]:
     return {**st, "age": (account or {}).get("age"), "city": loc}
 
 
+STALE_OPEN_AFTER_DAYS = 21
+
+
 def _days_until(iso: Optional[str], today: date) -> Optional[int]:
     try:
         return (date.fromisoformat(str(iso)[:10]) - today).days
@@ -377,13 +380,18 @@ def _days_until(iso: Optional[str], today: date) -> Optional[int]:
 
 
 def effective_status(program: Dict[str, Any], today: date) -> str:
-    """A fixed deadline that has passed means closed, whatever the stored status says."""
+    """A fixed deadline that has passed means closed, whatever the stored status says. An "open" with no closing date that nobody has confirmed
+    for three weeks is shown as "dates not posted": we do not say "Open now" about something we have not seen recently."""
     status = program.get("status") if program.get("status") in STATUSES else "check"
     dl = program.get("deadline") or {}
     if dl.get("kind") == "fixed":
         d = _days_until(dl.get("date"), today)
         if d is not None and d < 0:
             return "closed"
+    elif status == "open":
+        seen = _days_until(program.get("last_checked"), today)
+        if seen is not None and seen < -STALE_OPEN_AFTER_DAYS:
+            return "check"
     return status
 
 

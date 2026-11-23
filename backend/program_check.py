@@ -219,10 +219,49 @@ def _dates(s: str) -> List[date]:
     return out
 
 
+CLOSE_KW = re.compile(r"clos(?:e|es|ed|ing)\b|deadline|\bdue\b|apply by|submit(?:ted)? by|no later than|\buntil\b|\bends?\b|received by", re.I)
+OPEN_KW = re.compile(r"\bopen(?:s|ed|ing)?\b|\bstarts?\b|\bbegin(?:s|ning)?\b|\blaunch(?:es|ed)?\b|\bfrom\b|\bruns?\b|\bkicks? off\b", re.I)
+PAST_WINDOW_DAYS = 548      # a closing date older than this is old news, not a statement about the current intake
+STALE_OPEN_DAYS = 120       # "applications are now open" next to a date this old is a page nobody updated
+
+
+def _dated(s: str) -> List[Tuple[date, int]]:
+    """Every date in the sentence with where it sits, so the words just before it can say what the date is for."""
+    out: List[Tuple[date, int]] = []
+    for i, rx in enumerate(DATE_RXS):
+        for m in rx.finditer(s):
+            try:
+                if i == 0:
+                    d = date(int(m.group(3)), MONTHS[m.group(1).lower()], int(m.group(2)))
+                elif i == 1:
+                    d = date(int(m.group(3)), MONTHS[m.group(2).lower()], int(m.group(1)))
+                else:
+                    d = date(int(m.group(1)), int(m.group(2)), int(m.group(3)))
+                out.append((d, m.start()))
+            except (ValueError, KeyError):
+                pass
+    return out
+
+
+def _label(s: str, at: int) -> Optional[str]:
+    """What a date is for: "close" (a closing date or deadline), "open" (an opening or start date) or None. The nearer word in the same clause wins,
+    so "Applications open September 1 and close October 6" gives open for the first date and close for the second."""
+    before = re.split(r"[.;]", s[max(0, at - 60):at])[-1]
+    c = [m.start() for m in CLOSE_KW.finditer(before)]
+    o = [m.start() for m in OPEN_KW.finditer(before)]
+    if c and (not o or c[-1] > o[-1]):
+        return "close"
+    if o:
+        return "open"
+    return None
+
+
 def timing_signals(model: Dict[str, Any], today: date) -> Dict[str, Any]:
     """Plain statements on the page about whether and until when you can apply. Each carries the sentence it came from."""
-    sig: Dict[str, Any] = {"closed": None, "open": None, "rolling": None, "deadline": None}
+    sig: Dict[str, Any] = {"closed": None, "open": None, "rolling": None, "deadline": None, "past_close": None, "open_stale": False}
     soonest: Optional[Tuple[date, str]] = None
+    latest_past: Optional[Tuple[date, str]] = None
+    limit = date(today.year + 2, today.month, 1)
     for b in model["blocks"]:
         if len(b) >= 400:
             continue
@@ -230,20 +269,31 @@ def timing_signals(model: Dict[str, Any], today: date) -> Dict[str, Any]:
             sig["closed"] = b[:220]
         if sig["open"] is None and OPEN_RX.search(b):
             sig["open"] = b[:220]
+            if any((today - d).days > STALE_OPEN_DAYS for d, _ in _dated(b)):
+                sig["open_stale"] = True       # "now open" beside a long-gone date: nobody updated this page
         if sig["rolling"] is None and ROLLING_RX.search(b):
             sig["rolling"] = b[:220]
-        if DEADLINE_WORDS.search(b):
-            for d in _dates(b):
-                if today <= d <= date(today.year + 2, today.month, 1) and (soonest is None or d < soonest[0]):
+        has_words = bool(DEADLINE_WORDS.search(b))
+        for d, at in _dated(b):
+            lab = _label(b, at)
+            if lab == "close":
+                if today <= d <= limit and (soonest is None or d < soonest[0]):
                     soonest = (d, b[:220])
+                elif d < today and (today - d).days <= PAST_WINDOW_DAYS and (latest_past is None or d > latest_past[0]):
+                    latest_past = (d, b[:220])
+            elif lab is None and has_words and today <= d <= limit and (soonest is None or d < soonest[0]):
+                soonest = (d, b[:220])            # a date beside deadline words with nothing saying it is an opening or start date
     if soonest:
         sig["deadline"] = {"date": soonest[0].isoformat(), "evidence": soonest[1]}
+    if latest_past:
+        sig["past_close"] = {"date": latest_past[0].isoformat(), "evidence": latest_past[1]}
     return sig
 
 
 def decide_timing(program: Dict[str, Any], sig: Dict[str, Any], today: date) -> Optional[Dict[str, Any]]:
     """The change to status and deadline the page justifies, or None. Only plain statements count, and conflicting ones change nothing."""
     dl, closed, op, rolling = sig.get("deadline"), sig.get("closed"), sig.get("open"), sig.get("rolling")
+    gone = sig.get("past_close")
     note = (program.get("deadline") or {}).get("note") or ""
     if closed and (op or rolling or dl):
         return None   # the page says both: do not guess which is current
@@ -251,8 +301,18 @@ def decide_timing(program: Dict[str, Any], sig: Dict[str, Any], today: date) -> 
         return {"status": "closed", "deadline": {"kind": "closed", "date": None, "note": note}, "evidence": closed}
     if dl:
         return {"status": "open", "deadline": {"kind": "fixed", "date": dl["date"], "note": ""}, "evidence": dl["evidence"]}
+    if gone and not rolling:
+        # The page gives a closing date and it is behind us. "Applications open Sept 1 and close Oct 6" is closed once Oct 6 has passed.
+        # A separate "now open" line elsewhere on the page makes the page contradict itself, so then we claim nothing.
+        if op and op != gone["evidence"]:
+            return None
+        d = date.fromisoformat(gone["date"])
+        text = f"Applications closed {d.strftime('%B')} {d.day}, {d.year}. Check the program's page for the next intake."
+        return {"status": "closed", "deadline": {"kind": "closed", "date": None, "note": text}, "evidence": gone["evidence"]}
     if rolling:
         return {"status": "rolling", "deadline": {"kind": "rolling", "date": None, "note": note}, "evidence": rolling}
+    if op and sig.get("open_stale"):
+        return None      # "now open" next to a date long past: we do not call it open on that
     if op and (program.get("deadline") or {}).get("kind") != "fixed":
         return {"status": "open", "deadline": program.get("deadline") or {"kind": "none_published", "date": None, "note": ""}, "evidence": op}
     return None

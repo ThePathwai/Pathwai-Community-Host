@@ -3059,11 +3059,11 @@
    "requires": {},
    "requirements": [],
    "deadline": {
-    "kind": "none_published",
+    "kind": "rolling",
     "date": null,
-    "note": "Always available"
+    "note": "A directory, always available"
    },
-   "status": "open",
+   "status": "rolling",
    "phase": "learn",
    "apply_url": "https://www.startupcan.ca/28-resources-to-support-black-entrepreneurs-in-canada/",
    "source_url": "https://www.startupcan.ca/28-resources-to-support-black-entrepreneurs-in-canada/",
@@ -7371,21 +7371,23 @@
    ],
    "requires": {},
    "requirements": [
-    "Aimed at Black entrepreneurs in Southern Ontario",
-    "Up to 25 entrepreneurs in Cohort 1",
-    "Registration ran September 1 to 18, 2026, and Cohort 1 started October 1, 2026"
+    "Self-identify as Black and be 18 or older",
+    "Live in, operate in or be building a venture based in Southern Ontario",
+    "Founder, co-founder or authorized principal with a credible AI-enabled opportunity",
+    "Commit to the October 2026 to July 2027 program and Demo Day",
+    "Up to 25 entrepreneurs in Cohort 1"
    ],
    "deadline": {
     "kind": "closed",
     "date": null,
-    "note": "Cohort 1 registration closed Sept 18, 2026; no later cohort listed"
+    "note": "Cohort 1 registration closed October 6, 2026 (the program page says registration ran September 1 to October 6). No later cohort is listed."
    },
    "status": "closed",
    "phase": "learn",
    "apply_url": "https://blacktechhub.org/baiva/#apply",
    "source_url": "https://blacktechhub.org/",
    "verified": "official",
-   "last_checked": "2026-11-19",
+   "last_checked": "2026-11-23",
    "restricted_to": [
     "black"
    ],

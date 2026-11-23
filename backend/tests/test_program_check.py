@@ -68,3 +68,58 @@ def test_text_fragment_is_safe_in_a_url():
     html = "<html><body><h2>Who can apply? (Ontario-based, for-profit)</h2><p>x</p></body></html>"
     s = pc.find_section(pc.parse_page(html), "https://a.ca/p#old", "eligibility")
     assert s["url"].startswith("https://a.ca/p#:~:text=Who%20can%20apply%3F") and "," not in s["url"].split("text=")[1] and " " not in s["url"]
+
+
+# ---------------------------------------------------------------- dates that are behind us (BAIVA: "open Sept 1 and close Oct 6", read on Nov 23)
+def _page(sentence, extra=""):
+    return f"""<html><head><title>BAIVA | BlackTECH Hub</title></head><body><main><h1>BAIVA</h1><p>{sentence}</p>{extra}
+    <p>{"BAIVA is a hybrid accelerator for Black entrepreneurs building AI ventures. " * 12}</p></main></body></html>"""
+
+
+BAIVA = {"id": "b", "name": "BAIVA", "apply_url": "https://b.example.org/baiva", "link_kind": "program", "status": "open",
+         "deadline": {"kind": "none_published", "date": None, "note": ""}, "requirements": []}
+RANGE = "Applications open September 1, 2026 and close October 6, 2026. Fields marked * are required."
+
+
+def _timing(sentence, now, extra=""):
+    return pc.check_page(BAIVA, _page(sentence, extra), BAIVA["apply_url"], now)["timing"]
+
+
+def test_a_window_whose_closing_date_has_passed_is_closed_not_open():
+    t = _timing(RANGE, datetime(2026, 11, 23, 12, 0, tzinfo=timezone.utc))
+    assert t["status"] == "closed" and t["deadline"]["kind"] == "closed"
+    assert "October 6, 2026" in t["deadline"]["note"] and "Applications open September 1" in t["evidence"]
+
+
+def test_the_same_window_is_open_with_its_closing_date_while_it_is_running():
+    t = _timing(RANGE, datetime(2026, 9, 15, 12, 0, tzinfo=timezone.utc))
+    assert t["status"] == "open" and t["deadline"] == {"kind": "fixed", "date": "2026-10-06", "note": ""}
+
+
+def test_an_opening_date_is_never_taken_for_a_deadline():
+    t = _timing("Applications open December 1, 2026 and close January 15, 2027.", datetime(2026, 11, 23, 12, 0, tzinfo=timezone.utc))
+    assert t["deadline"]["date"] == "2027-01-15"
+
+
+def test_a_banner_that_says_open_beside_a_past_closing_date_claims_nothing():
+    banner = "<p>Applications are now open.</p>"
+    assert _timing("The previous intake closed on March 1, 2026.", datetime(2026, 11, 23, 12, 0, tzinfo=timezone.utc), banner) is None
+
+
+def test_now_open_beside_a_long_gone_start_date_is_not_called_open():
+    t = _timing("Applications are now open. Program begins: July 28, 2025", datetime(2026, 11, 23, 12, 0, tzinfo=timezone.utc))
+    assert t is None
+
+
+def test_a_closing_date_over_eighteen_months_old_is_old_news():
+    assert _timing("The 2024 deadline was March 1, 2024.", datetime(2026, 11, 23, 12, 0, tzinfo=timezone.utc)) is None
+
+
+def test_open_with_no_date_that_nobody_has_confirmed_for_three_weeks_is_not_called_open():
+    import navigator as nav
+    p = {"status": "open", "deadline": {"kind": "none_published", "date": None, "note": ""}, "last_checked": "2026-10-20"}
+    assert nav.effective_status(p, date(2026, 11, 23)) == "check"
+    assert nav.effective_status({**p, "last_checked": "2026-11-15"}, date(2026, 11, 23)) == "open"
+    assert nav.effective_status({**p, "status": "rolling"}, date(2026, 11, 23)) == "rolling"
+    future = {**p, "deadline": {"kind": "fixed", "date": "2026-12-15", "note": ""}}
+    assert nav.effective_status(future, date(2026, 11, 23)) == "open"

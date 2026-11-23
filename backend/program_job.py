@@ -25,7 +25,7 @@ RETRY_AFTER = timedelta(hours=6)
 PER_PASS = 70            # pages per hourly pass, so the whole list is covered in a few hours and each site is hit gently
 KEEP_AFTER_FAILS = 3     # a page that fails this many times in a row stops being trusted
 # Bump when the reading rules change: the next start then re-reads everything instead of waiting a day.
-RULES_VERSION = "2026-11-20-pagecheck-1"
+RULES_VERSION = "2026-11-23-pagecheck-2"
 
 
 def enabled() -> bool:

@@ -231,7 +231,8 @@ export function ProgramDrawer({ p, onClose, meta, tracked, onTrack, stage, inter
             <div className="grid grid-cols-2 gap-2">
               {p.fit && <div className="rounded-xl border border-line p-3"><p className="text-[11px] font-semibold uppercase text-muted" style={{ letterSpacing: "0.12em" }}>For you</p><div className="mt-2">{unmatched ? <span className="text-sm font-semibold text-muted">Not matched</span> : <FitMeter fit={p.fit} />}</div></div>}
               <div className="rounded-xl border border-line p-3"><p className="text-[11px] font-semibold uppercase text-muted" style={{ letterSpacing: "0.12em" }}>Deadline</p>
-                <p className="mt-1.5 text-sm font-semibold">{dl ? `${dl.date} · ${dl.days}d left` : p.deadline?.kind === "rolling" ? "No deadline" : p.deadline?.kind === "annual" ? "Yearly" : "Not published"}</p></div>
+                <p className="mt-1.5 text-sm font-semibold">{dl ? `${dl.date} · ${dl.days}d left` : p.status === "closed" || p.deadline?.kind === "closed" ? "Closed" : p.deadline?.kind === "rolling" ? "No deadline" : p.deadline?.kind === "annual" ? "Yearly" : "Not published"}</p>
+                {(p.status === "closed" || p.deadline?.kind === "closed") && p.deadline?.note && <p className="mt-1 text-xs text-muted">{p.deadline.note}</p>}</div>
             </div>
           )}
           {p.amount && <div className="rounded-2xl p-4" style={{ background: tint(color, 0.12), border: `1px solid ${tint(color, 0.3)}` }}><p className="text-[11px] font-semibold uppercase" style={{ letterSpacing: "0.12em", color }}>What you get</p><p className="mt-1.5 text-[15px] leading-snug">{p.amount}</p></div>}
