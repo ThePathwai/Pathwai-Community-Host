@@ -452,7 +452,7 @@ GROUPS_NEEDING_A_GATE = {"black", "indigenous", "women", "newcomer"}
 def test_a_program_made_for_a_group_is_only_matched_to_that_group():
     for p in PROGRAMS:
         if GROUPS_NEEDING_A_GATE & set(p.get("audiences") or []):
-            assert p.get("restricted_to"), f"{p['id']} is made for a group but is not gated to it"
+            assert p.get("restricted_to") or p.get("restricted_all"), f"{p['id']} is made for a group but is not gated to it"
     base = {"stage": "launched", "province": "ON", "needs": ["mentorship"], "sectors": ["tech"]}
     plain = nav.suggest(PROGRAMS, base, TODAY, limit=999)
     assert "startup-canada-black-guide" not in {r["id"] for r in plain["matches"]}
@@ -673,3 +673,45 @@ def test_gender_and_the_women_group_always_agree_and_old_profiles_read_as_female
     saved = nav.clean_startup({**BASE_G, "gender": "female", "audiences": ["black"]})
     assert saved["gender"] == "female" and saved["audiences"] == ["black", "women"]
     assert nav.clean_startup({**BASE_G, "gender": "nonsense"})["gender"] == ""
+
+
+def test_a_program_for_people_in_two_groups_needs_both_not_either():
+    """Black women, Indigenous women and newcomer women programs need every group. A man in the group (or a woman outside it) is not matched."""
+    base = {"stage": "launched", "province": "ON", "needs": ["mentorship", "network", "funding"], "sectors": ["tech"]}
+    p = by_id("black-women-collective")
+    assert p["restricted_all"] == ["women", "black"] and not p.get("restricted_to")
+
+    def verdict(extra):
+        return nav.evaluate(p, nav.normalize_profile({**base, **extra}), TODAY)
+
+    man = verdict({"gender": "male", "audiences": ["black"]})
+    assert man["fit"] == "skip" and "Black" in man["skip"]
+    woman = verdict({"gender": "female", "audiences": []})
+    assert woman["fit"] == "skip"
+    both = verdict({"gender": "female", "audiences": ["black"]})
+    assert both["fit"] != "skip"
+
+
+def test_a_woman_and_non_binary_program_is_not_matched_to_a_man_even_if_he_belongs_to_another_group():
+    """Communitech Fierce Founders is for women and non-binary founders only. Its own page names no other group."""
+    p = by_id("communitech-fierce-founders")
+    assert p["restricted_to"] == ["women"]
+    base = {"stage": "prototype", "province": "ON", "needs": ["funding", "mentorship"], "sectors": ["tech"], "audiences": ["black", "indigenous", "newcomer"]}
+    man = nav.evaluate(p, nav.normalize_profile({**base, "gender": "male"}), TODAY)
+    assert man["fit"] == "skip" and "women" in man["skip"]
+    no_answer = nav.evaluate(p, nav.normalize_profile(base), TODAY)
+    assert no_answer["fit"] == "skip" and "Add your gender" in no_answer["skip"]
+    nonbinary = nav.evaluate(p, nav.normalize_profile({**base, "gender": "other"}), TODAY)
+    assert nonbinary["fit"] != "skip" and any("non-binary" in c for c in nonbinary["cautions"])
+    woman = nav.evaluate(p, nav.normalize_profile({**base, "gender": "female"}), TODAY)
+    assert woman["fit"] != "skip"
+
+
+def test_a_listing_tagged_for_a_group_but_not_gated_is_never_a_good_match_for_someone_outside_it():
+    """Community admins can list programs without a gate. The tag alone must still stop a 'good match' for an outsider."""
+    listing = {**by_id("black-women-collective"), "id": "t-listing", "audiences": ["indigenous"], "restricted_to": [], "restricted_all": [],
+               "needs": ["funding", "mentorship", "network"], "stages": ["launched"], "provinces": ["any"], "sectors": ["any"], "requirements": [], "status": "rolling"}
+    outsider = nav.evaluate(listing, nav.normalize_profile({"stage": "launched", "province": "ON", "needs": ["funding"], "audiences": []}), TODAY)
+    assert outsider["fit"] == "possible" and any("Indigenous" in c for c in outsider["cautions"])
+    insider = nav.evaluate(listing, nav.normalize_profile({"stage": "launched", "province": "ON", "needs": ["funding"], "audiences": ["indigenous"]}), TODAY)
+    assert insider["fit"] == "strong"

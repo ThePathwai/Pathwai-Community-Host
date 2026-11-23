@@ -144,12 +144,14 @@ export function uncheckedRequirements(program) {
   if (req.student) pats.push("student");
   const provs = program.provinces || ["any"];
   if (!provs.includes("any")) provs.forEach((x) => { if (PROVINCE_WORDS[x]) pats.push(PROVINCE_WORDS[x]); });
-  if ((program.restricted_to || []).length) pats.push("black|women|woman|indigenous|newcomer|youth|student|owned|led by|visible minorit");
+  if ((program.restricted_to || []).length || (program.restricted_all || []).length) pats.push("black|women|woman|indigenous|newcomer|youth|student|owned|led by|visible minorit");
   (program.regions || []).forEach((rg) => { pats.push(escapeRx((REGION_LABEL[rg] || rg).toLowerCase()), escapeRx(rg.replace(/-/g, " "))); });
   const rx = pats.length ? new RegExp(pats.join("|"), "i") : null;
   const confirmed = new Set((program.page_check && program.page_check.confirmed) || []);   // stated on the program's own page, so the founder need not re-check them
   return (program.requirements || []).filter((r) => !confirmed.has(r) && !(rx && rx.test(r)));
 }
+
+const GROUP_AUDIENCES = ["women", "black", "indigenous", "newcomer"];   // groups a program can be made for; age and student status come from the profile
 
 export function evaluate(p, profile, today) {
   const req = p.requires || {};
@@ -163,6 +165,20 @@ export function evaluate(p, profile, today) {
     else if (restricted.includes("women") && profile.gender === "other") add("maybe", `For ${label} founders. Some also welcome non-binary and gender-diverse founders, so confirm on the page.`);
     else if (restricted.includes("women") && !profile.gender) add("no", `For ${label} founders. Add your gender to your profile if it applies to you.`);
     else add("no", `For ${label} founders`);
+  }
+  // A program made for people who are BOTH (Black women, Indigenous women, newcomer women) needs every group, not any one of them.
+  const mustAll = p.restricted_all || [];
+  if (mustAll.length) {
+    const label = joinList(mustAll.map((a) => AUDIENCE_LABEL[a] || a));
+    const missing = mustAll.filter((a) => !profile.audiences.includes(a));
+    if (!missing.length) { add("yes", `For ${label} founders only. You qualify.`); tailored.push(`For ${label} founders, which you are.`); }
+    else if (missing.length === 1 && missing[0] === "women" && profile.gender === "other") add("maybe", `For ${label} founders. Some also welcome non-binary and gender-diverse founders, so confirm on the page.`);
+    else if (missing.includes("women") && !profile.gender) add("no", `For ${label} founders. Add your gender to your profile if it applies to you.`);
+    else add("no", `For ${label} founders`);
+  } else if (!restricted.length) {
+    // Tagged for a group but not marked group-only: never a good match for someone outside that group. Ask them to check.
+    const madeFor = (p.audiences || []).filter((a) => GROUP_AUDIENCES.includes(a));
+    if (madeFor.length && !madeFor.some((a) => profile.audiences.includes(a))) add("maybe", `Made for ${joinList(madeFor.map((a) => AUDIENCE_LABEL[a] || a))} founders. Check the page to confirm you qualify.`);
   }
   const provs = p.provinces || ["any"];
   if (!provs.includes("any")) {
@@ -297,7 +313,7 @@ const verdict = (p, profile, today) => {
   return { fit: ev.fit, score: ev.score, reasons: ev.reasons, cautions: ev.cautions, checks: ev.checks };
 };
 
-const BRIEF_KEYS = ["id", "name", "org", "level", "type", "summary", "amount", "stages", "audiences", "needs", "sectors", "provinces", "regions", "requirements", "deadline", "status", "phase", "apply_url", "link_label", "link_kind", "link_note", "link_exact", "source_url", "verified", "last_checked", "restricted_to", "community", "base_url", "page_check"];
+const BRIEF_KEYS = ["id", "name", "org", "level", "type", "summary", "amount", "stages", "audiences", "needs", "sectors", "provinces", "regions", "requirements", "deadline", "status", "phase", "apply_url", "link_label", "link_kind", "link_note", "link_exact", "source_url", "verified", "last_checked", "restricted_to", "restricted_all", "community", "base_url", "page_check"];
 const brief = (p) => { const o = {}; for (const k of BRIEF_KEYS) if (k in p) o[k] = p[k]; return o; };
 const byScore = (a, b) => (b.score - a.score) || (a.name < b.name ? -1 : a.name > b.name ? 1 : 0);
 
@@ -536,7 +552,7 @@ export function filterPrograms(programs, f = {}, today = todayIso()) {
     if (f.type && p.type !== f.type) continue;
     if (f.province && !(p.provinces || ["any"]).includes("any") && !(p.provinces || []).includes(String(f.province).toUpperCase())) continue;
     if (f.stage && !(p.stages || []).includes(f.stage)) continue;
-    if (f.audience && !(p.audiences || []).includes(f.audience) && !(p.restricted_to || []).includes(f.audience)) continue;
+    if (f.audience && !(p.audiences || []).includes(f.audience) && !(p.restricted_to || []).includes(f.audience) && !(p.restricted_all || []).includes(f.audience)) continue;
     if (f.need && !(p.needs || []).includes(f.need)) continue;
     if (f.region && (p.regions || []).length && !p.regions.includes(f.region)) continue;
     if (f.status === "live" && st !== "open" && st !== "rolling") continue;

@@ -591,9 +591,10 @@
    "org": "Communitech",
    "level": "private",
    "type": "accelerator",
-   "summary": "Cash and coaching for women-identifying and underrepresented tech founders in Waterloo Region.",
+   "summary": "Programs, funding and peer connections for women and non-binary founders, run by Communitech in Kitchener-Waterloo.",
    "amount": "Uplift: $10,000 cash. Intensive: up to $50,000 on milestones with matching required",
    "stages": [
+    "idea",
     "prototype",
     "launched",
     "revenue"
@@ -614,30 +615,27 @@
    ],
    "requires": {},
    "requirements": [
-    "Women-identifying or underrepresented founder leadership",
-    "Connection to the Waterloo Region tech ecosystem",
-    "MVP or early traction"
+    "Women or non-binary founders",
+    "The page lists no other rules; its join form takes founders from idea stage up to $1M in revenue",
+    "Contact the team to join the waitlist"
    ],
    "deadline": {
     "kind": "none_published",
     "date": null,
-    "note": "Rolling cycles; the source lists no dates and is inconsistent on current status"
+    "note": "No dates published. The page says to contact the team to join the waitlist."
    },
    "status": "check",
    "phase": "learn",
    "apply_url": "https://communitech.ca/programs/fierce-founders/",
    "source_url": "https://grantcompass.ca/grants/communitech-fierce-founders-and-startup-programs.html",
    "verified": "third_party",
-   "last_checked": "2026-10-28",
+   "last_checked": "2026-11-23",
    "restricted_to": [
-    "women",
-    "black",
-    "indigenous",
-    "newcomer"
+    "women"
    ],
    "link_label": "Communitech: Fierce Founders",
    "link_kind": "program",
-   "link_note": "See who it is for, the cash and coaching on offer, and when applications open.",
+   "link_note": "Eligibility confirmed on Communitech's own page: women and non-binary founders. Dollar amounts come from a third-party listing, so confirm them on the page.",
    "link_exact": true,
    "regions": []
   },
@@ -7663,13 +7661,15 @@
    "source_url": "https://theblackwomencollective.com/",
    "verified": "official",
    "last_checked": "2026-11-19",
-   "restricted_to": [
-    "black"
-   ],
+   "restricted_to": [],
    "link_label": "Black Women Collective",
    "link_kind": "apply",
    "link_note": "This goes to the application or sign-up page. Read who it is for first, then fill it in.",
-   "link_exact": true
+   "link_exact": true,
+   "restricted_all": [
+    "women",
+    "black"
+   ]
   },
   {
    "id": "ey-entrepreneurs-access-network",
@@ -8945,7 +8945,8 @@
     "prototype"
    ],
    "audiences": [
-    "newcomer"
+    "newcomer",
+    "women"
    ],
    "needs": [
     "training",
@@ -8978,13 +8979,15 @@
    "source_url": "https://woodgreen.org/?p=3869",
    "verified": "official",
    "last_checked": "2026-11-19",
-   "restricted_to": [
-    "newcomer"
-   ],
+   "restricted_to": [],
    "link_label": "WoodGreen Community Services: Newcomer Women Entrepreneurship Program",
    "link_kind": "program",
    "link_note": "Read what it offers and who can apply, then follow the steps on the page.",
-   "link_exact": true
+   "link_exact": true,
+   "restricted_all": [
+    "women",
+    "newcomer"
+   ]
   },
   {
    "id": "self-employment-for-newcomers",
@@ -9257,7 +9260,8 @@
     "growth"
    ],
    "audiences": [
-    "indigenous"
+    "indigenous",
+    "women"
    ],
    "needs": [
     "funding",
@@ -9291,13 +9295,15 @@
    "source_url": "https://www.nadf.org/indigenous-women",
    "verified": "official",
    "last_checked": "2026-11-19",
-   "restricted_to": [
-    "indigenous"
-   ],
+   "restricted_to": [],
    "link_label": "Nishnawbe Aski Development Fund (NADF): Indigenous Women Entrepreneurship Program",
    "link_kind": "contact",
    "link_note": "This is a contact page. Say who you are and what you are building, and ask about fit.",
-   "link_exact": true
+   "link_exact": true,
+   "restricted_all": [
+    "women",
+    "indigenous"
+   ]
   },
   {
    "id": "indigenous-youth-entrepreneurship-program",
@@ -9645,7 +9651,8 @@
     "growth"
    ],
    "audiences": [
-    "indigenous"
+    "indigenous",
+    "women"
    ],
    "needs": [
     "network",
@@ -9674,13 +9681,15 @@
    "source_url": "https://pauktuutit.ca/iwbn/",
    "verified": "official",
    "last_checked": "2026-11-19",
-   "restricted_to": [
-    "indigenous"
-   ],
+   "restricted_to": [],
    "link_label": "Pauktuutit Inuit Women of Canada: Inuit Women in Business Network",
    "link_kind": "program",
    "link_note": "Read what it offers and who can apply, then follow the steps on the page.",
-   "link_exact": true
+   "link_exact": true,
+   "restricted_all": [
+    "women",
+    "indigenous"
+   ]
   },
   {
    "id": "techto",
@@ -11039,14 +11048,14 @@
    },
    "status": "check",
    "phase": "scale",
-   "apply_url": "https://apply.techstars.com/",
+   "apply_url": "https://www.techstars.com/investment-terms",
    "source_url": "https://www.techstars.com/investment-terms",
    "verified": "official",
    "last_checked": "2026-11-21",
    "restricted_to": [],
    "link_label": "Techstars: investment terms",
-   "link_kind": "apply",
-   "link_note": "The page covers terms only. Check the apply site for open programs.",
+   "link_kind": "overview",
+   "link_note": "This page explains the investment terms. Check the Techstars apply site for which programs are open.",
    "link_exact": true,
    "regions": []
   },
@@ -12102,7 +12111,9 @@
    "source_url": "https://www.startupcan.ca/explore/startup-women/",
    "verified": "official",
    "last_checked": "2026-11-21",
-   "restricted_to": [],
+   "restricted_to": [
+    "women"
+   ],
    "link_label": "Startup Canada: Startup Women",
    "link_kind": "program",
    "link_note": "Free. The 2026 program is ending; watch for 2027.",
@@ -13537,7 +13548,9 @@
    "source_url": "https://maybehuge.ca/resources",
    "verified": "third_party",
    "last_checked": "2026-11-21",
-   "restricted_to": [],
+   "restricted_to": [
+    "women"
+   ],
    "link_label": "WeBC: website",
    "link_kind": "overview",
    "link_note": "Found in the Maybe Huge directory. We have not read this organization's own program pages, so check eligibility and timing there.",
@@ -13814,7 +13827,9 @@
    "source_url": "https://maybehuge.ca/resources",
    "verified": "third_party",
    "last_checked": "2026-11-21",
-   "restricted_to": [],
+   "restricted_to": [
+    "women"
+   ],
    "link_label": "Alberta Women Entrepreneurs: website",
    "link_kind": "overview",
    "link_note": "Found in the Maybe Huge directory. We have not read this organization's own program pages, so check eligibility and timing there.",
@@ -14043,7 +14058,9 @@
    "source_url": "https://maybehuge.ca/resources",
    "verified": "third_party",
    "last_checked": "2026-11-21",
-   "restricted_to": [],
+   "restricted_to": [
+    "indigenous"
+   ],
    "link_label": "Alberta Indian Investment Corporation: website",
    "link_kind": "overview",
    "link_note": "Found in the Maybe Huge directory. We have not read this organization's own program pages, so check eligibility and timing there.",
@@ -14090,7 +14107,9 @@
    "source_url": "https://maybehuge.ca/resources",
    "verified": "third_party",
    "last_checked": "2026-11-21",
-   "restricted_to": [],
+   "restricted_to": [
+    "indigenous"
+   ],
    "link_label": "Apeetogosan Métis Development: website",
    "link_kind": "overview",
    "link_note": "Found in the Maybe Huge directory. We have not read this organization's own program pages, so check eligibility and timing there.",
@@ -14231,7 +14250,9 @@
    "source_url": "https://maybehuge.ca/resources",
    "verified": "third_party",
    "last_checked": "2026-11-21",
-   "restricted_to": [],
+   "restricted_to": [
+    "women"
+   ],
    "link_label": "WESK: website",
    "link_kind": "overview",
    "link_note": "Found in the Maybe Huge directory. We have not read this organization's own program pages, so check eligibility and timing there.",
@@ -14369,7 +14390,9 @@
    "source_url": "https://maybehuge.ca/resources",
    "verified": "third_party",
    "last_checked": "2026-11-21",
-   "restricted_to": [],
+   "restricted_to": [
+    "indigenous"
+   ],
    "link_label": "Saskatchewan Indigenous Enterprise Foundation: website",
    "link_kind": "overview",
    "link_note": "Found in the Maybe Huge directory. We have not read this organization's own program pages, so check eligibility and timing there.",
@@ -14647,7 +14670,9 @@
    "source_url": "https://maybehuge.ca/resources",
    "verified": "third_party",
    "last_checked": "2026-11-21",
-   "restricted_to": [],
+   "restricted_to": [
+    "women"
+   ],
    "link_label": "WeMB: website",
    "link_kind": "overview",
    "link_note": "Found in the Maybe Huge directory. We have not read this organization's own program pages, so check eligibility and timing there.",
@@ -15566,7 +15591,9 @@
    "source_url": "https://maybehuge.ca/resources",
    "verified": "third_party",
    "last_checked": "2026-11-21",
-   "restricted_to": [],
+   "restricted_to": [
+    "women"
+   ],
    "link_label": "Réseau des femmes d'affaires du Québec: website",
    "link_kind": "overview",
    "link_note": "Found in the Maybe Huge directory. We have not read this organization's own program pages, so check eligibility and timing there.",
@@ -16619,7 +16646,9 @@
    "source_url": "https://maybehuge.ca/resources",
    "verified": "third_party",
    "last_checked": "2026-11-21",
-   "restricted_to": [],
+   "restricted_to": [
+    "women"
+   ],
    "link_label": "Women's Enterprise Organizations of Canada: website",
    "link_kind": "overview",
    "link_note": "Found in the Maybe Huge directory. We have not read this organization's own program pages, so check eligibility and timing there.",
@@ -16712,7 +16741,9 @@
    "source_url": "https://maybehuge.ca/resources",
    "verified": "third_party",
    "last_checked": "2026-11-21",
-   "restricted_to": [],
+   "restricted_to": [
+    "indigenous"
+   ],
    "link_label": "Raven Indigenous Capital Partners: website",
    "link_kind": "overview",
    "link_note": "Found in the Maybe Huge directory. We have not read this organization's own program pages, so check eligibility and timing there.",
@@ -17300,7 +17331,9 @@
    "source_url": "https://maybehuge.ca/resources",
    "verified": "third_party",
    "last_checked": "2026-11-21",
-   "restricted_to": [],
+   "restricted_to": [
+    "women"
+   ],
    "link_label": "Women in Business New Brunswick: website",
    "link_kind": "overview",
    "link_note": "Found in the Maybe Huge directory. We have not read this organization's own program pages, so check eligibility and timing there.",
@@ -17394,7 +17427,9 @@
    "source_url": "https://maybehuge.ca/resources",
    "verified": "third_party",
    "last_checked": "2026-11-21",
-   "restricted_to": [],
+   "restricted_to": [
+    "black"
+   ],
    "link_label": "Black Business and Professional Network NB: website",
    "link_kind": "overview",
    "link_note": "Found in the Maybe Huge directory. We have not read this organization's own program pages, so check eligibility and timing there.",
@@ -18844,7 +18879,9 @@
    "source_url": "https://maybehuge.ca/resources",
    "verified": "third_party",
    "last_checked": "2026-11-21",
-   "restricted_to": [],
+   "restricted_to": [
+    "women"
+   ],
    "link_label": "Centre for Women in Business: website",
    "link_kind": "overview",
    "link_note": "Found in the Maybe Huge directory. We have not read this organization's own program pages, so check eligibility and timing there.",
@@ -18944,7 +18981,11 @@
    "link_kind": "overview",
    "link_note": "Found in the Maybe Huge directory. We have not read this organization's own program pages, so check eligibility and timing there.",
    "link_exact": false,
-   "regions": []
+   "regions": [],
+   "restricted_all": [
+    "women",
+    "indigenous"
+   ]
   },
   {
    "id": "mh-membertou-entrepreneur-centre",
@@ -19033,7 +19074,9 @@
    "source_url": "https://maybehuge.ca/resources",
    "verified": "third_party",
    "last_checked": "2026-11-21",
-   "restricted_to": [],
+   "restricted_to": [
+    "newcomer"
+   ],
    "link_label": "CDÉNÉ – Immigrant Entrepreneur Services: website",
    "link_kind": "overview",
    "link_note": "Found in the Maybe Huge directory. We have not read this organization's own program pages, so check eligibility and timing there.",
@@ -20247,7 +20290,9 @@
    "source_url": "https://maybehuge.ca/resources",
    "verified": "third_party",
    "last_checked": "2026-11-21",
-   "restricted_to": [],
+   "restricted_to": [
+    "women"
+   ],
    "link_label": "PEI Business Women's Association: website",
    "link_kind": "overview",
    "link_note": "Found in the Maybe Huge directory. We have not read this organization's own program pages, so check eligibility and timing there.",
@@ -20699,7 +20744,11 @@
    "apply_url": "https://nacca.ca/about-nacca/indigenous-women-entrepreneurs",
    "source_url": "https://innovation.canada.ca/s/list-liste",
    "link_label": "Indigenous Women Entrepreneurs Program: program page",
-   "link_note": "Listed in the Business Benefits Finder (innovation.canada.ca). We have not confirmed the details on the program's own page, so check them there."
+   "link_note": "Listed in the Business Benefits Finder (innovation.canada.ca). We have not confirmed the details on the program's own page, so check them there.",
+   "restricted_all": [
+    "women",
+    "indigenous"
+   ]
   },
   {
    "amount": "",
@@ -20767,7 +20816,9 @@
    "phase": "learn",
    "verified": "third_party",
    "last_checked": "2026-11-21",
-   "restricted_to": [],
+   "restricted_to": [
+    "women"
+   ],
    "link_kind": "program",
    "link_exact": false,
    "regions": [],
@@ -20808,7 +20859,9 @@
    "phase": "learn",
    "verified": "third_party",
    "last_checked": "2026-11-21",
-   "restricted_to": [],
+   "restricted_to": [
+    "women"
+   ],
    "link_kind": "program",
    "link_exact": false,
    "regions": [],
@@ -20929,7 +20982,9 @@
    "phase": "fund",
    "verified": "third_party",
    "last_checked": "2026-11-21",
-   "restricted_to": [],
+   "restricted_to": [
+    "indigenous"
+   ],
    "link_kind": "program",
    "link_exact": false,
    "regions": [],
@@ -20970,7 +21025,9 @@
    "phase": "fund",
    "verified": "third_party",
    "last_checked": "2026-11-21",
-   "restricted_to": [],
+   "restricted_to": [
+    "women"
+   ],
    "link_kind": "program",
    "link_exact": false,
    "regions": [],
@@ -21011,7 +21068,9 @@
    "phase": "fund",
    "verified": "third_party",
    "last_checked": "2026-11-21",
-   "restricted_to": [],
+   "restricted_to": [
+    "women"
+   ],
    "link_kind": "program",
    "link_exact": false,
    "regions": [],
@@ -21053,7 +21112,9 @@
    "phase": "fund",
    "verified": "third_party",
    "last_checked": "2026-11-21",
-   "restricted_to": [],
+   "restricted_to": [
+    "newcomer"
+   ],
    "link_kind": "program",
    "link_exact": false,
    "regions": [],
@@ -21213,7 +21274,9 @@
    "phase": "learn",
    "verified": "third_party",
    "last_checked": "2026-11-21",
-   "restricted_to": [],
+   "restricted_to": [
+    "women"
+   ],
    "link_kind": "program",
    "link_exact": false,
    "regions": [],
@@ -21294,7 +21357,9 @@
    "phase": "fund",
    "verified": "third_party",
    "last_checked": "2026-11-21",
-   "restricted_to": [],
+   "restricted_to": [
+    "indigenous"
+   ],
    "link_kind": "program",
    "link_exact": false,
    "regions": [],
@@ -21415,7 +21480,9 @@
    "phase": "learn",
    "verified": "third_party",
    "last_checked": "2026-11-21",
-   "restricted_to": [],
+   "restricted_to": [
+    "women"
+   ],
    "link_kind": "program",
    "link_exact": false,
    "regions": [],
@@ -21496,7 +21563,9 @@
    "phase": "fund",
    "verified": "third_party",
    "last_checked": "2026-11-21",
-   "restricted_to": [],
+   "restricted_to": [
+    "newcomer"
+   ],
    "link_kind": "program",
    "link_exact": false,
    "regions": [],
@@ -21537,7 +21606,9 @@
    "phase": "learn",
    "verified": "third_party",
    "last_checked": "2026-11-21",
-   "restricted_to": [],
+   "restricted_to": [
+    "black"
+   ],
    "link_kind": "program",
    "link_exact": false,
    "regions": [],
@@ -21898,7 +21969,9 @@
    "phase": "learn",
    "verified": "third_party",
    "last_checked": "2026-11-21",
-   "restricted_to": [],
+   "restricted_to": [
+    "women"
+   ],
    "link_kind": "program",
    "link_exact": false,
    "regions": [],
@@ -21979,7 +22052,9 @@
    "phase": "fund",
    "verified": "third_party",
    "last_checked": "2026-11-21",
-   "restricted_to": [],
+   "restricted_to": [
+    "indigenous"
+   ],
    "link_kind": "program",
    "link_exact": false,
    "regions": [],
@@ -22020,7 +22095,9 @@
    "phase": "learn",
    "verified": "third_party",
    "last_checked": "2026-11-21",
-   "restricted_to": [],
+   "restricted_to": [
+    "women"
+   ],
    "link_kind": "program",
    "link_exact": false,
    "regions": [],
@@ -22218,7 +22295,9 @@
    "phase": "fund",
    "verified": "third_party",
    "last_checked": "2026-11-21",
-   "restricted_to": [],
+   "restricted_to": [
+    "indigenous"
+   ],
    "link_kind": "program",
    "link_exact": false,
    "regions": [],
@@ -22259,7 +22338,9 @@
    "phase": "fund",
    "verified": "third_party",
    "last_checked": "2026-11-21",
-   "restricted_to": [],
+   "restricted_to": [
+    "indigenous"
+   ],
    "link_kind": "program",
    "link_exact": false,
    "regions": [],
@@ -22696,7 +22777,9 @@
    "phase": "fund",
    "verified": "third_party",
    "last_checked": "2026-11-21",
-   "restricted_to": [],
+   "restricted_to": [
+    "indigenous"
+   ],
    "link_kind": "program",
    "link_exact": false,
    "regions": [],
@@ -23143,7 +23226,9 @@
    "phase": "fund",
    "verified": "third_party",
    "last_checked": "2026-11-21",
-   "restricted_to": [],
+   "restricted_to": [
+    "indigenous"
+   ],
    "link_kind": "program",
    "link_exact": false,
    "regions": [],
@@ -23264,7 +23349,9 @@
    "phase": "fund",
    "verified": "third_party",
    "last_checked": "2026-11-21",
-   "restricted_to": [],
+   "restricted_to": [
+    "indigenous"
+   ],
    "link_kind": "program",
    "link_exact": false,
    "regions": [],
@@ -23359,7 +23446,11 @@
    "apply_url": "https://www.lrcc.mb.ca/mwe-grant-and-loan-program",
    "source_url": "https://innovation.canada.ca/s/list-liste",
    "link_label": "LRCC — Metis Women Entrepreneurship Program: program page",
-   "link_note": "Listed in the Business Benefits Finder (innovation.canada.ca). We have not confirmed the details on the program's own page, so check them there."
+   "link_note": "Listed in the Business Benefits Finder (innovation.canada.ca). We have not confirmed the details on the program's own page, so check them there.",
+   "restricted_all": [
+    "women",
+    "indigenous"
+   ]
   },
   {
    "amount": "",
@@ -23466,7 +23557,9 @@
    "phase": "fund",
    "verified": "third_party",
    "last_checked": "2026-11-21",
-   "restricted_to": [],
+   "restricted_to": [
+    "indigenous"
+   ],
    "link_kind": "program",
    "link_exact": false,
    "regions": [],
@@ -23624,7 +23717,9 @@
    "phase": "fund",
    "verified": "third_party",
    "last_checked": "2026-11-21",
-   "restricted_to": [],
+   "restricted_to": [
+    "indigenous"
+   ],
    "link_kind": "program",
    "link_exact": false,
    "regions": [],
@@ -23665,7 +23760,9 @@
    "phase": "learn",
    "verified": "third_party",
    "last_checked": "2026-11-21",
-   "restricted_to": [],
+   "restricted_to": [
+    "indigenous"
+   ],
    "link_kind": "program",
    "link_exact": false,
    "regions": [],
@@ -23785,7 +23882,9 @@
    "phase": "learn",
    "verified": "third_party",
    "last_checked": "2026-11-21",
-   "restricted_to": [],
+   "restricted_to": [
+    "women"
+   ],
    "link_kind": "program",
    "link_exact": false,
    "regions": [],
@@ -23905,7 +24004,9 @@
    "phase": "fund",
    "verified": "third_party",
    "last_checked": "2026-11-21",
-   "restricted_to": [],
+   "restricted_to": [
+    "women"
+   ],
    "link_kind": "program",
    "link_exact": false,
    "regions": [],
@@ -23946,7 +24047,9 @@
    "phase": "fund",
    "verified": "third_party",
    "last_checked": "2026-11-21",
-   "restricted_to": [],
+   "restricted_to": [
+    "indigenous"
+   ],
    "link_kind": "program",
    "link_exact": false,
    "regions": [],
@@ -24027,7 +24130,9 @@
    "phase": "fund",
    "verified": "third_party",
    "last_checked": "2026-11-21",
-   "restricted_to": [],
+   "restricted_to": [
+    "indigenous"
+   ],
    "link_kind": "program",
    "link_exact": false,
    "regions": [],
@@ -24150,7 +24255,9 @@
    "phase": "learn",
    "verified": "third_party",
    "last_checked": "2026-11-21",
-   "restricted_to": [],
+   "restricted_to": [
+    "women"
+   ],
    "link_kind": "overview",
    "link_exact": false,
    "regions": [],
@@ -25532,7 +25639,9 @@
    "phase": "learn",
    "verified": "third_party",
    "last_checked": "2026-11-21",
-   "restricted_to": [],
+   "restricted_to": [
+    "women"
+   ],
    "link_kind": "overview",
    "link_exact": false,
    "regions": [],

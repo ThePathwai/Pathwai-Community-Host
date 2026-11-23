@@ -132,7 +132,8 @@ function Facts({ p }) {
   const idx = st.map((s) => STAGES.indexOf(s));
   const stage = !idx.length || idx.length >= 4 ? "Any stage" : idx.length === 1 ? `For ${STAGE_LABEL[STAGES[idx[0]]]}` : `${STAGE_LABEL[STAGES[Math.min(...idx)]]} to ${STAGE_LABEL[STAGES[Math.max(...idx)]]}`;
   const place = (p.regions || []).length ? (p.regions.length > 2 ? `${REGION_LABEL[p.regions[0]] || p.regions[0]} and nearby` : p.regions.map((r) => REGION_LABEL[r] || r).join(" and ")) + " only" : (p.provinces || []).includes("any") || !(p.provinces || []).length ? "Across Canada" : p.provinces.map((x) => (x === "ON" ? "Ontario" : x)).join(", ") + " only";
-  const who = (p.restricted_to || []).length ? "For " + p.restricted_to.map((a) => AUDIENCE_LABEL[a] || a).join(" and ") + " founders" : "";
+  const groups = (p.restricted_all || []).length ? p.restricted_all : p.restricted_to || [];
+  const who = groups.length ? "For " + groups.map((a) => AUDIENCE_LABEL[a] || a).join(" and ") + " founders" : "";
   const chip = "inline-flex items-center rounded-md bg-ink/[.06] px-2 py-0.5 text-xs text-ink/80";
   return (
     <span className="mt-3 flex flex-wrap gap-1.5" data-testid="card-facts">

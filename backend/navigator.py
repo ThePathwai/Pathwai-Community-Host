@@ -47,6 +47,7 @@ NEED_LABEL = {
     "tools": "software discounts",
     "legal": "legal help",
 }
+GROUP_AUDIENCES = ("women", "black", "indigenous", "newcomer")   # groups a program can be made for; age and student status are worked out from the profile
 AUDIENCES = ["women", "black", "indigenous", "newcomer", "youth", "student", "rural"]
 GENDERS = ["female", "male", "other"]
 GENDER_LABEL = {"female": "Female", "male": "Male", "other": "Other"}
@@ -427,7 +428,7 @@ def unchecked_requirements(program: Dict[str, Any]) -> List[str]:
     provs = program.get("provinces") or ["any"]
     if "any" not in provs:
         pats += [_PROVINCE_WORDS[x] for x in provs if x in _PROVINCE_WORDS]
-    if program.get("restricted_to"):
+    if program.get("restricted_to") or program.get("restricted_all"):
         pats.append(r"black|women|woman|indigenous|newcomer|youth|student|owned|led by|visible minorit")
     for rg in program.get("regions") or []:
         pats += [re.escape(REGION_LABEL.get(rg, rg).lower()), re.escape(rg.replace("-", " "))]
@@ -478,6 +479,25 @@ def evaluate(program: Dict[str, Any], profile: Dict[str, Any], today: Optional[d
             add("no", f"For {label} founders. Add your gender to your profile if it applies to you.")
         else:
             add("no", f"For {label} founders")
+    # A program made for people who are BOTH (Black women, Indigenous women, newcomer women) needs every group, not any one of them.
+    must_all = program.get("restricted_all") or []
+    if must_all:
+        label = _join([AUDIENCE_LABEL.get(a, a) for a in must_all])
+        missing = [a for a in must_all if a not in profile["audiences"]]
+        if not missing:
+            add("yes", f"For {label} founders only. You qualify.")
+            tailored.append(f"For {label} founders, which you are.")
+        elif missing == ["women"] and profile.get("gender") == "other":
+            add("maybe", f"For {label} founders. Some also welcome non-binary and gender-diverse founders, so confirm on the page.")
+        elif "women" in missing and not profile.get("gender"):
+            add("no", f"For {label} founders. Add your gender to your profile if it applies to you.")
+        else:
+            add("no", f"For {label} founders")
+    # A program tagged for a group but not marked group-only: never call it a good match for someone outside that group. Ask them to check.
+    elif not restricted:
+        made_for = [a for a in (program.get("audiences") or []) if a in GROUP_AUDIENCES]
+        if made_for and not any(a in profile["audiences"] for a in made_for):
+            add("maybe", f"Made for {_join([AUDIENCE_LABEL.get(a, a) for a in made_for])} founders. Check the page to confirm you qualify.")
     provs = program.get("provinces") or ["any"]
     if "any" not in provs:
         if profile["province"] in provs:
@@ -646,7 +666,7 @@ def evaluate(program: Dict[str, Any], profile: Dict[str, Any], today: Optional[d
 
 def _brief(program: Dict[str, Any]) -> Dict[str, Any]:
     keys = ["id", "name", "org", "level", "type", "summary", "amount", "stages", "audiences", "needs", "sectors", "provinces", "regions", "requirements",
-            "deadline", "status", "phase", "apply_url", "link_label", "link_kind", "link_note", "link_exact", "source_url", "verified", "last_checked", "restricted_to", "community", "base_url", "page_check"]
+            "deadline", "status", "phase", "apply_url", "link_label", "link_kind", "link_note", "link_exact", "source_url", "verified", "last_checked", "restricted_to", "restricted_all", "community", "base_url", "page_check"]
     return {k: program.get(k) for k in keys if k in program}
 
 
@@ -1005,7 +1025,7 @@ def filter_programs(programs: List[Dict[str, Any]], q: str = "", ptype: str = ""
             continue
         if stage and stage not in (p.get("stages") or []):
             continue
-        if audience and audience not in (p.get("audiences") or []) and audience not in (p.get("restricted_to") or []):
+        if audience and audience not in (p.get("audiences") or []) and audience not in (p.get("restricted_to") or []) and audience not in (p.get("restricted_all") or []):
             continue
         if need and need not in (p.get("needs") or []):
             continue
