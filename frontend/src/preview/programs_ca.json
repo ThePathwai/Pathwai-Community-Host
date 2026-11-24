@@ -29445,6 +29445,1201 @@
    "source_url": "https://founderfuel.com/apply/",
    "link_label": "FounderFuel: Apply",
    "link_note": "The accelerator's own apply page."
+  },
+  {
+   "id": "canada-cleantech-export-growth",
+   "name": "Canada Cleantech Export Growth Program",
+   "org": "Export Development Canada",
+   "level": "federal",
+   "type": "resource",
+   "summary": "Funding and resources to help Canadian cleantech businesses grow in international markets.",
+   "amount": "Varies",
+   "stages": [
+    "launched",
+    "revenue",
+    "growth"
+   ],
+   "audiences": [],
+   "needs": [
+    "export",
+    "funding"
+   ],
+   "sectors": [
+    "cleantech"
+   ],
+   "provinces": [
+    "any"
+   ],
+   "requires": {},
+   "requirements": [
+    "Canadian cleantech business"
+   ],
+   "deadline": {
+    "kind": "none_published",
+    "date": null,
+    "note": "No dates confirmed. A third-party directory lists it as ongoing; check the program page for current intake"
+   },
+   "status": "check",
+   "phase": "fund",
+   "apply_url": "https://www.edc.ca/en/trade-matters/canada-cleantech-export-growth.html",
+   "source_url": "https://www.edc.ca/en/trade-matters/canada-cleantech-export-growth.html",
+   "verified": "third_party",
+   "last_checked": "2026-11-24",
+   "restricted_to": [],
+   "link_label": "EDC: Cleantech Export Growth",
+   "link_kind": "program",
+   "link_note": "Listed by a third-party directory, not yet confirmed by Pathwai. Check eligibility and dates on this page.",
+   "link_exact": true,
+   "regions": []
+  },
+  {
+   "id": "obio-healthmint",
+   "name": "OBIO HealthMINT",
+   "org": "OBIO (Ontario Bioscience Innovation Organization)",
+   "level": "nonprofit",
+   "type": "accelerator",
+   "summary": "Investment and commercialization readiness program with mentorship, investor access, networking and targeted advice for early-stage Ontario health science companies.",
+   "amount": "Varies",
+   "stages": [
+    "prototype",
+    "launched"
+   ],
+   "audiences": [],
+   "needs": [
+    "funding",
+    "mentorship",
+    "network"
+   ],
+   "sectors": [
+    "health"
+   ],
+   "provinces": [
+    "ON"
+   ],
+   "requires": {},
+   "requirements": [
+    "Early-stage health science company in Ontario"
+   ],
+   "deadline": {
+    "kind": "none_published",
+    "date": null,
+    "note": "No dates confirmed. A third-party directory lists it as ongoing; check the program page for current intake"
+   },
+   "status": "check",
+   "phase": "fund",
+   "apply_url": "https://www.obio.ca/healthmint",
+   "source_url": "https://www.obio.ca/healthmint",
+   "verified": "third_party",
+   "last_checked": "2026-11-24",
+   "restricted_to": [],
+   "link_label": "OBIO: HealthMINT",
+   "link_kind": "program",
+   "link_note": "Listed by a third-party directory, not yet confirmed by Pathwai. Check eligibility and dates on this page.",
+   "link_exact": true,
+   "regions": []
+  },
+  {
+   "id": "obio-caap",
+   "name": "OBIO CAAP (Capital Access Advisory Program)",
+   "org": "OBIO (Ontario Bioscience Innovation Organization)",
+   "level": "nonprofit",
+   "type": "accelerator",
+   "summary": "A competitive 9 to 12 month program that prepares high-potential Ontario bioscience companies for post-seed (Series A) financing and strategic partnerships.",
+   "amount": "Varies",
+   "stages": [
+    "launched",
+    "revenue"
+   ],
+   "audiences": [],
+   "needs": [
+    "funding",
+    "mentorship",
+    "network"
+   ],
+   "sectors": [
+    "health"
+   ],
+   "provinces": [
+    "ON"
+   ],
+   "requires": {},
+   "requirements": [
+    "Ontario bioscience company preparing for Series A",
+    "Selection is competitive"
+   ],
+   "deadline": {
+    "kind": "none_published",
+    "date": null,
+    "note": "No dates confirmed. A third-party directory lists it as ongoing; check the program page for current intake"
+   },
+   "status": "check",
+   "phase": "fund",
+   "apply_url": "https://www.obio.ca/obiocaap",
+   "source_url": "https://www.obio.ca/obiocaap",
+   "verified": "third_party",
+   "last_checked": "2026-11-24",
+   "restricted_to": [],
+   "link_label": "OBIO: CAAP",
+   "link_kind": "program",
+   "link_note": "Listed by a third-party directory, not yet confirmed by Pathwai. Check eligibility and dates on this page.",
+   "link_exact": true,
+   "regions": []
+  },
+  {
+   "id": "weseed-women-stem-life-sciences",
+   "name": "WeSEED",
+   "org": "OBIO and FACIT",
+   "level": "nonprofit",
+   "type": "mentorship",
+   "summary": "Joint program to reduce barriers for women STEM entrepreneurs in life sciences, with business training, advisory resources, networks and access to venture funding.",
+   "amount": "Varies",
+   "stages": [
+    "idea",
+    "prototype"
+   ],
+   "audiences": [
+    "women"
+   ],
+   "needs": [
+    "mentorship",
+    "network",
+    "funding",
+    "training"
+   ],
+   "sectors": [
+    "health"
+   ],
+   "provinces": [
+    "ON"
+   ],
+   "requires": {},
+   "requirements": [
+    "Women STEM entrepreneur in life sciences, Ontario"
+   ],
+   "deadline": {
+    "kind": "none_published",
+    "date": null,
+    "note": "No dates confirmed. A third-party directory lists it as ongoing; check the program page for current intake"
+   },
+   "status": "check",
+   "phase": "fund",
+   "apply_url": "https://www.obio.ca/wihi-weseed-program",
+   "source_url": "https://www.obio.ca/wihi-weseed-program",
+   "verified": "third_party",
+   "last_checked": "2026-11-24",
+   "restricted_to": [
+    "women"
+   ],
+   "link_label": "OBIO: WeSEED program",
+   "link_kind": "program",
+   "link_note": "Listed by a third-party directory, not yet confirmed by Pathwai. Check eligibility and dates on this page.",
+   "link_exact": true,
+   "regions": []
+  },
+  {
+   "id": "abdp-socca-non-refundable-contribution",
+   "name": "Aboriginal Business Development Program: Non-Refundable Contribution",
+   "org": "SOCCA",
+   "level": "nonprofit",
+   "type": "grant",
+   "summary": "Non-refundable contributions for Indigenous entrepreneurs in Quebec to start, acquire or expand a business.",
+   "amount": "Up to about $1M listed",
+   "stages": [
+    "idea",
+    "prototype",
+    "launched",
+    "revenue",
+    "growth"
+   ],
+   "audiences": [
+    "indigenous"
+   ],
+   "needs": [
+    "funding"
+   ],
+   "sectors": [
+    "any"
+   ],
+   "provinces": [
+    "QC"
+   ],
+   "requires": {},
+   "requirements": [
+    "Indigenous entrepreneur in Quebec"
+   ],
+   "deadline": {
+    "kind": "none_published",
+    "date": null,
+    "note": "No dates confirmed. A third-party directory lists it as ongoing; check the program page for current intake"
+   },
+   "status": "check",
+   "phase": "fund",
+   "apply_url": "https://socca.qc.ca/en/non-refundable-contribution/",
+   "source_url": "https://socca.qc.ca/en/non-refundable-contribution/",
+   "verified": "third_party",
+   "last_checked": "2026-11-24",
+   "restricted_to": [
+    "indigenous"
+   ],
+   "link_label": "SOCCA: Non-Refundable Contribution",
+   "link_kind": "program",
+   "link_note": "Listed by a third-party directory, not yet confirmed by Pathwai. Check eligibility and dates on this page.",
+   "link_exact": true,
+   "regions": []
+  },
+  {
+   "id": "all-nations-trust-entrepreneur-financing",
+   "name": "Indigenous Entrepreneur Financing Programs",
+   "org": "All Nations Trust Company",
+   "level": "nonprofit",
+   "type": "grant",
+   "summary": "Non-repayable contributions for Indigenous entrepreneurs in B.C. to start, expand or acquire a viable Indigenous-owned business, including business planning and marketing.",
+   "amount": "$5K to $100K listed",
+   "stages": [
+    "idea",
+    "prototype",
+    "launched",
+    "revenue",
+    "growth"
+   ],
+   "audiences": [
+    "indigenous"
+   ],
+   "needs": [
+    "funding"
+   ],
+   "sectors": [
+    "any"
+   ],
+   "provinces": [
+    "BC"
+   ],
+   "requires": {},
+   "requirements": [
+    "Indigenous entrepreneur in British Columbia"
+   ],
+   "deadline": {
+    "kind": "none_published",
+    "date": null,
+    "note": "No dates confirmed. A third-party directory lists it as ongoing; check the program page for current intake"
+   },
+   "status": "check",
+   "phase": "fund",
+   "apply_url": "https://www.antco.ca/entrepreneurs",
+   "source_url": "https://www.antco.ca/entrepreneurs",
+   "verified": "third_party",
+   "last_checked": "2026-11-24",
+   "restricted_to": [
+    "indigenous"
+   ],
+   "link_label": "All Nations Trust: Entrepreneurs",
+   "link_kind": "program",
+   "link_note": "Listed by a third-party directory, not yet confirmed by Pathwai. Check eligibility and dates on this page.",
+   "link_exact": true,
+   "regions": []
+  },
+  {
+   "id": "cannor-entrepreneurship-business-development",
+   "name": "Entrepreneurship and Business Development (EBD)",
+   "org": "CanNor",
+   "level": "federal",
+   "type": "grant",
+   "summary": "Project-based support to start or grow Indigenous businesses in the territories.",
+   "amount": "Varies",
+   "stages": [
+    "idea",
+    "prototype",
+    "launched",
+    "revenue",
+    "growth"
+   ],
+   "audiences": [
+    "indigenous"
+   ],
+   "needs": [
+    "funding"
+   ],
+   "sectors": [
+    "any"
+   ],
+   "provinces": [
+    "NT",
+    "NU",
+    "YT"
+   ],
+   "requires": {},
+   "requirements": [
+    "Indigenous entrepreneur or business in Northern Canada"
+   ],
+   "deadline": {
+    "kind": "none_published",
+    "date": null,
+    "note": "No dates confirmed. A third-party directory lists it as ongoing; check the program page for current intake"
+   },
+   "status": "check",
+   "phase": "fund",
+   "apply_url": "https://www.cannor.gc.ca/eng/1396123434848/1396123576050",
+   "source_url": "https://www.cannor.gc.ca/eng/1396123434848/1396123576050",
+   "verified": "third_party",
+   "last_checked": "2026-11-24",
+   "restricted_to": [
+    "indigenous"
+   ],
+   "link_label": "CanNor: EBD",
+   "link_kind": "program",
+   "link_note": "Listed by a third-party directory, not yet confirmed by Pathwai. Check eligibility and dates on this page.",
+   "link_exact": true,
+   "regions": []
+  },
+  {
+   "id": "aep-access-to-capital",
+   "name": "Aboriginal Entrepreneurship Program: Access to Capital",
+   "org": "Indigenous Services Canada",
+   "level": "federal",
+   "type": "grant",
+   "summary": "Access to capital and business opportunities for Indigenous entrepreneurs and business owners in Canada.",
+   "amount": "Up to $250K listed",
+   "stages": [
+    "idea",
+    "prototype",
+    "launched",
+    "revenue",
+    "growth"
+   ],
+   "audiences": [
+    "indigenous"
+   ],
+   "needs": [
+    "funding"
+   ],
+   "sectors": [
+    "any"
+   ],
+   "provinces": [
+    "any"
+   ],
+   "requires": {},
+   "requirements": [
+    "Indigenous entrepreneur or business owner"
+   ],
+   "deadline": {
+    "kind": "none_published",
+    "date": null,
+    "note": "No dates confirmed. A third-party directory lists it as ongoing; check the program page for current intake"
+   },
+   "status": "check",
+   "phase": "fund",
+   "apply_url": "https://www.isc-sac.gc.ca/eng/1375201178602/1610797286236",
+   "source_url": "https://www.isc-sac.gc.ca/eng/1375201178602/1610797286236",
+   "verified": "third_party",
+   "last_checked": "2026-11-24",
+   "restricted_to": [
+    "indigenous"
+   ],
+   "link_label": "ISC: Aboriginal Entrepreneurship Program",
+   "link_kind": "program",
+   "link_note": "Listed by a third-party directory, not yet confirmed by Pathwai. Check eligibility and dates on this page.",
+   "link_exact": true,
+   "regions": []
+  },
+  {
+   "id": "northern-ontario-women-now",
+   "name": "Northern Ontario Women (NOW) Program",
+   "org": "NOW",
+   "level": "nonprofit",
+   "type": "mentorship",
+   "summary": "Business development resources for the start-up and growth of women-owned and women-led businesses in Northern Ontario.",
+   "amount": "Varies",
+   "stages": [
+    "idea",
+    "prototype",
+    "launched",
+    "revenue"
+   ],
+   "audiences": [
+    "women"
+   ],
+   "needs": [
+    "mentorship",
+    "funding",
+    "network"
+   ],
+   "sectors": [
+    "any"
+   ],
+   "provinces": [
+    "ON"
+   ],
+   "requires": {},
+   "requirements": [
+    "Woman-owned or woman-led business in Northern Ontario"
+   ],
+   "deadline": {
+    "kind": "none_published",
+    "date": null,
+    "note": "No dates confirmed. A third-party directory lists it as ongoing; check the program page for current intake"
+   },
+   "status": "check",
+   "phase": "fund",
+   "apply_url": "https://www.nowplus.ca/",
+   "source_url": "https://www.nowplus.ca/",
+   "verified": "third_party",
+   "last_checked": "2026-11-24",
+   "restricted_to": [
+    "women"
+   ],
+   "link_label": "NOW program site",
+   "link_kind": "program",
+   "link_note": "Listed by a third-party directory, not yet confirmed by Pathwai. Check eligibility and dates on this page. The link is the program's home page.",
+   "link_exact": false,
+   "regions": [
+    "northern-ontario"
+   ]
+  },
+  {
+   "id": "dmz-chi-accelerator",
+   "name": "DMZ CHI Accelerator",
+   "org": "DMZ at Toronto Metropolitan University",
+   "level": "academic",
+   "type": "accelerator",
+   "summary": "A 6-month venture support program for housing companies, with experts, connections and access to capital, backed by national partners.",
+   "amount": "Varies",
+   "stages": [
+    "launched",
+    "revenue"
+   ],
+   "audiences": [],
+   "needs": [
+    "mentorship",
+    "network",
+    "funding"
+   ],
+   "sectors": [
+    "any"
+   ],
+   "provinces": [
+    "ON"
+   ],
+   "requires": {},
+   "requirements": [
+    "Housing-focused company"
+   ],
+   "deadline": {
+    "kind": "none_published",
+    "date": null,
+    "note": "No dates confirmed. A third-party directory lists it as ongoing; check the program page for current intake"
+   },
+   "status": "check",
+   "phase": "fund",
+   "apply_url": "https://dmz.torontomu.ca/chi-accelerator",
+   "source_url": "https://dmz.torontomu.ca/chi-accelerator",
+   "verified": "third_party",
+   "last_checked": "2026-11-24",
+   "restricted_to": [],
+   "link_label": "DMZ: CHI Accelerator",
+   "link_kind": "program",
+   "link_note": "Listed by a third-party directory, not yet confirmed by Pathwai. Check eligibility and dates on this page.",
+   "link_exact": true,
+   "regions": [
+    "toronto"
+   ]
+  },
+  {
+   "id": "proof-of-concept-natural-products-canada",
+   "name": "Proof of Concept Program",
+   "org": "Natural Products Canada",
+   "level": "nonprofit",
+   "type": "grant",
+   "summary": "Funding for Canadian SMEs, start-ups and research institutes to establish the commercial feasibility of an innovative natural product or technology.",
+   "amount": "Up to $350K listed",
+   "stages": [
+    "prototype"
+   ],
+   "audiences": [],
+   "needs": [
+    "funding",
+    "rd"
+   ],
+   "sectors": [
+    "food",
+    "health"
+   ],
+   "provinces": [
+    "any"
+   ],
+   "requires": {},
+   "requirements": [
+    "Natural products or related technology"
+   ],
+   "deadline": {
+    "kind": "none_published",
+    "date": null,
+    "note": "No dates confirmed. A third-party directory lists it as ongoing; check the program page for current intake"
+   },
+   "status": "check",
+   "phase": "fund",
+   "apply_url": "https://www.naturalproductscanada.com/proof-of-concept/",
+   "source_url": "https://www.naturalproductscanada.com/proof-of-concept/",
+   "verified": "third_party",
+   "last_checked": "2026-11-24",
+   "restricted_to": [],
+   "link_label": "Natural Products Canada: Proof of Concept",
+   "link_kind": "program",
+   "link_note": "Listed by a third-party directory, not yet confirmed by Pathwai. Check eligibility and dates on this page.",
+   "link_exact": true,
+   "regions": []
+  },
+  {
+   "id": "alberta-strategic-industries-tech-knowledge-grant",
+   "name": "Strategic Industries Technology and Knowledge Development Grant",
+   "org": "Alberta Innovates",
+   "level": "provincial",
+   "type": "grant",
+   "summary": "Supports the development, demonstration and commercialization of technologies that strengthen Alberta's industrial competitiveness and productivity.",
+   "amount": "Varies",
+   "stages": [
+    "prototype",
+    "launched",
+    "revenue",
+    "growth"
+   ],
+   "audiences": [],
+   "needs": [
+    "funding",
+    "rd"
+   ],
+   "sectors": [
+    "any"
+   ],
+   "provinces": [
+    "AB"
+   ],
+   "requires": {},
+   "requirements": [
+    "Alberta-based applicant"
+   ],
+   "deadline": {
+    "kind": "none_published",
+    "date": null,
+    "note": "No dates confirmed. A third-party directory lists it as ongoing; check the program page for current intake"
+   },
+   "status": "check",
+   "phase": "fund",
+   "apply_url": "https://albertainnovates.ca/funding/strategic-industries-technology-and-knowledge-development-grant",
+   "source_url": "https://albertainnovates.ca/funding/strategic-industries-technology-and-knowledge-development-grant",
+   "verified": "third_party",
+   "last_checked": "2026-11-24",
+   "restricted_to": [],
+   "link_label": "Alberta Innovates: Strategic Industries grant",
+   "link_kind": "program",
+   "link_note": "Listed by a third-party directory, not yet confirmed by Pathwai. Check eligibility and dates on this page.",
+   "link_exact": true,
+   "regions": []
+  },
+  {
+   "id": "alberta-export-expansion-program",
+   "name": "Alberta Export Expansion Program",
+   "org": "Government of Alberta",
+   "level": "provincial",
+   "type": "grant",
+   "summary": "Funding to help export-ready Alberta companies and non-profits reach international markets and attract global buyers.",
+   "amount": "Varies",
+   "stages": [
+    "launched",
+    "revenue",
+    "growth"
+   ],
+   "audiences": [],
+   "needs": [
+    "export",
+    "funding"
+   ],
+   "sectors": [
+    "any"
+   ],
+   "provinces": [
+    "AB"
+   ],
+   "requires": {},
+   "requirements": [
+    "Export-ready Alberta company or non-profit"
+   ],
+   "deadline": {
+    "kind": "none_published",
+    "date": null,
+    "note": "No dates confirmed. A third-party directory lists it as ongoing; check the program page for current intake"
+   },
+   "status": "check",
+   "phase": "fund",
+   "apply_url": "https://www.alberta.ca/alberta-export-expansion-program.aspx",
+   "source_url": "https://www.alberta.ca/alberta-export-expansion-program.aspx",
+   "verified": "third_party",
+   "last_checked": "2026-11-24",
+   "restricted_to": [],
+   "link_label": "Alberta: Export Expansion Program",
+   "link_kind": "program",
+   "link_note": "Listed by a third-party directory, not yet confirmed by Pathwai. Check eligibility and dates on this page.",
+   "link_exact": true,
+   "regions": []
+  },
+  {
+   "id": "business-link-alberta-guidance",
+   "name": "Business Link Alberta: business guidance",
+   "org": "Business Link",
+   "level": "nonprofit",
+   "type": "resource",
+   "summary": "Free, personalized guidance for Alberta entrepreneurs at any stage, including Indigenous and immigrant entrepreneurs.",
+   "amount": "Free",
+   "stages": [
+    "idea",
+    "prototype",
+    "launched",
+    "revenue",
+    "growth"
+   ],
+   "audiences": [],
+   "needs": [
+    "mentorship"
+   ],
+   "sectors": [
+    "any"
+   ],
+   "provinces": [
+    "AB"
+   ],
+   "requires": {},
+   "requirements": [
+    "Alberta entrepreneur"
+   ],
+   "deadline": {
+    "kind": "none_published",
+    "date": null,
+    "note": "No dates confirmed. A third-party directory lists it as ongoing; check the program page for current intake"
+   },
+   "status": "check",
+   "phase": "fund",
+   "apply_url": "https://businesslink.ca/services/business-guidance/",
+   "source_url": "https://businesslink.ca/services/business-guidance/",
+   "verified": "third_party",
+   "last_checked": "2026-11-24",
+   "restricted_to": [],
+   "link_label": "Business Link: business guidance",
+   "link_kind": "program",
+   "link_note": "Listed by a third-party directory, not yet confirmed by Pathwai. Check eligibility and dates on this page.",
+   "link_exact": true,
+   "regions": []
+  },
+  {
+   "id": "business-investment-program-nl",
+   "name": "Business Investment Program",
+   "org": "Government of Newfoundland and Labrador",
+   "level": "provincial",
+   "type": "loan",
+   "summary": "Term loans for small and medium-sized businesses in strategic growth sectors identified by the province.",
+   "amount": "Varies",
+   "stages": [
+    "launched",
+    "revenue",
+    "growth"
+   ],
+   "audiences": [],
+   "needs": [
+    "funding"
+   ],
+   "sectors": [
+    "any"
+   ],
+   "provinces": [
+    "NL"
+   ],
+   "requires": {},
+   "requirements": [
+    "SME in a strategic growth sector in Newfoundland and Labrador"
+   ],
+   "deadline": {
+    "kind": "none_published",
+    "date": null,
+    "note": "No dates confirmed. A third-party directory lists it as ongoing; check the program page for current intake"
+   },
+   "status": "check",
+   "phase": "fund",
+   "apply_url": "https://www.gov.nl.ca/jgrd/funding/business-investment-program/",
+   "source_url": "https://www.gov.nl.ca/jgrd/funding/business-investment-program/",
+   "verified": "third_party",
+   "last_checked": "2026-11-24",
+   "restricted_to": [],
+   "link_label": "NL: Business Investment Program",
+   "link_kind": "program",
+   "link_note": "Listed by a third-party directory, not yet confirmed by Pathwai. Check eligibility and dates on this page.",
+   "link_exact": true,
+   "regions": []
+  },
+  {
+   "id": "ipon-intellectual-property-ontario",
+   "name": "Intellectual Property Ontario (IPON)",
+   "org": "Intellectual Property Ontario",
+   "level": "provincial",
+   "type": "resource",
+   "summary": "IP services and funding for Ontario innovators, researchers and SMEs who want to use their intellectual property.",
+   "amount": "Up to $300K listed",
+   "stages": [
+    "prototype",
+    "launched",
+    "revenue",
+    "growth"
+   ],
+   "audiences": [],
+   "needs": [
+    "ip",
+    "funding"
+   ],
+   "sectors": [
+    "any"
+   ],
+   "provinces": [
+    "ON"
+   ],
+   "requires": {},
+   "requirements": [
+    "Ontario-based innovator, researcher or SME"
+   ],
+   "deadline": {
+    "kind": "none_published",
+    "date": null,
+    "note": "No dates confirmed. A third-party directory lists it as ongoing; check the program page for current intake"
+   },
+   "status": "check",
+   "phase": "fund",
+   "apply_url": "https://ip-ontario.ca/services",
+   "source_url": "https://ip-ontario.ca/services",
+   "verified": "third_party",
+   "last_checked": "2026-11-24",
+   "restricted_to": [],
+   "link_label": "IPON: services",
+   "link_kind": "program",
+   "link_note": "Listed by a third-party directory, not yet confirmed by Pathwai. Check eligibility and dates on this page.",
+   "link_exact": true,
+   "regions": []
+  },
+  {
+   "id": "bc-eligible-business-corporation-tax-credit",
+   "name": "B.C. Venture Capital Program: Eligible Business Corporation",
+   "org": "Government of British Columbia",
+   "level": "provincial",
+   "type": "tax_credit",
+   "summary": "Tax credits for investors who put equity capital into eligible B.C. small businesses. Useful when you raise from B.C. investors; the credit goes to the investor.",
+   "amount": "Investor tax credit",
+   "stages": [
+    "prototype",
+    "launched",
+    "revenue"
+   ],
+   "audiences": [],
+   "needs": [
+    "funding",
+    "tax"
+   ],
+   "sectors": [
+    "any"
+   ],
+   "provinces": [
+    "BC"
+   ],
+   "requires": {},
+   "requirements": [
+    "B.C. small business raising equity from investors",
+    "The credit goes to the investor, not the company"
+   ],
+   "deadline": {
+    "kind": "none_published",
+    "date": null,
+    "note": "No dates confirmed. A third-party directory lists it as ongoing; check the program page for current intake"
+   },
+   "status": "check",
+   "phase": "fund",
+   "apply_url": "https://www2.gov.bc.ca/gov/content/employment-business/investment-capital/venture-capital-programs/eligible-business-corporation",
+   "source_url": "https://www2.gov.bc.ca/gov/content/employment-business/investment-capital/venture-capital-programs/eligible-business-corporation",
+   "verified": "third_party",
+   "last_checked": "2026-11-24",
+   "restricted_to": [],
+   "link_label": "B.C.: Eligible Business Corporation",
+   "link_kind": "program",
+   "link_note": "Listed by a third-party directory, not yet confirmed by Pathwai. Check eligibility and dates on this page.",
+   "link_exact": true,
+   "regions": []
+  },
+  {
+   "id": "bc-venture-capital-corporation-tax-credit",
+   "name": "B.C. Venture Capital Program: Venture Capital Corporation",
+   "org": "Government of British Columbia",
+   "level": "provincial",
+   "type": "tax_credit",
+   "summary": "Tax credits for investors in registered venture capital corporations that fund B.C. small businesses.",
+   "amount": "Investor tax credit",
+   "stages": [
+    "prototype",
+    "launched",
+    "revenue"
+   ],
+   "audiences": [],
+   "needs": [
+    "funding",
+    "tax"
+   ],
+   "sectors": [
+    "any"
+   ],
+   "provinces": [
+    "BC"
+   ],
+   "requires": {},
+   "requirements": [
+    "B.C. small business",
+    "The credit goes to the investor, not the company"
+   ],
+   "deadline": {
+    "kind": "none_published",
+    "date": null,
+    "note": "No dates confirmed. A third-party directory lists it as ongoing; check the program page for current intake"
+   },
+   "status": "check",
+   "phase": "fund",
+   "apply_url": "https://www2.gov.bc.ca/gov/content/employment-business/investment-capital/venture-capital-programs/venture-capital-corporation",
+   "source_url": "https://www2.gov.bc.ca/gov/content/employment-business/investment-capital/venture-capital-programs/venture-capital-corporation",
+   "verified": "third_party",
+   "last_checked": "2026-11-24",
+   "restricted_to": [],
+   "link_label": "B.C.: Venture Capital Corporation",
+   "link_kind": "program",
+   "link_note": "Listed by a third-party directory, not yet confirmed by Pathwai. Check eligibility and dates on this page.",
+   "link_exact": true,
+   "regions": []
+  },
+  {
+   "id": "ideas-defence-excellence-security",
+   "name": "Innovation for Defence Excellence and Security (IDEaS)",
+   "org": "National Defence",
+   "level": "federal",
+   "type": "grant",
+   "summary": "Federal program funding defence and security research and development, open to businesses and researchers.",
+   "amount": "Varies by call",
+   "stages": [
+    "prototype",
+    "launched"
+   ],
+   "audiences": [],
+   "needs": [
+    "funding",
+    "rd",
+    "customers"
+   ],
+   "sectors": [
+    "tech",
+    "hardware"
+   ],
+   "provinces": [
+    "any"
+   ],
+   "requires": {},
+   "requirements": [
+    "Technology relevant to defence and security"
+   ],
+   "deadline": {
+    "kind": "none_published",
+    "date": null,
+    "note": "No dates confirmed. A third-party directory lists it as ongoing; check the program page for current intake"
+   },
+   "status": "check",
+   "phase": "fund",
+   "apply_url": "https://www.canada.ca/en/department-national-defence/programs/defence-ideas.html",
+   "source_url": "https://www.canada.ca/en/department-national-defence/programs/defence-ideas.html",
+   "verified": "third_party",
+   "last_checked": "2026-11-24",
+   "restricted_to": [],
+   "link_label": "National Defence: IDEaS",
+   "link_kind": "program",
+   "link_note": "Listed by a third-party directory, not yet confirmed by Pathwai. Check eligibility and dates on this page.",
+   "link_exact": true,
+   "regions": []
+  },
+  {
+   "id": "clean-growth-hub",
+   "name": "Clean Growth Hub",
+   "org": "Government of Canada",
+   "level": "federal",
+   "type": "resource",
+   "summary": "A federal one-stop point for Canadian clean technology: information, advisory services and a path to federal funding programs.",
+   "amount": "Free advice",
+   "stages": [
+    "prototype",
+    "launched",
+    "revenue",
+    "growth"
+   ],
+   "audiences": [],
+   "needs": [
+    "funding",
+    "mentorship",
+    "network"
+   ],
+   "sectors": [
+    "cleantech"
+   ],
+   "provinces": [
+    "any"
+   ],
+   "requires": {},
+   "requirements": [
+    "Clean technology company"
+   ],
+   "deadline": {
+    "kind": "none_published",
+    "date": null,
+    "note": "No dates confirmed. A third-party directory lists it as ongoing; check the program page for current intake"
+   },
+   "status": "check",
+   "phase": "fund",
+   "apply_url": "https://ised-isde.canada.ca/site/clean-growth-hub/en",
+   "source_url": "https://ised-isde.canada.ca/site/clean-growth-hub/en",
+   "verified": "third_party",
+   "last_checked": "2026-11-24",
+   "restricted_to": [],
+   "link_label": "Clean Growth Hub",
+   "link_kind": "program",
+   "link_note": "Listed by a third-party directory, not yet confirmed by Pathwai. Check eligibility and dates on this page.",
+   "link_exact": true,
+   "regions": []
+  },
+  {
+   "id": "cglcc-out-for-business",
+   "name": "OUT for Business",
+   "org": "Canadian 2SLGBTQI+ Chamber of Commerce",
+   "level": "nonprofit",
+   "type": "mentorship",
+   "summary": "A national mentorship program for 2SLGBTQI+ entrepreneurs.",
+   "amount": "Varies",
+   "stages": [
+    "idea",
+    "prototype",
+    "launched",
+    "revenue",
+    "growth"
+   ],
+   "audiences": [],
+   "needs": [
+    "mentorship",
+    "network"
+   ],
+   "sectors": [
+    "any"
+   ],
+   "provinces": [
+    "any"
+   ],
+   "requires": {},
+   "requirements": [
+    "2SLGBTQI+ entrepreneur"
+   ],
+   "deadline": {
+    "kind": "none_published",
+    "date": null,
+    "note": "No dates confirmed. A third-party directory lists it as ongoing; check the program page for current intake"
+   },
+   "status": "check",
+   "phase": "fund",
+   "apply_url": "https://queerchamber.ca/out-for-business/",
+   "source_url": "https://queerchamber.ca/out-for-business/",
+   "verified": "third_party",
+   "last_checked": "2026-11-24",
+   "restricted_to": [],
+   "link_label": "CGLCC: OUT for Business",
+   "link_kind": "program",
+   "link_note": "Listed by a third-party directory, not yet confirmed by Pathwai. Check eligibility and dates on this page.",
+   "link_exact": true,
+   "regions": []
+  },
+  {
+   "id": "genome-bc-industry-innovation-fund",
+   "name": "Industry Innovation Fund (I²)",
+   "org": "Genome BC",
+   "level": "nonprofit",
+   "type": "loan",
+   "summary": "Interest-free hybrid debt and royalty capital for B.C. life science technology companies at the early commercial stage.",
+   "amount": "$500K to $1.8M listed",
+   "stages": [
+    "launched",
+    "revenue"
+   ],
+   "audiences": [],
+   "needs": [
+    "funding"
+   ],
+   "sectors": [
+    "health"
+   ],
+   "provinces": [
+    "BC"
+   ],
+   "requires": {},
+   "requirements": [
+    "B.C.-based life science technology company"
+   ],
+   "deadline": {
+    "kind": "none_published",
+    "date": null,
+    "note": "No dates confirmed. A third-party directory lists it as ongoing; check the program page for current intake"
+   },
+   "status": "check",
+   "phase": "fund",
+   "apply_url": "https://isquaredfund.ca/",
+   "source_url": "https://isquaredfund.ca/",
+   "verified": "third_party",
+   "last_checked": "2026-11-24",
+   "restricted_to": [],
+   "link_label": "Genome BC: I² Fund",
+   "link_kind": "program",
+   "link_note": "Listed by a third-party directory, not yet confirmed by Pathwai. Check eligibility and dates on this page. The link is the fund's home page.",
+   "link_exact": false,
+   "regions": []
+  },
+  {
+   "id": "basin-business-advisors",
+   "name": "Basin Business Advisors",
+   "org": "Columbia Basin Trust",
+   "level": "nonprofit",
+   "type": "resource",
+   "summary": "Business advisory support for entrepreneurs and existing businesses in the Columbia Basin region.",
+   "amount": "Varies",
+   "stages": [
+    "idea",
+    "prototype",
+    "launched",
+    "revenue",
+    "growth"
+   ],
+   "audiences": [],
+   "needs": [
+    "mentorship"
+   ],
+   "sectors": [
+    "any"
+   ],
+   "provinces": [
+    "BC"
+   ],
+   "requires": {},
+   "requirements": [
+    "Business in the Columbia Basin region"
+   ],
+   "deadline": {
+    "kind": "none_published",
+    "date": null,
+    "note": "No dates confirmed. A third-party directory lists it as ongoing; check the program page for current intake"
+   },
+   "status": "check",
+   "phase": "fund",
+   "apply_url": "https://bbaprogram.ca/",
+   "source_url": "https://bbaprogram.ca/",
+   "verified": "third_party",
+   "last_checked": "2026-11-24",
+   "restricted_to": [],
+   "link_label": "Basin Business Advisors",
+   "link_kind": "program",
+   "link_note": "Listed by a third-party directory, not yet confirmed by Pathwai. Check eligibility and dates on this page. The link is the program's home page.",
+   "link_exact": false,
+   "regions": []
+  },
+  {
+   "id": "axeo",
+   "name": "Axeo",
+   "org": "Axeo",
+   "level": "nonprofit",
+   "type": "accelerator",
+   "summary": "Non-profit incubator-accelerator that helps Quebec startups, companies and institutions reach technological innovation goals.",
+   "amount": "Varies",
+   "stages": [
+    "prototype",
+    "launched"
+   ],
+   "audiences": [],
+   "needs": [
+    "mentorship",
+    "network",
+    "funding"
+   ],
+   "sectors": [
+    "tech"
+   ],
+   "provinces": [
+    "QC"
+   ],
+   "requires": {},
+   "requirements": [
+    "Quebec startup or company with a technology project"
+   ],
+   "deadline": {
+    "kind": "none_published",
+    "date": null,
+    "note": "No dates confirmed. A third-party directory lists it as ongoing; check the program page for current intake"
+   },
+   "status": "check",
+   "phase": "fund",
+   "apply_url": "https://www.axeo.ca/en",
+   "source_url": "https://www.axeo.ca/en",
+   "verified": "third_party",
+   "last_checked": "2026-11-24",
+   "restricted_to": [],
+   "link_label": "Axeo: incubator-accelerator",
+   "link_kind": "program",
+   "link_note": "Listed by a third-party directory, not yet confirmed by Pathwai. Check eligibility and dates on this page.",
+   "link_exact": true,
+   "regions": []
+  },
+  {
+   "id": "impact-canada-challenge-platform",
+   "name": "Impact Canada challenges",
+   "org": "Government of Canada",
+   "level": "federal",
+   "type": "competition",
+   "summary": "Government of Canada challenge platform offering prizes for innovative solutions to public-policy problems.",
+   "amount": "$100K to $10M listed (varies by challenge)",
+   "stages": [
+    "prototype",
+    "launched",
+    "revenue"
+   ],
+   "audiences": [],
+   "needs": [
+    "funding",
+    "customers"
+   ],
+   "sectors": [
+    "any"
+   ],
+   "provinces": [
+    "any"
+   ],
+   "requires": {},
+   "requirements": [
+    "Each challenge sets its own rules"
+   ],
+   "deadline": {
+    "kind": "none_published",
+    "date": null,
+    "note": "No dates confirmed. A third-party directory lists it as ongoing; check the program page for current intake"
+   },
+   "status": "check",
+   "phase": "fund",
+   "apply_url": "https://impact.canada.ca/en/outcomes-based-financing",
+   "source_url": "https://impact.canada.ca/en/outcomes-based-financing",
+   "verified": "third_party",
+   "last_checked": "2026-11-24",
+   "restricted_to": [],
+   "link_label": "Impact Canada: challenges",
+   "link_kind": "program",
+   "link_note": "Listed by a third-party directory, not yet confirmed by Pathwai. Check eligibility and dates on this page.",
+   "link_exact": true,
+   "regions": []
   }
  ]
 }
