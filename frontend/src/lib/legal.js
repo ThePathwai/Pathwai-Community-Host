@@ -4,24 +4,34 @@
 // onto every new account ("accepted version X on date Y"). Bump BOTH when either document changes in a
 // way people should re-accept.
 //
-// NOTE: this is a plain-language starting draft written for a Canadian (Ontario) community platform. It is
+// NOTE: this is an INTERIM, plain-language draft for the early-testing period. It is a plain-language starting draft written for a Canadian (Ontario) community platform. It is
 // not legal advice -- have a lawyer review it, and set REACT_APP_LEGAL_EMAIL / REACT_APP_LEGAL_ENTITY (build
 // variables) to your real contact address and operating entity before launch.
-export const LEGAL_VERSION = "2026-10-06";
-export const LEGAL_EFFECTIVE = "October 6, 2026";
+export const LEGAL_VERSION = "2026-11-24-interim";
+export const LEGAL_EFFECTIVE = "November 24, 2026";
 export const LEGAL_EMAIL = process.env.REACT_APP_LEGAL_EMAIL || "privacy@pathwai.app";
 export const LEGAL_ENTITY = process.env.REACT_APP_LEGAL_ENTITY || "Pathwai";
 
 export const TERMS = {
   title: "Terms of Service",
-  intro: `These Terms govern your use of ${LEGAL_ENTITY}'s website and apps ("Pathwai", "we", "us"). By creating an account or using Pathwai you agree to them. If you don't agree, please don't create an account.`,
+  intro: `These Terms govern your use of ${LEGAL_ENTITY}'s website and apps ("Pathwai", "we", "us"). By creating an account or using Pathwai you agree to them. If you don't agree, please don't create an account.\n\nThese are interim Terms for Pathwai's early-testing period. We will replace them with fuller Terms and tell you when we do.`,
   sections: [
     ["Who can use Pathwai", [
       "You must be at least 13 years old. If a community you want to join sets a higher minimum age, you must meet it. If you are under the age of majority where you live, you confirm a parent or guardian is aware you are using Pathwai and agrees to these Terms.",
       "You agree to give accurate information and to keep it up to date.",
     ]],
+    ["Early access", [
+      "Pathwai is in early testing. Features can change, move or be switched off without notice, and some are marked \"coming soon\" or \"under construction\" (for example the AI guide, which is not available yet). You may find mistakes. Please tell us when you do.",
+      "We may limit the number of people testing, reset or remove test data, or pause the service while we improve it.",
+    ]],
+    ["Program information is guidance, not advice", [
+      "Pathwai helps founders in Canada find programs, funding, events and other support. The details come from public sources and from the programs' own pages, some of them read automatically. Deadlines, who can apply, amounts and whether a program is open can change at any time, and we can get things wrong or be out of date.",
+      "A label such as \"Good match\" only means our tool did not find a rule that rules you out. It does not mean you qualify, will be accepted, or will receive money. Before you apply or rely on anything, check the program's own official page and confirm the details with the program.",
+      "We do not run, sponsor or speak for the programs listed, and a listing is not an endorsement. Nothing on Pathwai is legal, financial, tax, immigration or investment advice. Talk to a qualified professional about your own situation.",
+    ]],
     ["Your account", [
       "One Pathwai account lets you apply to and belong to many communities. Keep your password private and tell us right away if you think someone else has used your account. You are responsible for what happens under your account.",
+      "Your profile answers (for example your stage, sector, province and, only if you choose to give them, your gender or group) are used to show you programs. Give only what you are comfortable sharing. You can change or remove your answers at any time.",
       "Signing in with Google or Apple lets us confirm your email address; we don't receive your Google or Apple password.",
     ]],
     ["Communities and approval", [
@@ -47,10 +57,10 @@ export const TERMS = {
       "Pathwai may link to or work with services we don't control (for example Luma, Typeform, Google Forms). Their own terms and privacy practices apply when you use them.",
     ]],
     ["Ending your account", [
-      "You can stop using Pathwai at any time and ask us to delete your account (see the Privacy Policy). We may suspend or end access if you break these Terms, if required by law, or if we stop offering the service. Sections that by their nature should continue (for example disclaimers and limits of liability) survive.",
+      "You can stop using Pathwai at any time and ask us to delete your account (see the Privacy Policy). You can delete your account yourself in Settings. We may suspend or end access if you break these Terms, if required by law, or if we stop offering the service. Sections that by their nature should continue (for example disclaimers and limits of liability) survive.",
     ]],
     ["Disclaimers", [
-      "Pathwai is provided \"as is\" and \"as available\". We work to keep it reliable and secure but don't promise it will always be uninterrupted or error-free. We aren't responsible for the conduct of members or communities, or for in-person events you attend.",
+      "Pathwai is provided \"as is\" and \"as available\", and during early testing it is more likely to have errors, gaps and downtime. We work to keep it reliable and secure but don't promise it will always be uninterrupted, accurate, complete or error-free, or that any program information is current. We aren't responsible for the conduct of members or communities, or for in-person events you attend.",
     ]],
     ["Limit of liability", [
       "To the fullest extent permitted by law, we are not liable for indirect, incidental or consequential losses, or for loss of data, profits or goodwill, arising from your use of Pathwai. Our total liability for any claim is limited to the greater of CAD $100 or the amount you paid us (if any) in the 12 months before the claim. Nothing here limits liability that cannot be limited by law, including your statutory consumer rights.",
@@ -67,11 +77,12 @@ export const TERMS = {
 
 export const PRIVACY = {
   title: "Privacy Policy",
-  intro: `${LEGAL_ENTITY} ("Pathwai", "we", "us") respects your privacy. This policy explains what we collect, why, who sees it and the choices you have. It is written to meet Canadian privacy law (PIPEDA); we treat people elsewhere the same way.`,
+  intro: `${LEGAL_ENTITY} ("Pathwai", "we", "us") respects your privacy. This policy explains what we collect, why, who sees it and the choices you have. It is written to meet Canadian privacy law (PIPEDA); we treat people elsewhere the same way.\n\nThis is an interim policy for Pathwai's early-testing period. We will replace it with a fuller policy and tell you when we do.`,
   sections: [
     ["What we collect", [
       "Account details: your name, email address and a securely hashed password (or, if you sign in with Google or Apple, the name, email and profile picture they share with us).",
       "Profile details you choose to add: age, what you do, employer or school, city or neighbourhood, bio, skills, interests, goals, photos, phone number and links such as LinkedIn, Instagram or a website. All of this is optional.",
+      "Planner answers: what you tell the Pathwai planner so it can match you to programs, such as your startup's stage, what you need, your sector, province or city, team size, whether you are incorporated and your age. Some programs are made for specific groups, so you may also choose to tell us your gender or whether you are a woman, Black, Indigenous or a newcomer founder. These details are sensitive. They are optional, we ask for them only to show you programs you may qualify for, and you will still get results if you leave them blank. We do not sell them, use them for advertising, or send them to the programs: you apply on each program's own site.",
       "Community activity: communities you apply to or join, your answers to application questions, event RSVPs and tickets, messages you send, requests and forms you complete, and notification and communication preferences.",
       "Payments: if you pay dues or buy a ticket, Stripe collects your card details; we receive only a confirmation, the amount and a reference. We never see or store your full card number.",
       "Technical data: IP address, device and browser type, and basic logs we need to keep the service secure and working.",
@@ -97,13 +108,22 @@ export const PRIVACY = {
       "We use only the cookies the service needs to work: they keep you signed in and remember which community you are viewing. We don't use advertising or cross-site tracking cookies.",
     ]],
     ["How long we keep it", [
-      "We keep your account information while your account is open. If you ask us to delete your account we remove or anonymize your personal information within a reasonable period, except where we must keep some records for legal, security or payment reasons. Content you posted in a community (such as event comments or messages other people received) may remain visible to them in anonymized form.",
+      "We keep your account information while your account is open. You can delete your account yourself in Settings, or write to us. We delete or anonymize your personal information within 30 days, except where we must keep some records for legal, security or payment reasons. Backups may hold a copy until they are overwritten in the normal cycle. Content you posted in a community (such as event comments or messages other people received) may remain visible to them in anonymized form.",
     ]],
     ["Your choices and rights", [
       "You can access and correct your information in your account, opt out of text and email messages in Settings (and reply STOP to any text), and ask us to delete your account. You can also ask for a copy of your information, withdraw consent, or raise a privacy concern with us at the address below. You may also complain to the Office of the Privacy Commissioner of Canada.",
     ]],
     ["Security", [
       "We use industry-standard safeguards, including encrypted connections, hashed passwords and encrypted storage of integration keys, and limit who can access personal information. No system is perfectly secure, so please use a strong, unique password.",
+    ]],
+    ["If something goes wrong", [
+      "If a security incident puts your information at real risk of serious harm, we will tell you directly, as soon as we can, what happened, what information was involved, what we have done and what you can do. We will also report it to the Privacy Commissioner of Canada as the law requires, and we keep a record of every incident.",
+    ]],
+    ["AI features", [
+      "Pathwai's AI guide is not available yet. Before we switch on any feature that sends your questions or answers to an AI service, we will update this policy and tell you.",
+    ]],
+    ["Who is responsible for privacy", [
+      `Our privacy lead is the Pathwai founder. Reach them at ${LEGAL_EMAIL}.`,
     ]],
     ["Children", [
       "Pathwai is not for children under 13 and we don't knowingly collect their information. If you believe a child under 13 has an account, contact us and we'll remove it.",

@@ -21,7 +21,7 @@ export default function Legal({ doc }) {
       </nav>
       <h1 className="mb-1 text-3xl font-bold">{d.title}</h1>
       <p className="mb-6 text-xs text-muted" data-testid="legal-version">Effective {LEGAL_EFFECTIVE} · version {LEGAL_VERSION}</p>
-      <p className="mb-8 text-sm leading-relaxed">{d.intro}</p>
+      <p className="mb-8 whitespace-pre-line text-sm leading-relaxed">{d.intro}</p>
       <div className="space-y-7">
         {d.sections.map(([heading, paras], i) => (
           <section key={heading}>
