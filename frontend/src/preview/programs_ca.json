@@ -28992,6 +28992,209 @@
    "source_url": "https://natural-resources.canada.ca/funding-partnerships/energy-innovation-program-renewable-energy-demonstrations-call",
    "link_label": "NRCan: program page",
    "link_note": "Read on NRCan's own page on 2026-11-21. The page shows this call as closed."
+  },
+  {
+   "audiences": [],
+   "regions": [],
+   "requires": {},
+   "restricted_to": [],
+   "verified": "official",
+   "last_checked": "2026-11-24",
+   "link_kind": "program",
+   "link_exact": true,
+   "phase": "fund",
+   "level": "private",
+   "id": "sony-innovation-fund",
+   "name": "Sony Innovation Fund",
+   "org": "Sony Innovation Fund",
+   "type": "investor",
+   "summary": "Sony's venture fund for early-growth founders in sports tech, music tech, gaming and the creator economy, and in deep tech such as semiconductors, physical AI, robotics, sensors and photonics.",
+   "amount": "$250K to $3M cheques",
+   "stages": [
+    "launched",
+    "revenue",
+    "growth"
+   ],
+   "needs": [
+    "funding",
+    "network",
+    "customers"
+   ],
+   "sectors": [
+    "tech",
+    "hardware",
+    "creative"
+   ],
+   "provinces": [
+    "any"
+   ],
+   "requirements": [
+    "Seed, Series A or Series B stage",
+    "Creator economy, gaming, music tech or sports tech, or deep tech (semiconductors, physical AI, robotics, sensors, photonics)",
+    "Based in Canada or the United States",
+    "Applications go directly to the fund through its application page"
+   ],
+   "deadline": {
+    "kind": "closed",
+    "date": null,
+    "note": "The latest window ran October 29 to November 17, 2026. No next intake is posted."
+   },
+   "status": "closed",
+   "apply_url": "https://app.dgpt.io/p/sonyvc",
+   "source_url": "https://app.dgpt.io/p/sonyvc",
+   "link_label": "Sony Innovation Fund application page",
+   "link_note": "The fund's own application page, hosted on DiligenceGPT. It shows when a new window opens."
+  },
+  {
+   "audiences": [],
+   "regions": [],
+   "requires": {},
+   "restricted_to": [],
+   "verified": "official",
+   "last_checked": "2026-11-24",
+   "link_kind": "program",
+   "link_exact": true,
+   "phase": "fund",
+   "level": "private",
+   "id": "bdc-deep-tech-venture-fund",
+   "name": "BDC Deep Tech Venture Fund",
+   "org": "BDC Capital",
+   "type": "investor",
+   "summary": "BDC Capital venture fund for pre-seed and Series A startups in advanced technology such as quantum, photonics, electronics, advanced materials, robotics and foundational AI.",
+   "amount": "Equity investment; cheque size not published",
+   "stages": [
+    "prototype",
+    "launched",
+    "revenue"
+   ],
+   "needs": [
+    "funding",
+    "network"
+   ],
+   "sectors": [
+    "tech",
+    "hardware"
+   ],
+   "provinces": [
+    "any"
+   ],
+   "requirements": [
+    "Pre-seed or Series A startup in advanced technology (quantum, photonics, electronics, advanced materials, robotics, foundational AI)",
+    "The form asks whether the company is a Canadian-controlled private corporation (CCPC)",
+    "A warm introduction is preferred, but the form is open to submissions",
+    "You send your pitch deck after the confirmation email; the form takes no attachments"
+   ],
+   "deadline": {
+    "kind": "rolling",
+    "date": null,
+    "note": "No intake dates or deadline are published"
+   },
+   "status": "rolling",
+   "apply_url": "https://www.bdc.ca/en/bdc-capital/venture-capital/funds/deep-tech-venture-fund/deep-tech-venture-fund-form",
+   "source_url": "https://www.bdc.ca/en/bdc-capital/venture-capital/funds/deep-tech-venture-fund/deep-tech-venture-fund-form",
+   "link_label": "BDC Deep Tech Venture Fund form",
+   "link_note": "The fund's own submission form."
+  },
+  {
+   "audiences": [],
+   "regions": [],
+   "requires": {},
+   "restricted_to": [],
+   "verified": "official",
+   "last_checked": "2026-11-24",
+   "link_kind": "program",
+   "link_exact": true,
+   "phase": "fund",
+   "level": "nonprofit",
+   "id": "spark-capital-access-program",
+   "name": "Spark Capital Access Program (SCAP)",
+   "org": "Spark Centre",
+   "type": "accelerator",
+   "summary": "Free investor-readiness program from Spark Centre for startups across Canada that are preparing to raise: pitch deck and financial review, due diligence help and Demo Days with its investor network. No fees and no equity.",
+   "amount": "No fees, no equity; no cheque",
+   "stages": [
+    "revenue",
+    "growth"
+   ],
+   "needs": [
+    "funding",
+    "network",
+    "mentorship"
+   ],
+   "sectors": [
+    "any"
+   ],
+   "provinces": [
+    "any"
+   ],
+   "requirements": [
+    "At least CAD $200,000 in revenue over the past 12 months",
+    "Market-ready product and actively preparing to raise",
+    "Post-revenue or showing strong market traction",
+    "Intellectual property secured or developed, where it applies",
+    "Founders committed to taking part"
+   ],
+   "deadline": {
+    "kind": "none_published",
+    "date": null,
+    "note": "The program page posts no intake dates; check the page before planning around it"
+   },
+   "status": "check",
+   "apply_url": "https://sparkcentre.org/spark-capital-access-program/",
+   "source_url": "https://sparkcentre.org/spark-capital-access-program/",
+   "link_label": "Spark Centre: Spark Capital Access Program",
+   "link_note": "Read who it is for, then use the apply button on the page."
+  },
+  {
+   "audiences": [],
+   "regions": [],
+   "requires": {},
+   "restricted_to": [],
+   "verified": "official",
+   "last_checked": "2026-11-24",
+   "link_kind": "program",
+   "link_exact": false,
+   "phase": "fund",
+   "level": "nonprofit",
+   "id": "venturelab-investment-readiness",
+   "name": "ventureLAB Investment Readiness",
+   "org": "ventureLAB",
+   "type": "mentorship",
+   "summary": "No-equity support for Canadian hardtech and deeptech startups preparing to raise: a 3-month cohort for those raising in 3 to 12 months, and one-to-one advisory for those already raising.",
+   "amount": "No equity taken; no cheque",
+   "stages": [
+    "prototype",
+    "launched",
+    "revenue"
+   ],
+   "needs": [
+    "funding",
+    "mentorship",
+    "network"
+   ],
+   "sectors": [
+    "hardware",
+    "tech",
+    "health"
+   ],
+   "provinces": [
+    "any"
+   ],
+   "requirements": [
+    "Hardtech or deeptech startup (for example medtech, semiconductors, AI, advanced manufacturing, hardware)",
+    "Series stream: a working prototype and early traction, raising within 3 to 12 months",
+    "Advisory stream: already raising, with a funding target, investor materials and a clear use of funds"
+   ],
+   "deadline": {
+    "kind": "none_published",
+    "date": null,
+    "note": "No intake dates are posted"
+   },
+   "status": "check",
+   "apply_url": "https://www.venturelab.ca/investment-readiness",
+   "source_url": "https://www.venturelab.ca/investment-readiness",
+   "link_label": "ventureLAB: Investment Readiness",
+   "link_note": "This page describes the service but has no apply button. Its Join Us page is the nearest way in."
   }
  ]
 }
