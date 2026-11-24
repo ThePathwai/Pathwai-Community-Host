@@ -294,7 +294,7 @@ export function evaluate(p, profile, today) {
   const trust = { official: 2, third_party: 1 }[p.verified || "unconfirmed"] ?? 0;
   const focused = Math.floor((9 * hits.length) / Math.max(1, provides.filter((n) => NEEDS.includes(n)).length));
   const answeredYes = [applyCheck, stageCheck, needCheck].filter((c) => c.state === "yes").length;
-  const score = live * 100000 + answeredYes * 15000 + (tailored.length + focus.length) * 10000 + Math.min(3, hits.length) * 1000 + focused * 100 + urgency * 10 + trust;
+  const score = live * 100000 + answeredYes * 15000 + tailored.length * 25000 + focus.length * 10000 + Math.min(3, hits.length) * 1000 + focused * 100 + urgency * 10 + trust;
 
   const reasons = [...tailored, ...(needCheck.state === "yes" ? [needCheck.text] : []), ...focus, ...(timingCheck.state === "yes" ? [timingCheck.text] : []), ...(stageCheck.state === "yes" ? [stageCheck.text] : [])].filter(Boolean);
   const steps = [...facets.filter((f) => f.state === "later").map((f) => f.text), ...(stageCheck.state === "later" ? [stageCheck.text] : [])];

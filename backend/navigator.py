@@ -653,7 +653,7 @@ def evaluate(program: Dict[str, Any], profile: Dict[str, Any], today: Optional[d
     focused = (9 * len(hits)) // max(1, len([n for n in provides if n in NEEDS]))
     # Questions 1 to 3 answered yes: the more of them, the closer the fit (it only matters among "worth a look" programs, since every good match has all three).
     answered_yes = sum(1 for c in (apply_check, stage_check, need_check) if c["state"] == "yes")
-    score = live * 100000 + answered_yes * 15000 + (len(tailored) + len(focus)) * 10000 + min(3, len(hits)) * 1000 + focused * 100 + urgency * 10 + trust
+    score = live * 100000 + answered_yes * 15000 + len(tailored) * 25000 + len(focus) * 10000 + min(3, len(hits)) * 1000 + focused * 100 + urgency * 10 + trust
 
     # Reasons and cautions are the same answers, flattened to sentences for the places that show one line.
     reasons = tailored + ([need_check["text"]] if need_check["state"] == "yes" else []) + focus + ([timing_check["text"]] if timing_check["state"] == "yes" else []) + ([stage_check["text"]] if stage_check["state"] == "yes" else [])
