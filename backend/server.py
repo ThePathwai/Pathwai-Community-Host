@@ -5,6 +5,7 @@ try:
 except ImportError:  # private package unavailable -> local stand-in
     sys.path.insert(0, str(pathlib.Path(__file__).parent / "_shims"))
 from fastapi import FastAPI, APIRouter, HTTPException, Query, Depends, Request, Response
+from fastapi.responses import JSONResponse
 from dotenv import load_dotenv
 from starlette.middleware.cors import CORSMiddleware
 import asyncio
@@ -670,6 +671,22 @@ async def health():
         logger.error("health check: database unreachable: %s", exc)
         raise HTTPException(status_code=503, detail="database unreachable")
     return {"ok": True, "mode": "demo" if demo_mode() else "production"}
+
+
+_STARTED_AT = datetime.now(timezone.utc)
+
+
+@api_router.get("/health/freshness")
+async def health_freshness():
+    """For an uptime monitor: 200 while the event reader and the program page reader have both run in the last 48 hours, 503 when one has gone quiet.
+    Only times, no names or personal data. Kept apart from /health so a quiet reader never fails a deploy's liveness check."""
+    from events_job import scraper_enabled
+    from freshness import report
+    from program_job import enabled as program_checks_enabled
+    out = await report(hub_db(), datetime.now(timezone.utc), _STARTED_AT, scraper_enabled(), program_checks_enabled())
+    if not out["ok"]:
+        return JSONResponse(out, status_code=503)
+    return out
 
 
 # ===========================
