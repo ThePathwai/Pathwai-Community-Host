@@ -29195,6 +29195,256 @@
    "source_url": "https://www.venturelab.ca/investment-readiness",
    "link_label": "ventureLAB: Investment Readiness",
    "link_note": "This page describes the service but has no apply button. Its Join Us page is the nearest way in."
+  },
+  {
+   "audiences": [],
+   "regions": [],
+   "requires": {},
+   "restricted_to": [],
+   "verified": "official",
+   "last_checked": "2026-11-24",
+   "link_kind": "program",
+   "link_exact": true,
+   "phase": "fund",
+   "level": "provincial",
+   "id": "innovate-bc-commercialization-investment-readiness-microgrant",
+   "name": "Commercialization and Investment Readiness Microgrant",
+   "org": "Innovate BC",
+   "type": "grant",
+   "summary": "Non-repayable funding of up to $30,000 for B.C. companies to pay qualified professionals for the work investors, lenders and enterprise customers ask for: legal, financial, governance, privacy, cybersecurity, regulatory and commercial readiness.",
+   "amount": "Up to $30,000, non-repayable",
+   "stages": [
+    "prototype",
+    "launched",
+    "revenue"
+   ],
+   "needs": [
+    "funding",
+    "legal",
+    "ip"
+   ],
+   "sectors": [
+    "any"
+   ],
+   "provinces": [
+    "BC"
+   ],
+   "requirements": [
+    "For-profit company headquartered in British Columbia, incorporated in B.C. or federally and in good standing",
+    "Small or medium-sized enterprise (499 employees or fewer)",
+    "Developing or commercializing an innovative product, service or technology with a credible market",
+    "One supporting quote or statement of work from a qualified service provider",
+    "Matching funds from the applicant are required; it competes with other applicants"
+   ],
+   "deadline": {
+    "kind": "fixed",
+    "date": "2026-11-27",
+    "note": "Intake opened November 2 and closes November 27, 2026; decisions by December 15, 2026"
+   },
+   "status": "open",
+   "apply_url": "https://www.innovatebc.ca/commercialization-and-investment-readiness-microgrant-innovate-bc",
+   "source_url": "https://www.innovatebc.ca/commercialization-and-investment-readiness-microgrant-innovate-bc",
+   "link_label": "Innovate BC: Investment Readiness Microgrant",
+   "link_note": "The program page, with the call guide and the link to Innovate BC's application portal."
+  },
+  {
+   "audiences": [],
+   "regions": [],
+   "requires": {},
+   "restricted_to": [],
+   "verified": "official",
+   "last_checked": "2026-11-24",
+   "link_kind": "program",
+   "link_exact": true,
+   "phase": "fund",
+   "level": "provincial",
+   "id": "aice-alberta-innovates",
+   "name": "Accelerating Innovations into CarE (AICE)",
+   "org": "Alberta Innovates",
+   "type": "grant",
+   "summary": "Competitive, staged funding for Alberta health-technology companies that need scientific and clinical evidence to get to market: a Validate stream up to $300,000 and a Market Access stream of $300,000 to $600,000.",
+   "amount": "Up to $300,000 (Validate) or $300,000 to $600,000 (Market Access); up to 75% of project costs",
+   "stages": [
+    "prototype",
+    "launched",
+    "revenue"
+   ],
+   "needs": [
+    "funding",
+    "rd",
+    "legal"
+   ],
+   "sectors": [
+    "health"
+   ],
+   "provinces": [
+    "AB"
+   ],
+   "requirements": [
+    "Alberta-based small or medium-sized enterprise developing a health technology",
+    "Validate stream needs readiness level 4 in all domains; Market Access needs level 6",
+    "At least 25% of eligible project costs from the applicant, in cash or in kind",
+    "Projects run up to 24 months"
+   ],
+   "deadline": {
+    "kind": "fixed",
+    "date": "2026-11-27",
+    "note": "Current intake is due November 27, 2026 at 4:00 pm"
+   },
+   "status": "open",
+   "apply_url": "https://albertainnovates.ca/funding/accelerating-innovations-into-care-aice/",
+   "source_url": "https://albertainnovates.ca/funding/accelerating-innovations-into-care-aice/",
+   "link_label": "Alberta Innovates: AICE",
+   "link_note": "The program page, with the program guide and the open intake."
+  },
+  {
+   "audiences": [],
+   "regions": [
+    "thunder-bay",
+    "northern-ontario"
+   ],
+   "requires": {},
+   "restricted_to": [],
+   "verified": "official",
+   "last_checked": "2026-11-24",
+   "link_kind": "program",
+   "link_exact": true,
+   "phase": "fund",
+   "level": "nonprofit",
+   "id": "boreal-springboard-accelerator",
+   "name": "Boreal Springboard Accelerator",
+   "org": "Northwestern Ontario Innovation Centre",
+   "type": "accelerator",
+   "summary": "A 12-week accelerator in Thunder Bay with $40,000 in investment, mentorship, office space and lab access for startups bringing new forest-sector products, processes or technology to market.",
+   "amount": "$40,000 investment",
+   "stages": [
+    "idea",
+    "prototype",
+    "launched"
+   ],
+   "needs": [
+    "funding",
+    "mentorship",
+    "space",
+    "network"
+   ],
+   "sectors": [
+    "cleantech",
+    "hardware"
+   ],
+   "provinces": [
+    "ON"
+   ],
+   "requirements": [
+    "Startup or seed-stage business with a forest-sector product, process or technology",
+    "Founders take part full time in the 12-week program in Thunder Bay and plan to locate in Thunder Bay or Northwestern Ontario",
+    "Resellers, wholesalers, distributors and consulting companies are not eligible"
+   ],
+   "deadline": {
+    "kind": "fixed",
+    "date": "2026-12-14",
+    "note": "Cohort 2 applications close December 14, 2026; the cohort starts February 1"
+   },
+   "status": "open",
+   "apply_url": "https://borealspringboard.ca/accelerator-program/",
+   "source_url": "https://borealspringboard.ca/accelerator-program/",
+   "link_label": "Boreal Springboard: Accelerator Program",
+   "link_note": "The program page, with the full application and a shorter expression of interest."
+  },
+  {
+   "audiences": [],
+   "regions": [],
+   "requires": {},
+   "restricted_to": [],
+   "verified": "official",
+   "last_checked": "2026-11-24",
+   "link_kind": "program",
+   "link_exact": true,
+   "phase": "fund",
+   "level": "provincial",
+   "id": "nbif-breakthru",
+   "name": "Breakthru Pitch Competition",
+   "org": "New Brunswick Innovation Foundation (NBIF)",
+   "type": "competition",
+   "summary": "NBIF's founder-development program and pitch competition for New Brunswick technology startups, with workshops, mentorship and pitch coaching, and three NBIF equity investment opportunities of $150,000, $100,000 and $50,000.",
+   "amount": "Three equity investment opportunities: $150,000, $100,000 and $50,000",
+   "stages": [
+    "idea",
+    "prototype"
+   ],
+   "needs": [
+    "funding",
+    "mentorship",
+    "network"
+   ],
+   "sectors": [
+    "tech"
+   ],
+   "provinces": [
+    "NB"
+   ],
+   "requirements": [
+    "Technology-driven idea or early-stage startup",
+    "Commitment to building and growing in New Brunswick",
+    "Investments are subject to NBIF due diligence and approval"
+   ],
+   "deadline": {
+    "kind": "closed",
+    "date": null,
+    "note": "Applications for the 2027 cohort are closed. No next intake is posted."
+   },
+   "status": "closed",
+   "apply_url": "https://www.nbif.ca/breakthru-2027",
+   "source_url": "https://www.nbif.ca/breakthru-2027",
+   "link_label": "NBIF: Breakthru 2027",
+   "link_note": "NBIF's program page. It says when applications reopen."
+  },
+  {
+   "audiences": [],
+   "regions": [],
+   "requires": {},
+   "restricted_to": [],
+   "verified": "official",
+   "last_checked": "2026-11-24",
+   "link_kind": "program",
+   "link_exact": true,
+   "phase": "fund",
+   "level": "private",
+   "id": "founderfuel-accelerator",
+   "name": "FounderFuel Accelerator",
+   "org": "FounderFuel (Real Ventures, with Panache Ventures and Inovia Capital)",
+   "type": "accelerator",
+   "summary": "A 4-month mentor-driven accelerator for early-stage tech founders, powered by Real Ventures with Panache Ventures and Inovia Capital, ending in a large Demo Day.",
+   "amount": "Investment amount not published on the page",
+   "stages": [
+    "prototype",
+    "launched"
+   ],
+   "needs": [
+    "funding",
+    "mentorship",
+    "network"
+   ],
+   "sectors": [
+    "tech"
+   ],
+   "provinces": [
+    "any"
+   ],
+   "requirements": [
+    "Early-stage technology company preparing to go to market and raise seed capital",
+    "The page does not publish a location rule or current intake dates; the last date it shows is for the 2023 cohort"
+   ],
+   "deadline": {
+    "kind": "none_published",
+    "date": null,
+    "note": "The apply page only shows the 2023 cohort deadline (March 12, 2023); check with FounderFuel before planning around it"
+   },
+   "status": "check",
+   "apply_url": "https://founderfuel.com/apply/",
+   "source_url": "https://founderfuel.com/apply/",
+   "link_label": "FounderFuel: Apply",
+   "link_note": "The accelerator's own apply page."
   }
  ]
 }
