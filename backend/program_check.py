@@ -313,7 +313,7 @@ def decide_timing(program: Dict[str, Any], sig: Dict[str, Any], today: date) -> 
         return {"status": "rolling", "deadline": {"kind": "rolling", "date": None, "note": note}, "evidence": rolling}
     if op and sig.get("open_stale"):
         return None      # "now open" next to a date long past: we do not call it open on that
-    if op and (program.get("deadline") or {}).get("kind") != "fixed":
+    if op and (program.get("deadline") or {}).get("kind") not in ("fixed", "closed"):   # a catalog entry that says closed is never turned to open by a banner alone
         return {"status": "open", "deadline": program.get("deadline") or {"kind": "none_published", "date": None, "note": ""}, "evidence": op}
     return None
 

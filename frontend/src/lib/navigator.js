@@ -117,6 +117,7 @@ const STALE_OPEN_AFTER_DAYS = 21;
 export function effectiveStatus(p, today) {
   const status = STATUSES.includes(p.status) ? p.status : "check";
   const dl = p.deadline || {};
+  if (dl.kind === "closed" && status !== "paused") return "closed";
   if (dl.kind === "fixed") { const d = daysUntil(dl.date, today); if (d !== null && d < 0) return "closed"; }
   else if (status === "open") { const seen = daysUntil(p.last_checked, today); if (seen !== null && seen < -STALE_OPEN_AFTER_DAYS) return "check"; }
   return status;

@@ -1375,9 +1375,19 @@ async def list_mentors_route(
 
 
 # ---------- users / me ----------
+async def login_required_in_production(request: Request):
+    """Person-level data (members, their profiles, the demo 'me') is for signed-in people only on a real deployment.
+    The throwaway demo/dev/test environment (demo_mode) keeps the old open behaviour its tests and previews rely on."""
+    if demo_mode():
+        return None
+    return await get_current_user(request)
+
+
 @api_router.get("/me")
-async def get_me(role: str = Query("founder")):
-    """Return the demo 'me' user for a given role."""
+async def get_me(role: str = Query("founder"), _viewer: Optional[dict] = Depends(login_required_in_production)):
+    """Return the demo 'me' user for a given role. Demo environments only: a real deployment has no demo user."""
+    if not demo_mode():
+        raise HTTPException(status_code=404, detail="Not found")
     user = await db.users.find_one({"is_demo_me_for_role": role})
     if not user:
         # fallback to first user with the requested role
@@ -1403,6 +1413,7 @@ async def list_users(
     member_kind: Optional[str] = None,    # founder | mentor | alumni | partner | guest
     saved: Optional[bool] = None,
     request: Request = None,
+    _viewer: Optional[dict] = Depends(login_required_in_production),
 ):
     """Community directory search.
 
@@ -1540,7 +1551,7 @@ async def get_user_filters():
 
 
 @api_router.get("/users/{user_id}")
-async def get_user(user_id: str, request: Request):
+async def get_user(user_id: str, request: Request, _viewer: Optional[dict] = Depends(login_required_in_production)):
     user = await db.users.find_one({"id": user_id})
     if not user:
         raise HTTPException(status_code=404, detail="User not found")

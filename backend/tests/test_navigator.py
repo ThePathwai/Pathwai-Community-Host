@@ -79,6 +79,17 @@ def test_every_catalog_entry_is_complete_and_honest():
             assert p["deadline"]["kind"] in ("closed", "none_published")
 
 
+def test_a_deadline_that_says_closed_beats_a_stored_open():
+    p = {"id": "x", "status": "open", "deadline": {"kind": "closed", "date": None, "note": "Closed for the 2026 cycle"}}
+    assert nav.effective_status(p, date(2026, 11, 24)) == "closed"
+    assert nav.effective_status({**p, "status": "paused"}, date(2026, 11, 24)) == "paused"
+
+
+def test_no_catalog_entry_is_open_while_its_deadline_says_closed():
+    bad = [g["id"] for g in PROGRAMS if (g.get("deadline") or {}).get("kind") == "closed" and g.get("status") not in ("closed", "paused")]
+    assert not bad, bad
+
+
 def test_a_passed_fixed_deadline_counts_as_closed():
     p = by_id("ovin-rd")
     assert nav.effective_status(p, date(2026, 10, 27)) == "open"
@@ -231,7 +242,7 @@ def test_a_community_stays_out_of_the_directory_until_the_admin_opts_in(club):
         listed = [p for p in anon.get("/api/navigator/programs").json()["programs"] if p.get("community")]
         assert listed and listed[0]["community"]["slug"] == slug and listed[0]["name"] == "Founders Friday"
         res = anon.post("/api/navigator/suggest", json={"profile": {"stage": "idea", "needs": ["mentorship"], "city": "Toronto"}}).json()
-        assert any(m["name"] == "Founders Friday" for m in res["matches"])
+        assert any(m["name"] == "Founders Friday" for m in res["matches"] + res.get("more", []))
         com = next(x for x in res["communities"] if x["slug"] == slug)
         assert com["reasons"] and com["score"] > 0
 

@@ -384,6 +384,8 @@ def effective_status(program: Dict[str, Any], today: date) -> str:
     for three weeks is shown as "dates not posted": we do not say "Open now" about something we have not seen recently."""
     status = program.get("status") if program.get("status") in STATUSES else "check"
     dl = program.get("deadline") or {}
+    if dl.get("kind") == "closed" and status != "paused":
+        return "closed"   # the deadline itself says closed, so no stored "open" can win over it
     if dl.get("kind") == "fixed":
         d = _days_until(dl.get("date"), today)
         if d is not None and d < 0:

@@ -133,3 +133,9 @@ def test_a_stored_reading_made_under_older_timing_rules_does_not_override_the_ca
     assert out["status"] == "closed" and "timing" not in out["page_check"]
     new = {**old, "timing_rules": pc.TIMING_RULES}
     assert pc.merge_check(prog, new)["status"] == "open"
+
+
+def test_an_open_banner_never_turns_a_closed_catalog_entry_to_open():
+    prog = {"id": "x", "name": "X", "status": "closed", "deadline": {"kind": "closed", "date": None, "note": "Closed for the 2026 cycle"}}
+    sig = {"deadline": None, "closed": None, "open": "Applications are open", "rolling": None, "past_close": None, "open_stale": False}
+    assert pc.decide_timing(prog, sig, date(2026, 11, 24)) is None

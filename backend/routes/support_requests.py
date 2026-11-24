@@ -5,7 +5,7 @@ from fastapi import APIRouter, Depends, HTTPException, Request
 from pydantic import BaseModel
 
 from auth import get_current_user, get_current_user_optional
-from database import db
+from database import db, demo_mode
 from ._common import check_image, audit, clean, lower_set, now_iso
 from .notifications import notify
 
@@ -47,6 +47,8 @@ async def list_requests(
     q: Optional[str] = None,
 ):
     me = await get_current_user_optional(request)
+    if me is None and not demo_mode():
+        raise HTTPException(status_code=401, detail="Not authenticated")   # members' requests are for signed-in people on a real deployment
     query = {}
     if status and status != "all":
         query["status"] = status

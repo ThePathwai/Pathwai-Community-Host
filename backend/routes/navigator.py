@@ -20,8 +20,8 @@ from pydantic import BaseModel, Field
 import journey as jny
 import navigator as nav
 import navigator_guide as guide
-from auth import client_ip, rate_limit, require_role
-from database import COMMUNITY_SLUGS, db, dbfor, hub_db
+from auth import client_ip, get_current_user, rate_limit, require_role
+from database import COMMUNITY_SLUGS, db, dbfor, demo_mode, hub_db
 from program_check import merge_check
 from program_job import load_checks, summarize
 from ._common import audit, now_iso
@@ -136,8 +136,13 @@ async def navigator_programs(q: str = "", type: str = "", province: str = "", st
 
 
 @router.get("/navigator/checks")
-async def navigator_checks() -> Dict[str, Any]:
-    """How the page reader is doing: how many programs it has read, how many requirements it could confirm, and the programs it could not read (with why)."""
+async def navigator_checks(request: Request) -> Dict[str, Any]:
+    """How the page reader is doing: how many programs it has read, how many requirements it could confirm, and the programs it could not read (with why).
+    Internal quality data: on a real deployment only a signed-in admin sees it."""
+    if not demo_mode():
+        me = await get_current_user(request)
+        if me.get("role") != "admin":
+            raise HTTPException(status_code=403, detail="Insufficient permissions")
     return summarize(await _page_checks(), nav.load_catalog()["programs"])
 
 
