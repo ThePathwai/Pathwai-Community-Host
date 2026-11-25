@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { Link, useLocation } from "react-router-dom";
-import { ArrowRight, Bookmark, CalendarDays, Check, ChevronDown, Compass, EyeOff, Flag, Pencil, Rocket, Search, SlidersHorizontal, Users } from "../components/icons";
+import { ArrowRight, Bookmark, CalendarDays, Check, ChevronDown, Compass, EyeOff, Flag, LayoutGrid, Pencil, Rocket, Rows, Search, SlidersHorizontal, Users } from "../components/icons";
 import { api } from "../lib/api";
 import { useAuth } from "../lib/auth";
 import { Wordmark, PoweredBy, Spinner, cx } from "../components/ui";
@@ -338,6 +338,22 @@ function BrowseRow({ p, onOpen, mark }) {
   );
 }
 
+// The same program as a small square tile for the phone's two-up grid: kind, name, who runs it, whether you can apply. Tap for the detail.
+function BrowseTile({ p, onOpen, mark }) {
+  const { color } = typeMeta(p.type);
+  const dl = deadlineInfo(p);
+  return (
+    <button type="button" onClick={() => onOpen(p)} data-testid={`program-${p.id}`} className="flex h-full min-h-[156px] w-full flex-col rounded-2xl border border-line p-3 text-left transition active:scale-[.98]"
+      style={{ background: `linear-gradient(150deg, ${tint(color, 0.12)} 0%, transparent 60%), rgb(var(--c-surface))` }}>
+      <span className="flex items-center justify-between gap-2"><TypeTile type={p.type} size={32} /><span className="flex items-center gap-1.5">{mark === "yes" && <Bookmark className="h-3.5 w-3.5 text-sky-500" aria-label="Interested" />}{p.fit && <FitMeter fit={p.fit} showLabel={false} />}</span></span>
+      <span className="mt-2 block truncate text-[10px] font-semibold uppercase text-muted" style={{ letterSpacing: "0.1em" }}>{TYPE_LABEL[p.type] || p.type}</span>
+      <span className="line-clamp-3 block text-[14px] font-semibold leading-snug">{p.name}</span>
+      <span className="mt-0.5 line-clamp-1 block text-xs text-muted">{p.community ? `From ${p.community.name}` : p.org}</span>
+      <span className="mt-auto flex flex-wrap items-center gap-1 pt-2"><Status status={p.status} />{dl && (dl.soon || dl.urgent) && <span className="whitespace-nowrap text-[11px] font-semibold text-amber-600 dark:text-amber-400">{dl.short === "Today" ? "Closes today" : `${dl.short} left`}</span>}</span>
+    </button>
+  );
+}
+
 // The phone version of For you: three views, one at a time. Top picks (the one thing to do, then a few more), Your path (the stages), All (the full list with filters).
 function PhoneForYou({ res, onOpen, tracked, onTrack, imap, nudge, generic, loading }) {
   const [v, setV] = useState("picks");
@@ -598,8 +614,12 @@ function Directory({ meta, onOpen, imap, eco, fitRes, account, hasProfile, start
   const [f, setF] = useState(() => ({ ...BLANK, type: startType && startType !== "events" ? startType : "" }));
   const [rowsAll, setRows] = useState(null);
   const phone = useMedia("(max-width: 639px)");
-  const [limit, setLimit] = useState(20);   // 600+ programs: show a screenful, then more on request
-  const step = phone ? 20 : 24;
+  // On a phone the list is a two-up grid of small tiles (or short rows, one tap to switch); the choice is remembered on this phone.
+  const [layout, setLayoutRaw] = useState(() => { try { return localStorage.getItem("pw_browse_layout") === "rows" ? "rows" : "grid"; } catch { return "grid"; } });
+  const setLayout = (v) => { setLayoutRaw(v); try { localStorage.setItem("pw_browse_layout", v); } catch { /* private window: fine */ } };
+  const tiles = phone && layout === "grid";
+  const step = !phone ? 24 : tiles ? 12 : 20;
+  const [limit, setLimit] = useState(step);   // 600+ programs: show a screenful, then more on request
   const [moreOpen, setMoreOpen] = useState(false);   // phones: only search and kind show; need, place and timing fold away
   const [ev, setEv] = useState(startType === "events");   // "Events" is one more kind in this list: pick it and the list below becomes upcoming events
   const [all, setAll] = useState([]);
@@ -613,7 +633,7 @@ function Directory({ meta, onOpen, imap, eco, fitRes, account, hasProfile, start
     return () => { live = false; clearTimeout(t); };
   }, [f.q, f.type, f.province, f.need, f.region]);
   const rows = useMemo(() => (rowsAll && f.timing ? rowsAll.filter((p) => timingMatch(f.timing, p)) : rowsAll), [rowsAll, f.timing]);
-  useEffect(() => { setLimit(phone ? 20 : 24); }, [f.q, f.type, f.need, f.region, f.timing, ev, phone]);
+  useEffect(() => { setLimit(step); }, [f.q, f.type, f.need, f.region, f.timing, ev, step]);
   const set = (k, v) => setF((o) => ({ ...o, [k]: v }));
   // Signed in with a startup profile: every program here carries the same "why it may fit / why it may not" as For you.
   const fitById = useMemo(() => {
@@ -677,7 +697,12 @@ function Directory({ meta, onOpen, imap, eco, fitRes, account, hasProfile, start
       {ev ? <div className="mt-6"><FounderEvents embedded /></div> : <>
       <div className="mb-3 mt-5 flex items-center justify-between gap-3">
         <p className="text-sm font-medium" data-testid="dir-count">{rows ? `${rows.length} program${rows.length === 1 ? "" : "s"}` : ""}{f.region && rows ? <span className="font-normal text-muted"> in or open to {(meta.regions || []).find((r) => r.key === f.region)?.label}</span> : null}{hasProfile && fitRes && rows?.length > 1 ? <span className="font-normal text-muted"> · best fit first</span> : null}</p>
-        {active && <button type="button" onClick={() => setF(BLANK)} className="text-sm font-semibold text-muted underline hover:text-ink" data-testid="dir-clear">Clear filters</button>}
+        <div className="flex shrink-0 items-center gap-3">
+  {active && <button type="button" onClick={() => setF(BLANK)} className="text-sm font-semibold text-muted underline hover:text-ink" data-testid="dir-clear">Clear filters</button>}
+        {phone && <div className="inline-flex shrink-0 rounded-full border border-line p-0.5" role="group" aria-label="Layout">
+          {[["grid", LayoutGrid, "Grid"], ["rows", Rows, "List"]].map(([k, I, t]) => <button key={k} type="button" onClick={() => setLayout(k)} aria-pressed={layout === k} aria-label={t} data-testid={`dir-layout-${k}`} className={cx("flex h-8 w-9 items-center justify-center rounded-full transition", layout === k ? "" : "text-muted")} style={layout === k ? { background: "var(--accent)", color: "var(--on-accent)" } : undefined}><I className="h-4 w-4" aria-hidden /></button>)}
+        </div>}
+        </div>
       </div>
       {!hasProfile && !ev && (
         <ProfilePrompt className="mb-5" to={account ? "/me?edit=startup" : "/signup?for=founder"} testId="dir-no-profile" tour="profile-bar"
@@ -688,7 +713,7 @@ function Directory({ meta, onOpen, imap, eco, fitRes, account, hasProfile, start
       )}
       {!rows ? <Spinner /> : rows.length === 0 ? <p className="rounded-2xl border border-dashed border-line p-8 text-center text-muted">Nothing matches. Try clearing a filter.</p>
         : <>
-          <div className={phone ? "space-y-2" : "grid grid-cols-[minmax(0,1fr)] gap-3 md:grid-cols-[repeat(2,minmax(0,1fr))] 2xl:grid-cols-[repeat(3,minmax(0,1fr))]"}>{ordered.slice(0, limit).map((q) => { const p = hasProfile && fitById[q.id] ? { ...q, ...fitById[q.id] } : q; return phone ? <BrowseRow key={p.id} p={p} onOpen={onOpen} mark={imap?.[p.id]} /> : <ProgramCard key={p.id} p={p} onOpen={onOpen} mark={imap?.[p.id]} badge={badgeFor(p, eco)} />; })}</div>
+          <div className={tiles ? "grid grid-cols-2 gap-2.5" : phone ? "space-y-2" : "grid grid-cols-[minmax(0,1fr)] gap-3 md:grid-cols-[repeat(2,minmax(0,1fr))] 2xl:grid-cols-[repeat(3,minmax(0,1fr))]"}>{ordered.slice(0, limit).map((q) => { const p = hasProfile && fitById[q.id] ? { ...q, ...fitById[q.id] } : q; return tiles ? <BrowseTile key={p.id} p={p} onOpen={onOpen} mark={imap?.[p.id]} /> : phone ? <BrowseRow key={p.id} p={p} onOpen={onOpen} mark={imap?.[p.id]} /> : <ProgramCard key={p.id} p={p} onOpen={onOpen} mark={imap?.[p.id]} badge={badgeFor(p, eco)} />; })}</div>
           {ordered.length > limit && <div className="mt-5 flex flex-col items-center gap-1"><button type="button" onClick={() => setLimit((n) => n + step)} className="btn-ghost w-full sm:w-auto" data-testid="dir-more">Show {Math.min(step, ordered.length - limit)} more</button><p className="text-xs text-muted">Showing {limit} of {ordered.length}. Search or pick a kind to narrow the list.</p></div>}
         </>}
       </>}
