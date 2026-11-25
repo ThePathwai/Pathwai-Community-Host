@@ -13,6 +13,7 @@ import { useTracked } from "../lib/useTracked";
 import { useInterest } from "../lib/useInterest";
 import { useEcosystem } from "../lib/ecosystem";
 import Trajectory from "../components/Trajectory";
+import ProfilePrompt from "../components/ProfilePrompt";
 import AccountShell, { useShell } from "../components/AccountShell";
 import GuideChat from "../components/GuideChat";
 import FounderEvents from "./FounderEvents";
@@ -87,7 +88,7 @@ function SignedOutGate() {
     <section className="relative overflow-hidden rounded-3xl border border-line p-4 sm:p-10" style={{ background: "radial-gradient(110% 130% at 100% 0%, rgb(var(--c-ink) / 0.10) 0%, transparent 55%), rgb(var(--c-surface))" }} aria-label="Your profile" data-testid="nav-gate">
       <span className="flex h-10 w-10 items-center justify-center rounded-full sm:h-12 sm:w-12" style={{ background: "var(--accent)", color: "var(--on-accent)" }}><Rocket className="h-5 w-5 sm:h-6 sm:w-6" aria-hidden /></span>
       <h2 className="mt-4 max-w-xl text-2xl leading-tight sm:mt-5 sm:text-4xl" style={{ textWrap: "balance", textTransform: "none", letterSpacing: "-0.03em", fontWeight: 800 }}>Your profile picks the programs</h2>
-      <p className="mt-2 max-w-xl text-sm text-muted sm:mt-3 sm:text-base">Tell Pathwai about your startup once, in your profile. This page, the communities suggested to you and the guide all follow it and update when it changes. There is no form to fill in here.</p>
+      <p className="mt-2 max-w-xl text-sm text-muted sm:mt-3 sm:text-base">Tell Pathwai about your startup once. Your programs, events, deadlines and the guide all follow it and update when it changes. Free, and nothing to fill in on this page.</p>
       <div className="mt-6 flex flex-col gap-2 sm:flex-row">
         <Link to="/signup?for=founder" className="btn-primary !px-6 !py-3 text-sm" data-testid="nav-gate-signup">Create your profile<ArrowRight className="h-4 w-4" /></Link>
         <Link to="/login?next=navigator" className="btn-ghost !px-6 !py-3 text-sm" data-testid="nav-gate-signin">Sign in</Link>
@@ -102,8 +103,8 @@ function SignedOutGate() {
       </div>
       <div className="mt-8 rounded-2xl bg-ink/[.05] p-4 sm:max-w-xl">
         <p className="text-sm font-semibold">See it first</p>
-        <p className="mt-1 text-sm text-muted">Fife Ashley-Dejo is a founder with one profile and one practice community. Open the demo to see how one profile drives everything, and how to hop between all of Canada and a community.</p>
-        <button type="button" onClick={() => startDemo("founder")} className="btn-ghost mt-3 !py-2 text-sm" data-testid="nav-gate-demo">Open Fife's profile (demo)<ArrowRight className="h-4 w-4" /></button>
+        <p className="mt-1 text-sm text-muted">Open a sample founder to see how one profile picks the programs, events and next steps. Nothing you do there is saved.</p>
+        <button type="button" onClick={() => startDemo("founder")} className="btn-ghost mt-3 !py-2 text-sm" data-testid="nav-gate-demo">Open the sample founder<ArrowRight className="h-4 w-4" /></button>
       </div>
     </section>
   );
@@ -655,11 +656,11 @@ function Directory({ meta, onOpen, imap, eco, fitRes, account, hasProfile, start
         {active && <button type="button" onClick={() => setF(BLANK)} className="text-sm font-semibold text-muted underline hover:text-ink" data-testid="dir-clear">Clear filters</button>}
       </div>
       {!hasProfile && !ev && (
-        <Link to={account ? "/me?edit=startup" : "/signup?for=founder"} className="mb-4 flex items-center gap-3 rounded-2xl border border-dashed border-line p-4 text-sm transition hover:border-ink/40" data-testid="dir-no-profile" data-tour="profile-bar">
-          <Compass className="h-5 w-5 shrink-0 text-muted" aria-hidden />
-          <span className="min-w-0 flex-1"><span className="block font-semibold">{account ? "Add your startup to see why each one fits you, or doesn't" : "Create a free profile to see why each one fits you, or doesn't"}</span><span className="block text-muted">Every program would then say why it may suit you and what to watch out for.</span></span>
-          <ArrowRight className="h-4 w-4 shrink-0" aria-hidden />
-        </Link>
+        <ProfilePrompt className="mb-5" to={account ? "/me?edit=startup" : "/signup?for=founder"} testId="dir-no-profile" tour="profile-bar"
+          title={account ? "Add your startup to see which programs fit you" : "Create a free profile to see which programs fit you"}
+          body="Right now you're seeing every program. With a profile, each one tells you why it fits, or doesn't, and what to watch out for."
+          points={["Programs ranked by how well they match you", "Why each one fits, or doesn't", "Deadlines and events picked for your stage"]}
+          cta={account ? "Add my startup" : "Create my free profile"} />
       )}
       {!rows ? <Spinner /> : rows.length === 0 ? <p className="rounded-2xl border border-dashed border-line p-8 text-center text-muted">Nothing matches. Try clearing a filter.</p>
         : <div className="grid grid-cols-[minmax(0,1fr)] gap-3 md:grid-cols-[repeat(2,minmax(0,1fr))] 2xl:grid-cols-[repeat(3,minmax(0,1fr))]">{ordered.map((q) => { const p = hasProfile && fitById[q.id] ? { ...q, ...fitById[q.id] } : q; return <ProgramCard key={p.id} p={p} onOpen={onOpen} mark={imap?.[p.id]} badge={badgeFor(p, eco)} />; })}</div>}

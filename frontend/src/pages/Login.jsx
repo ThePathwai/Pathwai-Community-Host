@@ -110,11 +110,11 @@ export default function Login() {
       setStatus(data.joined.status === "rejected" ? "rejected" : "pending");
       return;
     }
-    if (data.new_account) toast.success("You're in. Apply to a community to get started.");
+    if (data.new_account) toast.success("You're in. Add your startup to see programs that fit you.");
     nav(params.get("next") === "navigator" ? "/navigator" : "/", { replace: true });
   };
 
-  const founderAcct = { demo_role: "founder", email: "founder@yourcommunity.app", label: "Founder, one community", description: "Fife Ashley-Dejo has one profile and belongs to a practice community. Hop between all of Canada and the community with one tap; the same profile drives both." };
+  const founderAcct = { demo_role: "founder", email: "founder@yourcommunity.app", label: "Sample founder", description: "A ready-made founder profile. See how one profile picks the programs, events and next steps. Nothing you do is saved." };
   const hostAcct = { demo_role: "host", email: "host@thevillage.example", label: "Community host demo", description: "Sign in as the host of The Village, a private dinner club, and review who has asked to join." };
   const demoItems = [...(inDemo && !PREVIEW ? [] : [["hub", "Demo hub"]]), ...(demo.accounts.length ? [["accounts", "Accounts"]] : [])];
   const demoShown = demoItems.some(([k]) => k === demoTab) ? demoTab : demoItems[0]?.[0];

@@ -1,10 +1,11 @@
 import React, { useCallback, useContext, useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { toast } from "sonner";
-import { ArrowRight, ArrowUpRight, CalendarDays, Check, ChevronDown, ChevronLeft, ChevronRight, MapPin, Search, TriangleAlert, Video } from "lucide-react";
+import { ArrowUpRight, CalendarDays, Check, ChevronDown, ChevronLeft, ChevronRight, MapPin, Search, TriangleAlert, Video } from "lucide-react";
 import { api } from "../lib/api";
 import { useAuth } from "../lib/auth";
 import AccountShell from "../components/AccountShell";
+import ProfilePrompt from "../components/ProfilePrompt";
 import { Spinner, cx } from "../components/ui";
 
 // Events: upcoming networking, pitch, mentor and learning events for founders, read from public event pages and ranked for your startup
@@ -304,11 +305,10 @@ export default function FounderEvents({ embedded }) {
       <p className="mt-2 max-w-2xl text-sm text-muted">Upcoming networking, pitch, mentor and learning events{prov ? ` in ${prov} and online` : ""}{hasProfile ? ", picked for your stage, sector, group and what you asked for" : ""}. Each one links to the organizer's own page.</p>
 
       {data && !data.has_profile && (
-        <Link to={account ? "/me?edit=startup" : "/signup"} className="mt-5 flex items-center gap-3 rounded-2xl border border-dashed border-line p-4 text-sm transition hover:border-ink/40" data-testid="events-no-profile">
-          <CalendarDays className="h-5 w-5 shrink-0 text-muted" aria-hidden />
-          <span className="min-w-0 flex-1"><span className="block font-semibold">{account ? "Add your startup to see events that fit you" : "Create a free account to see events that fit you"}</span><span className="block text-muted">Every upcoming event is listed below. Your province, what you need and your group pick out the ones that fit.</span></span>
-          <ArrowRight className="h-4 w-4 shrink-0" aria-hidden />
-        </Link>
+        <ProfilePrompt className="mt-5" to={account ? "/me?edit=startup" : "/signup?for=founder"} testId="events-no-profile"
+          title={account ? "Add your startup to see events that fit you" : "Create a free profile to see events that fit you"}
+          body="Every upcoming event is listed below. With a profile, your province, stage and what you need pick out the ones worth your time."
+          cta={account ? "Add my startup" : "Create my free profile"} />
       )}
 
       <div className="mt-5 flex flex-wrap items-center justify-between gap-2.5 sm:mt-6 sm:gap-3">
