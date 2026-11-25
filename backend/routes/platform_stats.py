@@ -69,9 +69,96 @@ def _ref_host(raw: str, own: str) -> str:
     return "" if not h or h == own else h[:60]
 
 
+# Where a visit came from and on what, kept to coarse labels only. The browser says its time zone and language; the server turns the
+# time zone into a country and a nearest city (no IP lookup, no outside service) and the browser string into a device, system and
+# browser. The IP address and the raw browser string are never stored.
+_ZONES: Optional[Dict[str, tuple]] = None
+
+
+def _zone_places() -> Dict[str, tuple]:
+    global _ZONES
+    if _ZONES is None:
+        _ZONES = {}
+        try:
+            import importlib.resources as res
+            for line in res.files("tzdata.zoneinfo").joinpath("zone.tab").read_text().splitlines():
+                if line.startswith("#") or not line.strip():
+                    continue
+                cols = line.split("\t")
+                if len(cols) >= 3:
+                    _ZONES[cols[2]] = (cols[0], cols[2].split("/")[-1].replace("_", " "))
+        except Exception:  # noqa: BLE001 -- no time zone table: places just show as unknown
+            pass
+    return _ZONES
+
+
+def place_from(tz: str, header_country: str = "") -> Dict[str, str]:
+    zone_cc, city = _zone_places().get((tz or "")[:64], ("", ""))
+    cc = zone_cc
+    hc = (header_country or "").strip().upper()
+    if len(hc) == 2 and hc.isalpha() and hc not in ("XX", "T1"):
+        cc = hc  # a country the host already worked out (for example from Cloudflare) wins over the time zone
+    return {"country": cc, "city": city if cc == zone_cc else ""}
+
+
+_IN_APPS = (("linkedinapp", "LinkedIn"), ("instagram", "Instagram"), ("fban", "Facebook"), ("fbav", "Facebook"), ("twitter", "X"), ("snapchat", "Snapchat"),
+            ("tiktok", "TikTok"), ("musical_ly", "TikTok"), ("micromessenger", "WeChat"), ("pinterest", "Pinterest"))
+_BOTS = ("bot", "crawl", "spider", "preview", "headless", "curl/", "python-requests", "httpx", "wget", "facebookexternalhit", "slurp")
+
+
+def parse_ua(ua: str) -> Optional[Dict[str, str]]:
+    """Device, system, browser and the app a link was opened in (if any), as plain words. None for robots."""
+    l = (ua or "").lower()
+    if not l or any(b in l for b in _BOTS):
+        return None
+    if "ipad" in l or "tablet" in l or ("android" in l and "mobile" not in l):
+        device = "Tablet"
+    elif "mobi" in l or "iphone" in l or "android" in l:
+        device = "Mobile"
+    else:
+        device = "Desktop"
+    if "iphone" in l or "ipad" in l or "ipod" in l:
+        system = "iOS"
+    elif "android" in l:
+        system = "Android"
+    elif "windows" in l:
+        system = "Windows"
+    elif "cros" in l:
+        system = "ChromeOS"
+    elif "mac os x" in l or "macintosh" in l:
+        system = "macOS"
+    elif "linux" in l:
+        system = "Linux"
+    else:
+        system = "Other"
+    if "edg/" in l or "edga/" in l or "edgios/" in l:
+        browser = "Edge"
+    elif "opr/" in l or "opera" in l:
+        browser = "Opera"
+    elif "samsungbrowser" in l:
+        browser = "Samsung Internet"
+    elif "firefox" in l or "fxios" in l:
+        browser = "Firefox"
+    elif "chrome" in l or "crios" in l:
+        browser = "Chrome"
+    elif "safari" in l:
+        browser = "Safari"
+    else:
+        browser = "Other"
+    app = next((name for key, name in _IN_APPS if key in l), "")
+    return {"device": device, "os": system, "browser": browser, "in_app": app}
+
+
+def _tag(v: Any) -> str:
+    return re.sub(r"[^a-z0-9._-]", "", str(v or "").lower())[:40]
+
+
 class TrackIn(BaseModel):
     path: str = Field(default="/", max_length=300)
     ref: str = Field(default="", max_length=300)
+    tz: str = Field(default="", max_length=64)
+    lang: str = Field(default="", max_length=16)
+    utm: Dict[str, str] = Field(default_factory=dict)
 
 
 @router.post("/hub/track", status_code=204)
@@ -96,11 +183,18 @@ async def track(body: TrackIn, request: Request):
             return Response(status_code=204)
         stamp = datetime.now(timezone.utc)
         day = _day(stamp)
-        ua = (request.headers.get("user-agent") or "")[:200]
+        ua = (request.headers.get("user-agent") or "")[:300]
+        agent = parse_ua(ua)
+        if agent is None:  # robots and link-preview fetchers are not visitors
+            return Response(status_code=204)
+        place = place_from(body.tz, request.headers.get("cf-ipcountry", ""))
+        lang = re.sub(r"[^a-z]", "", (body.lang or "").lower().split("-")[0])[:3]
+        utm = {k: _tag((body.utm or {}).get(k)) for k in ("source", "medium", "campaign")}
         visitor = hashlib.sha256(f"{JWT_SECRET}|{day}|{ip}|{ua}".encode()).hexdigest()[:16]
         own = (request.headers.get("host") or "").split(":")[0].lower().removeprefix("www.")
         await hub_db().web_events.insert_one({"ts": stamp, "day": day, "path": path, "visitor": visitor, "signed_in": bool(acc),
-                                              "ref": _ref_host(body.ref, own)})
+                                              "ref": _ref_host(body.ref, own), **place, **agent, "lang": lang,
+                                              "utm_source": utm["source"], "utm_medium": utm["medium"], "utm_campaign": utm["campaign"]})
         if acc and acc.get("id") and now - _seen_active.get(acc["id"], 0) > 900:
             _seen_active[acc["id"]] = now
             await hub_db().accounts.update_one({"id": acc["id"]}, {"$set": {"last_active_at": stamp.isoformat()}})
@@ -170,6 +264,46 @@ def _demand(accounts: List[dict]) -> Dict[str, Any]:
     }
 
 
+def _audience(people: List[dict]) -> Dict[str, Any]:
+    """Who visited, as counts of people (one per person per day): country, nearest city, device, system, browser, app, language and campaign."""
+    def top(counter: Counter, k: int = 8):
+        return counter.most_common(k)
+    countries: Counter = Counter()
+    cities: Counter = Counter()
+    devices: Counter = Counter()
+    systems: Counter = Counter()
+    browsers: Counter = Counter()
+    apps: Counter = Counter()
+    langs: Counter = Counter()
+    campaigns: Counter = Counter()
+    for e in people:
+        if e.get("country"):
+            countries[e["country"]] += 1
+        if e.get("city"):
+            cities[(e["city"], e.get("country") or "")] += 1
+        if e.get("device"):
+            devices[e["device"]] += 1
+            systems[e.get("os") or "Other"] += 1
+            browsers[e.get("browser") or "Other"] += 1
+        if e.get("in_app"):
+            apps[e["in_app"]] += 1
+        if e.get("lang"):
+            langs[e["lang"]] += 1
+        if e.get("utm_source") or e.get("utm_campaign") or e.get("utm_medium"):
+            campaigns[(e.get("utm_source") or "", e.get("utm_medium") or "", e.get("utm_campaign") or "")] += 1
+    return {
+        "people": len(people),
+        "countries": [{"code": k, "visitors": c} for k, c in top(countries)],
+        "cities": [{"city": k[0], "country": k[1], "visitors": c} for k, c in top(cities)],
+        "devices": [{"label": k, "visitors": c} for k, c in top(devices)],
+        "systems": [{"label": k, "visitors": c} for k, c in top(systems)],
+        "browsers": [{"label": k, "visitors": c} for k, c in top(browsers)],
+        "apps": [{"label": k, "visitors": c} for k, c in top(apps)],
+        "languages": [{"code": k, "visitors": c} for k, c in top(langs)],
+        "campaigns": [{"source": k[0], "medium": k[1], "campaign": k[2], "visitors": c} for k, c in top(campaigns)],
+    }
+
+
 def _row(a: dict) -> Dict[str, Any]:
     st = a.get("startup") or {}
     return {
@@ -195,9 +329,11 @@ async def overview(days: int = Query(30, ge=7, le=90), acc: dict = Depends(requi
     pages: Counter = Counter()
     refs: Counter = Counter()
     signed = 0
+    who: Dict[tuple, dict] = {}
     async for e in hub_db().web_events.find({"day": {"$gte": first}}, {"_id": 0}):
         views[e["day"]] += 1
         visitors[e["day"]].add(e["visitor"])
+        who.setdefault((e["day"], e["visitor"]), e)  # one entry per person per day, from their first page view
         pages[e["path"]] += 1
         signed += 1 if e.get("signed_in") else 0
         if e.get("ref"):
@@ -241,6 +377,7 @@ async def overview(days: int = Query(30, ge=7, le=90), acc: dict = Depends(requi
                      "series": [{"day": d, "signups": signups.get(d, 0)} for d in span]},
         "funnel": [{"label": k, "count": v, "share": round(v / n, 3) if n else 0} for k, v in funnel],
         "demand": _demand(accounts),
+        "audience": _audience(list(who.values())),
     }
 
 

@@ -275,8 +275,13 @@ export default function FounderEvents({ embedded }) {
     return () => clearTimeout(t);
   }, [account, loading, q, topic, free, online]);
 
-  const list = useMemo(() => (data ? (view === "fit" ? data.events : data.others) : []), [data, view]);
   const hasProfile = !!data?.has_profile;
+  // No startup on the account yet: nothing is picked for anyone, so show every upcoming event in date order and no "for you" list.
+  const list = useMemo(() => {
+    if (!data) return [];
+    if (!data.has_profile) return [...(data.events || []), ...(data.others || [])].sort((a, b) => (a.date + (a.time || "")).localeCompare(b.date + (b.time || "")));
+    return view === "fit" ? data.events : data.others;
+  }, [data, view]);
   const topicLabel = (data?.topics || []).find((t) => t.key === topic)?.label || "";
   const label = [topicLabel, q.trim() && `\u201c${q.trim()}\u201d`].filter(Boolean).join(" + ");
   const mctx = useMemo(() => ({ other: view === "other", filtersOn: !!(topic || q.trim()), label, topicLabel, hasProfile }), [view, topic, q, label, topicLabel, hasProfile]);
@@ -296,23 +301,23 @@ export default function FounderEvents({ embedded }) {
     <div className="mx-auto w-full max-w-5xl" data-testid="events-page">
       <p className="eyebrow">Events</p>
       <h1 className="mt-2 text-3xl sm:text-4xl" style={{ textTransform: "none", letterSpacing: "-0.03em", fontWeight: 800, textWrap: "balance" }}>Events for founders</h1>
-      <p className="mt-2 max-w-2xl text-sm text-muted">Upcoming networking, pitch, mentor and learning events{prov ? ` in ${prov} and online` : ""}, picked for your stage, sector, group and what you asked for. Each one links to the organizer's own page.</p>
+      <p className="mt-2 max-w-2xl text-sm text-muted">Upcoming networking, pitch, mentor and learning events{prov ? ` in ${prov} and online` : ""}{hasProfile ? ", picked for your stage, sector, group and what you asked for" : ""}. Each one links to the organizer's own page.</p>
 
       {data && !data.has_profile && (
         <Link to={account ? "/me?edit=startup" : "/signup"} className="mt-5 flex items-center gap-3 rounded-2xl border border-dashed border-line p-4 text-sm transition hover:border-ink/40" data-testid="events-no-profile">
           <CalendarDays className="h-5 w-5 shrink-0 text-muted" aria-hidden />
-          <span className="min-w-0 flex-1"><span className="block font-semibold">{account ? "Add your startup to see events that fit you" : "Create a free account to see events that fit you"}</span><span className="block text-muted">These are examples for Ontario. Your province, what you need and your group sharpen the list.</span></span>
+          <span className="min-w-0 flex-1"><span className="block font-semibold">{account ? "Add your startup to see events that fit you" : "Create a free account to see events that fit you"}</span><span className="block text-muted">Every upcoming event is listed below. Your province, what you need and your group pick out the ones that fit.</span></span>
           <ArrowRight className="h-4 w-4 shrink-0" aria-hidden />
         </Link>
       )}
 
       <div className="mt-5 flex flex-wrap items-center justify-between gap-2.5 sm:mt-6 sm:gap-3">
-        <div className="flex w-full rounded-full border border-line p-1 sm:inline-flex sm:w-auto" role="tablist">
+        {hasProfile ? <div className="flex w-full rounded-full border border-line p-1 sm:inline-flex sm:w-auto" role="tablist">
           {[["fit", `For you · ${data?.totals?.fit ?? 0}`], ["other", `Everything else · ${data?.totals?.others ?? 0}`]].map(([k, label]) => (
             <button key={k} role="tab" aria-selected={view === k} onClick={() => { setView(k); setLimit(12); }} data-testid={`events-tab-${k}`}
               className={cx("flex-1 whitespace-nowrap rounded-full px-3 py-2 text-sm font-medium transition sm:flex-none sm:px-4 sm:py-1.5", view === k ? "" : "text-muted hover:text-ink")} style={view === k ? { background: "var(--accent)", color: "var(--on-accent)" } : undefined}>{label}</button>
           ))}
-        </div>
+        </div> : <p className="text-sm text-muted" data-testid="events-count">{data ? `${list.length} upcoming event${list.length === 1 ? "" : "s"}` : ""}</p>}
         <label className="relative block min-w-0 flex-1 sm:w-64 sm:flex-none"><Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted" aria-hidden />
           <input type="search" value={q} onChange={(e) => { setQ(e.target.value); setLimit(12); }} placeholder="Search events" aria-label="Search events" data-testid="events-search" className="w-full rounded-full border border-line bg-transparent py-2 pl-9 pr-3 text-sm outline-none focus:border-ink/50" /></label>
       </div>
@@ -329,7 +334,7 @@ export default function FounderEvents({ embedded }) {
       {!data && !error ? <div className="mt-10"><Spinner /></div> : data && (
         <div className="mt-6 space-y-8">
           {view === "other" && <p className="text-sm text-muted">Real events too. They are outside your province or made for a group you have not said you belong to. Each card says why.</p>}
-          {list.length > 0 && view === "fit" && (
+          {hasProfile && list.length > 0 && view === "fit" && (
             <p className="flex items-start gap-2.5 rounded-2xl border border-line px-4 py-3 text-sm" data-testid="events-match-summary" style={mctx.filtersOn || nBest ? { background: TINT, borderColor: "var(--accent)" } : undefined}>
               <Check className="mt-0.5 h-4 w-4 shrink-0" aria-hidden />
               <span>
@@ -342,7 +347,7 @@ export default function FounderEvents({ embedded }) {
             </p>
           )}
           {list.length > 0 && <CalendarView list={list} />}
-          {view === "fit" && best.length > 0 && <div className="max-w-3xl"><BestWidget items={best} /></div>}
+          {hasProfile && view === "fit" && best.length > 0 && <div className="max-w-3xl"><BestWidget items={best} /></div>}
           {groups.length > 0 && <div className="max-w-3xl space-y-4" data-testid="events-timeline"><h2 className="text-lg" style={heading}>All upcoming events, by date</h2>{groups.map((g, gi) => <WeekWidget key={g.week} g={g} other={view === "other"} first={gi === 0} later={gi > 0 && groups[gi - 1].items[0].date.slice(0, 7) === g.items[0].date.slice(0, 7)} />)}</div>}
           {!list.length && (
             <div className="rounded-2xl border border-dashed border-line p-8 text-center" data-testid="events-empty">

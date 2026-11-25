@@ -121,3 +121,31 @@ def test_what_founders_are_looking_for_comes_from_real_choices(c):
     top = {p["name"]: p["saves"] for p in d["programs"]}
     assert top.get("Program A") == 2 and "Program B" not in top  # a program someone hid is not a save
     assert {"type": "grant", "label": "Grant", "saves": 2} in d["types"]
+
+
+IPHONE_LINKEDIN = "Mozilla/5.0 (iPhone; CPU iPhone OS 17_5 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Mobile/15E148 [LinkedInApp]/9.30"
+WIN_CHROME = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36"
+
+
+def test_the_audience_shows_where_and_on_what_people_came_without_storing_who(c):
+    from routes.platform_stats import parse_ua, place_from
+    assert parse_ua("Slackbot-LinkExpanding 1.0") is None and parse_ua("") is None  # robots are not visitors
+    assert parse_ua(IPHONE_LINKEDIN) == {"device": "Mobile", "os": "iOS", "browser": "Other", "in_app": "LinkedIn"}
+    assert parse_ua(WIN_CHROME) == {"device": "Desktop", "os": "Windows", "browser": "Chrome", "in_app": ""}
+    assert place_from("America/Toronto") == {"country": "CA", "city": "Toronto"}
+    assert place_from("Not/AZone") == {"country": "", "city": ""}
+    assert place_from("America/Toronto", "GB") == {"country": "GB", "city": ""}  # a host-supplied country wins; the city then no longer fits
+
+    c.post("/api/auth/logout")
+    h = {"user-agent": IPHONE_LINKEDIN}
+    assert c.post("/api/hub/track", json={"path": "/", "tz": "America/Toronto", "lang": "en-CA", "utm": {"source": "LinkedIn Post!", "medium": "social", "campaign": "pilot-1"}}, headers=h).status_code == 204
+    assert c.post("/api/hub/track", json={"path": "/", "tz": "Europe/London", "lang": "en-GB"}, headers={"user-agent": WIN_CHROME}).status_code == 204
+    assert c.post("/api/hub/track", json={"path": "/"}, headers={"user-agent": "Googlebot/2.1"}).status_code == 204
+    as_admin(c)
+    a = c.get("/api/hub/admin/overview?days=7").json()["audience"]
+    countries = {x["code"]: x["visitors"] for x in a["countries"]}
+    assert countries.get("CA", 0) >= 1 and countries.get("GB", 0) >= 1
+    assert {"city": "Toronto", "country": "CA", "visitors": 1} in a["cities"] or any(x["city"] == "Toronto" for x in a["cities"])
+    assert {x["label"] for x in a["devices"]} >= {"Mobile", "Desktop"}
+    assert {"label": "LinkedIn", "visitors": 1} in a["apps"]
+    assert any(x["source"] == "linkedinpost" and x["campaign"] == "pilot-1" for x in a["campaigns"])  # the tag is cleaned to plain characters

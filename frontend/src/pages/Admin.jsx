@@ -71,6 +71,52 @@ function Funnel({ steps }) {
   );
 }
 
+// Who visited: where, on what, and from which link. Counts are people (one per person per day).
+const region = (code) => { try { return new Intl.DisplayNames(["en"], { type: "region" }).of(code) || code; } catch { return code; } };
+const language = (code) => { try { return new Intl.DisplayNames(["en"], { type: "language" }).of(code) || code; } catch { return code; } };
+
+function Split({ title, rows, total, empty = "No data yet." }) {
+  return (
+    <div>
+      <p className="mb-2 text-sm font-semibold">{title}</p>
+      {rows.length ? (
+        <ol className="space-y-2.5">
+          {rows.map(([label, count, sub]) => (
+            <li key={`${label}-${sub || ""}`}>
+              <div className="mb-1 flex items-baseline justify-between gap-3 text-sm"><span className="min-w-0 truncate">{label}{sub ? <span className="text-muted"> · {sub}</span> : null}</span><span className="shrink-0 tabular-nums"><b>{n(count)}</b> <span className="text-muted">· {pct(total ? count / total : 0)}</span></span></div>
+              <div className="h-1.5 rounded-full bg-ink/[.07]"><div className="h-1.5 rounded-full" style={{ width: `${Math.max(2, total ? (count / total) * 100 : 0)}%`, background: "var(--accent)" }} /></div>
+            </li>
+          ))}
+        </ol>
+      ) : <p className="text-sm text-muted">{empty}</p>}
+    </div>
+  );
+}
+
+function Audience({ a }) {
+  const t = a.people;
+  return (
+    <Widget data-testid="admin-audience">
+      <Label>Who visited</Label>
+      <p className="mb-4 mt-1 text-xs text-muted">{n(t)} {t === 1 ? "person" : "people"} in this period (counted once per day). Place comes from the visitor&apos;s time zone, so it is approximate: a city means the main city in their time zone. No IP address or personal details are kept.</p>
+      {!t ? <p className="text-sm text-muted">No visits in this period yet.</p> : (
+        <div className="grid gap-x-8 gap-y-7 sm:grid-cols-2 lg:grid-cols-3">
+          <Split title="Countries" total={t} rows={a.countries.map((x) => [region(x.code), x.visitors])} empty="No place data yet." />
+          <Split title="Nearest city" total={t} rows={a.cities.map((x) => [x.city, x.visitors, region(x.country)])} empty="No place data yet." />
+          <Split title="Device" total={t} rows={a.devices.map((x) => [x.label, x.visitors])} />
+          <Split title="Operating system" total={t} rows={a.systems.map((x) => [x.label, x.visitors])} />
+          <Split title="Browser" total={t} rows={a.browsers.map((x) => [x.label, x.visitors])} />
+          <Split title="Opened inside an app" total={t} rows={a.apps.map((x) => [x.label, x.visitors])} empty="No one opened it inside another app." />
+          <Split title="Language" total={t} rows={a.languages.map((x) => [language(x.code), x.visitors])} />
+          <div className="sm:col-span-2">
+            <Split title="Campaigns (links you tagged)" total={t} rows={a.campaigns.map((x) => [x.source || "(no source)", x.visitors, [x.medium, x.campaign].filter(Boolean).join(" / ")])} empty="No tagged links yet. Add ?utm_source=linkedin&utm_campaign=pilot to a link you share to see it here." />
+          </div>
+        </div>
+      )}
+    </Widget>
+  );
+}
+
 // What founders asked for on their profile and what they saved. Real choices only; with few founders, read the counts, not the percentages.
 function Demand({ d }) {
   const none = !d.needs.length && !d.programs.length;
@@ -223,6 +269,8 @@ export default function Admin() {
               <Widget><Label>Where visitors come from</Label><div className="mt-2"><List rows={sources} empty="No outside links in this period. Visits that type the address or use a bookmark are not listed." /></div>
                 <p className="mt-3 text-xs text-muted">{pct(v.signed_in_share)} of page views were from signed-in people.</p></Widget>
             </div>
+
+            <Audience a={d.audience} />
 
             <Demand d={d.demand} />
 
