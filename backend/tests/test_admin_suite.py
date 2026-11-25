@@ -102,3 +102,22 @@ def test_deleting_your_own_account_removes_it_here_but_the_count_remembers(c):
     o = c.get("/api/hub/admin/overview?days=30").json()
     assert o["accounts"]["deleted_ever"] >= 1 and o["accounts"]["deleted_in_range"] >= 1
     assert o["accounts"]["signed_up_ever"] >= o["accounts"]["total"] + 1
+
+
+def test_what_founders_are_looking_for_comes_from_real_choices(c):
+    hub_signup(c, "Needs Founder", "needs.founder@example.com")
+    r = c.patch("/api/hub/profile", json={"startup": {"name": "Needs Co", "stage": "prototype", "province": "ON", "needs": ["funding", "mentorship"], "sectors": ["software"]}})
+    assert r.status_code == 200, r.text
+    assert c.post("/api/navigator/interest", json={"id": "prog-a", "name": "Program A", "org": "Org A", "type": "grant", "state": "yes"}).status_code == 200
+    assert c.post("/api/navigator/interest", json={"id": "prog-b", "name": "Program B", "org": "Org B", "type": "loan", "state": "no"}).status_code == 200
+    hub_signup(c, "Second Founder", "second.founder@example.com")
+    c.patch("/api/hub/profile", json={"startup": {"name": "Second Co", "stage": "idea", "province": "ON", "needs": ["funding"]}})
+    c.post("/api/navigator/interest", json={"id": "prog-a", "name": "Program A", "org": "Org A", "type": "grant", "state": "yes"})
+    as_admin(c)
+    d = c.get("/api/hub/admin/overview?days=7").json()["demand"]
+    needs = {n["need"]: n for n in d["needs"]}
+    assert needs["funding"]["count"] == 2 and needs["mentorship"]["count"] == 1 and needs["funding"]["label"] == "Funding"
+    assert d["founders_with_needs"] == 2 and needs["funding"]["share"] == 1.0
+    top = {p["name"]: p["saves"] for p in d["programs"]}
+    assert top.get("Program A") == 2 and "Program B" not in top  # a program someone hid is not a save
+    assert {"type": "grant", "label": "Grant", "saves": 2} in d["types"]

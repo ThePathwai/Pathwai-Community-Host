@@ -71,6 +71,46 @@ function Funnel({ steps }) {
   );
 }
 
+// What founders asked for on their profile and what they saved. Real choices only; with few founders, read the counts, not the percentages.
+function Demand({ d }) {
+  const none = !d.needs.length && !d.programs.length;
+  return (
+    <Widget data-testid="admin-demand">
+      <Label>What founders are looking for</Label>
+      <p className="mb-4 mt-1 text-xs text-muted">From the needs founders chose on their profile and the programs they saved. {d.founders_with_needs ? `${n(d.founders_with_needs)} ${d.founders_with_needs === 1 ? "founder has" : "founders have"} chosen needs so far.` : ""}</p>
+      {none ? <p className="text-sm text-muted">Nothing yet. This fills in as founders finish their profile and save programs.</p> : (
+        <div className="grid gap-6 lg:grid-cols-3">
+          <div className="lg:col-span-1">
+            <p className="mb-2 text-sm font-semibold">Needs they picked</p>
+            {d.needs.length ? (
+              <ol className="space-y-3" data-testid="admin-needs">
+                {d.needs.map((x) => (
+                  <li key={x.need}>
+                    <div className="mb-1 flex items-baseline justify-between gap-3 text-sm"><span>{x.label}</span><span className="tabular-nums"><b>{n(x.count)}</b> <span className="text-muted">· {pct(x.share)}</span></span></div>
+                    <div className="h-2 rounded-full bg-ink/[.07]"><div className="h-2 rounded-full" style={{ width: `${Math.max(2, x.share * 100)}%`, background: "var(--accent)" }} /></div>
+                  </li>
+                ))}
+              </ol>
+            ) : <p className="text-sm text-muted">No one has picked needs yet.</p>}
+          </div>
+          <div>
+            <p className="mb-1 text-sm font-semibold">Most saved programs</p>
+            {d.programs.length ? (
+              <ul className="divide-y divide-line text-sm" data-testid="admin-saved">
+                {d.programs.map((p) => <li key={`${p.name}-${p.org}`} className="flex items-center justify-between gap-3 py-2"><span className="min-w-0"><span className="block truncate">{p.name}</span>{p.org ? <span className="block truncate text-xs text-muted">{p.org}</span> : null}</span><span className="tabular-nums text-muted">{n(p.saves)}</span></li>)}
+              </ul>
+            ) : <p className="text-sm text-muted">No saved programs yet.</p>}
+          </div>
+          <div>
+            <p className="mb-1 text-sm font-semibold">Kinds of program they save</p>
+            {d.types.length ? <List rows={d.types.map((t) => [t.label, t.saves])} empty="" /> : <p className="text-sm text-muted">No saved programs yet.</p>}
+          </div>
+        </div>
+      )}
+    </Widget>
+  );
+}
+
 const List = ({ rows, empty }) => (rows.length ? (
   <ul className="divide-y divide-line text-sm">
     {rows.map(([k, v]) => <li key={k} className="flex items-center justify-between gap-3 py-2"><span className="min-w-0 truncate">{k}</span><span className="tabular-nums text-muted">{n(v)}</span></li>)}
@@ -183,6 +223,8 @@ export default function Admin() {
               <Widget><Label>Where visitors come from</Label><div className="mt-2"><List rows={sources} empty="No outside links in this period. Visits that type the address or use a bookmark are not listed." /></div>
                 <p className="mt-3 text-xs text-muted">{pct(v.signed_in_share)} of page views were from signed-in people.</p></Widget>
             </div>
+
+            <Demand d={d.demand} />
 
             <Accounts />
           </div>

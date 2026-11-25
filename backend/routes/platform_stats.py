@@ -26,6 +26,7 @@ from pydantic import BaseModel, Field
 
 from auth import JWT_SECRET, client_ip
 from database import hub_db
+from navigator import NEED_LABEL, TYPE_LABEL
 from ._common import audit_platform
 from .hub import account_from_request, is_platform_admin, require_account
 
@@ -134,6 +135,41 @@ def _stage(a: dict) -> str:
     return str((a.get("startup") or {}).get("stage") or "")
 
 
+def _saved(a: dict) -> Dict[str, dict]:
+    """Programs this person has saved to their shortlist ("yes") or marked as one they are in or have done, one entry per program."""
+    out: Dict[str, dict] = {}
+    for i in (a.get("interest") or []) + (a.get("tracked") or []):
+        if isinstance(i, dict) and i.get("id") and i.get("state") != "no":
+            out.setdefault(i["id"], i)
+    return out
+
+
+def _demand(accounts: List[dict]) -> Dict[str, Any]:
+    """What founders are asking for: the needs they chose on their profile, and the programs they actually saved."""
+    needs: Counter = Counter()
+    asked = 0
+    progs: Dict[str, dict] = {}
+    for a in accounts:
+        chosen = [n for n in ((a.get("startup") or {}).get("needs") or []) if n in NEED_LABEL]
+        if chosen:
+            asked += 1
+            needs.update(set(chosen))
+        for pid, i in _saved(a).items():
+            row = progs.setdefault(pid, {"name": i.get("name") or pid, "org": i.get("org") or "", "type": i.get("type") or "", "saves": 0})
+            row["saves"] += 1
+    kinds: Counter = Counter()
+    for r in progs.values():
+        if r["type"]:
+            kinds[r["type"]] += r["saves"]
+    top = sorted(progs.values(), key=lambda r: (-r["saves"], r["name"]))[:8]
+    return {
+        "founders_with_needs": asked,
+        "needs": [{"need": k, "label": NEED_LABEL[k][0].upper() + NEED_LABEL[k][1:], "count": c, "share": round(c / asked, 3) if asked else 0} for k, c in needs.most_common()],
+        "programs": top,
+        "types": [{"type": k, "label": TYPE_LABEL.get(k, k), "saves": c} for k, c in kinds.most_common(6)],
+    }
+
+
 def _row(a: dict) -> Dict[str, Any]:
     st = a.get("startup") or {}
     return {
@@ -141,7 +177,7 @@ def _row(a: dict) -> Dict[str, Any]:
         "signed_up": (_parse(a.get("created_at")) or datetime.now(timezone.utc)).astimezone(TZ).date().isoformat() if a.get("created_at") else "",
         "last_active": (_parse(a.get("last_active_at")) or datetime.now(timezone.utc)).astimezone(TZ).date().isoformat() if a.get("last_active_at") else "",
         "startup": st.get("name") or "", "stage": _stage(a), "province": st.get("province") or "",
-        "profile_done": bool(a.get("profile_completed")), "tracked": len(a.get("tracked") or []), "plan_items": len(a.get("journey") or []),
+        "profile_done": bool(a.get("profile_completed")), "tracked": len(_saved(a)), "plan_items": len(a.get("journey") or []),
     }
 
 
@@ -189,7 +225,7 @@ async def overview(days: int = Query(30, ge=7, le=90), acc: dict = Depends(requi
         ("Signed up", n),
         ("Finished their profile", sum(1 for a in accounts if a.get("profile_completed"))),
         ("Told us their stage", sum(1 for a in accounts if _stage(a))),
-        ("Saved a program", sum(1 for a in accounts if a.get("tracked"))),
+        ("Saved a program", sum(1 for a in accounts if _saved(a))),
         ("Built a plan", sum(1 for a in accounts if a.get("journey"))),
         ("Came back this week", active_since(week)),
     ]
@@ -204,6 +240,7 @@ async def overview(days: int = Query(30, ge=7, le=90), acc: dict = Depends(requi
                      "signed_up_ever": signed_up_ever, "deleted_ever": gone_ever, "deleted_in_range": gone_range,
                      "series": [{"day": d, "signups": signups.get(d, 0)} for d in span]},
         "funnel": [{"label": k, "count": v, "share": round(v / n, 3) if n else 0} for k, v in funnel],
+        "demand": _demand(accounts),
     }
 
 
