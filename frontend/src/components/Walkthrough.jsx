@@ -1,6 +1,6 @@
 import React, { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
-import { ArrowLeft, ArrowRight } from "lucide-react";
+import { ArrowLeft, ArrowRight } from "./icons";
 import { cx } from "./ui";
 
 // First-visit tour of the signed-in app. Every step points at a real control through a data-tour attribute, so what it explains is what the person can see. A step whose control is not on this page is left out, so the same tour works from any page, on a phone (tab bar) and on a computer (sidebar).

@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { Link, Navigate, useParams } from "react-router-dom";
 import { toast } from "sonner";
-import { ArrowLeft, Check, MapPin, Rocket, Send } from "lucide-react";
+import { ArrowLeft, Check, MapPin, Rocket, Send } from "../components/icons";
 import { api } from "../lib/api";
 import { useAuth } from "../lib/auth";
 import AccountShell from "../components/AccountShell";

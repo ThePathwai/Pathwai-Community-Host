@@ -1,5 +1,5 @@
 import React from "react";
-import { AlertCircle, ExternalLink, FileText, Lightbulb, Rocket, TrendingUp, Users2, Wallet } from "lucide-react";
+import { AlertCircle, ExternalLink, FileText, Lightbulb, Rocket, TrendingUp, Users2, Wallet } from "./icons";
 import { Card, Chip } from "./ui";
 import { NEED_LABEL } from "../lib/navigator";
 

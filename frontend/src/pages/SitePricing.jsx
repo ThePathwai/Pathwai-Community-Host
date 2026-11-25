@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { Link } from "react-router-dom";
-import { ArrowRight, Check, Minus } from "lucide-react";
+import { ArrowRight, Check, Minus } from "../components/icons";
 import { cx } from "../components/ui";
 import { CONTACT, PageTop, Pill, Section, SiteShell, WAITLIST } from "../components/SiteKit";
 import { ANNUAL_MONTHS_BILLED, CURRENCY, FEATURES, GRACE, TIERS, comparison, money } from "../lib/pricing";

@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Send, X } from "lucide-react";
+import { Send, X } from "./icons";
 import { toast } from "sonner";
 import { api, errMsg } from "../lib/api";
 import { Avatar, Button, Spinner } from "./ui";

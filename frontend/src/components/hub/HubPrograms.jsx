@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from "react";
-import { Bookmark } from "lucide-react";
+import { Bookmark } from "../icons";
 import { useEcosystem } from "../../lib/ecosystem";
 import { countBy } from "../../lib/explain";
 import { Spinner, cx } from "../ui";

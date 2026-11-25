@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { ArrowRight, Check, Clock, LogOut, Pencil, Sparkles } from "lucide-react";
+import { ArrowRight, Check, Clock, LogOut, Pencil, Sparkles } from "../components/icons";
 import { toast } from "sonner";
 import { api, errMsg } from "../lib/api";
 import { useAuth } from "../lib/auth";

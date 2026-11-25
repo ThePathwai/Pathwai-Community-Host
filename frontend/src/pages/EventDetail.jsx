@@ -1,7 +1,7 @@
 import { useAuth } from "../lib/auth";
 import React, { useCallback, useEffect, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
-import { Bookmark, CalendarPlus, ExternalLink } from "lucide-react";
+import { Bookmark, CalendarPlus, ExternalLink } from "../components/icons";
 import { toast } from "sonner";
 import { api, errMsg, fmtDate } from "../lib/api";
 import { useLive } from "../lib/live";

@@ -1,6 +1,6 @@
 import React, { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { ArrowRight, ArrowUp, Check, MessageCircle, Plus, Rocket } from "lucide-react";
+import { ArrowRight, ArrowUp, Check, MessageCircle, Plus, Rocket } from "./icons";
 import { api, fmtDate, timeAgo } from "../lib/api";
 import { useAuth } from "../lib/auth";
 import { useEcosystem } from "../lib/ecosystem";

@@ -327,7 +327,7 @@ h3, h4 { letter-spacing: -0.02em; }
 
 @media (max-width: 639px) {
   .app-topbar-phone .btn-ghost { background: transparent; border: 0; box-shadow: none; padding: 0; width: 40px; min-height: 40px; -webkit-backdrop-filter: none; backdrop-filter: none; }
-  .app-topbar-phone [data-testid="user-menu-trigger"] svg.lucide-chevron-down { display: none; }
+  .app-topbar-phone [data-testid="user-menu-trigger"] svg[data-icon="caret-down"] { display: none; }
   /* a row of chips or tabs scrolls edge to edge instead of stopping at the page margin */
   .pw-rail, .scroll-rail { max-width: none; }
   .bleed-x { margin-inline: -1rem; padding-inline: 1rem; }

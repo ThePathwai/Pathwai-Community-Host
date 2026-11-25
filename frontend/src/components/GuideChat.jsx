@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
-import { ArrowUp, Compass, ExternalLink, Users } from "lucide-react";
+import { ArrowUp, Compass, ExternalLink, Users } from "./icons";
 import { api, errMsg } from "../lib/api";
 import { FIT_LABEL, FIT_STYLE, Status } from "./NavBits";
 import { cx } from "./ui";

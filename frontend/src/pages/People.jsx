@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { Link, Navigate } from "react-router-dom";
-import { ArrowRight, Search } from "lucide-react";
+import { ArrowRight, Search } from "../components/icons";
 import { api } from "../lib/api";
 import { useAuth } from "../lib/auth";
 import AccountShell from "../components/AccountShell";

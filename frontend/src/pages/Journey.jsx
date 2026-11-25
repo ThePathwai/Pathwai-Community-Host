@@ -1,7 +1,7 @@
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import { Link, Navigate, useSearchParams } from "react-router-dom";
 import { toast } from "sonner";
-import { ArrowLeft, ArrowRight, ArrowUpRight, Check, Flag, MapPin, Pencil, Sparkles } from "lucide-react";
+import { ArrowLeft, ArrowRight, ArrowUpRight, Check, Flag, MapPin, Pencil, Sparkles } from "../components/icons";
 import { api } from "../lib/api";
 import { useAuth } from "../lib/auth";
 import { useTracked } from "../lib/useTracked";

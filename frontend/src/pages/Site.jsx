@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { ArrowRight, ArrowUp, BookOpen, Briefcase, Check, Compass, Layers, Rocket, Search, Sparkles, Target, TrendingUp, Users } from "lucide-react";
+import { ArrowRight, ArrowUp, BookOpen, Briefcase, Check, Compass, Layers, Rocket, Search, Sparkles, Target, TrendingUp, Users } from "../components/icons";
 import { cx } from "../components/ui";
 import { DEMO_PATH } from "../lib/demo";
 import { Eyebrow, Glow, Num, Pill, Section, SiteShell, WAITLIST } from "../components/SiteKit";

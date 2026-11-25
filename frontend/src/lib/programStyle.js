@@ -1,4 +1,4 @@
-import { Banknote, Building2, CalendarDays, Compass, FlaskConical, Handshake, Landmark, Percent, Plane, Rocket, Tag, TrendingUp, Trophy, Users } from "lucide-react";
+import { Banknote, Building2, CalendarDays, Compass, FlaskConical, Handshake, Landmark, Percent, Plane, Rocket, Tag, TrendingUp, Trophy, Users } from "../components/icons";
 import { daysUntil, isStageLine, todayIso } from "./navigator";
 
 // Each kind of program gets its own colour and icon, so a list reads at a glance (grant vs loan vs accelerator) before a word is read.

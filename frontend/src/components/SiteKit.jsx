@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { Link, NavLink, useLocation } from "react-router-dom";
-import { ArrowUpRight, Menu, Moon, Sun, X } from "lucide-react";
+import { ArrowUpRight, Menu, Moon, Sun, X } from "./icons";
 import { Wordmark, cx } from "./ui";
 import { applyBrand, effectiveMode, setModePref, setThemeScope } from "../lib/theme";
 

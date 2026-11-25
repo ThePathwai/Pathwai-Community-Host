@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
-import { ArrowRight, Check, Copy, Compass, Laptop, PencilLine, Smartphone, Users } from "lucide-react";
+import { ArrowRight, Check, Copy, Compass, Laptop, PencilLine, Smartphone, Users } from "../components/icons";
 import { toast } from "sonner";
 import { Wordmark, PoweredBy, cx } from "../components/ui";
 import { demoCommunity, demoLink, startDemo } from "../lib/demo";

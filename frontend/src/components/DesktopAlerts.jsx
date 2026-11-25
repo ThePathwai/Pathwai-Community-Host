@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Bell } from "lucide-react";
+import { Bell } from "./icons";
 import { alertsState, enableAlerts } from "../lib/webNotify";
 import { Button } from "./ui";
 

@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { Check, ChevronDown, MapPin, Plus, X } from "lucide-react";
+import { Check, ChevronDown, MapPin, Plus, X } from "./icons";
 import { STAGE_LABEL, STATUS_HELP, STATUS_LABEL } from "../lib/navigator";
 import { TypeTile } from "./ProgramCards";
 import { cx } from "./ui";

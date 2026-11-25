@@ -5,7 +5,7 @@ import React from "react";
 import ScrollLock from "./ScrollLock";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../lib/auth";
-import { Loader2 } from "lucide-react";
+import { Loader2 } from "./icons";
 import { BUILD } from "../lib/build";
 
 export const cx = (...a) => a.filter(Boolean).join(" ");

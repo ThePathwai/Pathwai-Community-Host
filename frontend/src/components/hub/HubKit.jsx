@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { ArrowRight, BookOpen, Calendar, Check, CheckCircle2, ChevronDown, CircleAlert, Clock, Landmark, MinusCircle, Rocket, Search, Users, X } from "lucide-react";
+import { ArrowRight, BookOpen, Calendar, Check, CheckCircle2, ChevronDown, CircleAlert, Clock, Landmark, MinusCircle, Rocket, Search, Users, X } from "../icons";
 import { VERDICT, VERDICTS } from "../../lib/explain";
 import { api, fmtDate } from "../../lib/api";
 import { useAuth } from "../../lib/auth";

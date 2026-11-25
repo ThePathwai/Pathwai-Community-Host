@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { Link, useLocation } from "react-router-dom";
-import { ArrowRight, Bookmark, CalendarDays, Check, ChevronDown, Compass, EyeOff, Flag, Pencil, Rocket, Search, SlidersHorizontal, Users } from "lucide-react";
+import { ArrowRight, Bookmark, CalendarDays, Check, ChevronDown, Compass, EyeOff, Flag, Pencil, Rocket, Search, SlidersHorizontal, Users } from "../components/icons";
 import { api } from "../lib/api";
 import { useAuth } from "../lib/auth";
 import { Wordmark, PoweredBy, Spinner, cx } from "../components/ui";

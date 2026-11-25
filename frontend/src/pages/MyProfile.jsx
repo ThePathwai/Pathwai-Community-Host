@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from "react";
 import { Link, Navigate, useSearchParams } from "react-router-dom";
-import { Compass, MessageCircle, Pencil, Plus, Rocket } from "lucide-react";
+import { Compass, MessageCircle, Pencil, Plus, Rocket } from "../components/icons";
 import { toast } from "sonner";
 import { api, errMsg } from "../lib/api";
 import { useAuth } from "../lib/auth";

@@ -1,6 +1,6 @@
 import React from "react";
 import { Link } from "react-router-dom";
-import { Check, Plus, RotateCcw } from "lucide-react";
+import { Check, Plus, RotateCcw } from "./icons";
 import { Card, cx } from "./ui";
 import { STAGE_LABEL } from "../lib/navigator";
 

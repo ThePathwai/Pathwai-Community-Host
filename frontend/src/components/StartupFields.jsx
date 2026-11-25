@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Plus, Rocket, X } from "lucide-react";
+import { Plus, Rocket, X } from "./icons";
 import { Field, Input, Select, Textarea, cx } from "./ui";
 import { AUDIENCES, AUDIENCE_LABEL, GENDERS, GENDER_LABEL, NEEDS, NEED_HINT, NEED_LABEL, PROVINCES, SECTORS, STAGES, STAGE_HINT, STAGE_LABEL } from "../lib/navigator";
 

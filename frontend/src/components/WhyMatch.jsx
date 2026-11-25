@@ -1,5 +1,5 @@
 import React from "react";
-import { HandHelping, Lightbulb, Sparkles } from "lucide-react";
+import { HandHelping, Lightbulb, Sparkles } from "./icons";
 
 // "Why this person?" for recommended connections. One place builds the reasons and one place draws them,
 // so the home page, the Connections page and a member's own profile all explain a suggestion the same way.

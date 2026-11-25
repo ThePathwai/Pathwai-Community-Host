@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from "react";
 import { Link, NavLink, useLocation, useNavigate } from "react-router-dom";
-import { Building2, Compass, MessageCircle, Target, Calendar, Gift, Info, Home as HomeIcon, LogOut, Moon, Settings, Sparkles, Sun, Users, CircleUser, ChevronDown } from "lucide-react";
+import { Building2, Compass, MessageCircle, Target, Calendar, Gift, Info, Home as HomeIcon, LogOut, Moon, Settings, Sparkles, Sun, Users, CircleUser, ChevronDown } from "./icons";
 import { applyBrand, effectiveMode, setModePref } from "../lib/theme";
 import { useAuth } from "../lib/auth";
 import { Avatar, BackButton, PoweredBy, Wordmark, cx } from "./ui";

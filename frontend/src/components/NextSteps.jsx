@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import { ArrowRight, Clock, MessageCircle, Rocket, Sparkles, User, Users } from "lucide-react";
+import { ArrowRight, Clock, MessageCircle, Rocket, Sparkles, User, Users } from "./icons";
 import { api } from "../lib/api";
 import { Button } from "./ui";
 import { Ring, Status } from "./NavBits";

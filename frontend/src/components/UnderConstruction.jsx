@@ -1,6 +1,6 @@
 import React from "react";
 import { Link } from "react-router-dom";
-import { Hammer } from "lucide-react";
+import { Hammer } from "./icons";
 
 // Shown in place of an area that is not ready yet (see lib/flags.js). No member information is loaded or shown here.
 export default function UnderConstruction({ title = "People", note = "We are building this part of Pathwai. Members will show up here once it is ready." }) {

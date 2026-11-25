@@ -1,6 +1,6 @@
 import React, { useMemo, useState } from "react";
 import { Link } from "react-router-dom";
-import { Check, MapPin, Users } from "lucide-react";
+import { Check, MapPin, Users } from "../icons";
 import { toast } from "sonner";
 import { api, errMsg, fmtDate } from "../../lib/api";
 import { countBy } from "../../lib/explain";

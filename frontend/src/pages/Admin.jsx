@@ -1,7 +1,7 @@
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { Navigate } from "react-router-dom";
 import { toast } from "sonner";
-import { Download, Search } from "lucide-react";
+import { Download, Search } from "../components/icons";
 import { api, errMsg } from "../lib/api";
 import { useAuth } from "../lib/auth";
 import AccountShell from "../components/AccountShell";

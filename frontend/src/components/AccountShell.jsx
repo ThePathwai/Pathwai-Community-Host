@@ -1,7 +1,7 @@
 import { COMMUNITIES_VISIBLE } from "../lib/flags";
 import React, { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { BarChart3, Building2, CalendarDays, Compass, LogOut, MessageCircle, Route, Search, User, UserRound, Info, PlayCircle } from "lucide-react";
+import { BarChart3, Building2, CalendarDays, Compass, LogOut, MessageCircle, Route, Search, User, UserRound, Info, PlayCircle } from "./icons";
 import { useAuth } from "../lib/auth";
 import { Avatar, Modal, PoweredBy, Wordmark, cx } from "./ui";
 import GuideChat from "./GuideChat";

@@ -1,6 +1,6 @@
 import React from "react";
 import { Link } from "react-router-dom";
-import { ArrowRight, Rocket } from "lucide-react";
+import { ArrowRight, Rocket } from "../components/icons";
 import { DEMO_PATH } from "../lib/demo";
 import { Eyebrow, Num, PageTop, Section, SiteShell, WAITLIST } from "../components/SiteKit";
 

@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import { ArrowRight, ArrowUpRight, BadgeCheck, Bookmark, Check, Circle, CircleCheck, CircleHelp, CircleX, Clock, Crosshair, Hourglass, Info, EyeOff, MessageCircle, TriangleAlert, X } from "lucide-react";
+import { ArrowRight, ArrowUpRight, BadgeCheck, Bookmark, Check, Circle, CircleCheck, CircleHelp, CircleX, Clock, Crosshair, Hourglass, Info, EyeOff, MessageCircle, TriangleAlert, X } from "./icons";
 import { Status } from "./NavBits";
 import ScrollLock from "./ScrollLock";
 import { useShell } from "./AccountShell";

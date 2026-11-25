@@ -1,6 +1,6 @@
 import React from "react";
 import { Link } from "react-router-dom";
-import { ArrowRight, Check, Sparkles } from "lucide-react";
+import { ArrowRight, Check, Sparkles } from "./icons";
 
 // The one loud call to action for people browsing without a startup profile. It is the main reason to sign up, so it is a solid,
 // high-contrast block (inverted from the page in both light and dark mode) with a real button, not a faint dashed outline.

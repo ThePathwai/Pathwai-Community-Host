@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { ArrowRight, Check, ChevronsUpDown, Clock, Compass } from "lucide-react";
+import { ArrowRight, Check, ChevronsUpDown, Clock, Compass } from "./icons";
 import { toast } from "sonner";
 import { api, errMsg } from "../lib/api";
 import { useAuth } from "../lib/auth";

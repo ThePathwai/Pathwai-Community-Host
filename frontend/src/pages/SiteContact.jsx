@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Building2, Handshake, Mail, TrendingUp } from "lucide-react";
+import { Building2, Handshake, Mail, TrendingUp } from "../components/icons";
 import { CONTACT, PageTop, Section, SiteShell } from "../components/SiteKit";
 
 // The website's Contact page (/contact). There is no message service behind the site yet, so the form builds an email in the visitor's own mail app.

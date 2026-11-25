@@ -1,7 +1,7 @@
 import React, { useCallback, useContext, useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { toast } from "sonner";
-import { ArrowUpRight, CalendarDays, Check, ChevronDown, ChevronLeft, ChevronRight, MapPin, Search, TriangleAlert, Video } from "lucide-react";
+import { ArrowUpRight, CalendarDays, Check, ChevronDown, ChevronLeft, ChevronRight, MapPin, Search, TriangleAlert, Video } from "../components/icons";
 import { api } from "../lib/api";
 import { useAuth } from "../lib/auth";
 import AccountShell from "../components/AccountShell";

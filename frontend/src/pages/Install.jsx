@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { Link } from "react-router-dom";
-import { Bell, Check, Copy, MoreVertical, Plus, Share, Smartphone } from "lucide-react";
+import { Bell, Check, Copy, MoreVertical, Plus, Share, Smartphone } from "../components/icons";
 import { toast } from "sonner";
 import { Wordmark, PoweredBy, cx } from "../components/ui";
 import { startDemo } from "../lib/demo";

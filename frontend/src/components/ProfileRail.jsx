@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
-import { ChevronLeft, ChevronRight, MapPin, Rocket } from "lucide-react";
+import { ChevronLeft, ChevronRight, MapPin, Rocket } from "./icons";
 import { cx } from "./ui";
 
 // The zoomed-out way to see people: photo-first cards in a row you swipe sideways (like a story or photo feed). Tapping a card opens the full

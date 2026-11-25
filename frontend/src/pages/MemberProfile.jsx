@@ -5,7 +5,7 @@ import { api, errMsg } from "../lib/api";
 import { ReachOutModal } from "../components/ReachOutModal";
 import { useAuth } from "../lib/auth";
 import { fieldLabel, fieldOn, typeLabel } from "../lib/profile";
-import { Bookmark, Globe, Instagram, Linkedin, Mail, MessageCircle, Phone } from "lucide-react";
+import { Bookmark, Globe, Instagram, Linkedin, Mail, MessageCircle, Phone } from "../components/icons";
 import { Avatar, Button, Card, Chip, Spinner } from "../components/ui";
 import { WhyReasons, reasonsOf } from "../components/WhyMatch";
 import PitchCard from "../components/PitchCard";

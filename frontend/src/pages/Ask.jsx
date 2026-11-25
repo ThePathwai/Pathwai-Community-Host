@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import { toast } from "sonner";
-import { ArrowRight, ArrowUp, Check, MessageCircle, Plus, Sparkles } from "lucide-react";
+import { ArrowRight, ArrowUp, Check, MessageCircle, Plus, Sparkles } from "../components/icons";
 import { api, errMsg } from "../lib/api";
 import { useAuth } from "../lib/auth";
 import { useEcosystem } from "../lib/ecosystem";

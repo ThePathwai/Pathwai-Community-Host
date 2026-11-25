@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import { Award, CalendarClock, ExternalLink, GraduationCap } from "lucide-react";
+import { Award, CalendarClock, ExternalLink, GraduationCap } from "./icons";
 import { api } from "../lib/api";
 import { Avatar, Chip, ProgressBar, cx } from "./ui";
 

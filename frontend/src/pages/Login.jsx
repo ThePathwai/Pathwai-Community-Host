@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { Link, useLocation, useNavigate, useSearchParams } from "react-router-dom";
 import { toast } from "sonner";
-import { ArrowRight, BookOpen, CalendarDays, Compass, Gift, Users } from "lucide-react";
+import { ArrowRight, BookOpen, CalendarDays, Compass, Gift, Users } from "../components/icons";
 import { api, errMsg } from "../lib/api";
 import { useAuth } from "../lib/auth";
 import { DEMO_COMMUNITIES, demoRole, inDemoTab, isDemo, leaveDemo, startDemo } from "../lib/demo";

@@ -1,7 +1,7 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { toast } from "sonner";
-import { ArrowRight, Check, CheckCircle2, Circle, Clock, Copy, Eye, EyeOff, GripVertical, Lock, Plus, Rocket, Send, Share2, Sparkles, Target, X } from "lucide-react";
+import { ArrowRight, Check, CheckCircle2, Circle, Clock, Copy, Eye, EyeOff, GripVertical, Lock, Plus, Rocket, Send, Share2, Sparkles, Target, X } from "../components/icons";
 import { api, errMsg } from "../lib/api";
 import { useAuth } from "../lib/auth";
 import { useEcosystem } from "../lib/ecosystem";
