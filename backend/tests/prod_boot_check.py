@@ -35,7 +35,7 @@ def check(name, cond, detail=""):
 
 assert not database.demo_mode()
 check("built-in demo community slugs are not routable", database.COMMUNITY_SLUGS == [], str(database.COMMUNITY_SLUGS))
-check("no platform admin unless PLATFORM_ADMIN_EMAILS names one", hub.PLATFORM_ADMINS == {"owner@example.com"}, str(hub.PLATFORM_ADMINS))
+check("platform admins are info@thepathwai.com plus what PLATFORM_ADMIN_EMAILS names, never the demo admin", hub.PLATFORM_ADMINS == {"info@thepathwai.com", "owner@example.com"}, str(hub.PLATFORM_ADMINS))
 
 with TestClient(server.app, base_url="https://app.example.com") as c:
     h = c.get("/api/health")

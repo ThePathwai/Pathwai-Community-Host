@@ -70,7 +70,9 @@ def _slugify(name: str) -> str:
 # Platform admins can enter and edit EVERY community, so a real deployment must name them explicitly
 # (PLATFORM_ADMIN_EMAILS=you@example.com). The demo admin login is only a platform admin in demo mode --
 # otherwise anyone could sign up as admin@yourcommunity.app and walk into every community.
-PLATFORM_ADMINS = {e.strip().lower() for e in os.environ.get("PLATFORM_ADMIN_EMAILS", "admin@yourcommunity.app" if demo_mode() else "").split(",") if e.strip()}
+# info@thepathwai.com is always one (it opens the Admin page); PLATFORM_ADMIN_EMAILS can add more. Sign-up does not verify emails, so that account must exist before anyone else can claim it.
+OWNER_EMAIL = "info@thepathwai.com"
+PLATFORM_ADMINS = {OWNER_EMAIL} | {e.strip().lower() for e in os.environ.get("PLATFORM_ADMIN_EMAILS", "admin@yourcommunity.app" if demo_mode() else "").split(",") if e.strip()}
 
 
 def is_platform_admin(email: Optional[str]) -> bool:

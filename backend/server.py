@@ -254,7 +254,7 @@ def validate_production_config() -> None:
     if problems:
         raise RuntimeError("Unsafe production configuration:\n - " + "\n - ".join(problems))
     if not os.environ.get("PLATFORM_ADMIN_EMAILS"):
-        logger.warning("PLATFORM_ADMIN_EMAILS is not set: nobody can enter every community as a platform admin.")
+        logger.info("PLATFORM_ADMIN_EMAILS is not set: only info@thepathwai.com is a platform admin.")
     if not os.environ.get("SENDGRID_API_KEY"):
         logger.warning("SENDGRID_API_KEY is not set: password-reset emails and email blasts will not be sent.")
     if not (os.environ.get("TWILIO_ACCOUNT_SID") and os.environ.get("TWILIO_AUTH_TOKEN")):
