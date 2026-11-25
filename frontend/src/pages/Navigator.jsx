@@ -6,7 +6,7 @@ import { useAuth } from "../lib/auth";
 import { Wordmark, PoweredBy, Spinner, cx } from "../components/ui";
 import { NEED_HINT, NEED_LABEL, TYPE_LABEL } from "../lib/navigator";
 import { startDemo } from "../lib/demo";
-import { TIMING, leadReason, timingMatch, tint, typeMeta } from "../lib/programStyle";
+import { TIMING, deadlineInfo, leadReason, timingMatch, tint, typeMeta } from "../lib/programStyle";
 import { DeadlineChip, FitMeter, ProgramCard, ProgramDrawer, TypeTile } from "../components/ProgramCards";
 import { Status } from "../components/NavBits";
 import { useTracked } from "../lib/useTracked";
@@ -318,6 +318,26 @@ function ProgramRow({ p, onOpen, mark }) {
   );
 }
 
+// One program in the Browse list on a phone: a short, scannable row (kind, name, who runs it, what it offers, can I apply). The full card is for a computer;
+// on a phone it ran to a screen and a half per program, which made 600 of them impossible to scan. The detail is one tap away in the drawer.
+function BrowseRow({ p, onOpen, mark }) {
+  const dl = deadlineInfo(p);
+  const offer = p.amount ? (p.amount.length > 70 ? p.amount.slice(0, 67).trimEnd() + "..." : p.amount) : "";
+  return (
+    <button type="button" onClick={() => onOpen(p)} data-testid={`program-${p.id}`} className="flex w-full items-start gap-3 rounded-2xl border border-line bg-surface p-3 text-left transition active:bg-ink/[.05]">
+      <TypeTile type={p.type} size={40} />
+      <span className="min-w-0 flex-1">
+        <span className="block truncate text-[11px] font-semibold uppercase text-muted" style={{ letterSpacing: "0.1em" }}>{TYPE_LABEL[p.type] || p.type}{dl ? ` · closes ${dl.date}` : ""}</span>
+        <span className="mt-0.5 line-clamp-2 block text-[15px] font-semibold leading-snug">{p.name}</span>
+        <span className="mt-0.5 block truncate text-xs text-muted">{p.community ? `From ${p.community.name}` : p.org}</span>
+        {offer && <span className="mt-1.5 block truncate text-xs font-medium text-ink/80">{offer}</span>}
+        <span className="mt-2 flex flex-wrap items-center gap-1.5"><Status status={p.status} />{dl && (dl.soon || dl.urgent) && <DeadlineChip p={p} />}{mark === "yes" && <Bookmark className="h-3.5 w-3.5 text-sky-500" aria-label="Interested" />}</span>
+      </span>
+      {p.fit && <FitMeter fit={p.fit} showLabel={false} />}
+    </button>
+  );
+}
+
 // The phone version of For you: three views, one at a time. Top picks (the one thing to do, then a few more), Your path (the stages), All (the full list with filters).
 function PhoneForYou({ res, onOpen, tracked, onTrack, imap, nudge, generic, loading }) {
   const [v, setV] = useState("picks");
@@ -577,6 +597,9 @@ function Directory({ meta, onOpen, imap, eco, fitRes, account, hasProfile, start
   const BLANK = { q: "", type: "", timing: "", province: "", need: "", region: "" };
   const [f, setF] = useState(() => ({ ...BLANK, type: startType && startType !== "events" ? startType : "" }));
   const [rowsAll, setRows] = useState(null);
+  const phone = useMedia("(max-width: 639px)");
+  const [limit, setLimit] = useState(20);   // 600+ programs: show a screenful, then more on request
+  const step = phone ? 20 : 24;
   const [moreOpen, setMoreOpen] = useState(false);   // phones: only search and kind show; need, place and timing fold away
   const [ev, setEv] = useState(startType === "events");   // "Events" is one more kind in this list: pick it and the list below becomes upcoming events
   const [all, setAll] = useState([]);
@@ -590,6 +613,7 @@ function Directory({ meta, onOpen, imap, eco, fitRes, account, hasProfile, start
     return () => { live = false; clearTimeout(t); };
   }, [f.q, f.type, f.province, f.need, f.region]);
   const rows = useMemo(() => (rowsAll && f.timing ? rowsAll.filter((p) => timingMatch(f.timing, p)) : rowsAll), [rowsAll, f.timing]);
+  useEffect(() => { setLimit(phone ? 20 : 24); }, [f.q, f.type, f.need, f.region, f.timing, ev, phone]);
   const set = (k, v) => setF((o) => ({ ...o, [k]: v }));
   // Signed in with a startup profile: every program here carries the same "why it may fit / why it may not" as For you.
   const fitById = useMemo(() => {
@@ -663,7 +687,10 @@ function Directory({ meta, onOpen, imap, eco, fitRes, account, hasProfile, start
           cta={account ? "Add my startup" : "Create my free profile"} />
       )}
       {!rows ? <Spinner /> : rows.length === 0 ? <p className="rounded-2xl border border-dashed border-line p-8 text-center text-muted">Nothing matches. Try clearing a filter.</p>
-        : <div className="grid grid-cols-[minmax(0,1fr)] gap-3 md:grid-cols-[repeat(2,minmax(0,1fr))] 2xl:grid-cols-[repeat(3,minmax(0,1fr))]">{ordered.map((q) => { const p = hasProfile && fitById[q.id] ? { ...q, ...fitById[q.id] } : q; return <ProgramCard key={p.id} p={p} onOpen={onOpen} mark={imap?.[p.id]} badge={badgeFor(p, eco)} />; })}</div>}
+        : <>
+          <div className={phone ? "space-y-2" : "grid grid-cols-[minmax(0,1fr)] gap-3 md:grid-cols-[repeat(2,minmax(0,1fr))] 2xl:grid-cols-[repeat(3,minmax(0,1fr))]"}>{ordered.slice(0, limit).map((q) => { const p = hasProfile && fitById[q.id] ? { ...q, ...fitById[q.id] } : q; return phone ? <BrowseRow key={p.id} p={p} onOpen={onOpen} mark={imap?.[p.id]} /> : <ProgramCard key={p.id} p={p} onOpen={onOpen} mark={imap?.[p.id]} badge={badgeFor(p, eco)} />; })}</div>
+          {ordered.length > limit && <div className="mt-5 flex flex-col items-center gap-1"><button type="button" onClick={() => setLimit((n) => n + step)} className="btn-ghost w-full sm:w-auto" data-testid="dir-more">Show {Math.min(step, ordered.length - limit)} more</button><p className="text-xs text-muted">Showing {limit} of {ordered.length}. Search or pick a kind to narrow the list.</p></div>}
+        </>}
       </>}
     </div>
   );
@@ -671,6 +698,7 @@ function Directory({ meta, onOpen, imap, eco, fitRes, account, hasProfile, start
 
 // The programs you said yes or no to. Interested ones read like a shortlist; the ones you hid wait here with a way back.
 function InterestedTab({ itc, onOpen }) {
+  const phone = useMedia("(max-width: 639px)");
   const [all, setAll] = useState(null);
   useEffect(() => { api.get("/navigator/programs").then((r) => setAll(r.data.programs || [])).catch(() => setAll([])); }, []);
   const rows = (state) => itc.interest.filter((i) => i.state === state).sort((a, b) => (b.at || "").localeCompare(a.at || ""));
@@ -684,7 +712,7 @@ function InterestedTab({ itc, onOpen }) {
         <h2 className="text-xl" style={{ textTransform: "none", letterSpacing: "-0.01em", fontWeight: 700 }}>{yes.length ? `${yes.length} you are interested in` : "Nothing saved yet"}</h2>
         <p className="mt-1 text-sm text-muted">Open any program and press Interested. It lands here, with its dates and its official page.</p>
         {yes.length > 0
-          ? <div className="mt-4 grid grid-cols-[minmax(0,1fr)] gap-3 md:grid-cols-[repeat(2,minmax(0,1fr))]">{yes.map((i) => <ProgramCard key={i.id} p={full(i)} onOpen={onOpen} mark="yes" />)}</div>
+          ? <div className={phone ? "mt-4 space-y-2" : "mt-4 grid grid-cols-[minmax(0,1fr)] gap-3 md:grid-cols-[repeat(2,minmax(0,1fr))]"}>{yes.map((i) => phone ? <BrowseRow key={i.id} p={full(i)} onOpen={onOpen} mark="yes" /> : <ProgramCard key={i.id} p={full(i)} onOpen={onOpen} mark="yes" />)}</div>
           : <p className="mt-4 rounded-2xl border border-dashed border-line p-8 text-center text-sm text-muted" data-testid="nav-interested-empty">Your shortlist is empty. Look through Programs that fit you and press Interested on the ones worth a second look.</p>}
       </section>
       {no.length > 0 && (
