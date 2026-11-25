@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect } from "react";
 import { Navigate, Route, Routes, useLocation } from "react-router-dom";
 import { Toaster } from "sonner";
 import { useAuth } from "./lib/auth";
@@ -29,6 +29,8 @@ import Install from "./pages/Install";
 import { HUB } from "./lib/demoHubConfig";
 import Navigator from "./pages/Navigator";
 import Journey from "./pages/Journey";
+import Admin from "./pages/Admin";
+import { trackView } from "./lib/track";
 import FounderEvents from "./pages/FounderEvents";
 import People from "./pages/People";
 import PersonProfile from "./pages/PersonProfile";
@@ -106,6 +108,13 @@ function HomeRoute() {
   return <Layout><EcosystemHome /></Layout>;
 }
 
+// Counts a page view each time the address changes (the page name only, never the query; see lib/track.js).
+function TrackViews() {
+  const { pathname } = useLocation();
+  useEffect(() => { trackView(pathname); }, [pathname]);
+  return null;
+}
+
 const P = ({ children }) => <Protected><Layout>{children}</Layout></Protected>;
 
 export default function App() {
@@ -113,6 +122,7 @@ export default function App() {
   return (
     <>
       <Toaster position="top-right" theme={config?.brand?.mode || "dark"} />
+      <TrackViews />
       <Routes>
         <Route path="/login" element={<Login />} />
         <Route path="/signup" element={<Signup />} />
@@ -123,6 +133,7 @@ export default function App() {
         <Route path="/demo/:short" element={<DemoLanding />} />
         <Route path="/navigator" element={<NavigatorRoute />} />
         <Route path="/journey" element={<JourneyRoute />} />
+        <Route path="/admin" element={<Admin />} />
         <Route path="/founder-events" element={<FounderEventsRoute />} />
         <Route path="/people" element={<PeopleRoute />} />
         <Route path="/people/:key" element={<PersonRoute />} />

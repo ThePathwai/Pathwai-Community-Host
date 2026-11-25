@@ -106,6 +106,7 @@ export const PRIVACY = {
     ]],
     ["Cookies", [
       "We use only the cookies the service needs to work: they keep you signed in and remember which community you are viewing. We don't use advertising or cross-site tracking cookies.",
+      "To see how many people use Pathwai, we count page views. This uses no cookie and no name: we record the page, the website a visit came from, and a code that changes every day and cannot be traced back to you. We skip it if your browser sends Do Not Track. Once you have an account, we also keep the date you last used it, so we can see how many people are active.",
     ]],
     ["How long we keep it", [
       "We keep your account information while your account is open. You can delete your account yourself in Settings, or write to us. We delete or anonymize your personal information within 30 days, except where we must keep some records for legal, security or payment reasons. Backups may hold a copy until they are overwritten in the normal cycle. Content you posted in a community (such as event comments or messages other people received) may remain visible to them in anonymized form.",

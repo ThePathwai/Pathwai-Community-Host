@@ -95,6 +95,7 @@ from seed_cross_community_roles import ensure_cross_community_roles  # noqa: E40
 import routes.hub as hub_module  # noqa: E402
 import realtime  # noqa: E402
 from routes.account import router as account_router  # noqa: E402
+from routes.platform_stats import router as platform_stats_router, ensure_indexes as ensure_stats_indexes  # noqa: E402
 from routes.live import router as live_router  # noqa: E402
 from routes.calendar_feed import router as calendar_router  # noqa: E402
 from routes.form_hooks import router as form_hooks_router  # noqa: E402
@@ -296,6 +297,7 @@ async def on_startup():
             await ensure_cross_community_roles()
     await ensure_directory_indexes()
     await ensure_hub_social_indexes()
+    await ensure_stats_indexes()
     if not demo_mode():
         # A real deployment: no fake data, no demo logins. Every community lives in its own database,
         # so each one needs its own indexes (not just the default one) -- also run when a new
@@ -1729,6 +1731,7 @@ api_router.include_router(navigator_router)
 api_router.include_router(oauth_router)
 api_router.include_router(hub_router)
 api_router.include_router(account_router)
+api_router.include_router(platform_stats_router)
 
 # Register router
 app.include_router(api_router)

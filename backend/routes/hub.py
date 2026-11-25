@@ -380,6 +380,8 @@ async def create_community(body: CreateCommunityIn, request: Request, response: 
 @router.get("/hub/me")
 async def hub_me(request: Request):
     acc = await account_from_request(request)
+    if acc:
+        acc = {**acc, "platform_admin": is_platform_admin(acc.get("email"))}  # only a yes or no, so the app can show the Admin page to the right people
     return {"account": acc, "active": current_community() if acc else None}
 
 
