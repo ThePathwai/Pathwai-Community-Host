@@ -10,7 +10,7 @@ const STEPS = [
   { id: "programs", target: "nav-programs", title: "Opportunities", body: "Every resource we track, with its source: grants, loans, tax credits, accelerators, incubators, mentors, founder communities and upcoming events. This is where you spend most of your time." },
   { id: "profile-bar", target: "profile-bar", title: "It all starts with your profile", body: "Your stage, province, sector and what you need decide which programs show up and in what order. Change them any time and this page follows." },
   { id: "matches", target: "matches", title: "Your best matches first", body: "Each program says why it fits you and whether you can apply now: open, apply anytime, or dates not posted. Tap one to see the requirements and go to the official page." },
-  { id: "tabs", target: "tabs", title: "Ways to look", body: "For you shows your matches. Browse searches and filters everything. Your shortlist sits next to it, and the guide answers questions in plain words." },
+  { id: "tabs", target: "tabs", title: "Ways to look", body: "Browse searches and filters everything we track. Once your startup is on your profile, a For you tab appears with your matches. Your shortlist sits next to it, and the guide answers questions in plain words." },
   { id: "journey", target: "nav-journey", title: "Journey", body: "Four steps from where you are now to what to do next, based on your stage." },
   { id: "events", target: "nav-events", title: "Events picked for you", body: "Networking, pitch, mentor and learning events for your stage and province. Each one links to the organizer's own page." },
   { id: "people", target: "nav-people", title: "People", body: "Browse founders, skilled people and startups. Follow them or send a message." },
@@ -30,7 +30,7 @@ export function findTarget(key) {
 // True once the page the person landed on has drawn what the tour points at.
 export function tourReady() {
   if (!findTarget("nav-programs")) return false;
-  return window.location.pathname.startsWith("/navigator") ? !!findTarget("matches") : true;
+  return window.location.pathname.startsWith("/navigator") ? !!(findTarget("matches") || findTarget("tabs")) : true; // "matches" only exists once there is a profile; the tabs are there for everyone
 }
 
 const pinned = (el) => { for (let n = el; n && n !== document.body; n = n.parentElement) { const p = getComputedStyle(n).position; if (p === "fixed" || p === "sticky") return true; } return false; };

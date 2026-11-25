@@ -655,7 +655,7 @@ function Directory({ meta, onOpen, imap, eco, fitRes, account, hasProfile, start
         {active && <button type="button" onClick={() => setF(BLANK)} className="text-sm font-semibold text-muted underline hover:text-ink" data-testid="dir-clear">Clear filters</button>}
       </div>
       {!hasProfile && !ev && (
-        <Link to={account ? "/me?edit=startup" : "/signup?for=founder"} className="mb-4 flex items-center gap-3 rounded-2xl border border-dashed border-line p-4 text-sm transition hover:border-ink/40" data-testid="dir-no-profile">
+        <Link to={account ? "/me?edit=startup" : "/signup?for=founder"} className="mb-4 flex items-center gap-3 rounded-2xl border border-dashed border-line p-4 text-sm transition hover:border-ink/40" data-testid="dir-no-profile" data-tour="profile-bar">
           <Compass className="h-5 w-5 shrink-0 text-muted" aria-hidden />
           <span className="min-w-0 flex-1"><span className="block font-semibold">{account ? "Add your startup to see why each one fits you, or doesn't" : "Create a free profile to see why each one fits you, or doesn't"}</span><span className="block text-muted">Every program would then say why it may suit you and what to watch out for.</span></span>
           <ArrowRight className="h-4 w-4 shrink-0" aria-hidden />
@@ -723,6 +723,8 @@ export default function Navigator({ embedded }) {
   const ready = !account || mine !== null;       // signed in: wait for the profile so we never flash results for someone else's answers
   const generic = !!account && ready && !mine?.stage;
   const phone = useMedia("(max-width: 639px)");
+  // No startup on the account yet means nothing can be picked for you: open on Browse, and leave "For you" out until there is a profile.
+  useEffect(() => { if (generic && tab === "path") setTab("all"); }, [generic, tab]);
   const railed = !embedded;                       // on a wide screen the next step, saved programs and events sit in a side column
 
   useEffect(() => { document.title = "Opportunities · Pathwai"; api.get("/navigator/meta").then((r) => setMeta(r.data)).catch(() => setErr("The directory could not load. Please try again.")); }, []);
@@ -767,10 +769,10 @@ export default function Navigator({ embedded }) {
       <div className="mb-6 flex flex-wrap items-end justify-between gap-4">
         <div>
           <p className="eyebrow hidden sm:block">Opportunities</p>
-          <h1 className="text-2xl sm:mt-2 sm:text-4xl" style={{ textTransform: "none", letterSpacing: "-0.03em", fontWeight: 800, textWrap: "balance" }}>{eco ? (scope === "hub" ? `Programs & grants at ${eco.hub}` : `Programs & grants across ${eco.wider}`) : account ? "Opportunities that fit your startup" : "Canadian opportunities that fit your startup"}</h1>
+          <h1 className="text-2xl sm:mt-2 sm:text-4xl" style={{ textTransform: "none", letterSpacing: "-0.03em", fontWeight: 800, textWrap: "balance" }}>{eco ? (scope === "hub" ? `Programs & grants at ${eco.hub}` : `Programs & grants across ${eco.wider}`) : account && !generic ? "Opportunities that fit your startup" : "Canadian opportunities"}</h1>
           <p className="mt-2 hidden text-sm text-muted sm:block">{eco ? (scope === "hub" ? (eco.wider ? `What ${eco.hub} runs, plus the grants, loans and programs its team points founders to. Each one is checked against your startup.` : `What ${eco.hub} runs for founders. Each one is checked against your startup.`) : `Every grant, loan, accelerator and mentor we track, with ${eco.hub} programs first.`) : meta ? <>{(meta.resources ?? meta.count).toLocaleString()} resources, each with its source: {meta.programs ?? meta.count} grants, loans, accelerators, mentors and founder communities{meta.events ? `, and ${meta.events} upcoming events` : ""}. Communities you join add their own on top.</> : "Loading"}</p>
         </div>
-        <div data-tour="tabs" className="w-full max-sm:[&>div]:flex max-sm:[&>div]:w-full max-sm:[&>div]:overflow-visible max-sm:[&_button]:flex-1 max-sm:[&_button]:px-1.5 sm:w-auto"><Segmented items={[["path", "For you"], ["all", <><span className="sm:hidden">Browse</span><span className="hidden sm:inline">Browse all</span></>], ...(account ? [["saved", <><span className="sm:hidden">Saved{itc.interest.some((i) => i.state === "yes") ? ` · ${itc.interest.filter((i) => i.state === "yes").length}` : ""}</span><span className="hidden sm:inline">{itc.interest.some((i) => i.state === "yes") ? `Interested · ${itc.interest.filter((i) => i.state === "yes").length}` : "Interested"}</span></>]] : []), ["ask", <><span className="sm:hidden">Guide</span><span className="hidden sm:inline">Ask the guide</span></>]]} value={tab} onChange={setTab} /></div>
+        <div data-tour="tabs" className="w-full max-sm:[&>div]:flex max-sm:[&>div]:w-full max-sm:[&>div]:overflow-visible max-sm:[&_button]:flex-1 max-sm:[&_button]:px-1.5 sm:w-auto"><Segmented items={[...(generic ? [] : [["path", "For you"]]), ["all", <><span className="sm:hidden">Browse</span><span className="hidden sm:inline">Browse all</span></>], ...(account ? [["saved", <><span className="sm:hidden">Saved{itc.interest.some((i) => i.state === "yes") ? ` · ${itc.interest.filter((i) => i.state === "yes").length}` : ""}</span><span className="hidden sm:inline">{itc.interest.some((i) => i.state === "yes") ? `Interested · ${itc.interest.filter((i) => i.state === "yes").length}` : "Interested"}</span></>]] : []), ["ask", <><span className="sm:hidden">Guide</span><span className="hidden sm:inline">Ask the guide</span></>]]} value={tab} onChange={setTab} /></div>
       </div>
 
       {eco?.wider && account && tab === "path" && <div className="mb-5"><ScopeSwitch eco={eco} scope={scope} onChange={setScope} total={res?.catalog_total} here={scope === "hub" ? (res ? (res.totals?.fit ?? null) : null) : null} /></div>}
@@ -780,7 +782,7 @@ export default function Navigator({ embedded }) {
       ) : account ? (
         <div className="space-y-6">
           {mine === null ? <Spinner /> : <><ProfileBar mine={mine} meta={meta} />{!phone && <div className="mt-3 empty:hidden"><GenderNudge mine={mine} /></div>}</>}
-          {ready && <div className={cx(railed && "xl:grid xl:grid-cols-[minmax(0,1fr)_340px] xl:items-start xl:gap-8")}><Results nudge={phone ? <GenderNudge mine={mine} /> : null} railed={railed} res={res} meta={meta} loading={loading} generic={generic} onOpen={setOpen} tracked={tracked} onTrack={track} imap={itc.byId} eco={eco} scope={scope} onWiden={() => setScope("all")} />{railed && res && <NextStepRail res={res} itc={itc} onOpen={setOpen} />}</div>}
+          {ready && !generic && <div className={cx(railed && "xl:grid xl:grid-cols-[minmax(0,1fr)_340px] xl:items-start xl:gap-8")}><Results nudge={phone ? <GenderNudge mine={mine} /> : null} railed={railed} res={res} meta={meta} loading={loading} generic={generic} onOpen={setOpen} tracked={tracked} onTrack={track} imap={itc.byId} eco={eco} scope={scope} onWiden={() => setScope("all")} />{railed && res && <NextStepRail res={res} itc={itc} onOpen={setOpen} />}</div>}
         </div>
       ) : <><SignedOutGate /><SignedOutShowcase meta={meta} onOpen={setOpen} onBrowse={(t) => { setStartType(t); setTab("all"); window.scrollTo({ top: 0 }); }} /></>}
       <ProgramDrawer p={open} onClose={() => setOpen(null)} meta={meta} tracked={tracked} onTrack={account ? track : undefined} interest={account ? itc : undefined} eco={eco} stage={res?.trajectory?.current || mine?.stage || "idea"} />
