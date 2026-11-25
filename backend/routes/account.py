@@ -16,7 +16,7 @@ from fastapi.encoders import jsonable_encoder
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel
 
-from auth import client_ip, create_reset_token, rate_limit, verify_password
+from auth import check_password_strength, client_ip, create_access_token, create_refresh_token, create_reset_token, hash_password, rate_limit, set_auth_cookies, verify_password
 from database import dbfor, hub_db
 from directory import _forget_membership, find_all_for_email, list_all_people, revoke_sessions_for_email
 from ._common import audit, audit_platform, clean
@@ -110,6 +110,49 @@ async def export_my_data(request: Request, acc: dict = Depends(require_account))
     out["platform_messages_sent"] = [_scrub(m) async for m in hub_db().platform_messages.find({"sender_email": email})]
     await audit_platform(acc["id"], "account.exported", "user", acc["id"], request=request)
     return JSONResponse(jsonable_encoder(out), headers={"Content-Disposition": 'attachment; filename="pathwai-my-data.json"'})
+
+
+async def _password_hash_for(email: str):
+    """The stored hash for this person (platform account first, then any community profile), or None for a Google/Apple-only sign-in."""
+    hub = await hub_db().accounts.find_one({"email": email})
+    recs = await find_all_for_email(email)
+    return (hub or {}).get("password_hash") or next((r.get("password_hash") for _, r in recs if r.get("password_hash")), None)
+
+
+@router.get("/hub/account/security")
+async def account_security(acc: dict = Depends(require_account)):
+    """What the Settings tab needs to know about how this person signs in. Never returns the hash itself."""
+    email = acc["email"].strip().lower()
+    hub = await hub_db().accounts.find_one({"email": email}, {"created_at": 1, "oauth_provider": 1})
+    has_password = bool(await _password_hash_for(email))
+    return {"email": email, "has_password": has_password, "sign_in_with": (hub or {}).get("oauth_provider") or acc.get("oauth_provider") or None,
+            "created_at": (hub or {}).get("created_at") or acc.get("created_at")}
+
+
+class ChangePasswordIn(BaseModel):
+    current_password: str
+    new_password: str
+
+
+@router.post("/hub/account/change-password")
+async def change_my_password(body: ChangePasswordIn, request: Request, response: Response, acc: dict = Depends(require_account)):
+    """One password for the person everywhere (platform account and every community profile). Every older session,
+    including a thief's, stops working; this device is signed straight back in."""
+    await rate_limit("account_password", acc["id"], 10, 3600, "Too many attempts. Please try again later.")
+    email = acc["email"].strip().lower()
+    pw_hash = await _password_hash_for(email)
+    if not pw_hash:
+        raise HTTPException(status_code=400, detail="You sign in with Google or Apple, so there is no Pathwai password to change.")
+    if not verify_password(body.current_password, pw_hash):
+        raise HTTPException(status_code=400, detail="Your current password is not correct.")
+    try:
+        check_password_strength(body.new_password)
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc))
+    await revoke_sessions_for_email(email, hash_password(body.new_password))
+    set_auth_cookies(response, create_access_token(acc["id"], acc.get("role") or "member"), create_refresh_token(acc["id"]))
+    await audit_platform(acc["id"], "auth.password_changed", "user", acc["id"], {"sessions_revoked": True}, request=request)
+    return {"ok": True}
 
 
 @router.post("/hub/account/sign-out-everywhere")

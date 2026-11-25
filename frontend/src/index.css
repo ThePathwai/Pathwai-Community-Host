@@ -105,6 +105,8 @@ a, button, [role="button"], select, .input {
    Menus, popups and sheets (fixed or absolute) are more opaque and blur what is behind them. Dimmed backdrops blur the page too. */
 .bg-surface { background-color: rgb(var(--c-surface) / 0.58); }
 .absolute.bg-surface, .fixed.bg-surface, [role="dialog"].bg-surface, [role="menu"].bg-surface { background-color: var(--glass-fill-strong); -webkit-backdrop-filter: var(--glass-blur); backdrop-filter: var(--glass-blur); border-color: var(--glass-edge); box-shadow: var(--glass-hi), 0 24px 60px -16px rgb(0 0 0 / 0.45); }
+/* the account menu is a small list laid over page text, so it must be solid or the text shows through it (iPhone Safari drops the blur) */
+[role="menu"].bg-surface { background-color: rgb(var(--c-surface)); -webkit-backdrop-filter: none; backdrop-filter: none; }
 .fixed[class*="bg-black/"] { -webkit-backdrop-filter: blur(10px) saturate(140%); backdrop-filter: blur(10px) saturate(140%); }
 /* Small text links get a taller tap area (without moving anything on the page), so they are easy to hit on a phone. */
 .tap { display: inline-block; padding-block: 0.55rem; margin-block: -0.55rem; }
@@ -296,9 +298,9 @@ h3, h4 { letter-spacing: -0.02em; }
   background: rgb(var(--c-bg) / 0.94); -webkit-backdrop-filter: blur(24px) saturate(1.4); backdrop-filter: blur(24px) saturate(1.4);
   border-top: 1px solid rgb(var(--c-ink) / 0.1);
 }
-.app-tab { display: flex; min-width: 0; flex-direction: column; align-items: center; justify-content: flex-start; gap: 2px; padding: 0.15rem 0.1rem; color: rgb(var(--c-muted)); font-size: 10.5px; font-weight: 600; line-height: 1.1; -webkit-tap-highlight-color: transparent; }
+.app-tab { display: flex; min-width: 0; flex-direction: column; align-items: center; justify-content: flex-start; gap: 3px; padding: 0.2rem 0.1rem; color: rgb(var(--c-muted)); font-size: 11px; font-weight: 600; line-height: 1.1; -webkit-tap-highlight-color: transparent; }
 .app-tab > span:last-child { max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.app-tab-ico { display: flex; height: 30px; width: 58px; align-items: center; justify-content: center; border-radius: 999px; transition: background-color .2s var(--ease-out, ease), transform .15s; }
+.app-tab-ico { display: flex; height: 30px; width: 56px; align-items: center; justify-content: center; border-radius: 999px; transition: background-color .2s var(--ease-out, ease), transform .15s; }
 .app-tab:active .app-tab-ico { transform: scale(.92); }
 .app-tab[aria-current="page"] { color: rgb(var(--c-ink)); }
 .app-tab[aria-current="page"] .app-tab-ico { background: rgb(var(--c-ink) / 0.14); }

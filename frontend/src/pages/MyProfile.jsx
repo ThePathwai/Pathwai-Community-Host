@@ -11,6 +11,7 @@ import GuideChat from "../components/GuideChat";
 import NextSteps from "../components/NextSteps";
 import PitchCard from "../components/PitchCard";
 import AccountShell from "../components/AccountShell";
+import AccountSettings from "../components/AccountSettings";
 import Journey from "../components/Journey";
 import { ContactCard, List } from "./MemberProfile";
 
@@ -33,6 +34,8 @@ export default function MyProfile({ embedded }) {
   const { account, user, loading, refresh } = useAuth();
   const [params, setParams] = useSearchParams();
   const [editing, setEditing] = useState(false);
+  const tab = params.get("tab") === "settings" ? "settings" : "profile";
+  const setTab = (t) => setParams(t === "settings" ? { tab: "settings" } : {}, { replace: true });
   const [pf, setPf] = useState(null);
   const [photo, setPhoto] = useState("");
   const [busy, setBusy] = useState(false);
@@ -49,7 +52,7 @@ export default function MyProfile({ embedded }) {
   }, [account?.id, params]); // eslint-disable-line react-hooks/exhaustive-deps
   const [plan, setPlan] = useState(null);   // the progress log, shown under the startup card (only where the planner exists)
   useEffect(() => { if (account?.startup) api.get("/navigator/plan").then((r) => setPlan(r.data.plan)).catch(() => {}); }, [account?.startup]); // eslint-disable-line react-hooks/exhaustive-deps
-  useEffect(() => { document.title = "Your profile · Pathwai"; }, []);
+  useEffect(() => { document.title = (tab === "settings" ? "Settings" : "Your profile") + " · Pathwai"; }, [tab]);
   useEffect(() => { if (editing) window.scrollTo({ top: 0 }); }, [editing]);
 
   if (loading) return <Spinner />;
@@ -153,6 +156,19 @@ export default function MyProfile({ embedded }) {
     </div>
   );
 
-  if (embedded) return <div className="py-2">{body}</div>;
-  return <AccountShell active="profile"><div data-testid="my-profile-page">{body}</div></AccountShell>;
+  // Profile | Settings. Hidden while the editor is open, which has its own Save and Cancel.
+  const tabs = !editing && (
+    <div className="mx-auto mb-5 w-full max-w-5xl" role="tablist" aria-label="Your account">
+      <div className="inline-flex rounded-full border border-line p-1">
+        {[["profile", "Profile"], ["settings", "Settings"]].map(([k, label]) => (
+          <button key={k} type="button" role="tab" aria-selected={tab === k} onClick={() => setTab(k)} data-testid={`my-tab-${k}`}
+            className={"rounded-full px-5 py-2 text-sm font-medium transition " + (tab === k ? "" : "text-muted hover:text-ink")}
+            style={tab === k ? { background: "var(--accent)", color: "var(--on-accent)" } : undefined}>{label}</button>
+        ))}
+      </div>
+    </div>
+  );
+  const page = <>{tabs}{!editing && tab === "settings" ? <AccountSettings account={account} onEditProfile={() => { setTab("profile"); startEdit(false); }} /> : body}</>;
+  if (embedded) return <div className="py-2">{page}</div>;
+  return <AccountShell active="profile"><div data-testid="my-profile-page">{page}</div></AccountShell>;
 }

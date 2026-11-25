@@ -1,7 +1,7 @@
 import { COMMUNITIES_VISIBLE } from "../lib/flags";
 import React, { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { BarChart3, Building2, CalendarDays, Compass, LogOut, MessageCircle, Route, Search, User, UserRound, Info, PlayCircle } from "./icons";
+import { BarChart3, Building2, CalendarDays, Compass, LogOut, MessageCircle, Route, Search, Settings, User, UserRound, Info, PlayCircle } from "./icons";
 import { useAuth } from "../lib/auth";
 import { Avatar, Modal, PoweredBy, Wordmark, cx } from "./ui";
 import GuideChat from "./GuideChat";
@@ -70,6 +70,7 @@ export default function AccountShell({ active, children }) {
       <div role="menu" className={cx("absolute z-50 w-60 overflow-hidden rounded-xl border border-line bg-surface shadow-xl", up ? "bottom-full left-0 mb-2" : "right-0 top-12")} data-testid="shell-menu-panel">
         <div className="border-b border-line px-4 py-3"><p className="truncate text-sm font-medium">{account.name}</p><p className="truncate text-xs text-muted">{account.email}</p></div>
         <Link role="menuitem" to="/me" onClick={() => setMenu(false)} className="flex items-center gap-2 px-4 py-2.5 text-sm hover:bg-ink/5"><User className="h-4 w-4" />Your profile</Link>
+        <Link role="menuitem" to="/me?tab=settings" onClick={() => setMenu(false)} className="flex items-center gap-2 px-4 py-2.5 text-sm hover:bg-ink/5" data-testid="shell-menu-settings"><Settings className="h-4 w-4" />Settings</Link>
         {COMMUNITIES_VISIBLE && <Link role="menuitem" to="/communities" onClick={() => setMenu(false)} className="flex items-center gap-2 px-4 py-2.5 text-sm hover:bg-ink/5" data-testid="shell-menu-communities"><Building2 className="h-4 w-4" />Communities</Link>}
         {account.platform_admin && <Link role="menuitem" to="/admin" onClick={() => setMenu(false)} className="flex items-center gap-2 px-4 py-2.5 text-sm hover:bg-ink/5" data-testid="shell-menu-admin"><BarChart3 className="h-4 w-4" />Admin</Link>}
         <button role="menuitem" className="flex w-full items-center gap-2 px-4 py-2.5 text-left text-sm hover:bg-ink/5" data-testid="shell-tour" onClick={() => { setMenu(false); setTour(true); }}><PlayCircle className="h-4 w-4" />Take the tour</button>
@@ -115,8 +116,8 @@ export default function AccountShell({ active, children }) {
         </div>
 
         {/* phone: guide button and tab bar */}
-        <nav className="app-tabbar grid grid-cols-[1.4fr_1fr_1fr_1fr_1fr] lg:hidden" aria-label="Main" data-testid="shell-tabs">
-          {[["programs", "/navigator", Compass, "Opportunities"], ["journey", "/journey", Route, "Journey"], ["events", "/founder-events", CalendarDays, "Events"], ["people", "/people", UserRound, "People"], ["profile", "/me", User, "Profile"]].map(([k, to, Icon, label]) => {
+        <nav className="app-tabbar grid grid-cols-5 lg:hidden" aria-label="Main" data-testid="shell-tabs">
+          {[["programs", "/navigator", Compass, "Programs"], ["journey", "/journey", Route, "Journey"], ["events", "/founder-events", CalendarDays, "Events"], ["people", "/people", UserRound, "People"], ["profile", "/me", User, "Profile"]].map(([k, to, Icon, label]) => {
             const on = k === active;
             return (
               <Link key={label} to={to} data-tour={`nav-${k}`} aria-current={on ? "page" : undefined} className="app-tab">
