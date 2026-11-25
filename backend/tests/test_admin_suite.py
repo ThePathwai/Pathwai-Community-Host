@@ -149,3 +149,20 @@ def test_the_audience_shows_where_and_on_what_people_came_without_storing_who(c)
     assert {x["label"] for x in a["devices"]} >= {"Mobile", "Desktop"}
     assert {"label": "LinkedIn", "visitors": 1} in a["apps"]
     assert any(x["source"] == "linkedinpost" and x["campaign"] == "pilot-1" for x in a["campaigns"])  # the tag is cleaned to plain characters
+
+
+def test_a_profile_saved_by_someone_who_signed_up_inside_a_community_is_kept(c):
+    """Community-only people had no platform account, so photo and profile edits were silently dropped. They are now adopted and saved."""
+    c.post("/api/auth/logout")
+    r = c.post("/api/auth/login", json={"email": "admin@yourcommunity.app", "password": "Demo123!"})
+    assert r.status_code == 200, r.text
+    photo = "data:image/png;base64,iVBORw0KGgo="
+    r = c.patch("/api/hub/profile", json={"bio": "Updated from the profile page", "avatar_url": photo, "title": "Founder"})
+    assert r.status_code == 200, r.text
+    me = c.get("/api/hub/me").json()["account"]
+    assert me["bio"] == "Updated from the profile page" and me["avatar_url"] == photo and me["title"] == "Founder"
+    # still signs in the same way afterwards, and a second edit sticks too
+    c.post("/api/auth/logout")
+    assert c.post("/api/auth/login", json={"email": "admin@yourcommunity.app", "password": "Demo123!"}).status_code == 200
+    assert c.patch("/api/hub/profile", json={"bio": "Second edit"}).status_code == 200
+    assert c.get("/api/hub/me").json()["account"]["bio"] == "Second edit"

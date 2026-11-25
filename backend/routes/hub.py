@@ -107,6 +107,34 @@ def set_community_cookie(response: Response, slug: str) -> None:
     set_cookie(response, "pw_community", slug, COMMUNITY_COOKIE_DAYS * 86400, httponly=False)
 
 
+async def _adopt_into_hub(d: dict) -> Optional[dict]:
+    """Someone who signed up inside a community before accounts lived on the platform has a profile there but no platform account, so
+    everything saved on the account (profile, photo, startup, saved programs) had nowhere to go and was lost without an error. Give
+    them the platform account they should have had: same id, email and password, with the profile they already have. Safe to repeat."""
+    email = (d.get("email") or "").strip().lower()
+    if not email or not d.get("id"):
+        return None
+    hub = hub_db()
+    existing = await hub.accounts.find_one({"$or": [{"id": d["id"]}, {"email": email}]}, {"_id": 0, "password_hash": 0, "sessions_valid_after": 0})
+    if existing:
+        return existing
+    doc = {
+        "id": d["id"], "name": d.get("name") or email.split("@")[0], "email": email, "password_hash": d.get("password_hash"), "avatar_url": d.get("avatar_url"),
+        "age": d.get("age"), "title": d.get("title") or "", "company": d.get("company") or "", "location": d.get("location") or "", "bio": d.get("bio") or "",
+        "skill_set": d.get("skill_set") or [], "interests_hobbies": d.get("interests_hobbies") or [], "goals": d.get("goals") or [], "support_needs": d.get("support_needs") or [],
+        "contact": d.get("contact") or {"phone": "", "linkedin": "", "instagram": "", "website": ""}, "photos": d.get("photos") or [],
+        "profile_completed": False, "created_at": d.get("created_at") or _now(), "adopted_from_community": True,
+    }
+    for k in ("sessions_valid_after", "terms_accepted_at", "terms_version"):
+        if d.get(k):
+            doc[k] = d[k]
+    try:
+        await hub.accounts.insert_one(dict(doc))
+    except Exception:  # noqa: BLE001 -- two requests adopting at once: the other one wins, read it back
+        pass
+    return await hub.accounts.find_one({"id": d["id"]}, {"_id": 0, "password_hash": 0, "sessions_valid_after": 0})
+
+
 async def account_from_request(request: Request) -> Optional[dict]:
     """Signed-in Pathwai person (works without membership in the active community)."""
     tok = request.cookies.get("access_token")
@@ -133,6 +161,9 @@ async def account_from_request(request: Request) -> Optional[dict]:
         _, d = hit
         if session_revoked(payload, d):
             return None
+        adopted = await _adopt_into_hub(d)
+        if adopted:
+            return adopted
         return {"id": d["id"], "name": d.get("name"), "email": d.get("email"), "avatar_url": d.get("avatar_url"), "title": d.get("title")}
     return None
 
@@ -295,7 +326,9 @@ async def hub_update_profile(body: AccountProfileIn, acc: dict = Depends(require
         values["startup"] = _clean_startup(values["startup"], age=values.get("age", acc.get("age"))) if values["startup"] else {}
     values["profile_completed"] = True
     values["updated_at"] = _now()
-    await hub_db().accounts.update_one({"id": acc["id"]}, {"$set": values})
+    res = await hub_db().accounts.update_one({"id": acc["id"]}, {"$set": values})
+    if not res.matched_count:  # never answer "saved" for something that was not saved
+        raise HTTPException(status_code=409, detail="Your account could not be found to save these changes. Please sign out, sign in again and retry.")
     updated = await hub_db().accounts.find_one({"id": acc["id"]}, {"_id": 0, "password_hash": 0})
     return {"ok": True, "account": updated}
 
