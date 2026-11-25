@@ -31,6 +31,9 @@ import Navigator from "./pages/Navigator";
 import Journey from "./pages/Journey";
 import Admin from "./pages/Admin";
 import { trackView } from "./lib/track";
+import { COMMUNITIES_VISIBLE } from "./lib/flags";
+import UnderConstruction from "./components/UnderConstruction";
+import AccountShell from "./components/AccountShell";
 import FounderEvents from "./pages/FounderEvents";
 import People from "./pages/People";
 import PersonProfile from "./pages/PersonProfile";
@@ -93,6 +96,7 @@ function CommunitiesRoute() {
   const loc = useLocation();
   if (loading) return <Spinner />;
   if (!account) return <Navigate to="/login" state={{ from: loc.pathname }} replace />;
+  if (!COMMUNITIES_VISIBLE) return <AccountShell active="communities"><UnderConstruction title="Communities" note="We are building this part of Pathwai. Communities will show up here once it is ready." /></AccountShell>;
   return user ? <Layout><Communities embedded /></Layout> : <Communities />;
 }
 
@@ -144,8 +148,8 @@ export default function App() {
         <Route path="/terms" element={<Legal doc="terms" />} />
         <Route path="/privacy" element={<Legal doc="privacy" />} />
         <Route path="/reset-password" element={<ResetPassword />} />
-        <Route path="/join/:code" element={<JoinCommunity />} />
-        <Route path="/c/:slug" element={<CommunityLanding />} />
+        <Route path="/join/:code" element={COMMUNITIES_VISIBLE ? <JoinCommunity /> : <Navigate to="/" replace />} />
+        <Route path="/c/:slug" element={COMMUNITIES_VISIBLE ? <CommunityLanding /> : <Navigate to="/" replace />} />
         <Route path="/" element={<HomeRoute />} />
         <Route path="/assistant" element={<P><Ask /></P>} />
         <Route path="/plan" element={<P><Planner /></P>} />

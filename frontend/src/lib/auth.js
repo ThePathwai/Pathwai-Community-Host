@@ -1,3 +1,4 @@
+import { COMMUNITIES_VISIBLE } from "./flags";
 import { applyBrand, HUB_BRAND, setThemeScope } from "./theme";
 import React, { createContext, useCallback, useContext, useEffect, useRef, useState } from "react";
 import { api, renewSession } from "./api";
@@ -46,7 +47,7 @@ export function AuthProvider({ children }) {
       if (!acc && !bad && !isDemo()) {
         try { await renewSession(); acc = (await api.get("/hub/me")).data.account; } catch (e) { acc = null; bad = unsure(e); }
       }
-      if (acc && !bad) { try { u = (await api.get("/auth/me")).data; } catch (e) { u = null; bad = unsure(e); } }
+      if (acc && !bad && COMMUNITIES_VISIBLE) { try { u = (await api.get("/auth/me")).data; } catch (e) { u = null; bad = unsure(e); } }
       if (!bad) break;
       if (seen.current.account) break; // already showing the app: keep it as is
       await sleep(1200 * (i + 1));
@@ -81,10 +82,11 @@ export function AuthProvider({ children }) {
   }, []);
 
   const applySession = (data) => {
-    seen.current = { account: data.account || data.user, user: data.user || null };
-    setAccount(data.account || data.user); setUser(data.user || null);
+    const inCommunity = COMMUNITIES_VISIBLE ? data.user || null : null; // with communities off, nobody is ever "inside" one
+    seen.current = { account: data.account || data.user, user: inCommunity };
+    setAccount(data.account || data.user); setUser(inCommunity);
     // A community profile needs that community's settings (name, brand) before its pages draw, so fetch them right behind the sign-in.
-    if (data.user) loadConfig();
+    if (inCommunity) loadConfig();
     // Sign-in answers with just id, name and email. Fetch the whole account (profile, startup details) right behind it, so the
     // profile editor never opens half empty and then saves blanks over what is already stored.
     api.get("/hub/me").then((r) => { const a = r.data.account; if (a) { seen.current.account = a; setAccount(a); } }).catch(() => {});

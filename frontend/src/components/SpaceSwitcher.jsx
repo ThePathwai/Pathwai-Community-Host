@@ -6,6 +6,7 @@ import { api, errMsg } from "../lib/api";
 import { useAuth } from "../lib/auth";
 import { isInnovation } from "../lib/communityGroup";
 import { cx } from "./ui";
+import { COMMUNITIES_VISIBLE } from "../lib/flags";
 
 // Hop in and out of your communities from anywhere. Two kinds of place share one account and one profile:
 //   Pathwai       the general page: all of Canada, your journey, your events and people (the account shell)
@@ -27,7 +28,7 @@ export default function SpaceSwitcher({ variant = "chip", label = true }) {
   // Read again whenever you hop, so the check mark and the list are always where you are now.
   useEffect(() => { if (account) load(); }, [account, user, load]);
 
-  if (!account) return null;
+  if (!account || !COMMUNITIES_VISIBLE) return null;
   const list = (data?.communities || []).filter(isInnovation);
   const mine = list.filter((c) => c.my?.status === "approved");
   const waiting = list.filter((c) => c.my?.status === "pending");
