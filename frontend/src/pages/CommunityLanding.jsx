@@ -3,6 +3,7 @@ import { Link, useNavigate, useParams } from "react-router-dom";
 import { api, errMsg } from "../lib/api";
 import { applyBrand } from "../lib/theme";
 import { PoweredBy, Spinner } from "../components/ui";
+import { MEMBERS_VISIBLE } from "../lib/flags";
 
 // The external share link (GET /hub/communities/{slug}/public, no auth) -- what the "Copy
 // invite link" on their own community hands to anyone, on or off Pathwai. Deliberately its own
@@ -51,7 +52,7 @@ export default function CommunityLanding() {
         {info.tagline && <p className="mt-2 text-lg" style={{ color: col.muted }}>{info.tagline}</p>}
         {info.about && <p className="mt-5 whitespace-pre-wrap text-sm leading-relaxed sm:text-base" style={{ opacity: 0.85 }}>{info.about}</p>}
         <p className="mt-6 text-sm" style={{ color: col.muted }}>
-          {info.members} member{info.members === 1 ? "" : "s"} · {info.upcoming_events} upcoming event{info.upcoming_events === 1 ? "" : "s"}
+          {MEMBERS_VISIBLE ? `${info.members} member${info.members === 1 ? "" : "s"} · ` : ""}{info.upcoming_events} upcoming event{info.upcoming_events === 1 ? "" : "s"}
         </p>
         <div className="mt-8 flex flex-col gap-3 sm:flex-row">
           {/* Every community join request is confirmed by the Pathwai team -- no community can auto-approve one. */}

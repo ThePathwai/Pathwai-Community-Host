@@ -6,13 +6,15 @@ import { useAuth } from "../lib/auth";
 import AccountShell from "../components/AccountShell";
 import { ProfileCard, Rail, StartupMini } from "../components/ProfileRail";
 import { Spinner } from "../components/ui";
+import UnderConstruction from "../components/UnderConstruction";
+import { MEMBERS_VISIBLE } from "../lib/flags";
 
 // People: everyone on Pathwai in one place. Zoomed out, each group is a row of photo cards you swipe sideways (people open to work with startups,
 // startups looking for people, the people you follow, and everyone else). Tap a card for the full profile at /people/:key.
 
 const get = (url, params) => api.get(url, { params }).then((r) => r.data).catch(() => null);
 
-export default function People({ embedded }) {
+function PeopleDirectory({ embedded }) {
   const { account, loading } = useAuth();
   const [q, setQ] = useState("");
   const [talent, setTalent] = useState(null);
@@ -87,5 +89,11 @@ export default function People({ embedded }) {
       )}
     </div>
   );
+  return embedded ? page : <AccountShell active="people">{page}</AccountShell>;
+}
+
+export default function People({ embedded }) {
+  if (MEMBERS_VISIBLE) return <PeopleDirectory embedded={embedded} />;
+  const page = <div className="px-4 py-10"><UnderConstruction title="People" /></div>;
   return embedded ? page : <AccountShell active="people">{page}</AccountShell>;
 }

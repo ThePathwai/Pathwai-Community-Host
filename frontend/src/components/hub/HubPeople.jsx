@@ -2,6 +2,8 @@ import React, { useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { countBy } from "../../lib/explain";
 import { Spinner } from "../ui";
+import UnderConstruction from "../UnderConstruction";
+import { MEMBERS_VISIBLE } from "../../lib/flags";
 import { useEcosystem } from "../../lib/ecosystem";
 import { Chips, Empty, MatchCard, PageHead, PersonAvatar, SearchBox, SummaryBar, VerdictSections, useHubData } from "./HubKit";
 
@@ -19,7 +21,7 @@ function Card({ m }) {
   );
 }
 
-export default function HubPeople() {
+function HubPeopleList() {
   const eco = useEcosystem();
   const { d, err } = useHubData();
   const [filter, setFilter] = useState("all");
@@ -46,4 +48,8 @@ export default function HubPeople() {
       {items.length ? <VerdictSections items={items} filter={filter} render={(m) => <Card key={m.id} m={m} />} /> : <Empty>No one matches that search.</Empty>}
     </div>
   );
+}
+
+export default function HubPeople() {
+  return MEMBERS_VISIBLE ? <HubPeopleList /> : <UnderConstruction title="People" />;
 }

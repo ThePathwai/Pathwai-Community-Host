@@ -13,6 +13,7 @@ import { CheckStrip, KIND, KindTile, V, VerdictBadge, daysFromNow, dayShort, hea
 import { VERDICT, VERDICTS, VRANK } from "../lib/explain";
 import { buildPlan, stepStates, suggestNext } from "../lib/planner";
 import { SUGGESTIONS } from "../lib/ask";
+import { MEMBERS_VISIBLE } from "../lib/flags";
 
 // Home for a hub that works as an ecosystem (config.ecosystem, see lib/ecosystem.js). It is sized to the screen: on a laptop or a phone the
 // whole page is visible at once, with nothing to scroll. Whatever room is left goes to the list of matches, which shows as many rows as fit.
@@ -283,11 +284,11 @@ export default function EcosystemHome() {
     <div className="card" data-testid="home-fallback">
       <p className="eyebrow">Welcome{first ? `, ${first}` : ""}</p>
       <h1 className="mt-1 text-xl font-semibold sm:text-2xl">{hub ? `Welcome to ${hub}` : "Welcome"}</h1>
-      <p className="mt-1.5 max-w-xl text-sm text-muted">Find grants, programs, mentors and events that fit your business, see who else is here, and keep your own path in one place.</p>
+      <p className="mt-1.5 max-w-xl text-sm text-muted">Find grants, programs, mentors and events that fit your business, and keep your own path in one place.</p>
       <div className="mt-4 grid grid-cols-3 gap-2 sm:flex sm:flex-wrap">
         <Link to="/navigator" className="btn-primary col-span-3 sm:col-span-1" data-testid="home-opportunities">Find opportunities</Link>
         <Link to="/events" className="btn-ghost">Events</Link>
-        <Link to="/members" className="btn-ghost">People</Link>
+        {MEMBERS_VISIBLE && <Link to="/members" className="btn-ghost">People</Link>}
         <Link to="/journey" className="btn-ghost">Journey</Link>
       </div>
     </div>
@@ -304,7 +305,7 @@ export default function EcosystemHome() {
   const tabs = [
     { id: "programs", title: "Programs", to: "/navigator", counts: d.verdicts.program, items: progs },
     { id: "events", title: "Events", to: "/events", counts: d.verdicts.event, items: [...(L.event || [])].sort(byDate) },
-    { id: "people", title: "People", to: "/members", counts: d.verdicts.person, items: [...(L.person || [])].sort(rank) },
+    ...(MEMBERS_VISIBLE ? [{ id: "people", title: "People", to: "/members", counts: d.verdicts.person, items: [...(L.person || [])].sort(rank) }] : []),
     { id: "resources", title: "Resources", to: "/resources", counts: d.verdicts.resource, items: [...(L.resource || [])].sort(rank) },
   ];
   return (

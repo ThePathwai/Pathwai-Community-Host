@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { Link, useParams } from "react-router-dom";
+import { Link, Navigate, useParams } from "react-router-dom";
 import { toast } from "sonner";
 import { api, errMsg } from "../lib/api";
 import { ReachOutModal } from "../components/ReachOutModal";
@@ -10,6 +10,7 @@ import { Avatar, Button, Card, Chip, Spinner } from "../components/ui";
 import { WhyReasons, reasonsOf } from "../components/WhyMatch";
 import PitchCard from "../components/PitchCard";
 import { ProfileLearning } from "../components/Learning";
+import { MEMBERS_VISIBLE } from "../lib/flags";
 
 export const List = ({ title, items, accent }) => items?.length ? (
   <Card style={accent ? { borderColor: "var(--accent)" } : undefined}><h3 className="label" style={accent ? { color: "var(--accent)" } : undefined}>{title}</h3><div className="flex flex-wrap gap-1.5">{items.map((x) => { const t = typeof x === "string" ? x : x.name || x.label; return <Chip key={t} accent={accent}>{t}</Chip>; })}</div></Card>
@@ -40,7 +41,7 @@ export function ContactCard({ u, self }) {
   );
 }
 
-export default function MemberProfile() {
+function MemberProfileView() {
   const { id } = useParams();
   const { user, config } = useAuth();
   const [u, setU] = useState(null);
@@ -116,4 +117,8 @@ export default function MemberProfile() {
       <ReachOutModal open={open} onClose={() => setOpen(false)} member={u} communityName={config?.community_name} defaultTopic={why?.can_help_you?.[0] || ""} />
     </div>
   );
+}
+
+export default function MemberProfile() {
+  return MEMBERS_VISIBLE ? <MemberProfileView /> : <Navigate to="/members" replace />;
 }

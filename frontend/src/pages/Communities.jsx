@@ -7,6 +7,7 @@ import { useAuth } from "../lib/auth";
 import AccountShell from "../components/AccountShell";
 import { Modal, Spinner, cx } from "../components/ui";
 import { isInnovation } from "../lib/communityGroup";
+import { MEMBERS_VISIBLE } from "../lib/flags";
 
 // Communities: the hubs, accelerators and founder networks you can join with the one profile on your account.
 //   Yours      the ones you are in (open one) and the ones waiting to be confirmed
@@ -113,7 +114,7 @@ function Card({ c, children, testId }) {
       <Logo c={c} />
       <div className="min-w-0 flex-1">
         <p className="truncate font-semibold">{c.name}</p>
-        <p className="truncate text-xs text-muted">{[c.kind, c.members ? `${c.members} ${c.members === 1 ? "member" : "members"}` : ""].filter(Boolean).join(" · ")}</p>
+        <p className="truncate text-xs text-muted">{[c.kind, MEMBERS_VISIBLE && c.members ? `${c.members} ${c.members === 1 ? "member" : "members"}` : ""].filter(Boolean).join(" · ")}</p>
         {c.tagline && <p className="mt-1.5 line-clamp-2 text-sm text-ink/80">{c.tagline}</p>}
         <div className="mt-3 flex flex-wrap items-center gap-2">{children}</div>
       </div>

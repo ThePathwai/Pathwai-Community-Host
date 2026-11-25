@@ -8,6 +8,7 @@ import AccountShell from "../components/AccountShell";
 import MessageRequestModal from "../components/MessageRequestModal";
 import { Cover } from "../components/ProfileRail";
 import { Spinner, cx } from "../components/ui";
+import { MEMBERS_VISIBLE } from "../lib/flags";
 
 // A person's full profile, in the same widgets a community member card uses: a hero with their photo and the numbers that matter, then a widget
 // each for what they do, their startup, the communities they are in, and their photos. Only what they chose to share is here.
@@ -27,7 +28,7 @@ const Widget = ({ title, children, className = "", ...rest }) => (
 );
 const Label = ({ children }) => <p className="mb-1.5 text-[11px] font-semibold uppercase text-muted" style={{ letterSpacing: "0.12em" }}>{children}</p>;
 
-export default function PersonProfile({ embedded }) {
+function PersonProfileView({ embedded }) {
   const { key } = useParams();
   const { account, loading } = useAuth();
   const [p, setP] = useState(null);
@@ -152,4 +153,9 @@ export default function PersonProfile({ embedded }) {
       <MessageRequestModal to={to} onClose={() => setTo(null)} />
     </div>
   );
+}
+
+export default function PersonProfile(props) {
+  // While the members area is under construction nothing about a person is loaded or shown.
+  return MEMBERS_VISIBLE ? <PersonProfileView {...props} /> : <Navigate to="/people" replace />;
 }

@@ -8,6 +8,7 @@
 //   profile: the Navigator profile ({stage, needs, ...}), picks: { programId: note } from the hub, today: "YYYY-MM-DD"
 import { NEED_LABEL } from "./navigator";
 import { NEED_TAGS, VRANK, countBy, daysBetween, explainEvent, explainPerson, explainProgram, explainResource, needsOf } from "./explain";
+import { MEMBERS_VISIBLE } from "./flags";
 
 export { needsOf };
 export const KINDS = { program: "Program", grant: "Grant", event: "Event", person: "Person", resource: "Resource" };
@@ -41,7 +42,7 @@ function collect({ programs, events, people, resources, needs, picks, today, hub
       place: String(e.location || "").split(" (")[0], going: e.attendee_count || 0, capacity: e.capacity || null, text: hay(e.title, e.category, e.description, e.location, ...(e.tags || [])), rsvp: e.my_rsvp || null, paid: !!e.price_cents, category: e.category || "", days: d,
       needs: needsOf([...(e.tags || []), String(e.category || "").toLowerCase()]), action: e.is_attending ? "You're going" : "RSVP", score: 60 - VRANK[x.verdict] * 12 + Math.max(0, 14 - d), ref: e });
   }
-  for (const m of people) {
+  for (const m of (MEMBERS_VISIBLE ? people : [])) {
     const u = m.user || {};
     const offers = (m.can_help_you || []).slice(0, 3), wants = (m.you_can_help || []).slice(0, 3);
     const base = { offers, wants, reasonScore: m.score || 0 };
