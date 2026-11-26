@@ -1,7 +1,7 @@
 {
   "name": "Pathwai",
   "short_name": "Pathwai",
-  "description": "Your personal venture planner.",
+  "description": "The venture advisor for innovation hubs.",
   "start_url": "/",
   "scope": "/",
   "display": "standalone",

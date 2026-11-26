@@ -1,27 +1,27 @@
 import React, { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { ArrowRight, ArrowUp, BookOpen, Briefcase, Check, Compass, Layers, Rocket, Search, Sparkles, Target, TrendingUp, Users } from "../components/icons";
+import { ArrowRight, ArrowUp, Briefcase, Building2, Check, Compass, Layers, Rocket, Search, Target, TrendingUp, Users } from "../components/icons";
 import { cx } from "../components/ui";
 import { DEMO_PATH } from "../lib/demo";
-import { Eyebrow, Glow, Num, Pill, Section, SiteShell, WAITLIST } from "../components/SiteKit";
+import { Eyebrow, Glow, Growth, Num, Pill, Section, SiteShell, WAITLIST } from "../components/SiteKit";
 
 // The website home page (shown at / to anyone who is signed out). About and Contact are their own pages (SiteAbout.jsx, SiteContact.jsx);
 // header, footer and shared blocks live in components/SiteKit.jsx. Plain data arrays below, so copy edits are one-liners.
 // Wording follows thepathwai.com.
 
 const FLOW = [
-  [Layers, "Business context", "Where the business is heading"],
-  [Compass, "Opportunities", "Programs and capital that fit"],
-  [Users, "People", "Mentors, investors and peers"],
-  [BookOpen, "Resources", "Guides, templates and perks"],
-  [Target, "Clarity", "Why it matters, what to do next"],
+  [Building2, "Your hub", "Programs, events and people, loaded once"],
+  [Layers, "Each founder", "Business, stage and what they need"],
+  [Compass, "The match", "What fits, and why"],
+  [Target, "The next move", "A plan with the first step marked"],
+  [Users, "Your advisors", "Free for the hard conversations"],
 ];
 
 const TOUR = [
+  [Building2, "For hubs", "Your hub's own advisor", "Load your programs, events and people once. Pathwai answers the routine questions from your own catalogue."],
   [Layers, "For founders", "Business context", "Start with the business trajectory, its goals, and current needs."],
-  [Compass, "For founders", "Relevant support", "Match that context with opportunities and people in the community."],
+  [Compass, "For founders", "Relevant support", "Match that context with your hub's programs first, then the wider ecosystem."],
   [TrendingUp, "For founders", "Investor introductions", "Find the angels and venture funds that back this stage and sector, and arrive with a clear ask."],
-  [Target, "For founders", "Context and clarity", "Show founders why a match matters and what to explore next."],
   [Users, "For advisors", "Advisor capacity", "Less routine discovery. More time for complex founder needs."],
   [Briefcase, "For investors", "Founders worth meeting", "See who is building what, with a pitch and a plan on each profile, and meet the ones founders choose to introduce."],
 ];
@@ -31,15 +31,15 @@ const PROMPTS = ["I need to find my first customers", "Which grant should I appl
 const STARTS = ["Funding", "Investors", "Mentors", "Events", "People", "Resources"];
 
 const SIDES = [
-  { tag: "For founders", title: "Find your way.", sub: "Self-service, matched to you.", items: ["Programs and funding matched to you", "Mentors and investors who fit", "Why each match matters", "Sharper advisor questions"] },
-  { tag: "For advisors", title: "Get time back.", sub: "Focus where it matters.", items: ["Less routine work", "Programs easy to find", "Time for complex needs", "More founders, same team"] },
-  { tag: "For investors", title: "Meet the right founders.", sub: "Prepared, and known to their community.", items: ["Founders by stage and sector", "A clear pitch and plan on each profile", "Introductions founders choose to make", "Backed by a community that knows them"] },
+  { tag: "For hubs", title: "A venture advisor on call.", sub: "Your programs, events and people, put to work.", items: ["Answers the routine questions at intake", "Matches each founder to your programs first", "Plans the next steps with the founder", "Your team keeps the hard conversations"] },
+  { tag: "For founders", title: "Know your next move.", sub: "Matched to you, and to the hub behind you.", items: ["Programs, grants and events that fit", "Mentors and investors who back your stage", "Why each match matters", "A plan, not a list"] },
+  { tag: "For the ecosystem", title: "One system, hub to hub.", sub: "Stronger with every hub that joins.", items: ["Founders carry their profile between hubs, when they choose", "Hubs refer founders to each other", "Investors meet founders their hub already knows", "One national picture of innovation support"] },
 ];
 
 const STEPS = [
-  ["Discover directly", "Explore support directly."],
-  ["Understand the fit", "See what fits the business."],
-  ["Seek deeper help", "Bring focused questions."],
+  ["Load your hub", "Your programs, events and people go in once. We do the loading with you."],
+  ["Founders arrive", "Each founder builds a profile and gets matched, your hub first."],
+  ["Advisors focus", "Routine questions are answered. Your team takes the rest."],
 ];
 
 // The two sides of the problem, in words (no figures). Edit the copy here.
@@ -221,7 +221,7 @@ function ProblemSection() {
         ))}
       </div>
       <p className="mx-auto mt-10 max-w-3xl text-center text-2xl font-light leading-snug text-muted sm:text-4xl" style={{ letterSpacing: "-0.03em", textWrap: "balance" }} data-testid="site-problem-bridge">
-        Both sides are working hard. <span className="text-ink">What is missing is a map that fits the business.</span>
+        Both sides are working hard. <span className="text-ink">What is missing is an advisor that knows your hub, and the business.</span>
       </p>
     </Section>
   );
@@ -236,14 +236,14 @@ export default function Site() {
       <section className="px-4 pb-8 pt-10 text-center sm:px-6 sm:pb-10 sm:pt-16">
         <div className="mx-auto max-w-5xl">
           <h1 className="mx-auto text-[2.6rem] leading-[1.05] sm:text-7xl lg:text-8xl" style={{ textWrap: "balance" }}>
-            Founders find support. Advisors get time back.
+            A venture advisor for every innovation hub.
           </h1>
-          <p className="mx-auto mt-4 max-w-2xl text-base text-muted sm:mt-5 sm:text-xl">Pathwai is a personal venture planner for founders, and for the incubators that serve them. It matches a business to the programs, grants, people, investors and events around it, and helps founders leave with a decision plan.</p>
+          <p className="mx-auto mt-4 max-w-2xl text-base text-muted sm:mt-5 sm:text-xl">Pathwai gives each hub its own venture advisor. It knows the hub's programs, events and people, reads each founder's business, and points them to the right next step. Your team keeps the conversations that need a person. As more hubs join, it becomes one national system.</p>
           <AskBox />
           <div className="mx-auto mt-7 grid max-w-sm grid-cols-2 gap-3 sm:flex sm:max-w-none sm:flex-wrap sm:items-center sm:justify-center">
-            <Link to="/navigator" className="btn-primary col-span-2 !px-6 !py-3 text-base sm:col-span-1" data-testid="site-founders">Find opportunities for my startup<ArrowRight className="h-4 w-4" aria-hidden /></Link>
+            <Link to="/contact" className="btn-primary col-span-2 !px-6 !py-3 text-base sm:col-span-1" data-testid="site-incubators">Bring Pathwai to your hub<ArrowRight className="h-4 w-4" aria-hidden /></Link>
             <Link to={DEMO_PATH} className="btn-ghost !px-6 !py-3 text-base" data-testid="site-demo">Try the demo</Link>
-            <Link to="/about" className="btn-ghost !px-6 !py-3 text-base" data-testid="site-incubators">For incubators</Link>
+            <Link to="/navigator" className="btn-ghost !px-6 !py-3 text-base" data-testid="site-founders">For founders</Link>
           </div>
         </div>
         <ol className="mx-auto mt-12 grid max-w-6xl grid-cols-2 overflow-hidden rounded-[1.6rem] border border-line/60 text-left sm:grid-cols-3 lg:grid-cols-5" data-testid="site-flow">
@@ -262,12 +262,12 @@ export default function Site() {
       {/* the statement: one large light paragraph with the key phrase picked out */}
       <section className="px-4 py-12 text-center sm:px-6 sm:py-16" data-testid="site-statement">
         <div className="mx-auto grid max-w-md gap-3 text-left sm:hidden" data-testid="site-statement-cards">
-          {[["The gap", "Support exists across hundreds of portals.", false], ["The cost", "Founders can't see what fits, and advisors keep repeating the same answers.", false], ["The fix", "Pathwai reads what a founder is building and shows what is relevant, and why.", true]].map(([tag, line, hot]) => (
+          {[["The gap", "Every hub holds real support, scattered across hundreds of portals.", false], ["The cost", "Founders can't see what fits, and advisors keep repeating the same answers.", false], ["The fix", "Pathwai is the venture advisor inside your hub. It reads the business and shows what fits, and why.", true]].map(([tag, line, hot]) => (
             <div key={tag} className="card !p-5"><p className="eyebrow">{tag}</p><p className={cx("mt-2 text-xl font-light leading-snug", hot ? "text-ink" : "text-muted")} style={{ letterSpacing: "-0.02em" }}>{line}</p></div>
           ))}
         </div>
         <p className="mx-auto hidden max-w-4xl text-3xl font-light leading-[1.3] text-muted sm:block sm:text-[2.6rem] sm:leading-[1.25]" style={{ letterSpacing: "-0.03em", textWrap: "balance" }}>
-          Support exists across hundreds of portals. <span className="text-ink">Founders can't see what fits</span>, and advisors keep repeating the same answers. Pathwai reads what a founder is building and <span className="text-ink">shows what is relevant, and why.</span>
+          Every hub holds real support, and <span className="text-ink">no founder can see all of it</span>. Advisors keep repeating the same answers. Pathwai is the venture advisor that knows your hub and reads what a founder is building, so it can <span className="text-ink">show what fits, and why.</span>
         </p>
       </section>
 
@@ -279,7 +279,7 @@ export default function Site() {
         <Story />
       </Section>
 
-      <Section id="tour" eyebrow="Product tour" title="Relevant support, explained." sub="Built around where each founder's business is heading.">
+      <Section id="tour" eyebrow="Product tour" title="Relevant support, explained." sub="Built around your hub, and where each founder's business is heading.">
         <ol className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-3" data-testid="site-tour">
           {TOUR.map(([Icon, tag, t, d]) => (
             <li key={t} className="card flex flex-col gap-3 !p-4 sm:!p-6">
@@ -290,7 +290,7 @@ export default function Site() {
         </ol>
       </Section>
 
-      <Section id="sides" eyebrow="Two sides" title="For founders. For advisors. For investors.">
+      <Section id="sides" eyebrow="Two sides" title="For hubs. For founders. For the ecosystem.">
         <div className="grid gap-4 lg:grid-cols-3" data-testid="site-sides">
           {SIDES.map((s) => (
             <div key={s.tag} className="card !p-7 sm:!p-10">
@@ -303,7 +303,11 @@ export default function Site() {
         </div>
       </Section>
 
-      <Section id="selfservice" eyebrow="Founder self-service" title="Discover. Understand. Ask.">
+      <Section id="network" eyebrow="How it grows" title="One hub at a time. One national system in the end." sub="Each hub keeps its own advisor. Together they become one network.">
+        <Growth />
+      </Section>
+
+      <Section id="start" eyebrow="Starting a hub" title="Set up once. Advise all year.">
         <ol className="grid gap-4 sm:grid-cols-3" data-testid="site-steps">
           {STEPS.map(([t, d], i) => (
             <li key={t} className="card flex flex-col gap-2 !p-7"><p className="eyebrow">Step {String(i + 1).padStart(2, "0")}</p><h3 className="mt-3 text-2xl">{t}</h3><p className="text-sm text-muted">{d}</p></li>
@@ -315,9 +319,9 @@ export default function Site() {
 
       <section className="px-4 pb-14 pt-4 text-center sm:px-6 sm:pb-20">
         <div className="mx-auto flex max-w-4xl flex-col items-center gap-9">
-          <h2 className="text-4xl sm:text-6xl" style={{ textWrap: "balance" }}>Give every founder a way to find their next step.</h2>
+          <h2 className="text-4xl sm:text-6xl" style={{ textWrap: "balance" }}>Give every hub a venture advisor.</h2>
           <div className="flex flex-wrap justify-center gap-3">
-            <Link to="/navigator" className="btn-primary !px-6 !py-3" data-testid="site-founders-end">Find opportunities<ArrowRight className="h-4 w-4" aria-hidden /></Link>
+            <Link to="/contact" className="btn-primary !px-6 !py-3" data-testid="site-hubs-end">Bring Pathwai to your hub<ArrowRight className="h-4 w-4" aria-hidden /></Link>
             <a href={WAITLIST} className="btn-ghost !px-6 !py-3" data-testid="site-waitlist-end">Join the waitlist</a>
             <Link to={DEMO_PATH} className="btn-ghost !px-6 !py-3" data-testid="site-demo-end"><Rocket className="h-4 w-4" aria-hidden />Try the demo</Link>
           </div>

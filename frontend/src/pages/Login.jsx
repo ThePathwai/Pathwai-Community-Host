@@ -141,7 +141,7 @@ export default function Login() {
         <div className="relative flex h-full flex-col justify-between p-12 text-white">
           <span className="text-4xl"><Wordmark name="Pathwai" brand={{}} /></span>
           <div>
-            <p className="font-display text-5xl font-bold leading-[1.08]">Your personal<br />venture planner.</p>
+            <p className="font-display text-5xl font-bold leading-[1.08]">Your venture<br />advisor.</p>
             <p className="mt-4 max-w-md text-lg text-white/80">Tell it what you are building. It finds the programs, people and next steps that fit, and plans them with you.</p>
             <div className="mt-6 flex max-w-md flex-wrap gap-2" aria-label="Built in">
               {[[Compass, "Opportunities"], [Gift, "Grants"], [CalendarDays, "Events"], [Users, "People"], [BookOpen, "Resources"]].map(([Icon, l]) => (

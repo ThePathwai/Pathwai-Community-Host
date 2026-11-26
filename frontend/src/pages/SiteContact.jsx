@@ -5,11 +5,11 @@ import { CONTACT, PageTop, Section, SiteShell } from "../components/SiteKit";
 // The website's Contact page (/contact). There is no message service behind the site yet, so the form builds an email in the visitor's own mail app.
 
 const REACH = [
-  [Handshake, "Partnerships", "Integrate Pathwai into your ecosystem."],
+  [Handshake, "Your hub", "Bring a venture advisor to your hub."],
   [TrendingUp, "Investment", "Join our mission to power innovation communities."],
   [Building2, "Enterprise", "Custom solutions for your organization."],
 ];
-const TOPICS = ["Partnerships", "Investment", "Enterprise", "Join the waitlist", "Something else"];
+const TOPICS = ["Bring Pathwai to my hub", "Partnerships", "Investment", "Enterprise", "Join the waitlist", "Something else"];
 
 export default function SiteContact() {
   const [f, setF] = useState({ name: "", email: "", org: "", topic: TOPICS[0], message: "" });
@@ -21,7 +21,7 @@ export default function SiteContact() {
   };
   return (
     <SiteShell title="Contact">
-      <PageTop eyebrow="Contact" title="Get in touch." sub="Let's build the future of community together." />
+      <PageTop eyebrow="Contact" title="Get in touch." sub="Run an innovation hub? Tell us about it and we will show you what your own venture advisor looks like." />
 
       <Section className="!pt-6">
         <div className="grid gap-4 sm:grid-cols-3" data-testid="site-reach">
@@ -53,7 +53,7 @@ export default function SiteContact() {
             <Mail className="h-5 w-5 text-muted" aria-hidden />
             <p className="eyebrow mt-4">Email us</p>
             <a href={`mailto:${CONTACT}`} className="hit mt-1 block break-all text-xl font-bold underline underline-offset-4" data-testid="site-email">{CONTACT}</a>
-            <p className="mt-3 text-sm text-muted">Partnerships, investment, enterprise and waitlist questions all come to the same inbox.</p>
+            <p className="mt-3 text-sm text-muted">Hub, partnership, investment, enterprise and waitlist questions all come to the same inbox.</p>
           </div>
         </div>
       </Section>

@@ -26,6 +26,20 @@ export const Pill = ({ children, tone = "green" }) => (
 // A soft purple-blue light that sits between sections.
 export const Glow = ({ className }) => <div aria-hidden className={cx("site-glow", className)} />;
 
+// How one hub becomes a national system. Shown on the home page and About. No figures, on purpose.
+export const GROWTH = [
+  ["One hub", "Your hub gets its own venture advisor, loaded with your programs, events and people."],
+  ["Many hubs", "Founders carry their profile from hub to hub when they choose to, and hubs refer founders to each other."],
+  ["Every hub", "Every innovation hub in the country on one system: a national map of support, and no founder left to search alone."],
+];
+export const Growth = () => (
+  <ol className="grid gap-4 sm:grid-cols-3" data-testid="site-growth">
+    {GROWTH.map(([t, d], i) => (
+      <li key={t} className="card flex flex-col gap-2 !p-7"><Num n={i + 1} /><h3 className="mt-3 text-2xl">{t}</h3><p className="text-sm text-muted">{d}</p></li>
+    ))}
+  </ol>
+);
+
 // A section: a small label, a big light headline, one sentence, then the content. Centered, with a lot of room around it.
 export function Section({ id, eyebrow, title, sub, children, className, align = "center" }) {
   const c = align === "center";
@@ -66,7 +80,7 @@ export function SiteShell({ title, children }) {
   const [scrolled, setScrolled] = useState(false);
 
   useEffect(() => { applyBrand({ community_name: "", brand: SITE_BRAND }); setMode(effectiveMode(SITE_BRAND)); }, []);
-  useEffect(() => { document.title = title ? `${title} — Pathwai` : "Pathwai — Your personal venture planner"; }, [title]);
+  useEffect(() => { document.title = title ? `${title} — Pathwai` : "Pathwai — The venture advisor for innovation hubs"; }, [title]);
   // A new page starts at the top, and the phone menu closes.
   useEffect(() => { window.scrollTo(0, 0); setOpen(false); }, [loc.pathname]);
   useEffect(() => { const f = () => setScrolled(window.scrollY > 12); f(); window.addEventListener("scroll", f, { passive: true }); return () => window.removeEventListener("scroll", f); }, []);
