@@ -288,7 +288,22 @@ export function ProgramDrawer({ p, onClose, meta, tracked, onTrack, stage, inter
                   </li>
                 );
               })}</ul>
-              {p.page_check?.ok && <p className="mt-3 text-xs text-muted" data-testid="requirements-note">{(p.page_check.confirmed || []).length} of {p.page_check.total} confirmed on the program's own page{(p.page_check.confirmed || []).length < p.page_check.total ? ". The rest were not stated there." : "."}</p>}
+              {p.page_check?.ok && (() => { const done = p.requirements.filter((r) => (p.page_check.confirmed || []).includes(r)).length; return <p className="mt-3 text-xs text-muted" data-testid="requirements-note">{done} of {p.requirements.length} confirmed on the program's own page{done < p.requirements.length ? ". The rest were not stated there." : "."}</p>; })()}
+            </Section>
+          )}
+          {(p.how_to_apply || []).length > 0 && (
+            <Section title="How to apply">
+              <ul className="space-y-2.5" data-testid="drawer-how">{p.how_to_apply.map((r) => <li key={r} className="flex gap-2.5 text-sm text-ink/80"><ArrowRight className="mt-0.5 h-4 w-4 shrink-0 text-muted" aria-hidden /><span>{r}</span></li>)}</ul>
+            </Section>
+          )}
+          {(p.about || []).length > 0 && (
+            <Section title="About the program">
+              <ul className="space-y-2.5" data-testid="drawer-about">{p.about.map((r) => <li key={r} className="flex gap-2.5 text-sm text-ink/80"><span className="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-muted" aria-hidden /><span>{r}</span></li>)}</ul>
+            </Section>
+          )}
+          {(p.unconfirmed || []).length > 0 && (
+            <Section title="We could not confirm">
+              <ul className="space-y-2.5" data-testid="drawer-unconfirmed">{p.unconfirmed.map((r) => <li key={r} className="flex gap-2.5 text-sm text-ink/80"><TriangleAlert className="mt-0.5 h-4 w-4 shrink-0 text-amber-500" aria-hidden /><span>{r}</span></li>)}</ul>
             </Section>
           )}
 

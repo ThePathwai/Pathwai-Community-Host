@@ -35,8 +35,7 @@
    "requirements": [
     "Incorporated, for-profit SME in Canada",
     "500 or fewer employees",
-    "Innovative, technology-driven product or service",
-    "Talk to an Industrial Technology Advisor first"
+    "Innovative, technology-driven product or service"
    ],
    "deadline": {
     "kind": "none_published",
@@ -54,7 +53,10 @@
    "link_kind": "program",
    "link_note": "See who qualifies, then contact an Industrial Technology Advisor. IRAP starts with a conversation, not a form.",
    "link_exact": true,
-   "regions": []
+   "regions": [],
+   "how_to_apply": [
+    "Talk to an Industrial Technology Advisor first"
+   ]
   },
   {
    "id": "sred",
@@ -240,9 +242,7 @@
    "requires": {},
    "requirements": [
     "Gross annual revenue of $10M or less",
-    "Start-ups and existing businesses qualify, farming excluded",
-    "You apply at your own bank or credit union, which decides",
-    "2% registration fee"
+    "Start-ups and existing businesses qualify, farming excluded"
    ],
    "deadline": {
     "kind": "rolling",
@@ -260,7 +260,13 @@
    "link_kind": "program",
    "link_note": "See how the loans work. You apply at a bank or credit union, not here.",
    "link_exact": true,
-   "regions": []
+   "regions": [],
+   "how_to_apply": [
+    "You apply at your own bank or credit union, which decides"
+   ],
+   "about": [
+    "2% registration fee"
+   ]
   },
   {
    "id": "futurpreneur-core",
@@ -509,8 +515,7 @@
    ],
    "requires": {},
    "requirements": [
-    "First Nations, Inuit or Metis business owner",
-    "Apply through your regional Indigenous Financial Institution, not to the fund directly"
+    "First Nations, Inuit or Metis business owner"
    ],
    "deadline": {
     "kind": "rolling",
@@ -530,7 +535,10 @@
    "link_kind": "program",
    "link_note": "Learn how the fund works. You borrow through an Indigenous Financial Institution near you.",
    "link_exact": true,
-   "regions": []
+   "regions": [],
+   "how_to_apply": [
+    "Apply through your regional Indigenous Financial Institution, not to the fund directly"
+   ]
   },
   {
    "id": "wef",
@@ -615,9 +623,7 @@
    ],
    "requires": {},
    "requirements": [
-    "Women or non-binary founders",
-    "The page lists no other rules; its join form takes founders from idea stage up to $1M in revenue",
-    "Contact the team to join the waitlist"
+    "Women or non-binary founders"
    ],
    "deadline": {
     "kind": "none_published",
@@ -637,7 +643,13 @@
    "link_kind": "program",
    "link_note": "Eligibility confirmed on Communitech's own page: women and non-binary founders. Dollar amounts come from a third-party listing, so confirm them on the page.",
    "link_exact": true,
-   "regions": []
+   "regions": [],
+   "how_to_apply": [
+    "Contact the team to join the waitlist"
+   ],
+   "unconfirmed": [
+    "The page lists no other rules; its join form takes founders from idea stage up to $1M in revenue"
+   ]
   },
   {
    "id": "venturelab-hci",
@@ -776,8 +788,7 @@
    "requirements": [
     "Incorporated, operating in Ontario, fewer than 500 employees",
     "Working product at readiness level 3 to 9",
-    "Automotive or mobility technology",
-    "Full proposals by invitation after an expression of interest"
+    "Automotive or mobility technology"
    ],
    "deadline": {
     "kind": "fixed",
@@ -795,7 +806,10 @@
    "link_kind": "directory",
    "link_note": "Pick the R&D Partnership Fund stream that matches your technology and read its guidelines.",
    "link_exact": true,
-   "regions": []
+   "regions": [],
+   "how_to_apply": [
+    "Full proposals by invitation after an expression of interest"
+   ]
   },
   {
    "id": "mitacs-accelerate",
@@ -829,8 +843,7 @@
    "requirements": [
     "A company, hospital or other partner organization in Canada",
     "A faculty supervisor at a Canadian institution",
-    "Partner contribution paid before funds are released",
-    "About 6 to 8 weeks of peer review"
+    "Partner contribution paid before funds are released"
    ],
    "deadline": {
     "kind": "none_published",
@@ -848,7 +861,10 @@
    "link_kind": "program",
    "link_note": "See how a research placement works and find your regional Mitacs contact.",
    "link_exact": true,
-   "regions": []
+   "regions": [],
+   "about": [
+    "About 6 to 8 weeks of peer review"
+   ]
   },
   {
    "id": "summer-company",
@@ -885,8 +901,7 @@
    "requirements": [
     "Aged 15 to 29 and returning to school in the fall",
     "Ontario resident, citizen or permanent resident",
-    "Brand-new business, sole proprietor or majority owner",
-    "Apply through your local Small Business Advisory Centre"
+    "Brand-new business, sole proprietor or majority owner"
    ],
    "deadline": {
     "kind": "annual",
@@ -904,7 +919,10 @@
    "link_kind": "program",
    "link_note": "Check the student rules and find the local office that runs it.",
    "link_exact": true,
-   "regions": []
+   "regions": [],
+   "how_to_apply": [
+    "Apply through your local Small Business Advisory Centre"
+   ]
   },
   {
    "id": "starter-company-plus",
@@ -1039,8 +1057,7 @@
    },
    "requirements": [
     "Canadian company",
-    "Fit with a specific fund's stage and sector",
-    "Submit the online intake form; you are contacted only if there is a fit"
+    "Fit with a specific fund's stage and sector"
    ],
    "deadline": {
     "kind": "rolling",
@@ -1058,7 +1075,10 @@
    "link_kind": "program",
    "link_note": "See which funds invest in your kind of company and how to reach the team.",
    "link_exact": true,
-   "regions": []
+   "regions": [],
+   "how_to_apply": [
+    "Submit the online intake form; you are contacted only if there is a fit"
+   ]
   },
   {
    "id": "startup-visa",
@@ -1140,8 +1160,7 @@
    ],
    "requires": {},
    "requirements": [
-    "Ventures applying differentiated technology to an industry problem",
-    "Prime runs in Calgary and Halifax; other CDL streams cover AI, health, quantum, climate and more"
+    "Ventures applying differentiated technology to an industry problem"
    ],
    "deadline": {
     "kind": "none_published",
@@ -1159,7 +1178,10 @@
    "link_kind": "program",
    "link_note": "See who it is for and how to apply.",
    "link_exact": true,
-   "regions": []
+   "regions": [],
+   "about": [
+    "Prime runs in Calgary and Halifax; other CDL streams cover AI, health, quantum, climate and more"
+   ]
   },
   {
    "id": "dmz-incubator",
@@ -1236,8 +1258,7 @@
    ],
    "requires": {},
    "requirements": [
-    "Early-stage life sciences or biotech venture",
-    "Private labs 150-400 sq ft offices; leasing inquiry required"
+    "Early-stage life sciences or biotech venture"
    ],
    "deadline": {
     "kind": "none_published",
@@ -1255,7 +1276,10 @@
    "link_kind": "program",
    "link_note": "See the workspace options and the contact for applying.",
    "link_exact": true,
-   "regions": []
+   "regions": [],
+   "about": [
+    "Private labs 150-400 sq ft offices; leasing inquiry required"
+   ]
   },
   {
    "id": "alberta-catalyzer",
@@ -1711,8 +1735,7 @@
     "incorporated": true
    },
    "requirements": [
-    "Eligible Canadian small business",
-    "Two streams: Challenge (build a prototype) and Testing (test in real settings)"
+    "Eligible Canadian small business"
    ],
    "deadline": {
     "kind": "none_published",
@@ -1730,7 +1753,10 @@
    "link_kind": "program",
    "link_note": "Open challenges and testing calls and see which ones match what you build.",
    "link_exact": true,
-   "regions": []
+   "regions": [],
+   "about": [
+    "Two streams: Challenge (build a prototype) and Testing (test in real settings)"
+   ]
   },
   {
    "id": "ready-4-market",
@@ -2952,9 +2978,7 @@
     "any"
    ],
    "requires": {},
-   "requirements": [
-    "Accessed through partner organizations, including Communitech, New Ventures BC and Springboard Atlantic"
-   ],
+   "requirements": [],
    "deadline": {
     "kind": "none_published",
     "date": null,
@@ -2971,7 +2995,10 @@
    "link_kind": "program",
    "link_note": "Read what is covered and how to apply through a delivery partner.",
    "link_exact": true,
-   "regions": []
+   "regions": [],
+   "about": [
+    "Accessed through partner organizations, including Communitech, New Ventures BC and Springboard Atlantic"
+   ]
   },
   {
    "id": "tcs-diversity-export",
@@ -3349,8 +3376,7 @@
    "requirements": [
     "Incorporated for-profit business operating in southern Ontario",
     "At least 5 full-time equivalent employees in the region",
-    "In defence supply chains or moving into them",
-    "Intake paused as of June 2026"
+    "In defence supply chains or moving into them"
    ],
    "deadline": {
     "kind": "none_published",
@@ -3367,7 +3393,10 @@
    "link_label": "FedDev Ontario: Regional Defence Investment Initiative (southern Ontario)",
    "link_kind": "program",
    "link_note": "Read what it offers and who can apply, then follow the steps on the page.",
-   "link_exact": true
+   "link_exact": true,
+   "about": [
+    "Intake paused as of June 2026"
+   ]
   },
   {
    "id": "feddev-ontario-funding-for-businesses",
@@ -3459,9 +3488,7 @@
    ],
    "requires": {},
    "requirements": [
-    "Apply through the client intake form",
-    "Technology start-up or scaling company",
-    "Free; no equity taken"
+    "Technology start-up or scaling company"
    ],
    "deadline": {
     "kind": "rolling",
@@ -3478,7 +3505,13 @@
    "link_label": "Innovation Factory",
    "link_kind": "apply",
    "link_note": "This goes to the application or sign-up page. Read who it is for first, then fill it in.",
-   "link_exact": true
+   "link_exact": true,
+   "how_to_apply": [
+    "Apply through the client intake form"
+   ],
+   "about": [
+    "Free; no equity taken"
+   ]
   },
   {
    "id": "market-readiness",
@@ -3512,10 +3545,8 @@
    ],
    "requires": {},
    "requirements": [
-    "Apply through the online form",
     "Register as an Altitude client",
-    "Brampton-based regional centre",
-    "Hybrid 12-week format"
+    "Brampton-based regional centre"
    ],
    "deadline": {
     "kind": "none_published",
@@ -3532,7 +3563,13 @@
    "link_label": "Altitude Accelerator: Market Readiness",
    "link_kind": "apply",
    "link_note": "This goes to the application or sign-up page. Read who it is for first, then fill it in.",
-   "link_exact": true
+   "link_exact": true,
+   "how_to_apply": [
+    "Apply through the online form"
+   ],
+   "about": [
+    "Hybrid 12-week format"
+   ]
   },
   {
    "id": "landing-pad-accelerator-program",
@@ -3734,9 +3771,7 @@
    ],
    "requires": {},
    "requirements": [
-    "Tech company or entrepreneur",
-    "Book a session with a coach",
-    "Membership option available"
+    "Tech company or entrepreneur"
    ],
    "deadline": {
     "kind": "rolling",
@@ -3753,7 +3788,13 @@
    "link_label": "TechAlliance advisory services",
    "link_kind": "program",
    "link_note": "Read what it offers and who can apply, then follow the steps on the page.",
-   "link_exact": true
+   "link_exact": true,
+   "how_to_apply": [
+    "Book a session with a coach"
+   ],
+   "about": [
+    "Membership option available"
+   ]
   },
   {
    "id": "utest",
@@ -3787,10 +3828,7 @@
    ],
    "requires": {},
    "requirements": [
-    "Company based on U of T research",
-    "Incubation space at the St. George campus",
-    "Mentoring and business strategy support",
-    "Check the site for intake; its footer is dated 2021"
+    "Company based on U of T research"
    ],
    "deadline": {
     "kind": "none_published",
@@ -3807,7 +3845,14 @@
    "link_label": "University of Toronto: UTEST",
    "link_kind": "apply",
    "link_note": "This goes to the application or sign-up page. Read who it is for first, then fill it in.",
-   "link_exact": true
+   "link_exact": true,
+   "about": [
+    "Incubation space at the St. George campus",
+    "Mentoring and business strategy support"
+   ],
+   "unconfirmed": [
+    "Check the site for intake; its footer is dated 2021"
+   ]
   },
   {
    "id": "the-forge-business-incubator",
@@ -3844,8 +3889,7 @@
    "requirements": [
     "Early-stage startup",
     "Based in Hamilton, the GTA or Niagara",
-    "Limited-enrolment cohort",
-    "Mentor and advisor access"
+    "Limited-enrolment cohort"
    ],
    "deadline": {
     "kind": "none_published",
@@ -3862,7 +3906,10 @@
    "link_label": "The Forge Business Incubator",
    "link_kind": "program",
    "link_note": "Read what it offers and who can apply, then follow the steps on the page.",
-   "link_exact": true
+   "link_exact": true,
+   "about": [
+    "Mentor and advisor access"
+   ]
   },
   {
    "id": "business-impact-program",
@@ -4108,8 +4155,6 @@
    ],
    "requires": {},
    "requirements": [
-    "Complete the Become a Client form",
-    "Meet an advisor to plan next steps",
     "Innovation-based company"
    ],
    "deadline": {
@@ -4127,7 +4172,11 @@
    "link_label": "Innovate Niagara client advisory",
    "link_kind": "program",
    "link_note": "Read what it offers and who can apply, then follow the steps on the page.",
-   "link_exact": true
+   "link_exact": true,
+   "how_to_apply": [
+    "Complete the Become a Client form",
+    "Meet an advisor to plan next steps"
+   ]
   },
   {
    "id": "scaleup-accelerator",
@@ -4158,8 +4207,6 @@
    ],
    "requires": {},
    "requirements": [
-    "Cohort-based accelerator",
-    "Partners include Libro Credit Union and Communitech",
     "Serves Windsor-Essex and Chatham-Kent"
    ],
    "deadline": {
@@ -4177,7 +4224,11 @@
    "link_label": "WEtech Alliance: ScaleUP Accelerator",
    "link_kind": "program",
    "link_note": "Read what it offers and who can apply, then follow the steps on the page.",
-   "link_exact": true
+   "link_exact": true,
+   "about": [
+    "Cohort-based accelerator",
+    "Partners include Libro Credit Union and Communitech"
+   ]
   },
   {
    "id": "idea-fund",
@@ -4262,9 +4313,7 @@
    "requires": {},
    "requirements": [
     "Canadian or international applicant",
-    "For-profit or not-for-profit venture",
-    "Full-time or part-time option",
-    "Apply through the YEDI form"
+    "For-profit or not-for-profit venture"
    ],
    "deadline": {
     "kind": "none_published",
@@ -4281,7 +4330,13 @@
    "link_label": "York Entrepreneurship Development Institute: YEDI Incubator",
    "link_kind": "program",
    "link_note": "This is the closest official page we found, not a dedicated program page.",
-   "link_exact": false
+   "link_exact": false,
+   "how_to_apply": [
+    "Apply through the YEDI form"
+   ],
+   "about": [
+    "Full-time or part-time option"
+   ]
   },
   {
    "id": "golden-ventures",
@@ -4313,8 +4368,7 @@
    "requires": {},
    "requirements": [
     "Pre-seed, seed and seed-plus stages",
-    "Invests across North America",
-    "No cold-versus-warm introduction rule stated"
+    "Invests across North America"
    ],
    "deadline": {
     "kind": "rolling",
@@ -4331,7 +4385,10 @@
    "link_label": "Golden Ventures",
    "link_kind": "program",
    "link_note": "This is the closest official page we found, not a dedicated program page.",
-   "link_exact": false
+   "link_exact": false,
+   "unconfirmed": [
+    "No cold-versus-warm introduction rule stated"
+   ]
   },
   {
    "id": "graphite-ventures",
@@ -4362,8 +4419,7 @@
    "requires": {},
    "requirements": [
     "Seed stage, B2B focus",
-    "Invests in Canada",
-    "Pitch form on the site; says it is always open to meeting founders"
+    "Invests in Canada"
    ],
    "deadline": {
     "kind": "rolling",
@@ -4380,7 +4436,10 @@
    "link_label": "Graphite Ventures",
    "link_kind": "apply",
    "link_note": "This goes to the application or sign-up page. Read who it is for first, then fill it in.",
-   "link_exact": true
+   "link_exact": true,
+   "how_to_apply": [
+    "Pitch form on the site; says it is always open to meeting founders"
+   ]
   },
   {
    "id": "n49p",
@@ -4411,9 +4470,7 @@
    "regions": [],
    "requires": {},
    "requirements": [
-    "Canadian founders",
-    "Direct applications through the apply form",
-    "No warm-introduction rule stated"
+    "Canadian founders"
    ],
    "deadline": {
     "kind": "rolling",
@@ -4430,7 +4487,13 @@
    "link_label": "N49P program page",
    "link_kind": "apply",
    "link_note": "This goes to the application or sign-up page. Read who it is for first, then fill it in.",
-   "link_exact": true
+   "link_exact": true,
+   "how_to_apply": [
+    "Direct applications through the apply form"
+   ],
+   "unconfirmed": [
+    "No warm-introduction rule stated"
+   ]
   },
   {
    "id": "standup-ventures",
@@ -4511,8 +4574,7 @@
    "requires": {},
    "requirements": [
     "Pre-incorporation, pre-product or pre-traction companies",
-    "Canadian or US startups selling to global markets",
-    "Site invites direct emails from new builders"
+    "Canadian or US startups selling to global markets"
    ],
    "deadline": {
     "kind": "rolling",
@@ -4529,7 +4591,10 @@
    "link_label": "Ripple Ventures",
    "link_kind": "program",
    "link_note": "This is the closest official page we found, not a dedicated program page.",
-   "link_exact": false
+   "link_exact": false,
+   "how_to_apply": [
+    "Site invites direct emails from new builders"
+   ]
   },
   {
    "id": "omers-ventures",
@@ -4560,8 +4625,7 @@
    "requires": {},
    "requirements": [
     "Ambitious Canadian founders",
-    "Fintech, vertical software, enterprise apps, AI and infrastructure",
-    "Contact page on the site"
+    "Fintech, vertical software, enterprise apps, AI and infrastructure"
    ],
    "deadline": {
     "kind": "rolling",
@@ -4578,7 +4642,10 @@
    "link_label": "OMERS Ventures",
    "link_kind": "contact",
    "link_note": "This is a contact page. Say who you are and what you are building, and ask about fit.",
-   "link_exact": true
+   "link_exact": true,
+   "how_to_apply": [
+    "Contact page on the site"
+   ]
   },
   {
    "id": "mars-investment-accelerator-fund",
@@ -4610,8 +4677,7 @@
    "requires": {},
    "requirements": [
     "Breakthrough technology companies",
-    "Day zero through seed stage",
-    "Apply through the IAF online form"
+    "Day zero through seed stage"
    ],
    "deadline": {
     "kind": "rolling",
@@ -4628,7 +4694,10 @@
    "link_label": "MaRS Investment Accelerator Fund",
    "link_kind": "apply",
    "link_note": "This goes to the application or sign-up page. Read who it is for first, then fill it in.",
-   "link_exact": true
+   "link_exact": true,
+   "how_to_apply": [
+    "Apply through the IAF online form"
+   ]
   },
   {
    "id": "relay-ventures",
@@ -4662,8 +4731,7 @@
    "requires": {},
    "requirements": [
     "Pre-seed and seed stage",
-    "North America focus",
-    "Contact form on the site"
+    "North America focus"
    ],
    "deadline": {
     "kind": "rolling",
@@ -4680,7 +4748,10 @@
    "link_label": "Relay Ventures",
    "link_kind": "contact",
    "link_note": "This is a contact page. Say who you are and what you are building, and ask about fit.",
-   "link_exact": true
+   "link_exact": true,
+   "how_to_apply": [
+    "Contact form on the site"
+   ]
   },
   {
    "id": "brightspark-ventures",
@@ -4710,9 +4781,7 @@
    "regions": [],
    "requires": {},
    "requirements": [
-    "Early-stage Canadian tech companies",
-    "Referral preferred; direct submission also accepted",
-    "Send an elevator pitch plus a deck or summary"
+    "Early-stage Canadian tech companies"
    ],
    "deadline": {
     "kind": "rolling",
@@ -4729,7 +4798,11 @@
    "link_label": "Brightspark Ventures",
    "link_kind": "program",
    "link_note": "Read what it offers and who can apply, then follow the steps on the page.",
-   "link_exact": true
+   "link_exact": true,
+   "how_to_apply": [
+    "Referral preferred; direct submission also accepted",
+    "Send an elevator pitch plus a deck or summary"
+   ]
   },
   {
    "id": "impression-ventures",
@@ -4759,8 +4832,7 @@
    "requires": {},
    "requirements": [
     "Fintech only (banking, insurance, wealth and similar)",
-    "First product built and first customer acquired",
-    "Pitch form on the site"
+    "First product built and first customer acquired"
    ],
    "deadline": {
     "kind": "rolling",
@@ -4777,7 +4849,10 @@
    "link_label": "Impression Ventures",
    "link_kind": "apply",
    "link_note": "This goes to the application or sign-up page. Read who it is for first, then fill it in.",
-   "link_exact": true
+   "link_exact": true,
+   "how_to_apply": [
+    "Pitch form on the site"
+   ]
   },
   {
    "id": "maple-leaf-angels",
@@ -4807,9 +4882,7 @@
    "regions": [],
    "requires": {},
    "requirements": [
-    "Seed and early-stage technology companies",
-    "Apply through the entrepreneur form",
-    "Members invest individually"
+    "Seed and early-stage technology companies"
    ],
    "deadline": {
     "kind": "rolling",
@@ -4826,7 +4899,13 @@
    "link_label": "Maple Leaf Angels",
    "link_kind": "program",
    "link_note": "Read what it offers and who can apply, then follow the steps on the page.",
-   "link_exact": true
+   "link_exact": true,
+   "how_to_apply": [
+    "Apply through the entrepreneur form"
+   ],
+   "about": [
+    "Members invest individually"
+   ]
   },
   {
    "id": "disruption-ventures",
@@ -4905,8 +4984,7 @@
    "requires": {},
    "requirements": [
     "Pre-product or pre-revenue founders",
-    "No idea or co-founder needed to enter",
-    "Cohorts start in late March and September"
+    "No idea or co-founder needed to enter"
    ],
    "deadline": {
     "kind": "none_published",
@@ -4923,7 +5001,10 @@
    "link_label": "Antler Canada residency",
    "link_kind": "program",
    "link_note": "Read what it offers and who can apply, then follow the steps on the page.",
-   "link_exact": true
+   "link_exact": true,
+   "about": [
+    "Cohorts start in late March and September"
+   ]
   },
   {
    "id": "northside-ventures",
@@ -5004,8 +5085,7 @@
    "requirements": [
     "At least one founder is a full-time U of T student or a recent alum (since June 2024)",
     "Complete U of T IP Education Level 1 or an approved Level 2 topic",
-    "Early stage: under $50K funding and under $25K revenue",
-    "Present in person March 1 to 5, 2027"
+    "Early stage: under $50K funding and under $25K revenue"
    ],
    "deadline": {
     "kind": "fixed",
@@ -5022,7 +5102,10 @@
    "link_label": "University of Toronto Entrepreneurship: Desjardins Startup Prize",
    "link_kind": "program",
    "link_note": "Read what it offers and who can apply, then follow the steps on the page.",
-   "link_exact": true
+   "link_exact": true,
+   "about": [
+    "Present in person March 1 to 5, 2027"
+   ]
   },
   {
    "id": "adams-sustainability-innovation-prize",
@@ -5056,9 +5139,7 @@
    "requires": {},
    "requirements": [
     "Student-led sustainability innovation at U of T",
-    "No separate application: opt in when applying to the Desjardins prize",
-    "Same early-stage limits as Desjardins",
-    "Top two teams get $15,000 and $10,000"
+    "Same early-stage limits as Desjardins"
    ],
    "deadline": {
     "kind": "fixed",
@@ -5075,7 +5156,13 @@
    "link_label": "University of Toronto Entrepreneurship: Adams Sustainability Innovation Prize",
    "link_kind": "program",
    "link_note": "Read what it offers and who can apply, then follow the steps on the page.",
-   "link_exact": true
+   "link_exact": true,
+   "how_to_apply": [
+    "No separate application: opt in when applying to the Desjardins prize"
+   ],
+   "about": [
+    "Top two teams get $15,000 and $10,000"
+   ]
   },
   {
    "id": "lions-lair",
@@ -5100,12 +5187,7 @@
    ],
    "regions": [],
    "requires": {},
-   "requirements": [
-    "Entry is through Innovation Factory's Founders Fast Track",
-    "Top 10 participants are invited to pitch",
-    "Finalists get pitch training and mentoring",
-    "No date is listed on the page"
-   ],
+   "requirements": [],
    "deadline": {
     "kind": "none_published",
     "date": null,
@@ -5121,7 +5203,17 @@
    "link_label": "Innovation Factory: LiONS LAIR",
    "link_kind": "program",
    "link_note": "Read what it offers and who can apply, then follow the steps on the page.",
-   "link_exact": true
+   "link_exact": true,
+   "how_to_apply": [
+    "Entry is through Innovation Factory's Founders Fast Track"
+   ],
+   "about": [
+    "Top 10 participants are invited to pitch",
+    "Finalists get pitch training and mentoring"
+   ],
+   "unconfirmed": [
+    "No date is listed on the page"
+   ]
   },
   {
    "id": "dunin-deshpande-regional-pitch-competition",
@@ -5154,9 +5246,7 @@
    "requires": {},
    "requirements": [
     "Venture based in Kingston or the surrounding region; no Queen's link needed",
-    "Under $30,000 received in grants, prizes, loans or equity",
-    "Coaching from the centre team",
-    "Audience votes for the Wisdom of the Market award"
+    "Under $30,000 received in grants, prizes, loans or equity"
    ],
    "deadline": {
     "kind": "closed",
@@ -5173,7 +5263,11 @@
    "link_label": "Dunin-Deshpande Regional Pitch Competition",
    "link_kind": "apply",
    "link_note": "This goes to the application or sign-up page. Read who it is for first, then fill it in.",
-   "link_exact": true
+   "link_exact": true,
+   "about": [
+    "Coaching from the centre team",
+    "Audience votes for the Wisdom of the Market award"
+   ]
   },
   {
    "id": "startup-survivor",
@@ -5209,9 +5303,7 @@
    },
    "requirements": [
     "Enrolled at an Ontario college or university, or graduated within 2 years",
-    "At least one co-founder at in-person events; about 20 hours a week",
-    "Four months, May to August, in person in Hamilton",
-    "$10,000 in milestone payments per team"
+    "At least one co-founder at in-person events; about 20 hours a week"
    ],
    "deadline": {
     "kind": "none_published",
@@ -5230,7 +5322,11 @@
    "link_label": "The Forge: Startup Survivor",
    "link_kind": "program",
    "link_note": "Read what it offers and who can apply, then follow the steps on the page.",
-   "link_exact": true
+   "link_exact": true,
+   "about": [
+    "Four months, May to August, in person in Hamilton",
+    "$10,000 in milestone payments per team"
+   ]
   },
   {
    "id": "startup-canada-equal-slice-pitch-competition",
@@ -5256,8 +5352,6 @@
    "regions": [],
    "requires": {},
    "requirements": [
-    "Eligibility is not listed on the page",
-    "Virtual pitch round on November 24, 2026",
     "Register through the link on the page"
    ],
    "deadline": {
@@ -5275,7 +5369,13 @@
    "link_label": "Startup Canada Equal Slice Pitch Competition",
    "link_kind": "apply",
    "link_note": "This is the closest official page we found, not a dedicated program page.",
-   "link_exact": false
+   "link_exact": false,
+   "about": [
+    "Virtual pitch round on November 24, 2026"
+   ],
+   "unconfirmed": [
+    "Eligibility is not listed on the page"
+   ]
   },
   {
    "id": "venture-north-pitch",
@@ -5366,8 +5466,7 @@
    "requirements": [
     "Self-identify as First Nations, Métis or Inuit",
     "Canadian citizen or permanent resident aged 18 to 39",
-    "Business not yet operating, or operating full time for 24 months or less",
-    "Follow-on financing available after two years"
+    "Business not yet operating, or operating full time for 24 months or less"
    ],
    "deadline": {
     "kind": "none_published",
@@ -5386,7 +5485,10 @@
    "link_label": "Futurpreneur Canada: Indigenous Entrepreneur Startup Program",
    "link_kind": "program",
    "link_note": "Read what it offers and who can apply, then follow the steps on the page.",
-   "link_exact": true
+   "link_exact": true,
+   "about": [
+    "Follow-on financing available after two years"
+   ]
   },
   {
    "id": "under-30-startup-program",
@@ -5525,9 +5627,7 @@
    "regions": [],
    "requires": {},
    "requirements": [
-    "Free online platform",
-    "Aimed at aspiring women entrepreneurs",
-    "Builds entrepreneurship skills"
+    "Aimed at aspiring women entrepreneurs"
    ],
    "deadline": {
     "kind": "none_published",
@@ -5546,7 +5646,11 @@
    "link_label": "DMZ: Women's Launchpad",
    "link_kind": "program",
    "link_note": "This is the closest official page we found, not a dedicated program page.",
-   "link_exact": false
+   "link_exact": false,
+   "about": [
+    "Free online platform",
+    "Builds entrepreneurship skills"
+   ]
   },
   {
    "id": "indigenous-launchpad",
@@ -5574,9 +5678,7 @@
    "regions": [],
    "requires": {},
    "requirements": [
-    "Free online platform",
-    "Aimed at Indigenous entrepreneurs",
-    "Builds entrepreneurship skills"
+    "Aimed at Indigenous entrepreneurs"
    ],
    "deadline": {
     "kind": "none_published",
@@ -5595,7 +5697,11 @@
    "link_label": "DMZ: Indigenous Launchpad",
    "link_kind": "program",
    "link_note": "Read what it offers and who can apply, then follow the steps on the page.",
-   "link_exact": true
+   "link_exact": true,
+   "about": [
+    "Free online platform",
+    "Builds entrepreneurship skills"
+   ]
   },
   {
    "id": "women-entrepreneurship-knowledge-hub",
@@ -5628,9 +5734,7 @@
    "regions": [],
    "requires": {},
    "requirements": [
-    "Sharing platform requires registration",
-    "Annual State of Women's Entrepreneurship report",
-    "Forum lists mentoring opportunities"
+    "Annual State of Women's Entrepreneurship report"
    ],
    "deadline": {
     "kind": "none_published",
@@ -5649,7 +5753,13 @@
    "link_label": "WEKH: Women Entrepreneurship Knowledge Hub",
    "link_kind": "program",
    "link_note": "This is the closest official page we found, not a dedicated program page.",
-   "link_exact": false
+   "link_exact": false,
+   "how_to_apply": [
+    "Sharing platform requires registration"
+   ],
+   "about": [
+    "Forum lists mentoring opportunities"
+   ]
   },
   {
    "id": "financerher-elevateher-and-innovateher",
@@ -5684,7 +5794,6 @@
    "requirements": [
     "Aimed at women entrepreneurs",
     "Ask a PARO business counsellor about local funding",
-    "Trade missions and export support",
     "Women's B2B database for women living in Canada"
    ],
    "deadline": {
@@ -5704,7 +5813,10 @@
    "link_label": "PARO Centre for Women's Enterprise: FinancerHER, ElevateHER and InnovateHER",
    "link_kind": "contact",
    "link_note": "This is the closest official page we found, not a dedicated program page.",
-   "link_exact": false
+   "link_exact": false,
+   "about": [
+    "Trade missions and export support"
+   ]
   },
   {
    "id": "canadian-queer-chamber-of-commerce-programs",
@@ -5736,9 +5848,7 @@
    "regions": [],
    "requires": {},
    "requirements": [
-    "For 2SLGBTQI+ business owners",
-    "Business programs and growth tools",
-    "Networking events and mentoring"
+    "For 2SLGBTQI+ business owners"
    ],
    "deadline": {
     "kind": "none_published",
@@ -5755,7 +5865,11 @@
    "link_label": "Canadian Queer Chamber of Commerce programs",
    "link_kind": "program",
    "link_note": "This is the closest official page we found, not a dedicated program page.",
-   "link_exact": false
+   "link_exact": false,
+   "about": [
+    "Business programs and growth tools",
+    "Networking events and mentoring"
+   ]
   },
   {
    "id": "toronto-small-business-enterprise-centre",
@@ -5788,10 +5902,7 @@
     "toronto"
    ],
    "requires": {},
-   "requirements": [
-    "Book a consultation online",
-    "Registration help is in person only, before 3:30 p.m."
-   ],
+   "requirements": [],
    "deadline": {
     "kind": "rolling",
     "date": null,
@@ -5807,7 +5918,13 @@
    "link_label": "City of Toronto: Toronto Small Business Enterprise Centre",
    "link_kind": "apply",
    "link_note": "This goes to the application or sign-up page. Read who it is for first, then fill it in.",
-   "link_exact": true
+   "link_exact": true,
+   "how_to_apply": [
+    "Book a consultation online"
+   ],
+   "about": [
+    "Registration help is in person only, before 3:30 p.m."
+   ]
   },
   {
    "id": "toronto-entrepreneur-mentoring-program",
@@ -5935,9 +6052,7 @@
     "toronto"
    ],
    "requires": {},
-   "requirements": [
-    "Directory: check each listed space for cost and fit"
-   ],
+   "requirements": [],
    "deadline": {
     "kind": "rolling",
     "date": null,
@@ -5953,7 +6068,10 @@
    "link_label": "City of Toronto: Toronto accelerators, incubators and coworking map",
    "link_kind": "directory",
    "link_note": "Browse the list and pick what fits where you are.",
-   "link_exact": true
+   "link_exact": true,
+   "about": [
+    "Directory: check each listed space for cost and fit"
+   ]
   },
   {
    "id": "pro-bono-ontario-free-legal-advice-hotline",
@@ -6034,8 +6152,7 @@
    "regions": [],
    "requires": {},
    "requirements": [
-    "Find your local centre on the Ontario list",
-    "Hours vary by centre"
+    "Find your local centre on the Ontario list"
    ],
    "deadline": {
     "kind": "rolling",
@@ -6052,7 +6169,10 @@
    "link_label": "Province of Ontario (delivered by local centres): Ontario Small Business Advisory Centres",
    "link_kind": "directory",
    "link_note": "Browse the list and pick what fits where you are.",
-   "link_exact": true
+   "link_exact": true,
+   "about": [
+    "Hours vary by centre"
+   ]
   },
   {
    "id": "hamilton-business-centre",
@@ -6086,9 +6206,7 @@
     "hamilton-niagara"
    ],
    "requires": {},
-   "requirements": [
-    "Book a consultation online or call 905-540-6400"
-   ],
+   "requirements": [],
    "deadline": {
     "kind": "rolling",
     "date": null,
@@ -6104,7 +6222,10 @@
    "link_label": "City of Hamilton: Hamilton Business Centre",
    "link_kind": "apply",
    "link_note": "This goes to the application or sign-up page. Read who it is for first, then fill it in.",
-   "link_exact": true
+   "link_exact": true,
+   "how_to_apply": [
+    "Book a consultation online or call 905-540-6400"
+   ]
   },
   {
    "id": "invest-ottawa-business-advisory",
@@ -6186,8 +6307,7 @@
    "requires": {},
    "requirements": [
     "Ontario employer",
-    "A workers' compensation or reprisal matter",
-    "Toll-free line 1-800-387-0774"
+    "A workers' compensation or reprisal matter"
    ],
    "deadline": {
     "kind": "rolling",
@@ -6204,7 +6324,10 @@
    "link_label": "Province of Ontario: Office of the Employer Adviser",
    "link_kind": "contact",
    "link_note": "This is a contact page. Say who you are and what you are building, and ask about fit.",
-   "link_exact": true
+   "link_exact": true,
+   "about": [
+    "Toll-free line 1-800-387-0774"
+   ]
   },
   {
    "id": "ontario-business-registry",
@@ -6232,8 +6355,7 @@
    "regions": [],
    "requires": {},
    "requirements": [
-    "Register or renew a business name online",
-    "Confirm current fees on the site"
+    "Register or renew a business name online"
    ],
    "deadline": {
     "kind": "rolling",
@@ -6250,7 +6372,10 @@
    "link_label": "Province of Ontario: Ontario Business Registry",
    "link_kind": "program",
    "link_note": "Read what it offers and who can apply, then follow the steps on the page.",
-   "link_exact": true
+   "link_exact": true,
+   "unconfirmed": [
+    "Confirm current fees on the site"
+   ]
   },
   {
    "id": "toronto-business-webinars-and-starting-your-business-101",
@@ -6283,9 +6408,7 @@
    ],
    "regions": [],
    "requires": {},
-   "requirements": [
-    "Free on-demand modules need online registration"
-   ],
+   "requirements": [],
    "deadline": {
     "kind": "rolling",
     "date": null,
@@ -6301,7 +6424,10 @@
    "link_label": "City of Toronto and partners: Toronto business webinars and Starting Your Business 101",
    "link_kind": "apply",
    "link_note": "This is the closest official page we found, not a dedicated program page.",
-   "link_exact": false
+   "link_exact": false,
+   "about": [
+    "Free on-demand modules need online registration"
+   ]
   },
   {
    "id": "succession-ontario-planning-hub",
@@ -6328,11 +6454,7 @@
    ],
    "regions": [],
    "requires": {},
-   "requirements": [
-    "Self-paced resources",
-    "Business valuation calculator",
-    "Advisor network"
-   ],
+   "requirements": [],
    "deadline": {
     "kind": "rolling",
     "date": null,
@@ -6348,7 +6470,12 @@
    "link_label": "Succession Ontario planning hub",
    "link_kind": "program",
    "link_note": "Read what it offers and who can apply, then follow the steps on the page.",
-   "link_exact": true
+   "link_exact": true,
+   "about": [
+    "Self-paced resources",
+    "Business valuation calculator",
+    "Advisor network"
+   ]
   },
   {
    "id": "digital-main-street-ontario",
@@ -6376,10 +6503,7 @@
    ],
    "regions": [],
    "requires": {},
-   "requirements": [
-    "Create a Digital Main Street account",
-    "Grant availability is not confirmed on the page"
-   ],
+   "requirements": [],
    "deadline": {
     "kind": "rolling",
     "date": null,
@@ -6395,7 +6519,13 @@
    "link_label": "Digital Main Street Ontario",
    "link_kind": "program",
    "link_note": "Read what it offers and who can apply, then follow the steps on the page.",
-   "link_exact": true
+   "link_exact": true,
+   "how_to_apply": [
+    "Create a Digital Main Street account"
+   ],
+   "unconfirmed": [
+    "Grant availability is not confirmed on the page"
+   ]
   },
   {
    "id": "aws-activate",
@@ -6425,8 +6555,7 @@
    "requirements": [
     "The higher tier needs an Org ID from an accelerator, angel or VC partner",
     "Pre-Series B and founded within the last 10 years",
-    "Needs an AWS account on a paid tier",
-    "Page does not state country limits"
+    "Needs an AWS account on a paid tier"
    ],
    "deadline": {
     "kind": "rolling",
@@ -6443,7 +6572,10 @@
    "link_label": "Amazon Web Services: AWS Activate",
    "link_kind": "apply",
    "link_note": "This goes to the application or sign-up page. Read who it is for first, then fill it in.",
-   "link_exact": true
+   "link_exact": true,
+   "unconfirmed": [
+    "Page does not state country limits"
+   ]
   },
   {
    "id": "google-for-startups-cloud-program",
@@ -6473,8 +6605,7 @@
    "requirements": [
     "Funded tiers need verifiable pre-seed to Series A funding from a known investor",
     "Start tier: founded in the past 2 years with a working MVP",
-    "Business email domain must match the company website",
-    "Page does not name Canada; credits cover pay-as-you-go products only"
+    "Business email domain must match the company website"
    ],
    "deadline": {
     "kind": "rolling",
@@ -6491,7 +6622,10 @@
    "link_label": "Google for Startups Cloud Program",
    "link_kind": "apply",
    "link_note": "This goes to the application or sign-up page. Read who it is for first, then fill it in.",
-   "link_exact": true
+   "link_exact": true,
+   "unconfirmed": [
+    "Page does not name Canada; credits cover pay-as-you-go products only"
+   ]
   },
   {
    "id": "microsoft-for-startups-founders-hub",
@@ -6519,11 +6653,7 @@
    ],
    "regions": [],
    "requires": {},
-   "requirements": [
-    "Eligibility and referral rules not stated on the pages we read",
-    "Apply through the sign-up link on the startups page",
-    "Canada eligibility not verified"
-   ],
+   "requirements": [],
    "deadline": {
     "kind": "none_published",
     "date": null,
@@ -6539,7 +6669,14 @@
    "link_label": "Microsoft for Startups Founders Hub",
    "link_kind": "apply",
    "link_note": "This goes to the application or sign-up page. Read who it is for first, then fill it in.",
-   "link_exact": true
+   "link_exact": true,
+   "how_to_apply": [
+    "Apply through the sign-up link on the startups page"
+   ],
+   "unconfirmed": [
+    "Eligibility and referral rules not stated on the pages we read",
+    "Canada eligibility not verified"
+   ]
   },
   {
    "id": "stripe-atlas-perks",
@@ -6569,8 +6706,7 @@
    "requires": {},
    "requirements": [
     "The company must be formed through Atlas (Delaware C corp or LLC); the Atlas fee is US$500",
-    "No US citizenship or residency needed",
-    "Atlas files documents but gives no legal or tax advice"
+    "No US citizenship or residency needed"
    ],
    "deadline": {
     "kind": "rolling",
@@ -6587,7 +6723,10 @@
    "link_label": "Stripe Atlas perks",
    "link_kind": "apply",
    "link_note": "This goes to the application or sign-up page. Read who it is for first, then fill it in.",
-   "link_exact": true
+   "link_exact": true,
+   "about": [
+    "Atlas files documents but gives no legal or tax advice"
+   ]
   },
   {
    "id": "notion-for-startups",
@@ -6665,8 +6804,7 @@
    "requires": {},
    "requirements": [
     "Seed (under $2M raised) or Series A (over $2M raised) per the page",
-    "Partner offers are for HubSpot for Startups customers only",
-    "Page does not state country limits"
+    "Partner offers are for HubSpot for Startups customers only"
    ],
    "deadline": {
     "kind": "rolling",
@@ -6683,7 +6821,10 @@
    "link_label": "HubSpot for Startups",
    "link_kind": "apply",
    "link_note": "This goes to the application or sign-up page. Read who it is for first, then fill it in.",
-   "link_exact": true
+   "link_exact": true,
+   "unconfirmed": [
+    "Page does not state country limits"
+   ]
   },
   {
    "id": "digitalocean-startups",
@@ -6711,7 +6852,6 @@
    "regions": [],
    "requires": {},
    "requirements": [
-    "Applications paused; updated program expected early 2027",
     "Awarded through approved partners; $10M raised or less",
     "Needs a company website and business email",
     "Service-based startups are not eligible"
@@ -6731,7 +6871,10 @@
    "link_label": "DigitalOcean Startups",
    "link_kind": "apply",
    "link_note": "This goes to the application or sign-up page. Read who it is for first, then fill it in.",
-   "link_exact": true
+   "link_exact": true,
+   "about": [
+    "Applications paused; updated program expected early 2027"
+   ]
   },
   {
    "id": "black-founders-network",
@@ -6767,8 +6910,7 @@
    "requires": {},
    "requirements": [
     "Lead founder self-identifies as Black and is based in Canada",
-    "Some programmes are for U of T students, alumni and staff, or founders nominated by a BFN partner",
-    "The 2026 cycle is closed; the newsletter announces the next one"
+    "Some programmes are for U of T students, alumni and staff, or founders nominated by a BFN partner"
    ],
    "deadline": {
     "kind": "closed",
@@ -6787,7 +6929,10 @@
    "link_label": "University of Toronto Entrepreneurship: Black Founders Network",
    "link_kind": "program",
    "link_note": "Read what it offers and who can apply, then follow the steps on the page.",
-   "link_exact": true
+   "link_exact": true,
+   "about": [
+    "The 2026 cycle is closed; the newsletter announces the next one"
+   ]
   },
   {
    "id": "bfn-accelerate",
@@ -6876,8 +7021,7 @@
    "requires": {},
    "requirements": [
     "Black-led company that has raised or earned over $250,000 since it started",
-    "Shown by growing customers and recurring revenue",
-    "Use the express-interest form; no dates are published"
+    "Shown by growing customers and recurring revenue"
    ],
    "deadline": {
     "kind": "none_published",
@@ -6896,7 +7040,10 @@
    "link_label": "University of Toronto Entrepreneurship (Black Founders Network): BFN Scale",
    "link_kind": "apply",
    "link_note": "This goes to the application or sign-up page. Read who it is for first, then fill it in.",
-   "link_exact": true
+   "link_exact": true,
+   "how_to_apply": [
+    "Use the express-interest form; no dates are published"
+   ]
   },
   {
    "id": "bof-catalyst-program",
@@ -7042,8 +7189,7 @@
    "requires": {},
    "requirements": [
     "Aimed at Black entrepreneurs; eligibility details are on the programme page",
-    "ACBN is Black-led and serves southern Ontario",
-    "Check the programme page for the current intake"
+    "ACBN is Black-led and serves southern Ontario"
    ],
    "deadline": {
     "kind": "none_published",
@@ -7062,7 +7208,10 @@
    "link_label": "Afro Caribbean Business Network (ACBN): ACBN Growth Pathway",
    "link_kind": "program",
    "link_note": "Read what it offers and who can apply, then follow the steps on the page.",
-   "link_exact": true
+   "link_exact": true,
+   "unconfirmed": [
+    "Check the programme page for the current intake"
+   ]
   },
   {
    "id": "acbn-loan-readiness-program",
@@ -7096,8 +7245,7 @@
    "requires": {},
    "requirements": [
     "A business plan and a three-year cash flow projection",
-    "At least $1,000 in revenue over the past six months",
-    "The last run posted was September 18 to November 13, 2025"
+    "At least $1,000 in revenue over the past six months"
    ],
    "deadline": {
     "kind": "none_published",
@@ -7116,7 +7264,10 @@
    "link_label": "Afro Caribbean Business Network (ACBN): ACBN Loan Readiness Program",
    "link_kind": "program",
    "link_note": "This is the closest official page we found, not a dedicated program page.",
-   "link_exact": false
+   "link_exact": false,
+   "unconfirmed": [
+    "The last run posted was September 18 to November 13, 2025"
+   ]
   },
   {
    "id": "acbn-membership",
@@ -7153,8 +7304,7 @@
    ],
    "requires": {},
    "requirements": [
-    "Run by a Black-led not-for-profit in Brampton",
-    "Free Community tier; Inner Circle is paid"
+    "Run by a Black-led not-for-profit in Brampton"
    ],
    "deadline": {
     "kind": "rolling",
@@ -7173,7 +7323,10 @@
    "link_label": "Afro Caribbean Business Network (ACBN): ACBN membership",
    "link_kind": "program",
    "link_note": "Read what it offers and who can apply, then follow the steps on the page.",
-   "link_exact": true
+   "link_exact": true,
+   "about": [
+    "Free Community tier; Inner Circle is paid"
+   ]
   },
   {
    "id": "baids-black-business-program",
@@ -7207,8 +7360,7 @@
    "regions": [],
    "requires": {},
    "requirements": [
-    "Black-owned business; applicants are approved by BBPA",
-    "Described from BBPA's 2022 and 2023 releases; the BBPA site gives no intake dates"
+    "Black-owned business; applicants are approved by BBPA"
    ],
    "deadline": {
     "kind": "none_published",
@@ -7227,7 +7379,10 @@
    "link_label": "BAIDS Black Business Program",
    "link_kind": "program",
    "link_note": "This is the closest official page we found, not a dedicated program page.",
-   "link_exact": false
+   "link_exact": false,
+   "unconfirmed": [
+    "Described from BBPA's 2022 and 2023 releases; the BBPA site gives no intake dates"
+   ]
   },
   {
    "id": "bacel-training",
@@ -7261,8 +7416,7 @@
    "regions": [],
    "requires": {},
    "requirements": [
-    "Black entrepreneurs 18 or older; no business requirements",
-    "Pilot phase ended in June 2023; check the BACEL site for current workshops"
+    "Black entrepreneurs 18 or older; no business requirements"
    ],
    "deadline": {
     "kind": "none_published",
@@ -7281,7 +7435,10 @@
    "link_label": "Black Business and Professional Association (BBPA): BACEL training",
    "link_kind": "program",
    "link_note": "This is the closest official page we found, not a dedicated program page.",
-   "link_exact": false
+   "link_exact": false,
+   "unconfirmed": [
+    "Pilot phase ended in June 2023; check the BACEL site for current workshops"
+   ]
   },
   {
    "id": "canadian-black-chamber-of-commerce",
@@ -7316,8 +7473,7 @@
    "regions": [],
    "requires": {},
    "requirements": [
-    "For Black Canadian businesses and entrepreneurs",
-    "Programme details and prices are on subpages"
+    "For Black Canadian businesses and entrepreneurs"
    ],
    "deadline": {
     "kind": "rolling",
@@ -7336,7 +7492,10 @@
    "link_label": "Canadian Black Chamber of Commerce",
    "link_kind": "program",
    "link_note": "Read what it offers and who can apply, then follow the steps on the page.",
-   "link_exact": true
+   "link_exact": true,
+   "unconfirmed": [
+    "Programme details and prices are on subpages"
+   ]
   },
   {
    "id": "black-ai-venture-accelerator-baiva",
@@ -7432,8 +7591,7 @@
    ],
    "requires": {},
    "requirements": [
-    "Aimed at Black-led STEM startups",
-    "The only current action on the site is the 2027 waitlist"
+    "Aimed at Black-led STEM startups"
    ],
    "deadline": {
     "kind": "closed",
@@ -7452,7 +7610,10 @@
    "link_label": "Nobellum Idea and Growth Programs",
    "link_kind": "apply",
    "link_note": "This goes to the application or sign-up page. Read who it is for first, then fill it in.",
-   "link_exact": true
+   "link_exact": true,
+   "unconfirmed": [
+    "The only current action on the site is the 2027 waitlist"
+   ]
   },
   {
    "id": "chnge-mker-entrepreneur-incubator",
@@ -7484,9 +7645,7 @@
    "regions": [],
    "requires": {},
    "requirements": [
-    "Designed for Black founders",
-    "Based in Ottawa; the page does not set a residence rule",
-    "No dates or fees stated"
+    "Designed for Black founders"
    ],
    "deadline": {
     "kind": "none_published",
@@ -7505,7 +7664,11 @@
    "link_label": "Chnge Mker Entrepreneur Incubator",
    "link_kind": "apply",
    "link_note": "This goes to the application or sign-up page. Read who it is for first, then fill it in.",
-   "link_exact": true
+   "link_exact": true,
+   "unconfirmed": [
+    "Based in Ottawa; the page does not set a residence rule",
+    "No dates or fees stated"
+   ]
   },
   {
    "id": "black-entrepreneurship-program-fbc",
@@ -7537,9 +7700,7 @@
    "regions": [],
    "requires": {},
    "requirements": [
-    "Early-stage Black entrepreneurs (pre-idea, validating or early revenue)",
-    "The page's summary says it is for Black youth and young adults but sets no age limit",
-    "No city limit is stated"
+    "Early-stage Black entrepreneurs (pre-idea, validating or early revenue)"
    ],
    "deadline": {
     "kind": "rolling",
@@ -7558,7 +7719,11 @@
    "link_label": "Federation of Black Canadians: Black Entrepreneurship Program (FBC)",
    "link_kind": "apply",
    "link_note": "This goes to the application or sign-up page. Read who it is for first, then fill it in.",
-   "link_exact": true
+   "link_exact": true,
+   "unconfirmed": [
+    "The page's summary says it is for Black youth and young adults but sets no age limit",
+    "No city limit is stated"
+   ]
   },
   {
    "id": "drabpe-black-business-directory-and-networking",
@@ -7593,8 +7758,7 @@
    ],
    "requires": {},
    "requirements": [
-    "Serves Durham Region",
-    "Programme details are limited on the site"
+    "Serves Durham Region"
    ],
    "deadline": {
     "kind": "rolling",
@@ -7613,7 +7777,10 @@
    "link_label": "Durham Region Association of Black Professionals and Entrepreneurs (DRABPE): DRABPE Black ",
    "link_kind": "program",
    "link_note": "This is the closest official page we found, not a dedicated program page.",
-   "link_exact": false
+   "link_exact": false,
+   "unconfirmed": [
+    "Programme details are limited on the site"
+   ]
   },
   {
    "id": "black-women-collective",
@@ -7649,8 +7816,7 @@
    "requires": {},
    "requirements": [
     "For Black women entrepreneurs",
-    "Registered not-for-profit in Brampton",
-    "Current memberships are full; join the waitlist"
+    "Registered not-for-profit in Brampton"
    ],
    "deadline": {
     "kind": "closed",
@@ -7671,6 +7837,9 @@
    "restricted_all": [
     "women",
     "black"
+   ],
+   "about": [
+    "Current memberships are full; join the waitlist"
    ]
   },
   {
@@ -7702,8 +7871,7 @@
    "requirements": [
     "At least 51% owned by Black, Indigenous, Pan-Asian or Latino individuals",
     "Private, scalable, for-profit company at least two years old",
-    "At least CA$1 million in annual revenue for the past two years",
-    "No deadline or apply link on the page; use its contact section"
+    "At least CA$1 million in annual revenue for the past two years"
    ],
    "deadline": {
     "kind": "none_published",
@@ -7720,7 +7888,10 @@
    "link_label": "EY Entrepreneurs Access Network",
    "link_kind": "contact",
    "link_note": "This is a contact page. Say who you are and what you are building, and ask about fit.",
-   "link_exact": true
+   "link_exact": true,
+   "unconfirmed": [
+    "No deadline or apply link on the page; use its contact section"
+   ]
   },
   {
    "id": "tribe-accelerate-tech",
@@ -7750,8 +7921,7 @@
    "regions": [],
    "requires": {},
    "requirements": [
-    "For racialised tech entrepreneurs",
-    "The programmes page does not show which intake is open"
+    "For racialised tech entrepreneurs"
    ],
    "deadline": {
     "kind": "none_published",
@@ -7768,7 +7938,10 @@
    "link_label": "Tribe Accelerate Tech",
    "link_kind": "program",
    "link_note": "Read what it offers and who can apply, then follow the steps on the page.",
-   "link_exact": true
+   "link_exact": true,
+   "unconfirmed": [
+    "The programmes page does not show which intake is open"
+   ]
   },
   {
    "id": "monday-girl",
@@ -7802,9 +7975,7 @@
    "regions": [],
    "requires": {},
    "requirements": [
-    "Apply and be accepted; criteria are on mondaygirl.ca",
-    "Welcomes women and marginalised genders; trans women included",
-    "Prices are in US dollars"
+    "Welcomes women and marginalised genders; trans women included"
    ],
    "deadline": {
     "kind": "rolling",
@@ -7823,7 +7994,13 @@
    "link_label": "Monday Girl",
    "link_kind": "apply",
    "link_note": "This goes to the application or sign-up page. Read who it is for first, then fill it in.",
-   "link_exact": true
+   "link_exact": true,
+   "how_to_apply": [
+    "Apply and be accepted; criteria are on mondaygirl.ca"
+   ],
+   "about": [
+    "Prices are in US dollars"
+   ]
   },
   {
    "id": "femcity-toronto",
@@ -7856,8 +8033,7 @@
    "regions": [],
    "requires": {},
    "requirements": [
-    "For women entrepreneurs, professionals and creatives",
-    "Toronto and GTA events plus online sessions"
+    "For women entrepreneurs, professionals and creatives"
    ],
    "deadline": {
     "kind": "rolling",
@@ -7876,7 +8052,10 @@
    "link_label": "FemCity Toronto",
    "link_kind": "program",
    "link_note": "Read what it offers and who can apply, then follow the steps on the page.",
-   "link_exact": true
+   "link_exact": true,
+   "about": [
+    "Toronto and GTA events plus online sessions"
+   ]
   },
   {
    "id": "erapreneur",
@@ -7911,9 +8090,7 @@
    ],
    "requires": {},
    "requirements": [
-    "For female entrepreneurs",
-    "In-person events in Toronto, Leaside, Port Credit, Thornhill and Toronto West",
-    "Prices exclude tax"
+    "For female entrepreneurs"
    ],
    "deadline": {
     "kind": "rolling",
@@ -7932,7 +8109,11 @@
    "link_label": "Erapreneur",
    "link_kind": "program",
    "link_note": "This is the closest official page we found, not a dedicated program page.",
-   "link_exact": false
+   "link_exact": false,
+   "about": [
+    "In-person events in Toronto, Leaside, Port Credit, Thornhill and Toronto West",
+    "Prices exclude tax"
+   ]
   },
   {
    "id": "work-wives",
@@ -7964,9 +8145,7 @@
    "regions": [],
    "requires": {},
    "requirements": [
-    "Women or marginalised-gender founders, CEOs or owners of a business operating in Canada",
-    "Review takes three to five business days; cohorts start every four to six weeks",
-    "Confirm pricing terms with the organisation: the page labels the annual tier both 'one-time' and 'billed annually'"
+    "Women or marginalised-gender founders, CEOs or owners of a business operating in Canada"
    ],
    "deadline": {
     "kind": "rolling",
@@ -7985,7 +8164,13 @@
    "link_label": "Work Wives",
    "link_kind": "apply",
    "link_note": "This goes to the application or sign-up page. Read who it is for first, then fill it in.",
-   "link_exact": true
+   "link_exact": true,
+   "about": [
+    "Review takes three to five business days; cohorts start every four to six weeks"
+   ],
+   "unconfirmed": [
+    "Confirm pricing terms with the organisation: the page labels the annual tier both 'one-time' and 'billed annually'"
+   ]
   },
   {
    "id": "the-forum-community",
@@ -8072,8 +8257,7 @@
    "regions": [],
    "requires": {},
    "requirements": [
-    "For women executives and entrepreneurs",
-    "Apply on the membership page"
+    "For women executives and entrepreneurs"
    ],
    "deadline": {
     "kind": "rolling",
@@ -8092,7 +8276,10 @@
    "link_label": "Canadian Association of Women Executives and Entrepreneurs (CAWEE): CAWEE membership",
    "link_kind": "apply",
    "link_note": "This goes to the application or sign-up page. Read who it is for first, then fill it in.",
-   "link_exact": true
+   "link_exact": true,
+   "how_to_apply": [
+    "Apply on the membership page"
+   ]
   },
   {
    "id": "leading-ladies-connect",
@@ -8125,8 +8312,7 @@
    "regions": [],
    "requires": {},
    "requirements": [
-    "For women in business, careers, leadership and investing",
-    "Membership is a paid tier"
+    "For women in business, careers, leadership and investing"
    ],
    "deadline": {
     "kind": "rolling",
@@ -8145,7 +8331,10 @@
    "link_label": "Leading Ladies Connect",
    "link_kind": "apply",
    "link_note": "This goes to the application or sign-up page. Read who it is for first, then fill it in.",
-   "link_exact": true
+   "link_exact": true,
+   "about": [
+    "Membership is a paid tier"
+   ]
   },
   {
    "id": "verity-private-womens-club",
@@ -8181,8 +8370,7 @@
    ],
    "requires": {},
    "requirements": [
-    "Women across industries; over 55% of members are senior managers or C-suite",
-    "Apply and book a tour"
+    "Women across industries; over 55% of members are senior managers or C-suite"
    ],
    "deadline": {
     "kind": "rolling",
@@ -8201,7 +8389,10 @@
    "link_label": "Verity private women's club",
    "link_kind": "apply",
    "link_note": "This goes to the application or sign-up page. Read who it is for first, then fill it in.",
-   "link_exact": true
+   "link_exact": true,
+   "how_to_apply": [
+    "Apply and book a tour"
+   ]
   },
   {
    "id": "fresh-idea-collective",
@@ -8234,8 +8425,7 @@
    "regions": [],
    "requires": {},
    "requirements": [
-    "For women entrepreneurs",
-    "Apply for a mastermind through the form on the site"
+    "For women entrepreneurs"
    ],
    "deadline": {
     "kind": "rolling",
@@ -8254,7 +8444,10 @@
    "link_label": "Fresh Idea Collective",
    "link_kind": "program",
    "link_note": "This is the closest official page we found, not a dedicated program page.",
-   "link_exact": false
+   "link_exact": false,
+   "how_to_apply": [
+    "Apply for a mastermind through the form on the site"
+   ]
   },
   {
    "id": "sisterhood-of-women-in-business",
@@ -8287,8 +8480,7 @@
    "regions": [],
    "requires": {},
    "requirements": [
-    "For women entrepreneurs",
-    "Join through the form on the site"
+    "For women entrepreneurs"
    ],
    "deadline": {
     "kind": "rolling",
@@ -8307,7 +8499,10 @@
    "link_label": "Sisterhood of Women in Business",
    "link_kind": "apply",
    "link_note": "This is the closest official page we found, not a dedicated program page.",
-   "link_exact": false
+   "link_exact": false,
+   "how_to_apply": [
+    "Join through the form on the site"
+   ]
   },
   {
    "id": "high-vibe-women",
@@ -8340,8 +8535,7 @@
    "regions": [],
    "requires": {},
    "requirements": [
-    "For female entrepreneurs",
-    "Buy tickets for the next event on the site"
+    "For female entrepreneurs"
    ],
    "deadline": {
     "kind": "rolling",
@@ -8360,7 +8554,10 @@
    "link_label": "High Vibe Women",
    "link_kind": "program",
    "link_note": "Read what it offers and who can apply, then follow the steps on the page.",
-   "link_exact": true
+   "link_exact": true,
+   "how_to_apply": [
+    "Buy tickets for the next event on the site"
+   ]
   },
   {
    "id": "brown-girl-angels",
@@ -8392,8 +8589,7 @@
    "requires": {},
    "requirements": [
     "Startup has at least one South Asian female founder",
-    "Investors must be accredited; the collective does not pool capital",
-    "Offices and events in Toronto, New York, Vancouver and other cities"
+    "Investors must be accredited; the collective does not pool capital"
    ],
    "deadline": {
     "kind": "rolling",
@@ -8412,7 +8608,10 @@
    "link_label": "Brown Girl Angels",
    "link_kind": "apply",
    "link_note": "This goes to the application or sign-up page. Read who it is for first, then fill it in.",
-   "link_exact": true
+   "link_exact": true,
+   "about": [
+    "Offices and events in Toronto, New York, Vancouver and other cities"
+   ]
   },
   {
    "id": "ella-express",
@@ -8445,8 +8644,7 @@
    "requires": {},
    "requirements": [
     "Women entrepreneurs with a business based in Canada",
-    "Product or service business, pre-revenue or early stage",
-    "A page banner says application forms are temporarily down, so the link may not work"
+    "Product or service business, pre-revenue or early stage"
    ],
    "deadline": {
     "kind": "rolling",
@@ -8465,7 +8663,10 @@
    "link_label": "YSpace: ELLA Express",
    "link_kind": "apply",
    "link_note": "This goes to the application or sign-up page. Read who it is for first, then fill it in.",
-   "link_exact": true
+   "link_exact": true,
+   "unconfirmed": [
+    "A page banner says application forms are temporarily down, so the link may not work"
+   ]
   },
   {
    "id": "ella-ascend",
@@ -8499,8 +8700,7 @@
    "requirements": [
     "Woman with at least 50% ownership of a registered business, non-profit or social enterprise",
     "Full time on the venture, with at least $100,000 in annual revenue",
-    "Based in Canada; five to seven hours a week",
-    "The 2026 run is finished; applications closed March 16, 2026 and a waitlist is open"
+    "Based in Canada; five to seven hours a week"
    ],
    "deadline": {
     "kind": "closed",
@@ -8519,7 +8719,10 @@
    "link_label": "YSpace: ELLA Ascend",
    "link_kind": "apply",
    "link_note": "This goes to the application or sign-up page. Read who it is for first, then fill it in.",
-   "link_exact": true
+   "link_exact": true,
+   "about": [
+    "The 2026 run is finished; applications closed March 16, 2026 and a waitlist is open"
+   ]
   },
   {
    "id": "rhyze-up",
@@ -8555,8 +8758,7 @@
    "requirements": [
     "Woman or non-binary led, owned or co-owned, with decision-making authority",
     "Technology-enabled, under 500 employees, over $200,000 in annual recurring revenue, incorporated in Canada",
-    "Open across Canada; consultants and locally focused retailers are excluded",
-    "Limited spots; not cohort-based"
+    "Open across Canada; consultants and locally focused retailers are excluded"
    ],
    "deadline": {
     "kind": "none_published",
@@ -8575,7 +8777,10 @@
    "link_label": "Boundless Accelerator: RHYZE UP",
    "link_kind": "apply",
    "link_note": "This goes to the application or sign-up page. Read who it is for first, then fill it in.",
-   "link_exact": true
+   "link_exact": true,
+   "about": [
+    "Limited spots; not cohort-based"
+   ]
   },
   {
    "id": "sheboot",
@@ -8606,9 +8811,7 @@
    "regions": [],
    "requires": {},
    "requirements": [
-    "Women-led early-stage startups, especially tech",
-    "Ottawa-based national non-profit; the application steps are on the for-founders page",
-    "Cost to take part is not stated"
+    "Women-led early-stage startups, especially tech"
    ],
    "deadline": {
     "kind": "none_published",
@@ -8627,7 +8830,13 @@
    "link_label": "SheBoot program page",
    "link_kind": "program",
    "link_note": "Read what it offers and who can apply, then follow the steps on the page.",
-   "link_exact": true
+   "link_exact": true,
+   "about": [
+    "Ottawa-based national non-profit; the application steps are on the for-founders page"
+   ],
+   "unconfirmed": [
+    "Cost to take part is not stated"
+   ]
   },
   {
    "id": "movement51-founder-lab",
@@ -8659,8 +8868,7 @@
    "requires": {},
    "requirements": [
     "Women-led, with a woman co-founder holding significant ownership and an active role",
-    "Incorporated and headquartered in Canada, MVP-ready or in market",
-    "Applications are closed; the next cohort is listed for early 2027"
+    "Incorporated and headquartered in Canada, MVP-ready or in market"
    ],
    "deadline": {
     "kind": "closed",
@@ -8679,7 +8887,10 @@
    "link_label": "Movement51 Founder Lab",
    "link_kind": "apply",
    "link_note": "This goes to the application or sign-up page. Read who it is for first, then fill it in.",
-   "link_exact": true
+   "link_exact": true,
+   "about": [
+    "Applications are closed; the next cohort is listed for early 2027"
+   ]
   },
   {
    "id": "coralus",
@@ -8711,10 +8922,7 @@
    ],
    "regions": [],
    "requires": {},
-   "requirements": [
-    "Membership is paid, not a grant",
-    "Eligibility for ventures is not stated on the page"
-   ],
+   "requirements": [],
    "deadline": {
     "kind": "rolling",
     "date": null,
@@ -8732,7 +8940,13 @@
    "link_label": "Coralus program page",
    "link_kind": "program",
    "link_note": "This is the closest official page we found, not a dedicated program page.",
-   "link_exact": false
+   "link_exact": false,
+   "about": [
+    "Membership is paid, not a grant"
+   ],
+   "unconfirmed": [
+    "Eligibility for ventures is not stated on the page"
+   ]
   },
   {
    "id": "femtech-canada-network",
@@ -8763,8 +8977,7 @@
    "regions": [],
    "requires": {},
    "requirements": [
-    "Femtech companies (health products for women, girls, non-binary and trans people)",
-    "The directory is Canadian"
+    "Femtech companies (health products for women, girls, non-binary and trans people)"
    ],
    "deadline": {
     "kind": "rolling",
@@ -8781,7 +8994,10 @@
    "link_label": "Femtech Canada network",
    "link_kind": "apply",
    "link_note": "This goes to the application or sign-up page. Read who it is for first, then fill it in.",
-   "link_exact": true
+   "link_exact": true,
+   "unconfirmed": [
+    "The directory is Canadian"
+   ]
   },
   {
    "id": "whealth-medpath",
@@ -8813,8 +9029,7 @@
    },
    "requirements": [
     "Privately incorporated Canadian femtech company at technology readiness level 6 or higher with a clear clinical application",
-    "Active Femtech Canada member; Ontario firms must also be Innovation Factory clients (both free)",
-    "First come, first served until March 31, 2027 or until funds run out"
+    "Active Femtech Canada member; Ontario firms must also be Innovation Factory clients (both free)"
    ],
    "deadline": {
     "kind": "fixed",
@@ -8831,7 +9046,10 @@
    "link_label": "Femtech Canada (Innovation Factory): wHealth MedPath",
    "link_kind": "apply",
    "link_note": "This goes to the application or sign-up page. Read who it is for first, then fill it in.",
-   "link_exact": true
+   "link_exact": true,
+   "about": [
+    "First come, first served until March 31, 2027 or until funds run out"
+   ]
   },
   {
    "id": "dmz-pre-incubator",
@@ -8864,8 +9082,7 @@
    "requirements": [
     "Software-based, scalable tech business with an MVP ideally in market",
     "Proven traction such as pilots, partnerships or letters of intent",
-    "At least one full-time founder and an in-house technical lead",
-    "Two intakes a year; the page's status is inconsistent, so confirm with DMZ"
+    "At least one full-time founder and an in-house technical lead"
    ],
    "deadline": {
     "kind": "none_published",
@@ -8882,7 +9099,10 @@
    "link_label": "DMZ: DMZ Pre-Incubator",
    "link_kind": "apply",
    "link_note": "This goes to the application or sign-up page. Read who it is for first, then fill it in.",
-   "link_exact": true
+   "link_exact": true,
+   "unconfirmed": [
+    "Two intakes a year; the page's status is inconsistent, so confirm with DMZ"
+   ]
   },
   {
    "id": "amex-backing-canadian-small-businesses",
@@ -8967,8 +9187,7 @@
    "requires": {},
    "requirements": [
     "For women 18 or older who are permanent residents, convention refugees or live-in caregivers",
-    "Focus is launching a business in Toronto",
-    "First come, first served; basic English preferred, other languages can be arranged"
+    "Focus is launching a business in Toronto"
    ],
    "deadline": {
     "kind": "rolling",
@@ -8989,6 +9208,9 @@
    "restricted_all": [
     "women",
     "newcomer"
+   ],
+   "about": [
+    "First come, first served; basic English preferred, other languages can be arranged"
    ]
   },
   {
@@ -9020,8 +9242,7 @@
    "regions": [],
    "requires": {},
    "requirements": [
-    "Newcomers focused on starting their own business",
-    "Complete the information form on the page; dates are not shown"
+    "Newcomers focused on starting their own business"
    ],
    "deadline": {
     "kind": "none_published",
@@ -9040,7 +9261,10 @@
    "link_label": "Conestoga College: Self-Employment for Newcomers",
    "link_kind": "program",
    "link_note": "Read what it offers and who can apply, then follow the steps on the page.",
-   "link_exact": true
+   "link_exact": true,
+   "how_to_apply": [
+    "Complete the information form on the page; dates are not shown"
+   ]
   },
   {
    "id": "mnlc-start-your-business-exl-program",
@@ -9072,10 +9296,7 @@
     "toronto"
    ],
    "requires": {},
-   "requirements": [
-    "For newcomers; PR, refugee and work permit rules are not stated",
-    "Contact MNLC for dates and eligibility"
-   ],
+   "requirements": [],
    "deadline": {
     "kind": "none_published",
     "date": null,
@@ -9093,7 +9314,13 @@
    "link_label": "MNLC start your business (EXL program)",
    "link_kind": "contact",
    "link_note": "This is a contact page. Say who you are and what you are building, and ask about fit.",
-   "link_exact": true
+   "link_exact": true,
+   "how_to_apply": [
+    "Contact MNLC for dates and eligibility"
+   ],
+   "unconfirmed": [
+    "For newcomers; PR, refugee and work permit rules are not stated"
+   ]
   },
   {
    "id": "entrepreneuriatseo-incubator",
@@ -9123,9 +9350,7 @@
    "regions": [],
    "requires": {},
    "requirements": [
-    "Ontarians who want to start a business",
-    "The programme runs in French only",
-    "The sign-up page lists tracks by season; confirm which is open"
+    "Ontarians who want to start a business"
    ],
    "deadline": {
     "kind": "none_published",
@@ -9142,7 +9367,13 @@
    "link_label": "Société économique de l'Ontario (SÉO): EntrepreneuriatSÉO incubator",
    "link_kind": "apply",
    "link_note": "This goes to the application or sign-up page. Read who it is for first, then fill it in.",
-   "link_exact": true
+   "link_exact": true,
+   "about": [
+    "The programme runs in French only"
+   ],
+   "unconfirmed": [
+    "The sign-up page lists tracks by season; confirm which is open"
+   ]
   },
   {
    "id": "rise-helps-small-business-programs",
@@ -9172,9 +9403,7 @@
    "regions": [],
    "requires": {},
    "requirements": [
-    "For entrepreneurs with mental health, substance use or addiction-related challenges",
-    "Loans go to eligible, loan-ready entrepreneurs",
-    "Rise does not provide mental health services or crisis support"
+    "For entrepreneurs with mental health, substance use or addiction-related challenges"
    ],
    "deadline": {
     "kind": "rolling",
@@ -9191,7 +9420,11 @@
    "link_label": "Rise Helps small business programs",
    "link_kind": "program",
    "link_note": "Read what it offers and who can apply, then follow the steps on the page.",
-   "link_exact": true
+   "link_exact": true,
+   "about": [
+    "Loans go to eligible, loan-ready entrepreneurs",
+    "Rise does not provide mental health services or crisis support"
+   ]
   },
   {
    "id": "feddev-ontario-indigenous-business-funding",
@@ -9224,8 +9457,7 @@
    "requires": {},
    "requirements": [
     "Indigenous businesses and entrepreneurs, Indigenous economic development corporations and not-for-profits",
-    "Southern Ontario only (37 census divisions, Cornwall to Owen Sound and Pembroke to Windsor)",
-    "Contact indigenous-autochtones@feddevontario.gc.ca for full criteria"
+    "Southern Ontario only (37 census divisions, Cornwall to Owen Sound and Pembroke to Windsor)"
    ],
    "deadline": {
     "kind": "rolling",
@@ -9244,7 +9476,10 @@
    "link_label": "FedDev Ontario Indigenous business funding",
    "link_kind": "contact",
    "link_note": "This is a contact page. Say who you are and what you are building, and ask about fit.",
-   "link_exact": true
+   "link_exact": true,
+   "how_to_apply": [
+    "Contact indigenous-autochtones@feddevontario.gc.ca for full criteria"
+   ]
   },
   {
    "id": "indigenous-women-entrepreneurship-program",
@@ -9283,8 +9518,7 @@
    "requirements": [
     "Indigenous woman over 18 who owns at least 51% of the business",
     "Business located in NADF's service area, Northern Ontario",
-    "Cannot be combined with the youth programme",
-    "Early applications are encouraged because funding is limited"
+    "Cannot be combined with the youth programme"
    ],
    "deadline": {
     "kind": "none_published",
@@ -9305,6 +9539,9 @@
    "restricted_all": [
     "women",
     "indigenous"
+   ],
+   "about": [
+    "Early applications are encouraged because funding is limited"
    ]
   },
   {
@@ -9346,8 +9583,7 @@
    "requirements": [
     "Indigenous youth aged 18 to 39 who own at least 51% of the business",
     "Business located in NADF's service area, Northern Ontario",
-    "Cannot be combined with the women's programme",
-    "Early applications are encouraged because funding is limited"
+    "Cannot be combined with the women's programme"
    ],
    "deadline": {
     "kind": "none_published",
@@ -9366,7 +9602,10 @@
    "link_label": "Nishnawbe Aski Development Fund (NADF): Indigenous Youth Entrepreneurship Program",
    "link_kind": "contact",
    "link_note": "This is a contact page. Say who you are and what you are building, and ask about fit.",
-   "link_exact": true
+   "link_exact": true,
+   "about": [
+    "Early applications are encouraged because funding is limited"
+   ]
   },
   {
    "id": "metis-voyageur-development-fund",
@@ -9510,8 +9749,7 @@
    "requires": {},
    "requirements": [
     "First Nations focus; the site lists ten communities served",
-    "Southern Ontario (Sarnia office)",
-    "Ownership share and age limits are not stated"
+    "Southern Ontario (Sarnia office)"
    ],
    "deadline": {
     "kind": "none_published",
@@ -9530,7 +9768,10 @@
    "link_label": "Tecumseh Community Development Corporation",
    "link_kind": "apply",
    "link_note": "This goes to the application or sign-up page. Read who it is for first, then fill it in.",
-   "link_exact": true
+   "link_exact": true,
+   "unconfirmed": [
+    "Ownership share and age limits are not stated"
+   ]
   },
   {
    "id": "two-rivers-indigenous-business-financing-program",
@@ -9564,8 +9805,7 @@
    ],
    "requires": {},
    "requirements": [
-    "Aboriginal-owned and controlled businesses in the Two Rivers service area",
-    "Call or email to start; no application link on the contact page"
+    "Aboriginal-owned and controlled businesses in the Two Rivers service area"
    ],
    "deadline": {
     "kind": "none_published",
@@ -9584,7 +9824,10 @@
    "link_label": "Two Rivers Indigenous Business Financing Program",
    "link_kind": "contact",
    "link_note": "This is the closest official page we found, not a dedicated program page.",
-   "link_exact": false
+   "link_exact": false,
+   "how_to_apply": [
+    "Call or email to start; no application link on the contact page"
+   ]
   },
   {
    "id": "canadian-council-for-indigenous-business-ccib",
@@ -9669,8 +9912,7 @@
    "regions": [],
    "requires": {},
    "requirements": [
-    "Any Inuk woman anywhere in Canada, whatever her age or ability",
-    "No join link appears on the page; use its contact details"
+    "Any Inuk woman anywhere in Canada, whatever her age or ability"
    ],
    "deadline": {
     "kind": "rolling",
@@ -9691,6 +9933,9 @@
    "restricted_all": [
     "women",
     "indigenous"
+   ],
+   "unconfirmed": [
+    "No join link appears on the page; use its contact details"
    ]
   },
   {
@@ -9777,8 +10022,7 @@
    ],
    "requires": {},
    "requirements": [
-    "Open to founders, investors, engineers, operators and job seekers",
-    "RSVP runs through Eventbrite or Luma"
+    "Open to founders, investors, engineers, operators and job seekers"
    ],
    "deadline": {
     "kind": "rolling",
@@ -9795,7 +10039,10 @@
    "link_label": "Ascent Valley (Meetup): Startup Networking and Founder Ecosystem Toronto",
    "link_kind": "program",
    "link_note": "Read what it offers and who can apply, then follow the steps on the page.",
-   "link_exact": true
+   "link_exact": true,
+   "how_to_apply": [
+    "RSVP runs through Eventbrite or Luma"
+   ]
   },
   {
    "id": "startup-grind-toronto",
@@ -9828,8 +10075,7 @@
    ],
    "requires": {},
    "requirements": [
-    "For founders, builders and innovators",
-    "Over 7,800 Toronto members"
+    "For founders, builders and innovators"
    ],
    "deadline": {
     "kind": "rolling",
@@ -9846,7 +10092,10 @@
    "link_label": "Startup Grind Toronto",
    "link_kind": "apply",
    "link_note": "This goes to the application or sign-up page. Read who it is for first, then fill it in.",
-   "link_exact": true
+   "link_exact": true,
+   "about": [
+    "Over 7,800 Toronto members"
+   ]
   },
   {
    "id": "foundersboost-toronto",
@@ -9878,8 +10127,7 @@
    "requires": {},
    "requirements": [
     "Early-stage tech founders with initial customer traction",
-    "Diverse and underrepresented founders are encouraged to apply",
-    "The page's application window closed September 15; use the waitlist"
+    "Diverse and underrepresented founders are encouraged to apply"
    ],
    "deadline": {
     "kind": "none_published",
@@ -9896,7 +10144,10 @@
    "link_label": "FoundersBoost Toronto",
    "link_kind": "apply",
    "link_note": "This goes to the application or sign-up page. Read who it is for first, then fill it in.",
-   "link_exact": true
+   "link_exact": true,
+   "unconfirmed": [
+    "The page's application window closed September 15; use the waitlist"
+   ]
   },
   {
    "id": "tie-toronto",
@@ -9931,8 +10182,7 @@
    ],
    "requires": {},
    "requirements": [
-    "For early-stage and serial entrepreneurs, corporate professionals, VCs and angels",
-    "Use the member registration block on the page"
+    "For early-stage and serial entrepreneurs, corporate professionals, VCs and angels"
    ],
    "deadline": {
     "kind": "rolling",
@@ -9949,7 +10199,10 @@
    "link_label": "TiE Toronto",
    "link_kind": "program",
    "link_note": "This is the closest official page we found, not a dedicated program page.",
-   "link_exact": false
+   "link_exact": false,
+   "how_to_apply": [
+    "Use the member registration block on the page"
+   ]
   },
   {
    "id": "indo-canada-chamber-of-commerce",
@@ -9979,8 +10232,7 @@
    "regions": [],
    "requires": {},
    "requirements": [
-    "For the Canadian and Indian business community, SMEs, women entrepreneurs and new immigrants",
-    "Individual, corporate and associate memberships"
+    "For the Canadian and Indian business community, SMEs, women entrepreneurs and new immigrants"
    ],
    "deadline": {
     "kind": "rolling",
@@ -9997,7 +10249,10 @@
    "link_label": "Indo-Canada Chamber of Commerce",
    "link_kind": "program",
    "link_note": "Read what it offers and who can apply, then follow the steps on the page.",
-   "link_exact": true
+   "link_exact": true,
+   "about": [
+    "Individual, corporate and associate memberships"
+   ]
   },
   {
    "id": "interactive-ontario",
@@ -10081,8 +10336,7 @@
    ],
    "requires": {},
    "requirements": [
-    "Tech companies at any of five stages",
-    "The join form is a waitlist"
+    "Tech companies at any of five stages"
    ],
    "deadline": {
     "kind": "none_published",
@@ -10099,7 +10353,10 @@
    "link_label": "Communitech",
    "link_kind": "apply",
    "link_note": "This goes to the application or sign-up page. Read who it is for first, then fill it in.",
-   "link_exact": true
+   "link_exact": true,
+   "unconfirmed": [
+    "The join form is a waitlist"
+   ]
   },
   {
    "id": "iion-advisory-services",
@@ -10133,8 +10390,7 @@
    ],
    "requires": {},
    "requirements": [
-    "For-profit businesses at various stages of innovation",
-    "Request a meeting through the site"
+    "For-profit businesses at various stages of innovation"
    ],
    "deadline": {
     "kind": "rolling",
@@ -10151,7 +10407,10 @@
    "link_label": "Innovation Initiatives Ontario North (IION): IION advisory services",
    "link_kind": "contact",
    "link_note": "This is a contact page. Say who you are and what you are building, and ask about fit.",
-   "link_exact": true
+   "link_exact": true,
+   "how_to_apply": [
+    "Request a meeting through the site"
+   ]
   },
   {
    "id": "norcat-innovation",
@@ -10182,8 +10441,7 @@
    ],
    "requires": {},
    "requirements": [
-    "Early-stage tech startups and their founders",
-    "Start with the discovery document or the how-we-can-help page"
+    "Early-stage tech startups and their founders"
    ],
    "deadline": {
     "kind": "rolling",
@@ -10200,7 +10458,10 @@
    "link_label": "NORCAT Innovation",
    "link_kind": "program",
    "link_note": "Read what it offers and who can apply, then follow the steps on the page.",
-   "link_exact": true
+   "link_exact": true,
+   "how_to_apply": [
+    "Start with the discovery document or the how-we-can-help page"
+   ]
   },
   {
    "id": "northwestern-ontario-innovation-centre",
@@ -10235,8 +10496,7 @@
    ],
    "requires": {},
    "requirements": [
-    "Innovative businesses, manufacturers and entrepreneurs in Northwestern Ontario",
-    "Request a meeting through the site"
+    "Innovative businesses, manufacturers and entrepreneurs in Northwestern Ontario"
    ],
    "deadline": {
     "kind": "rolling",
@@ -10253,7 +10513,10 @@
    "link_label": "Northwestern Ontario Innovation Centre",
    "link_kind": "contact",
    "link_note": "This is a contact page. Say who you are and what you are building, and ask about fit.",
-   "link_exact": true
+   "link_exact": true,
+   "how_to_apply": [
+    "Request a meeting through the site"
+   ]
   },
   {
    "id": "sault-ste-marie-innovation-centre",
@@ -10287,8 +10550,7 @@
    ],
    "requires": {},
    "requirements": [
-    "Businesses and entrepreneurs in the Sault Ste. Marie area",
-    "The site's newest dated news item is from October 2024"
+    "Businesses and entrepreneurs in the Sault Ste. Marie area"
    ],
    "deadline": {
     "kind": "rolling",
@@ -10305,7 +10567,10 @@
    "link_label": "Sault Ste. Marie Innovation Centre",
    "link_kind": "program",
    "link_note": "Read what it offers and who can apply, then follow the steps on the page.",
-   "link_exact": true
+   "link_exact": true,
+   "unconfirmed": [
+    "The site's newest dated news item is from October 2024"
+   ]
   },
   {
    "id": "gfs-accelerator-canada",
@@ -10677,6 +10942,7 @@
    "amount": "Up to 50% of capital needed (repayable, interest-free); contributions up to 75% of certain costs",
    "stages": [
     "launched",
+    "revenue",
     "growth"
    ],
    "audiences": [],
@@ -10694,9 +10960,7 @@
     "PE"
    ],
    "requires": {},
-   "requirements": [
-    "Contact your nearest ACOA office to discuss your project"
-   ],
+   "requirements": [],
    "deadline": {
     "kind": "none_published",
     "date": null,
@@ -10713,7 +10977,10 @@
    "link_kind": "program",
    "link_note": "Talk to the nearest ACOA office first.",
    "link_exact": true,
-   "regions": []
+   "regions": [],
+   "how_to_apply": [
+    "Contact your nearest ACOA office to discuss your project"
+   ]
   },
   {
    "id": "global-talent-stream",
@@ -10890,7 +11157,6 @@
    ],
    "requires": {},
    "requirements": [
-    "Capped at US$25 million",
     "EDC reviews your international sales and lending agreement",
     "Best suited for complex export finance structures"
    ],
@@ -10910,7 +11176,10 @@
    "link_kind": "contact",
    "link_note": "The link is EDC's contact form, not an application form.",
    "link_exact": true,
-   "regions": []
+   "regions": [],
+   "about": [
+    "Capped at US$25 million"
+   ]
   },
   {
    "id": "cta",
@@ -11321,6 +11590,7 @@
    "stages": [
     "prototype",
     "launched",
+    "revenue",
     "growth"
    ],
    "audiences": [],
@@ -11468,6 +11738,8 @@
    "amount": "",
    "stages": [
     "idea",
+    "prototype",
+    "launched",
     "revenue",
     "growth"
    ],
@@ -11630,9 +11902,7 @@
     "PE"
    ],
    "requires": {},
-   "requirements": [
-    "Formally apply and interview"
-   ],
+   "requirements": [],
    "deadline": {
     "kind": "none_published",
     "date": null,
@@ -11649,7 +11919,10 @@
    "link_kind": "directory",
    "link_note": "Listing on Startup Atlantic; check startupzone.ca for intake.",
    "link_exact": true,
-   "regions": []
+   "regions": [],
+   "how_to_apply": [
+    "Formally apply and interview"
+   ]
   },
   {
    "id": "ontario-genomics-biocreate",
@@ -11945,8 +12218,7 @@
    "requires": {},
    "requirements": [
     "Current students and recent graduates in Canada pursuing research",
-    "Quebec applicants must apply through the QcSE program",
-    "Up to 3 hours a week"
+    "Quebec applicants must apply through the QcSE program"
    ],
    "deadline": {
     "kind": "none_published",
@@ -11964,7 +12236,10 @@
    "link_kind": "program",
    "link_note": "Free. The page lists no open cohort dates.",
    "link_exact": true,
-   "regions": []
+   "regions": [],
+   "about": [
+    "Up to 3 hours a week"
+   ]
   },
   {
    "id": "amii-claude-credits",
@@ -12077,6 +12352,9 @@
    "amount": "Free; no funding or grants",
    "stages": [
     "idea",
+    "prototype",
+    "launched",
+    "revenue",
     "growth"
    ],
    "audiences": [
@@ -12099,8 +12377,7 @@
    ],
    "requires": {},
    "requirements": [
-    "Supports early-stage and scale-up women-identifying entrepreneurs across Canada",
-    "Virtual events are free"
+    "Supports early-stage and scale-up women-identifying entrepreneurs across Canada"
    ],
    "deadline": {
     "kind": "none_published",
@@ -12120,7 +12397,10 @@
    "link_kind": "program",
    "link_note": "Free. The 2026 program is ending; watch for 2027.",
    "link_exact": true,
-   "regions": []
+   "regions": [],
+   "about": [
+    "Virtual events are free"
+   ]
   },
   {
    "id": "startupcan-startup-global",
@@ -12201,9 +12481,7 @@
     "any"
    ],
    "requires": {},
-   "requirements": [
-    "Register to get free access to training modules"
-   ],
+   "requirements": [],
    "deadline": {
     "kind": "none_published",
     "date": null,
@@ -12220,7 +12498,10 @@
    "link_kind": "program",
    "link_note": "Free after you register.",
    "link_exact": true,
-   "regions": []
+   "regions": [],
+   "how_to_apply": [
+    "Register to get free access to training modules"
+   ]
   },
   {
    "id": "mh-acoa",
@@ -12371,6 +12652,7 @@
    "amount": "",
    "stages": [
     "idea",
+    "prototype",
     "launched",
     "revenue",
     "growth"
@@ -18715,6 +18997,7 @@
    "amount": "",
    "stages": [
     "idea",
+    "prototype",
     "launched",
     "revenue",
     "growth"
@@ -19587,6 +19870,7 @@
    "amount": "",
    "stages": [
     "idea",
+    "prototype",
     "launched",
     "revenue",
     "growth"
@@ -29031,8 +29315,7 @@
    "requirements": [
     "Seed, Series A or Series B stage",
     "Creator economy, gaming, music tech or sports tech, or deep tech (semiconductors, physical AI, robotics, sensors, photonics)",
-    "Based in Canada or the United States",
-    "Applications go directly to the fund through its application page"
+    "Based in Canada or the United States"
    ],
    "deadline": {
     "kind": "closed",
@@ -29043,7 +29326,10 @@
    "apply_url": "https://app.dgpt.io/p/sonyvc",
    "source_url": "https://app.dgpt.io/p/sonyvc",
    "link_label": "Sony Innovation Fund application page",
-   "link_note": "The fund's own application page, hosted on DiligenceGPT. It shows when a new window opens."
+   "link_note": "The fund's own application page, hosted on DiligenceGPT. It shows when a new window opens.",
+   "how_to_apply": [
+    "Applications go directly to the fund through its application page"
+   ]
   },
   {
    "audiences": [],
@@ -29079,10 +29365,7 @@
     "any"
    ],
    "requirements": [
-    "Pre-seed or Series A startup in advanced technology (quantum, photonics, electronics, advanced materials, robotics, foundational AI)",
-    "The form asks whether the company is a Canadian-controlled private corporation (CCPC)",
-    "A warm introduction is preferred, but the form is open to submissions",
-    "You send your pitch deck after the confirmation email; the form takes no attachments"
+    "Pre-seed or Series A startup in advanced technology (quantum, photonics, electronics, advanced materials, robotics, foundational AI)"
    ],
    "deadline": {
     "kind": "rolling",
@@ -29093,7 +29376,12 @@
    "apply_url": "https://www.bdc.ca/en/bdc-capital/venture-capital/funds/deep-tech-venture-fund/deep-tech-venture-fund-form",
    "source_url": "https://www.bdc.ca/en/bdc-capital/venture-capital/funds/deep-tech-venture-fund/deep-tech-venture-fund-form",
    "link_label": "BDC Deep Tech Venture Fund form",
-   "link_note": "The fund's own submission form."
+   "link_note": "The fund's own submission form.",
+   "how_to_apply": [
+    "The form asks whether the company is a Canadian-controlled private corporation (CCPC)",
+    "A warm introduction is preferred, but the form is open to submissions",
+    "You send your pitch deck after the confirmation email; the form takes no attachments"
+   ]
   },
   {
    "audiences": [],
@@ -29283,8 +29571,7 @@
    "requirements": [
     "Alberta-based small or medium-sized enterprise developing a health technology",
     "Validate stream needs readiness level 4 in all domains; Market Access needs level 6",
-    "At least 25% of eligible project costs from the applicant, in cash or in kind",
-    "Projects run up to 24 months"
+    "At least 25% of eligible project costs from the applicant, in cash or in kind"
    ],
    "deadline": {
     "kind": "fixed",
@@ -29295,7 +29582,10 @@
    "apply_url": "https://albertainnovates.ca/funding/accelerating-innovations-into-care-aice/",
    "source_url": "https://albertainnovates.ca/funding/accelerating-innovations-into-care-aice/",
    "link_label": "Alberta Innovates: AICE",
-   "link_note": "The program page, with the program guide and the open intake."
+   "link_note": "The program page, with the program guide and the open intake.",
+   "about": [
+    "Projects run up to 24 months"
+   ]
   },
   {
    "audiences": [],
@@ -29385,8 +29675,7 @@
    ],
    "requirements": [
     "Technology-driven idea or early-stage startup",
-    "Commitment to building and growing in New Brunswick",
-    "Investments are subject to NBIF due diligence and approval"
+    "Commitment to building and growing in New Brunswick"
    ],
    "deadline": {
     "kind": "closed",
@@ -29397,7 +29686,10 @@
    "apply_url": "https://www.nbif.ca/breakthru-2027",
    "source_url": "https://www.nbif.ca/breakthru-2027",
    "link_label": "NBIF: Breakthru 2027",
-   "link_note": "NBIF's program page. It says when applications reopen."
+   "link_note": "NBIF's program page. It says when applications reopen.",
+   "about": [
+    "Investments are subject to NBIF due diligence and approval"
+   ]
   },
   {
    "audiences": [],
@@ -29432,8 +29724,7 @@
     "any"
    ],
    "requirements": [
-    "Early-stage technology company preparing to go to market and raise seed capital",
-    "The page does not publish a location rule or current intake dates; the last date it shows is for the 2023 cohort"
+    "Early-stage technology company preparing to go to market and raise seed capital"
    ],
    "deadline": {
     "kind": "none_published",
@@ -29444,7 +29735,10 @@
    "apply_url": "https://founderfuel.com/apply/",
    "source_url": "https://founderfuel.com/apply/",
    "link_label": "FounderFuel: Apply",
-   "link_note": "The accelerator's own apply page."
+   "link_note": "The accelerator's own apply page.",
+   "unconfirmed": [
+    "The page does not publish a location rule or current intake dates; the last date it shows is for the 2023 cohort"
+   ]
   },
   {
    "id": "obio-healthmint",
@@ -29573,8 +29867,7 @@
    ],
    "requires": {},
    "requirements": [
-    "Women-led STEM company in life sciences, Ontario",
-    "The page says information about applying will be available soon; contact wihiseed@obio.ca"
+    "Women-led STEM company in life sciences, Ontario"
    ],
    "deadline": {
     "kind": "none_published",
@@ -29594,7 +29887,10 @@
    "link_kind": "program",
    "link_note": "Listed by a third-party directory, not yet confirmed by Pathwai. Check eligibility and dates on this page.",
    "link_exact": true,
-   "regions": []
+   "regions": [],
+   "unconfirmed": [
+    "The page says information about applying will be available soon; contact wihiseed@obio.ca"
+   ]
   },
   {
    "id": "abdp-socca-non-refundable-contribution",
@@ -29735,8 +30031,7 @@
    ],
    "requires": {},
    "requirements": [
-    "Indigenous entrepreneur or Indigenous business in the territories",
-    "Apply through the CanNor-approved partner for your region (Kakivak, Kivalliq Inuit Association, Kitikmeot Community Futures, Metis-Dene Development Fund, or dana Naye Ventures), or email operations@cannor.gc.ca"
+    "Indigenous entrepreneur or Indigenous business in the territories"
    ],
    "deadline": {
     "kind": "none_published",
@@ -29756,7 +30051,10 @@
    "link_kind": "program",
    "link_note": "Listed by a third-party directory, not yet confirmed by Pathwai. Check eligibility and dates on this page.",
    "link_exact": true,
-   "regions": []
+   "regions": [],
+   "how_to_apply": [
+    "Apply through the CanNor-approved partner for your region (Kakivak, Kivalliq Inuit Association, Kitikmeot Community Futures, Metis-Dene Development Fund, or dana Naye Ventures), or email operations@cannor.gc.ca"
+   ]
   },
   {
    "id": "aep-access-to-capital",
@@ -29787,8 +30085,7 @@
    ],
    "requires": {},
    "requirements": [
-    "Indigenous individual, or a business owned and controlled by Indigenous Peoples",
-    "Apply through your local Indigenous Financial Institution or Métis Capital Corporation; eligibility varies between them"
+    "Indigenous individual, or a business owned and controlled by Indigenous Peoples"
    ],
    "deadline": {
     "kind": "rolling",
@@ -29808,7 +30105,10 @@
    "link_kind": "program",
    "link_note": "Read who can apply, then contact your local Indigenous Financial Institution or Métis Capital Corporation.",
    "link_exact": true,
-   "regions": []
+   "regions": [],
+   "how_to_apply": [
+    "Apply through your local Indigenous Financial Institution or Métis Capital Corporation; eligibility varies between them"
+   ]
   },
   {
    "id": "northern-ontario-women-now",
@@ -29895,7 +30195,6 @@
     "Innovative solution to housing issues or construction productivity",
     "Full-time founder and a coachable leadership team",
     "Solid traction and ready to scale in Canada",
-    "2 to 3 hours per month; mostly virtual",
     "Special consideration for rural, Indigenous and academic-led startups"
    ],
    "deadline": {
@@ -29916,6 +30215,9 @@
    "link_exact": true,
    "regions": [
     "southern-ontario"
+   ],
+   "about": [
+    "2 to 3 hours per month; mostly virtual"
    ]
   },
   {
@@ -29948,8 +30250,7 @@
    "requirements": [
     "Canadian incorporated SME or startup and a member of Natural Products Canada",
     "Novel natural or bio-based product or technology at technology readiness level 4 to 9",
-    "Potential to reach $10M to $15M in annual revenue",
-    "Government funding stacking cap of 75% of eligible costs; 5% project administration fee plus tax"
+    "Potential to reach $10M to $15M in annual revenue"
    ],
    "deadline": {
     "kind": "none_published",
@@ -29967,7 +30268,10 @@
    "link_kind": "program",
    "link_note": "Listed by a third-party directory, not yet confirmed by Pathwai. Check eligibility and dates on this page.",
    "link_exact": true,
-   "regions": []
+   "regions": [],
+   "about": [
+    "Government funding stacking cap of 75% of eligible costs; 5% project administration fee plus tax"
+   ]
   },
   {
    "id": "alberta-strategic-industries-tech-knowledge-grant",
@@ -30046,8 +30350,7 @@
    ],
    "requires": {},
    "requirements": [
-    "Alberta small or medium-sized enterprise, industry association, Indigenous organization or economic development organization",
-    "Funding is for international travel to formal outbound trade events"
+    "Alberta small or medium-sized enterprise, industry association, Indigenous organization or economic development organization"
    ],
    "deadline": {
     "kind": "rolling",
@@ -30065,7 +30368,10 @@
    "link_kind": "program",
    "link_note": "Listed by a third-party directory, not yet confirmed by Pathwai. Check eligibility and dates on this page.",
    "link_exact": true,
-   "regions": []
+   "regions": [],
+   "about": [
+    "Funding is for international travel to formal outbound trade events"
+   ]
   },
   {
    "id": "business-link-alberta-guidance",
@@ -30094,8 +30400,7 @@
    ],
    "requires": {},
    "requirements": [
-    "Alberta entrepreneur or small business owner",
-    "Book a free meeting; no fees"
+    "Alberta entrepreneur or small business owner"
    ],
    "deadline": {
     "kind": "rolling",
@@ -30113,7 +30418,10 @@
    "link_kind": "program",
    "link_note": "Listed by a third-party directory, not yet confirmed by Pathwai. Check eligibility and dates on this page.",
    "link_exact": true,
-   "regions": []
+   "regions": [],
+   "how_to_apply": [
+    "Book a free meeting; no fees"
+   ]
   },
   {
    "id": "business-investment-program-nl",
@@ -30142,8 +30450,7 @@
    "requirements": [
     "SME based and operating in Newfoundland and Labrador with fewer than 100 employees and under $10M in sales",
     "Operates in a strategic sector defined by Jobs, Growth and Rural Development, or has export potential",
-    "In good standing with the provincial government",
-    "Apply with the commercial programs form"
+    "In good standing with the provincial government"
    ],
    "deadline": {
     "kind": "none_published",
@@ -30161,7 +30468,10 @@
    "link_kind": "program",
    "link_note": "Listed by a third-party directory, not yet confirmed by Pathwai. Check eligibility and dates on this page.",
    "link_exact": true,
-   "regions": []
+   "regions": [],
+   "how_to_apply": [
+    "Apply with the commercial programs form"
+   ]
   },
   {
    "id": "ipon-intellectual-property-ontario",
@@ -30190,8 +30500,7 @@
    ],
    "requires": {},
    "requirements": [
-    "Ontario-based innovator meeting IPON's eligibility criteria",
-    "Assessed on IP readiness and business stage"
+    "Ontario-based innovator meeting IPON's eligibility criteria"
    ],
    "deadline": {
     "kind": "rolling",
@@ -30209,7 +30518,10 @@
    "link_kind": "program",
    "link_note": "Listed by a third-party directory, not yet confirmed by Pathwai. Check eligibility and dates on this page.",
    "link_exact": true,
-   "regions": []
+   "regions": [],
+   "about": [
+    "Assessed on IP readiness and business stage"
+   ]
   },
   {
    "id": "bc-eligible-business-corporation-tax-credit",
@@ -30238,8 +30550,7 @@
    "requires": {},
    "requirements": [
     "Small business registered as an eligible business corporation (EBC) in British Columbia",
-    "Companies on the register may not hold a current pre-approval; investors should ask for the pre-approved authorization",
-    "The credit goes to the investor, not the company"
+    "Companies on the register may not hold a current pre-approval; investors should ask for the pre-approved authorization"
    ],
    "deadline": {
     "kind": "none_published",
@@ -30257,7 +30568,10 @@
    "link_kind": "program",
    "link_note": "Listed by a third-party directory, not yet confirmed by Pathwai. Check eligibility and dates on this page.",
    "link_exact": true,
-   "regions": []
+   "regions": [],
+   "about": [
+    "The credit goes to the investor, not the company"
+   ]
   },
   {
    "id": "ideas-defence-excellence-security",
@@ -30383,8 +30697,7 @@
    ],
    "requires": {},
    "requirements": [
-    "Self-identify as 2SLGBTQI+, be 18 or older, part-time or full-time entrepreneur located in Canada",
-    "4 to 6 hours a month for 10 months"
+    "Self-identify as 2SLGBTQI+, be 18 or older, part-time or full-time entrepreneur located in Canada"
    ],
    "deadline": {
     "kind": "closed",
@@ -30402,7 +30715,10 @@
    "link_kind": "program",
    "link_note": "Listed by a third-party directory, not yet confirmed by Pathwai. Check eligibility and dates on this page.",
    "link_exact": true,
-   "regions": []
+   "regions": [],
+   "about": [
+    "4 to 6 hours a month for 10 months"
+   ]
   },
   {
    "id": "genome-bc-industry-innovation-fund",
@@ -30429,9 +30745,7 @@
    "requires": {},
    "requirements": [
     "Beyond the research stage, in commercial proof of concept or development",
-    "B.C. company, or a company with a substantial B.C. presence",
-    "Funding is matched by other public or private sources",
-    "Principal is repayable starting no more than four years after disbursement"
+    "B.C. company, or a company with a substantial B.C. presence"
    ],
    "deadline": {
     "kind": "none_published",
@@ -30449,7 +30763,11 @@
    "link_kind": "program",
    "link_note": "Listed by a third-party directory, not yet confirmed by Pathwai. Check eligibility and dates on this page. The link is the fund's home page.",
    "link_exact": false,
-   "regions": []
+   "regions": [],
+   "about": [
+    "Funding is matched by other public or private sources",
+    "Principal is repayable starting no more than four years after disbursement"
+   ]
   },
   {
    "id": "basin-business-advisors",
@@ -30523,8 +30841,7 @@
    ],
    "requires": {},
    "requirements": [
-    "Startup or SME with a technology project in the Outaouais or National Capital Region",
-    "Defence cohort: expressions of interest are open for the spring 2027 start"
+    "Startup or SME with a technology project in the Outaouais or National Capital Region"
    ],
    "deadline": {
     "kind": "none_published",
@@ -30542,7 +30859,10 @@
    "link_kind": "program",
    "link_note": "Listed by a third-party directory, not yet confirmed by Pathwai. Check eligibility and dates on this page.",
    "link_exact": true,
-   "regions": []
+   "regions": [],
+   "about": [
+    "Defence cohort: expressions of interest are open for the spring 2027 start"
+   ]
   }
  ]
 }

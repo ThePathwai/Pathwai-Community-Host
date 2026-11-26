@@ -318,7 +318,7 @@ const verdict = (p, profile, today) => {
   return { fit: ev.fit, score: ev.score, reasons: ev.reasons, cautions: ev.cautions, checks: ev.checks };
 };
 
-const BRIEF_KEYS = ["id", "name", "org", "level", "type", "summary", "amount", "stages", "audiences", "needs", "sectors", "provinces", "regions", "requirements", "deadline", "status", "phase", "apply_url", "link_label", "link_kind", "link_note", "link_exact", "source_url", "verified", "last_checked", "restricted_to", "restricted_all", "community", "base_url", "page_check"];
+const BRIEF_KEYS = ["id", "name", "org", "level", "type", "summary", "amount", "stages", "audiences", "needs", "sectors", "provinces", "regions", "requirements", "how_to_apply", "about", "unconfirmed", "deadline", "status", "phase", "apply_url", "link_label", "link_kind", "link_note", "link_exact", "source_url", "verified", "last_checked", "restricted_to", "restricted_all", "community", "base_url", "page_check"];
 const brief = (p) => { const o = {}; for (const k of BRIEF_KEYS) if (k in p) o[k] = p[k]; return o; };
 const byScore = (a, b) => (b.score - a.score) || (a.name < b.name ? -1 : a.name > b.name ? 1 : 0);
 

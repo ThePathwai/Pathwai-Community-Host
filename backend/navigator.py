@@ -678,7 +678,7 @@ def evaluate(program: Dict[str, Any], profile: Dict[str, Any], today: Optional[d
 
 
 def _brief(program: Dict[str, Any]) -> Dict[str, Any]:
-    keys = ["id", "name", "org", "level", "type", "summary", "amount", "stages", "audiences", "needs", "sectors", "provinces", "regions", "requirements",
+    keys = ["id", "name", "org", "level", "type", "summary", "amount", "stages", "audiences", "needs", "sectors", "provinces", "regions", "requirements", "how_to_apply", "about", "unconfirmed",
             "deadline", "status", "phase", "apply_url", "link_label", "link_kind", "link_note", "link_exact", "source_url", "verified", "last_checked", "restricted_to", "restricted_all", "community", "base_url", "page_check"]
     return {k: program.get(k) for k in keys if k in program}
 
