@@ -1,7 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { api, errMsg } from "../lib/api";
-import { captureEvent } from "../lib/analytics";
 import { useAuth } from "../lib/auth";
 import { applyBrand } from "../lib/theme";
 import { inDemoTab, leaveDemo } from "../lib/demo";
@@ -146,7 +145,6 @@ export default function Signup() {
     try {
       const payload = { ...f, accepted_terms: true, ...(intent === "member" && joinSlug ? { join_slug: joinSlug } : {}) };
       const data = await signup(payload);
-      captureEvent("signed_up", { intent });
       setJoinResult(data?.joined || null);
       setShowProfile(true);
     } catch (ex) { setErr(errMsg(ex)); } finally { setBusy(false); }
