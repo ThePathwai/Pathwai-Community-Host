@@ -4,7 +4,7 @@ import { toast } from "sonner";
 import { ArrowRight, Check, CheckCircle2, Circle, Clock, Copy, Eye, EyeOff, GripVertical, Lock, Plus, Rocket, Send, Share2, Sparkles, Target, X } from "../components/icons";
 import { api, errMsg } from "../lib/api";
 import { useAuth } from "../lib/auth";
-import posthog, { posthogEnabled } from "../lib/posthog";
+import posthog, { posthogEnabled, posthogLogger } from "../lib/posthog";
 import { useEcosystem } from "../lib/ecosystem";
 import { NEED_LABEL, STAGES, STAGE_LABEL, needsFromText } from "../lib/navigator";
 import { BRIEF_SECTIONS, HORIZONS, STATUS_LABEL, STEPS, UPDATES, advisorBrief, applyUpdate, KEEP, buildPlan, decide, directions, moveStep, planProgress, stepStates } from "../lib/planner";
@@ -710,7 +710,7 @@ export default function Planner() {
       {step === "directions" && (startup.stage ? <Directions list={dirs} chosen={plan.direction} onChoose={choose} busy={busy} hub={hub} decideProps={{ startup, lists, hub, today, saved: plan.decision, onUse: useDecision }} />
         : <div className="card flex flex-wrap items-center justify-between gap-4"><p className="text-sm">Tell us about your startup first, so the directions fit you.</p><button type="button" className={PRIMARY} style={ACCENT} onClick={() => go("story")}>Start with your story</button></div>)}
       {step === "plan" && <Plan dir={dir} steps={steps} log={plan.log || []} decision={plan.decision} arranged={(plan.arrange || []).length > 0} onArrange={arrange} hidden={(plan.hidden || []).length} busy={busy} onPickDirection={() => go("directions")}
-        onStatus={(id, status) => post({ status: { id, status } })} onAdd={(title, horizon) => post({ add: { title, horizon } })} onRemove={(id) => post({ remove: id })} onRestore={() => post({ restore: true })} />}
+        onStatus={async (id, status) => { if (await post({ status: { id, status } })) { if (posthogEnabled) posthog.capture("planner_step_status_updated", { status }); posthogLogger.info("planner step status updated", { status }); } }} onAdd={(title, horizon) => post({ add: { title, horizon } })} onRemove={(id) => post({ remove: id })} onRestore={() => post({ restore: true })} />}
       {step === "brief" && <Brief brief={brief} plan={plan} dir={dir} steps={steps} advisors={advisors} busy={busy} today={today} onPickDirection={() => go("directions")} onHome={() => nav("/")}
         onStart={async () => { if (await post({ started: today }, "Plan started. Your first steps are on your home page.")) { if (posthogEnabled) posthog.capture("planner_started"); } }} onStop={() => post({ started: null })}
         onInclude={(k, v) => (k ? post({ include: { [k]: v } }) : post({ brief_ready: true }))}
