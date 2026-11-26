@@ -139,7 +139,7 @@ def test_closed_and_paused_programs_are_never_suggested_but_say_why():
 
 def test_no_published_deadline_is_said_out_loud_not_invented():
     p = nav.normalize_profile({"stage": "revenue", "needs": ["export"], "incorporated": "yes", "employees": 10})
-    ev = nav.evaluate(by_id("canexport-smes"), p, TODAY)
+    ev = nav.evaluate(by_id("irap"), p, TODAY)   # IRAP publishes no closing date
     assert any("No deadline was published" in c for c in ev["cautions"])
 
 
@@ -215,7 +215,10 @@ def test_suggest_over_the_api():
         r = c.post("/api/navigator/suggest", json={"profile": {"stage": "revenue", "needs": ["export"], "incorporated": "yes", "employees": 10}})
         assert r.status_code == 200
         body = r.json()
-        assert body["matches"][0]["id"] == "canexport-smes"
+        assert body["matches"][0]["status"] in ("open", "rolling")   # the best match is something a founder can apply to now
+        assert "canexport-smes" not in [m["id"] for m in body["matches"]]   # CanExport's own page says it is closed, so it is not suggested
+        closed = next(o for o in body["others"] if o["id"] == "canexport-smes")
+        assert closed["cautions"][0].startswith("Closed right now")
         assert body["narrative"] and body["narrative_by"] == "rules"  # no model key in tests
         assert c.post("/api/navigator/suggest", json={"profile": {"stage": "idea", "age": "oops"}}).status_code in (200, 422)
 

@@ -1,0 +1,186 @@
+{
+ "checked": "2026-11-26",
+ "how": "Each program's own page was read on this date. An entry is here only when the page said it plainly. Pages with no timing statement, with undated or stale statements, or that could not be read were left as they were.",
+ "read": 99,
+ "changes": [
+  {
+   "id": "isc",
+   "kind": "fixed",
+   "date": "2026-11-27",
+   "note": "The closing date shown is for the current call; each call has its own.",
+   "evidence": "Closing date: November 27, 2026 14:00 Eastern time",
+   "page": "https://ised-isde.canada.ca/site/innovative-solutions-canada/"
+  },
+  {
+   "id": "centech-acceleration",
+   "kind": "fixed",
+   "date": "2026-12-01",
+   "note": "Call for projects closes December 1, 2026 at 9:00 AM.",
+   "evidence": "Call for projects closes December 1, 2026 at 9:00 AM",
+   "page": "https://centech.co/en/acceleration-program/"
+  },
+  {
+   "id": "alberta-catalyzer",
+   "kind": "rolling",
+   "date": null,
+   "note": "Cohorts run year round.",
+   "evidence": "Cohorts for each program continue year round",
+   "page": "https://www.platformcalgary.com/programs/alberta-catalyzer"
+  },
+  {
+   "id": "launch-academy",
+   "kind": "rolling",
+   "date": null,
+   "note": "Applications are open all year round.",
+   "evidence": "Applications are open all year round",
+   "page": "https://www.launchacademy.ca/launchpad/"
+  },
+  {
+   "id": "acbn-growth-pathway",
+   "kind": "rolling",
+   "date": null,
+   "note": "Applications are open year-round.",
+   "evidence": "Applications are open year-round",
+   "page": "https://acbncanada.com/growth-pathway/"
+  },
+  {
+   "id": "dmz-pre-incubator",
+   "kind": "rolling",
+   "date": null,
+   "note": "The page says applications are open year-round; DMZ also mentions two intakes a year, so confirm with them.",
+   "evidence": "applications open year-round",
+   "page": "https://dmz.torontomu.ca/pre-incubator"
+  },
+  {
+   "id": "proof-of-concept-natural-products-canada",
+   "kind": "rolling",
+   "date": null,
+   "note": "Applications are accepted on an ongoing basis.",
+   "evidence": "Applications are accepted on an ongoing basis",
+   "page": "https://www.naturalproductscanada.com/proof-of-concept/"
+  },
+  {
+   "id": "eu-alberta-accelerator-500",
+   "kind": "rolling",
+   "date": null,
+   "note": "No deadline is set for the current batch.",
+   "evidence": "Applications for Batch 7 don't currently have a deadline",
+   "page": "https://500.co/founders/alberta/accelerator"
+  },
+  {
+   "id": "utest",
+   "kind": "closed",
+   "date": null,
+   "note": "Applications are closed until Spring 2027.",
+   "evidence": "closed until Spring 2027",
+   "page": "https://utest.to/apply/",
+   "drop_unconfirmed": [
+    "Check the site for intake; its footer is dated 2021"
+   ]
+  },
+  {
+   "id": "business-impact-program",
+   "kind": "closed",
+   "date": null,
+   "note": "Applications are closed and reopen on December 1, 2026.",
+   "evidence": "Applications are now closed and will reopen on December 1, 2026",
+   "page": "https://boundlessaccelerator.ca/programs/business-impact-program/"
+  },
+  {
+   "id": "sheboot",
+   "kind": "closed",
+   "date": null,
+   "note": "The 2026 cohort is closed. Applications open again in April 2027.",
+   "evidence": "Applications for the 2026 cohort are now closed. They will open again in April 2027",
+   "page": "https://sheboot.ca/for-founders/"
+  },
+  {
+   "id": "startup-survivor",
+   "kind": "closed",
+   "date": null,
+   "note": "Applications for the 2027 cohort open in January.",
+   "evidence": "Applications for the 2027 cohort will open in January",
+   "page": "https://theforge.mcmaster.ca/programs/startup-survivor/"
+  },
+  {
+   "id": "startupcan-startup-global",
+   "kind": "closed",
+   "date": null,
+   "note": "Applications are closed. Future pitch applications open in 2027.",
+   "evidence": "to be notified when future pitch applications open 2027",
+   "page": "https://www.startupcan.ca/startup-global-national-pitch-competition/"
+  },
+  {
+   "id": "validator",
+   "kind": "closed",
+   "date": null,
+   "note": "Applications are closed. Check the page for the next intake.",
+   "evidence": "Applications are now closed",
+   "page": "https://dmz.torontomu.ca/validator"
+  },
+  {
+   "id": "scaleup-accelerator",
+   "kind": "closed",
+   "date": null,
+   "note": "Applications are currently closed.",
+   "evidence": "Applications for our ScaleUP Accelerator are currently closed",
+   "page": "https://www.wetech-alliance.com/scaleup/"
+  },
+  {
+   "id": "hamilton-retail-co-retail-incubator",
+   "kind": "closed",
+   "date": null,
+   "note": "Applications for the first cohort are closed.",
+   "evidence": "Applications for the first Hamilton Retail Co. cohort are now closed",
+   "page": "https://investinhamilton.ca/hamilton-business-centre/hamilton-retail-co/"
+  },
+  {
+   "id": "eu-deep-tech-foundry",
+   "kind": "closed",
+   "date": null,
+   "note": "Not open yet. Register on the page to be told when applications open.",
+   "evidence": "Register to be notified when The Deep Tech Foundry officially opens",
+   "page": "https://edmontonunlimited.com/programs/deep-tech-foundry/"
+  },
+  {
+   "id": "iq-programme-innovation",
+   "kind": "closed",
+   "date": null,
+   "note": "Applications cannot be made at present.",
+   "evidence": "Il n'est pas possible de faire une demande présentement pour ce programme",
+   "page": "https://www.investquebec.com/fr/financement/programmes-gouvernementaux/programme-innovation/programme-innovation-volet-1"
+  },
+  {
+   "id": "canexport-smes",
+   "kind": "closed",
+   "date": null,
+   "note": "The program is currently closed. Information about future intakes will be posted on the page when available.",
+   "evidence": "The CanExport SMEs program is currently closed. All applications for the 2026-27 intake have been processed.",
+   "page": "https://www.tradecommissioner.gc.ca/en/our-solutions/funding-financing-international-business/canexport-smes.html"
+  },
+  {
+   "id": "tbdc-business-inc",
+   "kind": "closed",
+   "date": null,
+   "note": "The last deadline was October 8, 2026. Check the page for the next intake.",
+   "evidence": "Application Deadline: Thursday, October 8th 2026",
+   "page": "https://tbdc.com/business-inc/"
+  },
+  {
+   "id": "wes-loan-fund",
+   "kind": "open",
+   "date": null,
+   "note": "Page says it is accepting loan applications; no closing date shown.",
+   "evidence": "are currently accepting applications for loans",
+   "page": "https://ised-isde.canada.ca/site/ised/en/programs-and-initiatives/women-entrepreneurship-strategy/women-entrepreneurship-loan-fund"
+  },
+  {
+   "id": "axeo",
+   "kind": "open",
+   "date": null,
+   "note": "Taking expressions of interest for the first cohort; no closing date posted.",
+   "evidence": "submit their expression of interest now to be considered for this first cohort",
+   "page": "https://www.axeo.ca/en"
+  }
+ ]
+}

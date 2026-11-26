@@ -199,16 +199,16 @@
     "Matching share paid in cash"
    ],
    "deadline": {
-    "kind": "none_published",
+    "kind": "closed",
     "date": null,
-    "note": "2026-27 guide does not list dates; check the program page for the current intake"
+    "note": "The program is currently closed. Information about future intakes will be posted on the page when available."
    },
-   "status": "check",
+   "status": "closed",
    "phase": "scale",
    "apply_url": "https://www.tradecommissioner.gc.ca/en/our-solutions/funding-financing-international-business/canexport-smes.html",
    "source_url": "https://www.tradecommissioner.gc.ca/en/our-solutions/funding-financing-international-business/canexport-smes/applicants-guide-2026-27.html",
    "verified": "official",
-   "last_checked": "2026-10-27",
+   "last_checked": "2026-11-26",
    "restricted_to": [],
    "link_label": "Trade Commissioner Service: CanExport SMEs",
    "link_kind": "program",
@@ -1310,16 +1310,16 @@
     "Tech-enabled startup in Alberta"
    ],
    "deadline": {
-    "kind": "none_published",
+    "kind": "rolling",
     "date": null,
-    "note": "Intake dates not listed; see the programs page"
+    "note": "Cohorts run year round."
    },
-   "status": "check",
+   "status": "rolling",
    "phase": "learn",
    "apply_url": "https://www.platformcalgary.com/programs/alberta-catalyzer",
    "source_url": "https://www.platformcalgary.com/programs",
    "verified": "unconfirmed",
-   "last_checked": "2026-10-30",
+   "last_checked": "2026-11-26",
    "restricted_to": [],
    "link_label": "Platform Calgary: Alberta Catalyzer",
    "link_kind": "program",
@@ -1545,16 +1545,16 @@
    "requires": {},
    "requirements": [],
    "deadline": {
-    "kind": "none_published",
+    "kind": "rolling",
     "date": null,
-    "note": "Check the programs page for current cohorts and costs"
+    "note": "Applications are open all year round."
    },
-   "status": "check",
+   "status": "rolling",
    "phase": "learn",
    "apply_url": "https://www.launchacademy.ca/launchpad/",
    "source_url": "https://www.launchacademy.ca/",
    "verified": "unconfirmed",
-   "last_checked": "2026-10-28",
+   "last_checked": "2026-11-26",
    "restricted_to": [],
    "link_label": "Launch Academy: LaunchPad",
    "link_kind": "program",
@@ -1591,16 +1591,16 @@
     "Based in Toronto"
    ],
    "deadline": {
-    "kind": "none_published",
+    "kind": "closed",
     "date": null,
-    "note": "See the program page for the next intake"
+    "note": "The last deadline was October 8, 2026. Check the page for the next intake."
    },
-   "status": "check",
+   "status": "closed",
    "phase": "learn",
    "apply_url": "https://tbdc.com/business-inc/",
    "source_url": "https://tbdc.com/programs/",
    "verified": "official",
-   "last_checked": "2026-10-27",
+   "last_checked": "2026-11-26",
    "restricted_to": [],
    "link_label": "TBDC: Business Inc.",
    "link_kind": "program",
@@ -1738,16 +1738,16 @@
     "Eligible Canadian small business"
    ],
    "deadline": {
-    "kind": "none_published",
-    "date": null,
-    "note": "Each call has its own closing date; see the open opportunities list"
+    "kind": "fixed",
+    "date": "2026-11-27",
+    "note": "The closing date shown is for the current call; each call has its own."
    },
-   "status": "check",
+   "status": "open",
    "phase": "fund",
    "apply_url": "https://ised-isde.canada.ca/site/innovative-solutions-canada/",
    "source_url": "https://ised-isde.canada.ca/site/innovative-solutions-canada/",
    "verified": "official",
-   "last_checked": "2026-10-27",
+   "last_checked": "2026-11-26",
    "restricted_to": [],
    "link_label": "ISED: Innovative Solutions Canada",
    "link_kind": "program",
@@ -2144,14 +2144,14 @@
    "deadline": {
     "kind": "none_published",
     "date": null,
-    "note": "Detailed criteria are on the program page"
+    "note": "Page says it is accepting loan applications; no closing date shown."
    },
-   "status": "check",
+   "status": "open",
    "phase": "fund",
    "apply_url": "https://ised-isde.canada.ca/site/ised/en/programs-and-initiatives/women-entrepreneurship-strategy/women-entrepreneurship-loan-fund",
    "source_url": "https://ised-isde.canada.ca/site/ised/en/programs-and-initiatives/women-entrepreneurship-strategy",
    "verified": "official",
-   "last_checked": "2026-10-28",
+   "last_checked": "2026-11-26",
    "restricted_to": [
     "women"
    ],
@@ -3831,16 +3831,16 @@
     "Company based on U of T research"
    ],
    "deadline": {
-    "kind": "none_published",
+    "kind": "closed",
     "date": null,
-    "note": "No dates published on the page"
+    "note": "Applications are closed until Spring 2027."
    },
-   "status": "check",
+   "status": "closed",
    "phase": "learn",
    "apply_url": "https://utest.to/apply/",
    "source_url": "https://utest.to/",
    "verified": "official",
-   "last_checked": "2026-11-19",
+   "last_checked": "2026-11-26",
    "restricted_to": [],
    "link_label": "University of Toronto: UTEST",
    "link_kind": "apply",
@@ -3849,9 +3849,6 @@
    "about": [
     "Incubation space at the St. George campus",
     "Mentoring and business strategy support"
-   ],
-   "unconfirmed": [
-    "Check the site for intake; its footer is dated 2021"
    ]
   },
   {
@@ -3947,16 +3944,16 @@
     "Guelph-area accelerator (formerly Innovation Guelph)"
    ],
    "deadline": {
-    "kind": "none_published",
+    "kind": "closed",
     "date": null,
-    "note": "No dates published on the page"
+    "note": "Applications are closed and reopen on December 1, 2026."
    },
-   "status": "check",
+   "status": "closed",
    "phase": "learn",
    "apply_url": "https://boundlessaccelerator.ca/programs/business-impact-program/",
    "source_url": "https://boundlessaccelerator.ca/",
    "verified": "official",
-   "last_checked": "2026-11-19",
+   "last_checked": "2026-11-26",
    "restricted_to": [],
    "link_label": "Boundless Accelerator: Business Impact Program",
    "link_kind": "program",
@@ -3997,16 +3994,16 @@
     "Downtown Hamilton storefront"
    ],
    "deadline": {
-    "kind": "none_published",
+    "kind": "closed",
     "date": null,
-    "note": "Intake not stated on the page"
+    "note": "Applications for the first cohort are closed."
    },
-   "status": "check",
+   "status": "closed",
    "phase": "scale",
    "apply_url": "https://investinhamilton.ca/hamilton-business-centre/hamilton-retail-co/",
    "source_url": "https://investinhamilton.ca/hamilton-business-centre/",
    "verified": "official",
-   "last_checked": "2026-11-19",
+   "last_checked": "2026-11-26",
    "restricted_to": [],
    "link_label": "Hamilton Retail Co. retail incubator",
    "link_kind": "program",
@@ -4210,16 +4207,16 @@
     "Serves Windsor-Essex and Chatham-Kent"
    ],
    "deadline": {
-    "kind": "none_published",
+    "kind": "closed",
     "date": null,
-    "note": "Intake dates not stated"
+    "note": "Applications are currently closed."
    },
-   "status": "check",
+   "status": "closed",
    "phase": "scale",
    "apply_url": "https://www.wetech-alliance.com/scaleup/",
    "source_url": "https://www.wetech-alliance.com/",
    "verified": "official",
-   "last_checked": "2026-11-19",
+   "last_checked": "2026-11-26",
    "restricted_to": [],
    "link_label": "WEtech Alliance: ScaleUP Accelerator",
    "link_kind": "program",
@@ -5306,16 +5303,16 @@
     "At least one co-founder at in-person events; about 20 hours a week"
    ],
    "deadline": {
-    "kind": "none_published",
+    "kind": "closed",
     "date": null,
-    "note": "Page says 2027 applications open in January; no date given"
+    "note": "Applications for the 2027 cohort open in January."
    },
-   "status": "check",
+   "status": "closed",
    "phase": "fund",
    "apply_url": "https://theforge.mcmaster.ca/programs/startup-survivor/",
    "source_url": "https://theforge.mcmaster.ca/programs/startup-survivor/",
    "verified": "official",
-   "last_checked": "2026-11-19",
+   "last_checked": "2026-11-26",
    "restricted_to": [
     "student"
    ],
@@ -5583,16 +5580,16 @@
     "Commit to the full 10 weeks"
    ],
    "deadline": {
-    "kind": "none_published",
+    "kind": "closed",
     "date": null,
-    "note": "Site banner mentions an application date of Nov. 20 without a year; check the page"
+    "note": "Applications are closed. Check the page for the next intake."
    },
-   "status": "check",
+   "status": "closed",
    "phase": "learn",
    "apply_url": "https://mydmz.torontomu.ca/portal/apply",
    "source_url": "https://dmz.torontomu.ca/validator",
    "verified": "official",
-   "last_checked": "2026-11-19",
+   "last_checked": "2026-11-26",
    "restricted_to": [
     "black"
    ],
@@ -7192,16 +7189,16 @@
     "ACBN is Black-led and serves southern Ontario"
    ],
    "deadline": {
-    "kind": "none_published",
+    "kind": "rolling",
     "date": null,
-    "note": "No dates stated on the homepage"
+    "note": "Applications are open year-round."
    },
-   "status": "check",
+   "status": "rolling",
    "phase": "scale",
    "apply_url": "https://acbncanada.com/growth-pathway/",
    "source_url": "https://acbncanada.com/",
    "verified": "official",
-   "last_checked": "2026-11-19",
+   "last_checked": "2026-11-26",
    "restricted_to": [
     "black"
    ],
@@ -8814,16 +8811,16 @@
     "Women-led early-stage startups, especially tech"
    ],
    "deadline": {
-    "kind": "none_published",
+    "kind": "closed",
     "date": null,
-    "note": "No cohort dates on the homepage"
+    "note": "The 2026 cohort is closed. Applications open again in April 2027."
    },
-   "status": "check",
+   "status": "closed",
    "phase": "learn",
    "apply_url": "https://sheboot.ca/for-founders/",
    "source_url": "https://sheboot.ca/",
    "verified": "official",
-   "last_checked": "2026-11-19",
+   "last_checked": "2026-11-26",
    "restricted_to": [
     "women"
    ],
@@ -9085,16 +9082,16 @@
     "At least one full-time founder and an in-house technical lead"
    ],
    "deadline": {
-    "kind": "none_published",
+    "kind": "rolling",
     "date": null,
-    "note": "Page shows both 'Ongoing' and 'Now Closed'; confirm the intake"
+    "note": "The page says applications are open year-round; DMZ also mentions two intakes a year, so confirm with them."
    },
-   "status": "check",
+   "status": "rolling",
    "phase": "scale",
    "apply_url": "https://mydmz.torontomu.ca/portal/apply",
    "source_url": "https://dmz.torontomu.ca/pre-incubator",
    "verified": "official",
-   "last_checked": "2026-11-19",
+   "last_checked": "2026-11-26",
    "restricted_to": [],
    "link_label": "DMZ: DMZ Pre-Incubator",
    "link_kind": "apply",
@@ -10715,16 +10712,16 @@
     "Fits Centech's sector and technology focus"
    ],
    "deadline": {
-    "kind": "none_published",
-    "date": null,
-    "note": "Call of projects open until December 1, 9 AM (year not stated; apply code suggests the 2027 cohort)"
+    "kind": "fixed",
+    "date": "2026-12-01",
+    "note": "Call for projects closes December 1, 2026 at 9:00 AM."
    },
-   "status": "check",
+   "status": "open",
    "phase": "learn",
    "apply_url": "https://cente.ch/apply/ACC-H2027?lang=en",
    "source_url": "https://centech.co/en/acceleration-program/",
    "verified": "official",
-   "last_checked": "2026-11-21",
+   "last_checked": "2026-11-26",
    "restricted_to": [],
    "link_label": "Centech: Acceleration Program",
    "link_kind": "program",
@@ -11116,16 +11113,16 @@
     "Firms pooling efforts with universities, research centres and SMEs (Volet 2)"
    ],
    "deadline": {
-    "kind": "none_published",
+    "kind": "closed",
     "date": null,
-    "note": "No dates on this page"
+    "note": "Applications cannot be made at present."
    },
-   "status": "check",
+   "status": "closed",
    "phase": "fund",
    "apply_url": "https://www.investquebec.com/fr/financement/programmes-gouvernementaux/programme-innovation",
    "source_url": "https://www.investquebec.com/fr/financement/programmes-gouvernementaux/programme-innovation",
    "verified": "official",
-   "last_checked": "2026-11-21",
+   "last_checked": "2026-11-26",
    "restricted_to": [],
    "link_label": "Investissement Québec: Programme innovation",
    "link_kind": "program",
@@ -11467,16 +11464,16 @@
     "Early customer engagement such as pilots or letters of intent"
    ],
    "deadline": {
-    "kind": "none_published",
+    "kind": "closed",
     "date": null,
-    "note": "Page shows dates with no year; design is being finalized"
+    "note": "Not open yet. Register on the page to be told when applications open."
    },
-   "status": "check",
+   "status": "closed",
    "phase": "learn",
    "apply_url": "https://edmontonunlimited.com/programs/deep-tech-foundry/",
    "source_url": "https://edmontonunlimited.com/programs/deep-tech-foundry/",
    "verified": "official",
-   "last_checked": "2026-11-21",
+   "last_checked": "2026-11-26",
    "restricted_to": [],
    "link_label": "Edmonton Unlimited: Deep Tech Foundry",
    "link_kind": "program",
@@ -11665,16 +11662,16 @@
     "Tech-enabled solution across any industry"
    ],
    "deadline": {
-    "kind": "none_published",
+    "kind": "rolling",
     "date": null,
-    "note": "No dates or cost on the Edmonton Unlimited page"
+    "note": "No deadline is set for the current batch."
    },
-   "status": "check",
+   "status": "rolling",
    "phase": "learn",
    "apply_url": "https://500.co/founders/alberta/accelerator",
    "source_url": "https://edmontonunlimited.com/accelerators/alberta-accelerator-by-500/",
    "verified": "official",
-   "last_checked": "2026-11-21",
+   "last_checked": "2026-11-26",
    "restricted_to": [],
    "link_label": "500 Global: Alberta Accelerator",
    "link_kind": "program",
@@ -12435,16 +12432,16 @@
     "Primarily based in Canada"
    ],
    "deadline": {
-    "kind": "none_published",
+    "kind": "closed",
     "date": null,
-    "note": "No application deadline stated; 2026 webinars ran March to November"
+    "note": "Applications are closed. Future pitch applications open in 2027."
    },
-   "status": "check",
+   "status": "closed",
    "phase": "scale",
    "apply_url": "https://www.startupcan.ca/startup-global-national-pitch-competition/",
    "source_url": "https://www.startupcan.ca/explore/startup-global/",
    "verified": "official",
-   "last_checked": "2026-11-21",
+   "last_checked": "2026-11-26",
    "restricted_to": [],
    "link_label": "Startup Canada: Startup Global",
    "link_kind": "program",
@@ -30253,16 +30250,16 @@
     "Potential to reach $10M to $15M in annual revenue"
    ],
    "deadline": {
-    "kind": "none_published",
+    "kind": "rolling",
     "date": null,
-    "note": "No dates posted; contact Natural Products Canada for an eligibility assessment"
+    "note": "Applications are accepted on an ongoing basis."
    },
-   "status": "check",
+   "status": "rolling",
    "phase": "fund",
    "apply_url": "https://www.naturalproductscanada.com/proof-of-concept/",
    "source_url": "https://www.naturalproductscanada.com/proof-of-concept/",
    "verified": "official",
-   "last_checked": "2026-11-24",
+   "last_checked": "2026-11-26",
    "restricted_to": [],
    "link_label": "Natural Products Canada: Proof of Concept",
    "link_kind": "program",
@@ -30846,14 +30843,14 @@
    "deadline": {
     "kind": "none_published",
     "date": null,
-    "note": "No intake dates posted; the defence cohort is taking expressions of interest"
+    "note": "Taking expressions of interest for the first cohort; no closing date posted."
    },
-   "status": "check",
+   "status": "open",
    "phase": "fund",
    "apply_url": "https://www.axeo.ca/en",
    "source_url": "https://www.axeo.ca/en",
    "verified": "official",
-   "last_checked": "2026-11-24",
+   "last_checked": "2026-11-26",
    "restricted_to": [],
    "link_label": "Axeo: incubator-accelerator",
    "link_kind": "program",
