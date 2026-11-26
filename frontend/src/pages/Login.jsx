@@ -4,6 +4,7 @@ import { toast } from "sonner";
 import { ArrowRight, BookOpen, CalendarDays, Compass, Gift, Users } from "../components/icons";
 import { api, errMsg } from "../lib/api";
 import { useAuth } from "../lib/auth";
+import posthog, { posthogEnabled, posthogLogger } from "../lib/posthog";
 import { DEMO_COMMUNITIES, demoRole, inDemoTab, isDemo, leaveDemo, startDemo } from "../lib/demo";
 import { applyBrand } from "../lib/theme";
 import crowd from "../assets/crowd.jpg";
@@ -71,6 +72,9 @@ export default function Login() {
     setBusy(true); setErr(""); setStatus("");
     try {
       await login(e, p);
+      const loginMethod = isDemo() ? "demo" : "password";
+      if (posthogEnabled) posthog.capture("login_completed", { method: loginMethod });
+      posthogLogger.info("login completed", { login_method: loginMethod });
       // Drop focus from the sign-in fields so the browser closes its saved-password popup before the home page appears.
       try { document.activeElement?.blur?.(); } catch { /* not a focusable element */ }
       if (joinSlug) {
@@ -100,6 +104,8 @@ export default function Login() {
 
   const onSocialSignedIn = async (data) => {
     applySession(data);
+    if (posthogEnabled) posthog.capture("login_completed", { method: "social" });
+    posthogLogger.info("login completed", { login_method: "social" });
     // Mirrors go()'s post-login join handling -- /auth/oauth/{provider} now files the same join_slug
     // request when one was carried in from a share link, instead of silently dropping it. Same
     // persistent MembershipStatusCard as the email-login path below, rather than a toast that

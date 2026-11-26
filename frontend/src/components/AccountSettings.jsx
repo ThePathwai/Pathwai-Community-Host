@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { api, errMsg } from "../lib/api";
+import { useAuth } from "../lib/auth";
 import { isDemo } from "../lib/demo";
 import { Button, Field, Input } from "./ui";
 
@@ -18,6 +19,7 @@ const Section = ({ title, hint, children, testId }) => (
 const when = (iso) => { try { return new Date(iso).toLocaleDateString(undefined, { year: "numeric", month: "long", day: "numeric" }); } catch { return ""; } };
 
 export default function AccountSettings({ account, onEditProfile }) {
+  const { resetAnalyticsIdentity } = useAuth();
   const demo = isDemo();
   const [sec, setSec] = useState(null);
   const [pw, setPw] = useState({ current_password: "", new_password: "" });
@@ -39,9 +41,9 @@ export default function AccountSettings({ account, onEditProfile }) {
       toast.success("Your data was downloaded");
     } catch (e) { toast.error(errMsg(e)); }
   };
-  const signOutEverywhere = async () => { try { await api.post("/hub/account/sign-out-everywhere"); window.location.href = "/login"; } catch (e) { toast.error(errMsg(e)); } };
+  const signOutEverywhere = async () => { try { await api.post("/hub/account/sign-out-everywhere"); resetAnalyticsIdentity(); window.location.href = "/login"; } catch (e) { toast.error(errMsg(e)); } };
   const deleteAccount = async () => {
-    try { await api.post("/hub/account/delete", { confirm: del.confirm, password: del.password || undefined, email: del.email || undefined }); window.location.href = "/"; }
+    try { await api.post("/hub/account/delete", { confirm: del.confirm, password: del.password || undefined, email: del.email || undefined }); resetAnalyticsIdentity(); window.location.href = "/"; }
     catch (e) { toast.error(errMsg(e)); }
   };
 

@@ -4,6 +4,7 @@ import React, { createContext, useCallback, useContext, useEffect, useRef, useSt
 import { api, renewSession } from "./api";
 import { forgetThisDevice } from "./webNotify";
 import { inDemoTab, isDemo, leaveDemo, setDemoRole } from "./demo";
+import posthog, { posthogEnabled } from "./posthog";
 
 const Ctx = createContext(null);
 export const useAuth = () => useContext(Ctx);
@@ -31,7 +32,24 @@ export function AuthProvider({ children }) {
   }, []);
 
   const seen = useRef({ account: null, user: null });
+  const identifiedAccountId = useRef(null);
   const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+
+  const identifyAccount = useCallback((nextAccount) => {
+    if (!posthogEnabled || !nextAccount?.id) return;
+    const distinctId = String(nextAccount.id);
+    if (identifiedAccountId.current === distinctId) return;
+    if (identifiedAccountId.current) posthog.reset();
+    const personProperties = {};
+    if (nextAccount.email) personProperties.email = nextAccount.email;
+    if (nextAccount.name) personProperties.name = nextAccount.name;
+    posthog.identify(distinctId, personProperties);
+    identifiedAccountId.current = distinctId;
+  }, []);
+  const resetAnalyticsIdentity = useCallback(() => {
+    if (posthogEnabled) posthog.reset();
+    identifiedAccountId.current = null;
+  }, []);
   // Only a definite "not signed in" (401) signs anyone out of the screen. A dropped connection, a phone waking
   // from sleep or a server blip keeps whatever we already know, and on a cold start is retried a few times
   // before giving up, so a flaky moment never throws a signed-in person back to the login page.
@@ -55,9 +73,10 @@ export function AuthProvider({ children }) {
     if (bad && seen.current.account) { setLoading(false); return; }
     seen.current = { account: acc, user: u };
     setAccount(acc); setUser(u);
+    identifyAccount(acc);
     if (u) await loadConfig(); else showHubTheme();
     setLoading(false);
-  }, [loadConfig, showHubTheme]);
+  }, [identifyAccount, loadConfig, showHubTheme]);
 
   useEffect(() => { refresh(); }, [refresh]);
   // Opened with no connection: once it's back, pick the session up again instead of leaving the login page showing.
@@ -83,8 +102,10 @@ export function AuthProvider({ children }) {
 
   const applySession = (data) => {
     const inCommunity = COMMUNITIES_VISIBLE ? data.user || null : null; // with communities off, nobody is ever "inside" one
-    seen.current = { account: data.account || data.user, user: inCommunity };
-    setAccount(data.account || data.user); setUser(inCommunity);
+    const signedInAccount = data.account || data.user;
+    seen.current = { account: signedInAccount, user: inCommunity };
+    setAccount(signedInAccount); setUser(inCommunity);
+    identifyAccount(signedInAccount);
     // A community profile needs that community's settings (name, brand) before its pages draw, so fetch them right behind the sign-in.
     if (inCommunity) loadConfig();
     // Sign-in answers with just id, name and email. Fetch the whole account (profile, startup details) right behind it, so the
@@ -100,6 +121,7 @@ export function AuthProvider({ children }) {
     const { data } = await api.post("/hub/signup", payload);
     seen.current = { account: data.account, user: null };
     setAccount(data.account); setUser(null);
+    identifyAccount(data.account);
     return data;
   };
   const enter = async (slug) => {
@@ -118,12 +140,12 @@ export function AuthProvider({ children }) {
   };
   const logout = async () => {
     const wasDemo = inDemoTab();
-    setDemoRole(null); await forgetThisDevice(); await api.post("/auth/logout"); seen.current = { account: null, user: null }; setUser(null); setAccount(null); showHubTheme();
+    setDemoRole(null); await forgetThisDevice(); await api.post("/auth/logout"); resetAnalyticsIdentity(); seen.current = { account: null, user: null }; setUser(null); setAccount(null); showHubTheme();
     if (wasDemo) leaveDemo("/login");  // signing out of the demo ends it: the next sign-in or sign-up must be the real thing
   };
 
   return (
-    <Ctx.Provider value={{ account, user, setUser, config, loading, login, applySession, signup, enter, leave, logout, refresh, loadConfig, showHubTheme }}>
+    <Ctx.Provider value={{ account, user, setUser, config, loading, login, applySession, signup, enter, leave, logout, refresh, loadConfig, showHubTheme, resetAnalyticsIdentity }}>
       {children}
     </Ctx.Provider>
   );
