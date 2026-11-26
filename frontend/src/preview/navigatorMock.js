@@ -135,8 +135,7 @@ export function navigatorCall(method, path, body, params, ctx) {
     try { ctx.account.tracked = nav.updateTracked(ctx.account.tracked, body || {}, (ctx.account.startup || {}).stage || "idea", today); } catch (e) { return fail(config, 400, e.message); }
     return ok(config, { tracked: ctx.account.tracked });
   }
-  const outcomesView = (a) => ({ applications: a.applications || [], share: !!a.share_outcome_totals,
-    statuses: Object.entries(nav.OUTCOME_LABEL).map(([key, label]) => ({ key, label })), funding: Object.entries(nav.FUNDING_LABEL).map(([key, label]) => ({ key, label })) });
+  const outcomesView = (a) => ({ applications: a.applications || [], share: !!a.share_outcome_totals });
   if (path === "/navigator/outcomes" && method === "get") {
     if (!ctx.account) return fail(config, 401, "Not authenticated");
     return ok(config, outcomesView(ctx.account));

@@ -233,7 +233,6 @@ class OutcomeIn(BaseModel):
     org: str = Field(default="", max_length=120)
     type: str = Field(default="", max_length=30)
     status: str = Field(max_length=20)
-    funding: str = Field(default="", max_length=20)
 
 
 class SharingIn(BaseModel):
@@ -241,9 +240,7 @@ class SharingIn(BaseModel):
 
 
 def _outcomes_view(acc: Dict[str, Any], items: Optional[List[Dict[str, Any]]] = None) -> Dict[str, Any]:
-    return {"applications": items if items is not None else (acc.get("applications") or []), "share": bool(acc.get("share_outcome_totals")),
-            "statuses": [{"key": k, "label": v} for k, v in nav.OUTCOME_LABEL.items()],
-            "funding": [{"key": k, "label": v} for k, v in nav.FUNDING_LABEL.items()]}
+    return {"applications": items if items is not None else (acc.get("applications") or []), "share": bool(acc.get("share_outcome_totals"))}
 
 
 @router.get("/navigator/outcomes")

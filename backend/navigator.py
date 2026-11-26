@@ -949,24 +949,21 @@ def update_tracked(items: Optional[List[Dict[str, Any]]], body: Dict[str, Any], 
     return out
 
 
-# ---------- how it went: what happened after a founder applied ----------
-# Kept on the founder's account. A hub only ever sees these as totals, and only for founders who chose to share (see impact.outcome_rows).
-OUTCOME_STATUSES = ("applied", "accepted", "not_selected", "withdrew", "completed", "none")
-OUTCOME_LABEL = {"applied": "Applied, waiting to hear", "accepted": "Got in", "not_selected": "Not selected", "withdrew": "Withdrew", "completed": "Completed"}
-FUNDING_BANDS = ("", "none", "under_25k", "25k_100k", "100k_500k", "over_500k")
-FUNDING_LABEL = {"none": "No funding", "under_25k": "Under $25,000", "25k_100k": "$25,000 to $100,000", "100k_500k": "$100,000 to $500,000", "over_500k": "Over $500,000"}
+# ---------- applications: which programs a founder says they applied to ----------
+# Kept on the founder's account. That is all we ask: applied or not, never how it went. A hub only ever sees these as totals,
+# and only for founders who chose to share (see impact.outcome_rows).
+OUTCOME_STATUSES = ("applied", "none")
+OUTCOME_LABEL = {"applied": "Applied"}
 MAX_OUTCOMES = 100
 
 
 def update_outcome(items: Optional[List[Dict[str, Any]]], body: Dict[str, Any], today: Optional[date] = None) -> List[Dict[str, Any]]:
-    """Add, change or remove what happened with one program: applied, got in, not selected, withdrew or completed.
-    Funding (a band, never an exact amount) is kept only when the founder got in or completed. status "none" removes the record.
-    Raises ValueError with a readable message."""
+    """Mark one program as applied to, or remove the mark (status "none"). Raises ValueError with a readable message."""
     today = today or date.today()
     rows = [i for i in (items or []) if isinstance(i, dict) and i.get("id")]
     status = str(body.get("status") or "")
     if status not in OUTCOME_STATUSES:
-        raise ValueError("Choose applied, got in, not selected, withdrew or completed")
+        raise ValueError("Choose applied or none")
     pid = str(body.get("id") or "").strip()[:80]
     if not pid:
         raise ValueError("Which program?")
@@ -975,18 +972,13 @@ def update_outcome(items: Optional[List[Dict[str, Any]]], body: Dict[str, Any], 
     name = " ".join(str(body.get("name") or "").split())[:120]
     if len(name) < 2:
         raise ValueError("Give the program a name")
-    funding = str(body.get("funding") or "")
-    if funding not in FUNDING_BANDS:
-        raise ValueError("Choose one of the funding ranges")
-    if status not in ("accepted", "completed"):
-        funding = ""
     kind = str(body.get("type") or "")
     first = next((i.get("at") for i in rows if i["id"] == pid and i.get("at")), today.isoformat())
     row = {"id": pid, "name": name, "org": " ".join(str(body.get("org") or "").split())[:120], "type": kind if kind in TYPES else "",
-           "status": status, "funding": funding, "at": first, "updated_at": today.isoformat()}
+           "status": "applied", "at": first, "updated_at": today.isoformat()}
     out = [i for i in rows if i["id"] != pid] + [row]
     if len(out) > MAX_OUTCOMES:
-        raise ValueError(f"You can log up to {MAX_OUTCOMES} programs")
+        raise ValueError(f"You can mark up to {MAX_OUTCOMES} programs")
     return out
 
 
