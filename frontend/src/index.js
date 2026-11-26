@@ -11,6 +11,7 @@ import { prepareDemo } from "./lib/demo";
 import DemoBanner from "./components/DemoBanner";
 import { refreshIfStale } from "./lib/build";
 import { startAurora } from "./lib/aurora";
+import "./lib/posthog";
 
 // iPhone Safari ignores user-scalable=no, so block its pinch gesture directly (touch screens only).
 if (typeof window !== "undefined" && ("ontouchstart" in window || navigator.maxTouchPoints > 0)) {

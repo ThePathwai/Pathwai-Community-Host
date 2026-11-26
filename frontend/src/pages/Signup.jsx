@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { api, errMsg } from "../lib/api";
 import { useAuth } from "../lib/auth";
+import posthog, { posthogEnabled } from "../lib/posthog";
 import { applyBrand } from "../lib/theme";
 import { inDemoTab, leaveDemo } from "../lib/demo";
 import { AvatarUpload, Button, Card, Field, Input, MembershipStatusCard, Select, TagInput, Textarea, TermsConsent, Wordmark, cx } from "../components/ui";
@@ -30,7 +31,7 @@ function BuildProfileStep({ account, onDone, joinInfo, founder }) {
     if (yrs === null || yrs > 120) return setErr("Check the year of your birthday.");
     if (yrs < 13) return setErr("You need to be at least 13 to use Pathwai.");
     setBusy(true); setErr("");
-    try { await api.patch("/hub/profile", { ...f, startup: startupToApi(f.startup), avatar_url: photo || null }); onDone(); }
+    try { await api.patch("/hub/profile", { ...f, startup: startupToApi(f.startup), avatar_url: photo || null }); if (posthogEnabled) posthog.capture("profile_completed"); onDone(); }
     catch (ex) { setErr(errMsg(ex)); } finally { setBusy(false); }
   };
   return (
@@ -145,12 +146,13 @@ export default function Signup() {
     try {
       const payload = { ...f, accepted_terms: true, ...(intent === "member" && joinSlug ? { join_slug: joinSlug } : {}) };
       const data = await signup(payload);
+      if (posthogEnabled) posthog.capture("account_created", { signup_method: "password", intent });
       setJoinResult(data?.joined || null);
       setShowProfile(true);
     } catch (ex) { setErr(errMsg(ex)); } finally { setBusy(false); }
   };
 
-  const onSocialSignedIn = (data) => { applySession(data); setJoinResult(data?.joined || null); setShowProfile(true); };
+  const onSocialSignedIn = (data) => { applySession(data); if (data.new_account && posthogEnabled) posthog.capture("account_created", { signup_method: "social", intent }); setJoinResult(data?.joined || null); setShowProfile(true); };
 
   if (showPending) return <PendingStep communityName={joinInfo?.name} onContinue={() => nav("/navigator", { replace: true })} />;
   if (showProfile) return <BuildProfileStep account={account} onDone={afterProfile} joinInfo={joinInfo} founder={intent === "founder"} />;

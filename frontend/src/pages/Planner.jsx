@@ -4,6 +4,7 @@ import { toast } from "sonner";
 import { ArrowRight, Check, CheckCircle2, Circle, Clock, Copy, Eye, EyeOff, GripVertical, Lock, Plus, Rocket, Send, Share2, Sparkles, Target, X } from "../components/icons";
 import { api, errMsg } from "../lib/api";
 import { useAuth } from "../lib/auth";
+import posthog, { posthogEnabled } from "../lib/posthog";
 import { useEcosystem } from "../lib/ecosystem";
 import { NEED_LABEL, STAGES, STAGE_LABEL, needsFromText } from "../lib/navigator";
 import { BRIEF_SECTIONS, HORIZONS, STATUS_LABEL, STEPS, UPDATES, advisorBrief, applyUpdate, KEEP, buildPlan, decide, directions, moveStep, planProgress, stepStates } from "../lib/planner";
@@ -669,7 +670,7 @@ export default function Planner() {
   };
   const saveStory = async (next) => {
     setBusy(true);
-    try { await api.patch("/hub/profile", { startup: next }); await refresh(); toast.success("Saved"); go("directions"); }
+    try { await api.patch("/hub/profile", { startup: next }); await refresh(); if (posthogEnabled) posthog.capture("planner_story_saved"); toast.success("Saved"); go("directions"); }
     catch (e) { toast.error(errMsg(e)); } finally { setBusy(false); }
   };
   const [updating, setUpdating] = useState(qs.get("update") === "1");
@@ -684,7 +685,7 @@ export default function Planner() {
       return true;
     } catch (e) { toast.error(errMsg(e)); return false; } finally { setBusy(false); }
   };
-  const choose = async (key) => { if (await post({ direction: key, ...(plan.decision && plan.decision.direction !== key ? { decision: null } : {}) })) go("plan"); };
+  const choose = async (key) => { if (await post({ direction: key, ...(plan.decision && plan.decision.direction !== key ? { decision: null } : {}) })) { if (posthogEnabled) posthog.capture("planner_direction_selected", { direction: key }); go("plan"); } };
   const arrange = async (next) => {
     setState((x) => ({ ...x, plan: { ...x.plan, arrange: next || [] } }));   // show it at once, then save
     try { const r = await api.post("/navigator/plan", { arrange: next || [] }); setState((x) => ({ ...x, ...r.data })); }
@@ -711,9 +712,9 @@ export default function Planner() {
       {step === "plan" && <Plan dir={dir} steps={steps} log={plan.log || []} decision={plan.decision} arranged={(plan.arrange || []).length > 0} onArrange={arrange} hidden={(plan.hidden || []).length} busy={busy} onPickDirection={() => go("directions")}
         onStatus={(id, status) => post({ status: { id, status } })} onAdd={(title, horizon) => post({ add: { title, horizon } })} onRemove={(id) => post({ remove: id })} onRestore={() => post({ restore: true })} />}
       {step === "brief" && <Brief brief={brief} plan={plan} dir={dir} steps={steps} advisors={advisors} busy={busy} today={today} onPickDirection={() => go("directions")} onHome={() => nav("/")}
-        onStart={() => post({ started: today }, "Plan started. Your first steps are on your home page.")} onStop={() => post({ started: null })}
+        onStart={async () => { if (await post({ started: today }, "Plan started. Your first steps are on your home page.")) { if (posthogEnabled) posthog.capture("planner_started"); } }} onStop={() => post({ started: null })}
         onInclude={(k, v) => (k ? post({ include: { [k]: v } }) : post({ brief_ready: true }))}
-        onShare={(a) => post({ share: { id: a.id, name: a.title, title: a.sub } }, `Shared with ${a.title}`)} onUnshare={() => post({ share: null }, "Sharing stopped")} />}
+        onShare={async (a) => { if (await post({ share: { id: a.id, name: a.title, title: a.sub } }, `Shared with ${a.title}`)) { if (posthogEnabled) posthog.capture("planner_shared"); } }} onUnshare={() => post({ share: null }, "Sharing stopped")} />}
       {step === "plan" && dir && (
         <NextBar text="This is your plan. Drag steps to reorder them, tick them off, or add your own. When it looks right, see your decision plan.">
           <button type="button" className={PRIMARY} style={ACCENT} onClick={() => go("brief")} data-testid="to-brief">See my decision plan<ArrowRight className="h-4 w-4" aria-hidden /></button>

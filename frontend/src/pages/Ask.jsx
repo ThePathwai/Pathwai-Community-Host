@@ -4,6 +4,7 @@ import { toast } from "sonner";
 import { ArrowRight, ArrowUp, Check, MessageCircle, Plus, Sparkles } from "../components/icons";
 import { api, errMsg } from "../lib/api";
 import { useAuth } from "../lib/auth";
+import posthog, { posthogEnabled, posthogLogger } from "../lib/posthog";
 import { useEcosystem } from "../lib/ecosystem";
 import { ask, actionText, SUGGESTIONS } from "../lib/ask";
 import { buildPlan } from "../lib/planner";
@@ -93,6 +94,8 @@ export default function Ask() {
     const q = String(t ?? text).trim();
     if (!q || typing) return;
     setText("");
+    if (posthogEnabled) posthog.capture("assistant_question_submitted");
+    posthogLogger.info("assistant question submitted");
     setMsgs((m) => [...m, { role: "user", text: q }]);
     setTyping(true);
     window.setTimeout(() => {
@@ -112,6 +115,8 @@ export default function Ask() {
     const topic = [...msgs].reverse().find((x) => x.role === "bot" && x.results?.some((r) => r.item === m))?.topic || "";
     try {
       await api.post("/navigator/plan", { add: { title: actionText(m, topic), horizon: "soon" } });
+      if (posthogEnabled) posthog.capture("assistant_result_added_to_plan", { recommendation_kind: m.kind });
+      posthogLogger.info("assistant recommendation added to plan", { recommendation_kind: m.kind });
       setAdded((s) => new Set(s).add(`${m.kind}:${m.id}`));
       toast.success(plan.direction ? "Added to your plan" : "Saved to your plan. Pick a direction to see it with the rest.");
     } catch (e) { toast.error(errMsg(e)); }
