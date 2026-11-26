@@ -507,6 +507,31 @@ export function updateTracked(items, body, defaultStage = "idea", today = todayI
   return out;
 }
 
+// How it went: what happened after a founder applied (twin of update_outcome in backend/navigator.py).
+export const OUTCOME_LABEL = { applied: "Applied, waiting to hear", accepted: "Got in", not_selected: "Not selected", withdrew: "Withdrew", completed: "Completed" };
+export const FUNDING_LABEL = { none: "No funding", under_25k: "Under $25,000", "25k_100k": "$25,000 to $100,000", "100k_500k": "$100,000 to $500,000", over_500k: "Over $500,000" };
+export const MAX_OUTCOMES = 100;
+export function updateOutcome(items, body, today = todayIso()) {
+  const rows = (items || []).filter((i) => i && i.id);
+  const status = String(body.status || "");
+  if (![...Object.keys(OUTCOME_LABEL), "none"].includes(status)) throw new Error("Choose applied, got in, not selected, withdrew or completed");
+  const pid = String(body.id || "").trim().slice(0, 80);
+  if (!pid) throw new Error("Which program?");
+  if (status === "none") return rows.filter((i) => i.id !== pid);
+  const clean = (v, n) => String(v || "").split(/\s+/).filter(Boolean).join(" ").slice(0, n);
+  const name = clean(body.name, 120);
+  if (name.length < 2) throw new Error("Give the program a name");
+  let funding = String(body.funding || "");
+  if (funding && !(funding in FUNDING_LABEL)) throw new Error("Choose one of the funding ranges");
+  if (status !== "accepted" && status !== "completed") funding = "";
+  const kind = String(body.type || "");
+  const first = (rows.find((i) => i.id === pid) || {}).at || today;
+  const row = { id: pid, name, org: clean(body.org, 120), type: TYPES.includes(kind) ? kind : "", status, funding, at: first, updated_at: today };
+  const out = [...rows.filter((i) => i.id !== pid), row];
+  if (out.length > MAX_OUTCOMES) throw new Error(`You can log up to ${MAX_OUTCOMES} programs`);
+  return out;
+}
+
 // Interested / not interested (twin of update_interest, hidden_ids, without_hidden in backend/navigator.py).
 export const MAX_INTEREST = 300;
 export function updateInterest(items, body, today = todayIso()) {

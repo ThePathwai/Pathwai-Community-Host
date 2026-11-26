@@ -9,6 +9,7 @@ import { useInterest } from "../lib/useInterest";
 import { isStageLine, STAGE_LABEL } from "../lib/navigator";
 import { pickMove, prepFor, prepHeading, thenPicks, whyFirst } from "../lib/nextMove";
 import AccountShell from "../components/AccountShell";
+import Outcomes from "../components/Outcomes";
 import { Status } from "../components/NavBits";
 import { DeadlineChip, ProgramDrawer, TypeTile, linkVerb } from "../components/ProgramCards";
 import { Spinner, cx } from "../components/ui";
@@ -360,6 +361,7 @@ export default function Journey({ embedded }) {
               : (
                 <Widget data-testid="path-used-empty"><p className="text-sm text-muted">Nothing here yet. When you tap "I am doing this" or "Mark as done" on a resource in your plan, it shows up here.</p><button type="button" onClick={() => go("plan")} className="btn-ghost mt-4 self-start !py-2 text-sm">Go to my plan</button></Widget>
               )}
+            <Outcomes tracked={tracked} interest={itc.interest} />
             {data.coming_up && (
               <Widget data-testid="path-coming">
                 <Label>Coming up</Label>

@@ -177,7 +177,7 @@ def return_base_url(request: Request) -> str:
 # ---------- legal consent ----------
 # Bump when the Terms or Privacy Policy change materially (frontend/src/lib/legal.js carries the same
 # value). Every new account records which version it accepted and when.
-LEGAL_VERSION = "2026-11-24-interim"
+LEGAL_VERSION = "2026-11-26-interim"
 TERMS_REQUIRED_MSG = "You need to accept the Terms of Service and Privacy Policy to create an account."
 
 

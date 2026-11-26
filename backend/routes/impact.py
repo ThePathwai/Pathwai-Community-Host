@@ -21,7 +21,7 @@ import audit_pdf
 import report_deck
 import impact
 from auth import get_current_user, require_role
-from database import db
+from database import db, hub_db
 from ._common import audit, now_iso
 from .notifications import notify
 
@@ -178,9 +178,19 @@ async def _need_counts() -> dict:
     return counts
 
 
+async def _sharing_accounts(d: dict) -> list:
+    """The platform accounts of this community's approved members who chose to count their progress in its totals. Only their
+    application outcomes are read, and only to be added up; nothing here is ever shown by name."""
+    ids = [u["id"] for u in impact._members(d["users"]) if u.get("id")]
+    if not ids:
+        return []
+    return await hub_db().accounts.find({"id": {"$in": ids}, "share_outcome_totals": True}, {"_id": 0, "id": 1, "applications": 1}).to_list(5000)
+
+
 async def _metrics(days: int) -> dict:
     cfg = await _config()
-    return impact.metrics_table(await impact.load(db), _days(days), cfg.get("community_name") or "Community", await _need_counts())
+    d = await impact.load(db)
+    return impact.metrics_table(d, _days(days), cfg.get("community_name") or "Community", await _need_counts(), await _sharing_accounts(d))
 
 
 @router.get("/admin/metrics.csv")

@@ -35,7 +35,7 @@ export const GROWTH = [
 // What a hub can hand its funders. Shown on the home page and About. No figures, on purpose.
 export const PROOF = [
   ["Reports", "Funder, sponsor and board reports in your hub's own colours, as a PDF, as slides, or as a link that stays current."],
-  ["The raw numbers", "Every number behind those reports as one spreadsheet, for your own reporting or your funder's template."],
+  ["The raw numbers", "Every number behind those reports as one spreadsheet, including what founders choose to report about applications and funding."],
   ["Private by design", "Totals only. Never names or emails, and small groups are hidden in the export so no one can be picked out."],
 ];
 export const Proof = () => (

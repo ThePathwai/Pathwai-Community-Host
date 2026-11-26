@@ -24,7 +24,7 @@ from auth import client_ip, get_current_user, rate_limit, require_role
 from database import COMMUNITY_SLUGS, db, dbfor, demo_mode, hub_db
 from program_check import merge_check
 from program_job import load_checks, summarize
-from ._common import audit, now_iso
+from ._common import audit, audit_platform, now_iso
 from .hub import _summary, account_from_request, require_account
 
 router = APIRouter(tags=["navigator"])
@@ -225,6 +225,51 @@ async def navigator_track(body: TrackIn, acc: dict = Depends(require_account)) -
         raise HTTPException(400, str(exc))
     await hub_db().accounts.update_one({"id": acc["id"]}, {"$set": {"tracked": items}})
     return {"tracked": items}
+
+
+class OutcomeIn(BaseModel):
+    id: str = Field(max_length=80)
+    name: str = Field(default="", max_length=120)
+    org: str = Field(default="", max_length=120)
+    type: str = Field(default="", max_length=30)
+    status: str = Field(max_length=20)
+    funding: str = Field(default="", max_length=20)
+
+
+class SharingIn(BaseModel):
+    share: bool
+
+
+def _outcomes_view(acc: Dict[str, Any], items: Optional[List[Dict[str, Any]]] = None) -> Dict[str, Any]:
+    return {"applications": items if items is not None else (acc.get("applications") or []), "share": bool(acc.get("share_outcome_totals")),
+            "statuses": [{"key": k, "label": v} for k, v in nav.OUTCOME_LABEL.items()],
+            "funding": [{"key": k, "label": v} for k, v in nav.FUNDING_LABEL.items()]}
+
+
+@router.get("/navigator/outcomes")
+async def navigator_outcomes(acc: dict = Depends(require_account)) -> Dict[str, Any]:
+    """What happened with the programs you applied to, and whether you count in your community's totals."""
+    return _outcomes_view(acc)
+
+
+@router.post("/navigator/outcomes")
+async def navigator_outcome(body: OutcomeIn, acc: dict = Depends(require_account)) -> Dict[str, Any]:
+    """Say what happened with one program (applied, got in, not selected, withdrew, completed, and a funding range). Kept on your account."""
+    try:
+        items = nav.update_outcome(acc.get("applications"), body.model_dump())
+    except ValueError as exc:
+        raise HTTPException(400, str(exc))
+    await hub_db().accounts.update_one({"id": acc["id"]}, {"$set": {"applications": items}})
+    return _outcomes_view(acc, items)
+
+
+@router.put("/navigator/outcomes/sharing")
+async def navigator_outcome_sharing(body: SharingIn, request: Request, acc: dict = Depends(require_account)) -> Dict[str, Any]:
+    """Choose whether your progress counts in the totals of the communities you belong to. Off until you switch it on; they only ever see
+    totals (never your name or which programs), and nothing is shown until at least 5 people have chosen to share."""
+    await hub_db().accounts.update_one({"id": acc["id"]}, {"$set": {"share_outcome_totals": bool(body.share)}})
+    await audit_platform(acc["id"], "account.outcome_sharing", "account", acc["id"], {"share": bool(body.share)}, request=request)
+    return _outcomes_view({**acc, "share_outcome_totals": bool(body.share)})
 
 
 class InterestIn(BaseModel):

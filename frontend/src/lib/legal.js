@@ -7,8 +7,8 @@
 // NOTE: this is an INTERIM, plain-language draft for the early-testing period. It is a plain-language starting draft written for a Canadian (Ontario) community platform. It is
 // not legal advice -- have a lawyer review it, and set REACT_APP_LEGAL_EMAIL / REACT_APP_LEGAL_ENTITY (build
 // variables) to your real contact address and operating entity before launch.
-export const LEGAL_VERSION = "2026-11-24-interim";
-export const LEGAL_EFFECTIVE = "November 24, 2026";
+export const LEGAL_VERSION = "2026-11-26-interim";
+export const LEGAL_EFFECTIVE = "November 26, 2026";
 export const LEGAL_EMAIL = process.env.REACT_APP_LEGAL_EMAIL || "privacy@pathwai.app";
 export const LEGAL_ENTITY = process.env.REACT_APP_LEGAL_ENTITY || "Pathwai";
 
@@ -84,6 +84,7 @@ export const PRIVACY = {
       "Profile details you choose to add: age, what you do, employer or school, city or neighbourhood, bio, skills, interests, goals, photos, phone number and links such as LinkedIn, Instagram or a website. All of this is optional.",
       "Planner answers: what you tell the Pathwai planner so it can match you to programs, such as your startup's stage, what you need, your sector, province or city, team size, whether you are incorporated and your age. Some programs are made for specific groups, so you may also choose to tell us your gender or whether you are a woman, Black, Indigenous or a newcomer founder. These details are sensitive. They are optional, we ask for them only to show you programs you may qualify for, and you will still get results if you leave them blank. We do not sell them, use them for advertising, or send them to the programs: you apply on each program's own site.",
       "Community activity: communities you apply to or join, your answers to application questions, event RSVPs and tickets, messages you send, requests and forms you complete, and notification and communication preferences.",
+      "Application outcomes (optional): if you tell us what happened with a program you applied to (applied, got in, not selected, withdrew, completed, and a funding range), we keep it on your account. We never ask for exact amounts.",
       "Payments: if you pay dues or buy a ticket, Stripe collects your card details; we receive only a confirmation, the amount and a reference. We never see or store your full card number.",
       "Technical data: IP address, device and browser type, and basic logs we need to keep the service secure and working.",
       "Consent record: when you created your account and which version of these documents you accepted.",
@@ -95,6 +96,7 @@ export const PRIVACY = {
     ["Who can see what", [
       "People in the communities you belong to, and other Pathwai members, may see the profile details you make visible. Your email and phone number follow your visibility setting for each community. You can edit your profile and photos, and change what is shown, in your account at any time.",
       "Community admins can see your application answers and the profile details you share with their community, can message you, and may email or text you through Pathwai if you've opted in. Replying STOP to a text turns texts off. They are responsible for how they use that information; please read a community's own rules before you join.",
+      "Application outcomes stay private to you unless you choose to count your progress in your communities' totals. If you do, a community only sees totals added up across at least 5 people who chose to share: never your name, your startup or which programs. You can turn this off at any time on your Journey page.",
       "Messages are visible to the people in the conversation, and to us only when needed to investigate abuse, a report you make, or a legal requirement.",
     ]],
     ["Service providers", [

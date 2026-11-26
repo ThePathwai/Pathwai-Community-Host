@@ -462,7 +462,7 @@ def add_social(report: Dict[str, Any], ig: Optional[Dict[str, Any]] = None, ig_h
 
 # ---------- the metrics export (CSV / JSON): the same numbers as the reports, as rows a hub can hand to a funder or open in a sheet ----------
 MIN_GROUP = 5   # a group smaller than this is shown as "<5", so a handful of people can never be picked out of a total
-EXPORT_NOTE = "Totals only. No names, emails or member records. Groups smaller than 5 are shown as <5."
+EXPORT_NOTE = "Totals only. No names, emails or member records. Groups smaller than 5 are shown as <5."  # (the same sentence is repeated in frontend/src/lib/sampleReport.js)
 
 # (section, label, key in compute(), unit). A row is skipped when the number does not exist yet (for example turnout before check-ins are used).
 _EXPORT_ROWS: List[Tuple[str, str, str, str]] = [
@@ -510,7 +510,38 @@ def small_group(n: int) -> Any:
     return n if n >= MIN_GROUP else f"<{MIN_GROUP}"
 
 
-def metrics_table(d: Dict[str, Any], days: int, community: str, need_counts: Optional[Dict[str, int]] = None) -> Dict[str, Any]:
+OUTCOMES_SECTION = "Founder outcomes"
+
+
+def outcome_rows(accounts: List[Dict[str, Any]], members: int, since: datetime, now: datetime) -> List[Tuple[str, Any, str, str]]:
+    """What founders who chose to share reported about the programs they applied to, as (metric, value, unit, note).
+    Totals only. Nothing at all is shown until MIN_GROUP founders have shared, and every count under MIN_GROUP shows as "<5"."""
+    import navigator as nav
+    n = len(accounts)
+    out: List[Tuple[str, Any, str, str]] = []
+    if n < MIN_GROUP:
+        return [("Founders sharing their progress", small_group(n), "founders", f"Outcome totals appear once {MIN_GROUP} or more founders have chosen to share.")]
+    out.append(("Founders sharing their progress", n, "founders", f"{_pct(n, members)}% of members. Founders choose to share, so these totals describe them, not every member." if members else "Founders choose to share."))
+    recs = [r for a in accounts for r in (a.get("applications") or []) if isinstance(r, dict) and (t := _dt(r.get("updated_at") or r.get("at"))) and since <= t <= now]
+    out.append(("Applications logged", small_group(len(recs)), "applications", ""))
+    counts = Counter(r.get("status") for r in recs)
+    for key in ("applied", "accepted", "completed", "not_selected", "withdrew"):
+        out.append((nav.OUTCOME_LABEL[key], small_group(counts.get(key, 0)), "applications", ""))
+    got, no = counts.get("accepted", 0) + counts.get("completed", 0), counts.get("not_selected", 0)
+    if got + no >= MIN_GROUP:
+        out.append(("Share of decided applications that got in", _pct(got, got + no), "%", "Of the applications founders reported a decision on."))
+    funded = Counter(r.get("funding") for r in recs if r.get("funding") and r.get("funding") != "none")
+    out.append(("Programs that led to funding", small_group(sum(funded.values())), "programs", "Funding ranges are reported by founders, never exact amounts."))
+    for key, label in nav.FUNDING_LABEL.items():
+        if key != "none" and funded.get(key):
+            out.append((f"Funding received: {label}", small_group(funded[key]), "programs", ""))
+    kinds = Counter(r.get("type") for r in recs if r.get("type"))
+    for kind, c in kinds.most_common():
+        out.append((f"Applications to {kind.replace('_', ' ')} programs", small_group(c), "applications", ""))
+    return out
+
+
+def metrics_table(d: Dict[str, Any], days: int, community: str, need_counts: Optional[Dict[str, int]] = None, outcome_accounts: Optional[List[Dict[str, Any]]] = None) -> Dict[str, Any]:
     """Every number the reports use, as flat rows: {section, metric, value, previous, change, unit, note}.
     `previous` is the window just before this one (empty for a community that did not exist yet). Aggregates only."""
     m = compute(d, days)
@@ -541,6 +572,9 @@ def metrics_table(d: Dict[str, Any], days: int, community: str, need_counts: Opt
     for label, n in sorted((need_counts or {}).items(), key=lambda kv: -kv[1]):
         if n > 0:
             add("What members said they need", label, small_group(n), None, "members")
+    if outcome_accounts is not None:
+        for metric, value, unit, note in outcome_rows(outcome_accounts, m["members"], since, now):
+            add(OUTCOMES_SECTION, metric, value, None, unit, note)
 
     return {"community": community, "period_days": days, "period_label": PERIODS.get(days, f"Last {days} days"),
             "period_start": since.strftime("%Y-%m-%d"), "period_end": now.strftime("%Y-%m-%d"),

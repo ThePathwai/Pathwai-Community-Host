@@ -261,6 +261,12 @@ const EXPORT_ROWS = [
   ["Re-engagement", "Quiet members nudged (last 30 days)", "nudged", "people"], ["Re-engagement", "Of those, came back", "came_back", "people"],
 ];
 const SAMPLE_NEEDS = [["Funding", 14], ["Mentors", 9], ["Help finding customers", 6], ["Help hiring", 4], ["A workspace", 3]];
+const SAMPLE_OUTCOMES = [
+  ["Founders sharing their progress", 12, "founders", "Founders choose to share, so these totals describe them, not every member."], ["Applications logged", 27, "applications", ""],
+  ["Applied, waiting to hear", 6, "applications", ""], ["Got in", 11, "applications", ""], ["Completed", "<5", "applications", ""], ["Not selected", 7, "applications", ""], ["Withdrew", "<5", "applications", ""],
+  ["Share of decided applications that got in", 61, "%", "Of the applications founders reported a decision on."], ["Programs that led to funding", 7, "programs", "Funding ranges are reported by founders, never exact amounts."],
+  ["Funding received: $25,000 to $100,000", "<5", "programs", ""], ["Funding received: $100,000 to $500,000", "<5", "programs", ""], ["Applications to grant programs", 14, "applications", ""], ["Applications to accelerator programs", 8, "applications", ""],
+];
 const MIN_GROUP = 5;
 
 export function metricsTable(m, community = "Community") {
@@ -281,6 +287,7 @@ export function metricsTable(m, community = "Community") {
   for (const j of m.joins || []) add("New members per month", j.label, j.value, null, "people");
   for (const p of m.top_perks || []) add("Most-used perks", p.label, p.value, null, "opens");
   for (const [label, n] of SAMPLE_NEEDS) add("What members said they need", label, n >= MIN_GROUP ? n : `<${MIN_GROUP}`, null, "members");
+  for (const [metric, value, unit, note] of SAMPLE_OUTCOMES) add("Founder outcomes", metric, value, null, unit, note);
   return {
     community, sample: true, period_days: m.days, period_label: (PERIODS.find((p) => p.days === m.days) || {}).label || `Last ${m.days} days`,
     period_start: day(new Date(end.getTime() - m.days * 86400000)), period_end: day(end), generated_at: day(end), compared_with_previous: !!m.prev,

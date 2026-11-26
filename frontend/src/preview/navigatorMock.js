@@ -135,6 +135,22 @@ export function navigatorCall(method, path, body, params, ctx) {
     try { ctx.account.tracked = nav.updateTracked(ctx.account.tracked, body || {}, (ctx.account.startup || {}).stage || "idea", today); } catch (e) { return fail(config, 400, e.message); }
     return ok(config, { tracked: ctx.account.tracked });
   }
+  const outcomesView = (a) => ({ applications: a.applications || [], share: !!a.share_outcome_totals,
+    statuses: Object.entries(nav.OUTCOME_LABEL).map(([key, label]) => ({ key, label })), funding: Object.entries(nav.FUNDING_LABEL).map(([key, label]) => ({ key, label })) });
+  if (path === "/navigator/outcomes" && method === "get") {
+    if (!ctx.account) return fail(config, 401, "Not authenticated");
+    return ok(config, outcomesView(ctx.account));
+  }
+  if (path === "/navigator/outcomes" && method === "post") {
+    if (!ctx.account) return fail(config, 401, "Not authenticated");
+    try { ctx.account.applications = nav.updateOutcome(ctx.account.applications, body || {}, today); } catch (e) { return fail(config, 400, e.message); }
+    return ok(config, outcomesView(ctx.account));
+  }
+  if (path === "/navigator/outcomes/sharing" && method === "put") {
+    if (!ctx.account) return fail(config, 401, "Not authenticated");
+    ctx.account.share_outcome_totals = !!(body && body.share);
+    return ok(config, outcomesView(ctx.account));
+  }
   if (path === "/navigator/moves" && method === "get") {
     const eco = ECOSYSTEMS[ctx.slug];
     if (!eco || !ctx.account) return fail(config, eco ? 401 : 404, eco ? "Not authenticated" : "Not found");
