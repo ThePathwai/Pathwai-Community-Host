@@ -1,12 +1,13 @@
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import { Link, Navigate, useSearchParams } from "react-router-dom";
 import { toast } from "sonner";
-import { ArrowLeft, ArrowRight, ArrowUpRight, Check, Flag, MapPin, Pencil, Sparkles } from "../components/icons";
+import { ArrowLeft, ArrowRight, ArrowUpRight, Check, Circle, Flag, MapPin, Pencil, Sparkles } from "../components/icons";
 import { api } from "../lib/api";
 import { useAuth } from "../lib/auth";
 import { useTracked } from "../lib/useTracked";
 import { useInterest } from "../lib/useInterest";
 import { isStageLine, STAGE_LABEL } from "../lib/navigator";
+import { pickMove, prepFor, prepHeading, thenPicks, whyFirst } from "../lib/nextMove";
 import AccountShell from "../components/AccountShell";
 import { Status } from "../components/NavBits";
 import { DeadlineChip, ProgramDrawer, TypeTile, linkVerb } from "../components/ProgramCards";
@@ -86,8 +87,10 @@ function Step({ n, step, onOpen, onTrack, startId }) {
 
 
 
-// The one thing to do now: the best resource for the first thing you asked for, with the page to open and the reason.
-function NextMove({ r, step, then, onOpen, onTrack }) {
+// The one thing to do now. A close deadline comes first, then what you are already doing, then the best fit for the first thing you asked
+// for (lib/nextMove.js). The card says why it is first, what to check before applying, and why the others can wait.
+function NextMove({ move, why, prep, then, onOpen, onTrack }) {
+  const { r, step } = move;
   const mine = r.mine;
   const url = /^https?:\/\//.test(r.apply_url || "") ? r.apply_url : "";
   const waiting = r.status === "closed" || r.status === "paused";
@@ -99,7 +102,32 @@ function NextMove({ r, step, then, onOpen, onTrack }) {
         <div className="min-w-0 flex-1">
           <button type="button" onClick={() => onOpen(r)} className="block text-left" data-testid="path-next-open"><h2 className="text-2xl leading-tight" style={{ ...heading, letterSpacing: "-0.02em" }}>{r.name}</h2><span className="block text-sm text-muted">{r.org}</span></button>
           <div className="mt-2 flex flex-wrap items-center gap-1.5"><Status status={r.status} /><DeadlineChip p={r} /></div>
+          {why.length > 0 && (
+            <div className="mt-3 rounded-2xl bg-ink/[.04] p-3.5" data-testid="path-why-first">
+              <Label>Why this first</Label>
+              <ul className="mt-1.5 space-y-1">{why.map((l) => <li key={l} className="text-sm leading-snug">{l}</li>)}</ul>
+            </div>
+          )}
           <Why lines={whyLines(r)} caution={waiting ? "Not taking applications now. Read the page and plan for the next round." : ""} />
+          {!waiting && (
+            <div className="mt-3" data-testid="path-prep" data-ready={prep.total ? "0" : "1"}>
+              <p className="flex items-center gap-1.5 text-sm font-semibold">
+                {prep.total ? <Circle className="h-3.5 w-3.5 shrink-0 text-muted" aria-hidden /> : <Check className="h-3.5 w-3.5 shrink-0 text-emerald-500" aria-hidden />}
+                {prepHeading(prep.total)}
+              </p>
+              {prep.total > 0 && (
+                <ul className="mt-1.5 space-y-1.5">
+                  {prep.items.map((x) => (
+                    <li key={x.text} className="flex gap-2 text-[13px] leading-snug" data-testid="path-prep-item">
+                      <Circle className="mt-0.5 h-3.5 w-3.5 shrink-0 text-muted" aria-hidden />
+                      <span>{x.text}{x.kind === "profile" && <> <Link to="/me?edit=startup" className="font-semibold underline hover:text-ink">Add it</Link></>}</span>
+                    </li>
+                  ))}
+                  {prep.total > prep.items.length && <li className="pl-5 text-xs text-muted">{prep.total - prep.items.length} more on the program page.</li>}
+                </ul>
+              )}
+            </div>
+          )}
           <div className="mt-4 flex flex-wrap items-center gap-2.5">
             {url && <a href={url} target="_blank" rel="noreferrer" className="btn-primary" data-testid="path-next-go">{r.link_exact === false ? "Open the closest page" : linkVerb(r)}<ArrowUpRight className="h-4 w-4" aria-hidden /></a>}
             {mine === "in"
@@ -110,9 +138,17 @@ function NextMove({ r, step, then, onOpen, onTrack }) {
         </div>
       </div>
       {then.length > 0 && (
-        <div className="mt-5 flex flex-wrap items-center gap-x-4 gap-y-2 border-t border-line pt-4 text-sm" data-testid="path-then">
+        <div className="mt-5 border-t border-line pt-4 text-sm" data-testid="path-then">
           <span className="text-muted">After that</span>
-          {then.map((t) => <button key={t.r.id} type="button" onClick={() => onOpen(t.r)} className="inline-flex items-center gap-1.5 font-semibold hover:underline"><span className="text-xs font-medium text-muted">{cap(t.label)}</span>{t.r.name}<ArrowRight className="h-3.5 w-3.5" aria-hidden /></button>)}
+          <ul className="mt-2 space-y-2">
+            {then.map((t) => (
+              <li key={t.r.id}>
+                <button type="button" onClick={() => onOpen(t.r)} className="inline-flex flex-wrap items-center gap-x-1.5 text-left font-semibold hover:underline">
+                  <span className="text-xs font-medium text-muted">{cap(t.label)}</span>{t.r.name}<span className="text-xs font-normal text-muted">({t.note})</span><ArrowRight className="h-3.5 w-3.5" aria-hidden />
+                </button>
+              </li>
+            ))}
+          </ul>
         </div>
       )}
     </section>
@@ -244,9 +280,9 @@ export default function Journey({ embedded }) {
             {rest.map((o) => <button key={o.key} type="button" disabled={saving} onClick={() => toggleNeed(o.key)} aria-pressed="false" data-testid={`want-${o.key}`} className={cx("inline-flex items-center gap-1.5 rounded-full border px-3.5 py-2 text-sm font-medium transition hover:border-ink/50", o.common ? "border-ink/40" : "border-line text-muted")}>+ {cap(o.label)}<span className="text-xs tabular-nums text-muted" title={`${o.count} resources for you`}>{o.count}</span></button>)}
           </div>
     );
-    const moveStep = data.steps.find((st) => st.resources.length);
-    const move = moveStep ? (moveStep.resources.find((r) => r.mine === "in") || moveStep.resources[0]) : null;
-    const then = data.steps.filter((st) => st !== moveStep && st.resources.length).slice(0, 2).map((st) => ({ label: st.label, r: st.resources.find((r) => r.mine === "in") || st.resources[0] }));
+    const mv = pickMove(data.steps);
+    const move = mv ? mv.r : null;
+    const then = thenPicks(data.steps, mv);
     const doneCount = used.filter((t) => t.state === "done").length;
 
     const states = [
@@ -284,12 +320,12 @@ export default function Journey({ embedded }) {
     } else if (step === "plan") {
       content = (
         <div data-testid="path-step-plan">
-          <StepHead n={3} title="Your plan" sub="Start with the first one. Each resource says why it fits you and opens the exact page. Say when you are doing it or done." />
+          <StepHead n={3} title="Your plan" sub="Start with your next move below, then work down. Each resource says why it fits you and opens the exact page. Say when you are doing it or done." />
           {!chosen.length
             ? <Widget data-testid="path-plan-empty"><p className="text-sm text-muted">Pick what you need first and your plan will appear here.</p><button type="button" onClick={() => go("needs")} className="btn-primary mt-4 self-start">Pick what I need<ArrowRight className="h-4 w-4" aria-hidden /></button></Widget>
             : (
               <>
-                {move && <NextMove r={move} step={moveStep} then={then} onOpen={setOpen} onTrack={mark} />}
+                {mv && <NextMove move={mv} why={whyFirst(mv, data.steps)} prep={prepFor(mv.r)} then={then} onOpen={setOpen} onTrack={mark} />}
                 <div className="flex flex-col gap-4">
                   {data.steps.map((s, i) => <Step key={s.need} n={i + 1} step={s} onOpen={setOpen} onTrack={mark} startId={move && !move.mine ? move.id : ""} />)}
                 </div>
