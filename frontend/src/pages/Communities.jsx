@@ -4,6 +4,7 @@ import { ArrowRight, Check, Clock, LogOut, Pencil, Sparkles } from "../component
 import { toast } from "sonner";
 import { api, errMsg } from "../lib/api";
 import { useAuth } from "../lib/auth";
+import posthog, { posthogEnabled } from "../lib/posthog";
 import AccountShell from "../components/AccountShell";
 import { Modal, Spinner, cx } from "../components/ui";
 import { isInnovation } from "../lib/communityGroup";
@@ -61,6 +62,7 @@ function ApplySheet({ c, account, onClose, onSent }) {
     try {
       const answers = Object.fromEntries(questions.map((q) => [q.label, (ans[q.key] || "").trim()]).filter(([, v]) => v));
       const { data } = await api.post(`/hub/communities/${c.slug}/apply`, { answers, message: note.trim() });
+      if (posthogEnabled) posthog.capture("community_application_submitted", { application_status: data.status || "pending", has_custom_answers: Object.keys(answers).length > 0 });
       saveAnswers(account.id, Object.fromEntries(questions.map((q) => [norm(q.label), (ans[q.key] || "").trim()]).filter(([, v]) => v)));
       onSent(data.status || "pending");
     } catch (ex) { toast.error(errMsg(ex, "Could not send your application. Please try again.")); } finally { setBusy(false); }
@@ -140,7 +142,7 @@ export default function Communities({ embedded }) {
 
   const open = async (c) => {
     setBusy(c.slug);
-    try { await enter(c.slug); nav("/", { replace: true }); } catch (e) { toast.error(errMsg(e, "Could not open this community.")); setBusy(""); }
+    try { await enter(c.slug); if (posthogEnabled) posthog.capture("community_opened", { entry_method: "existing_membership" }); nav("/", { replace: true }); } catch (e) { toast.error(errMsg(e, "Could not open this community.")); setBusy(""); }
   };
   // The practice community has no waiting list, so it is one tap: join with only a name, then walk in.
   const tryOpen = async (c) => {
@@ -148,6 +150,7 @@ export default function Communities({ embedded }) {
     try {
       await api.post(`/hub/communities/${c.slug}/apply`, {});
       await enter(c.slug);
+      if (posthogEnabled) posthog.capture("community_opened", { entry_method: "open_community" });
       toast.success(`Welcome to ${c.name}. Same account, its own programs, events and people.`);
       nav("/", { replace: true });
     } catch (e) { toast.error(errMsg(e, "Could not open this community.")); setBusy(""); }

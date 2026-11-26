@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { api, errMsg } from "../lib/api";
+import { useAuth } from "../lib/auth";
 import DesktopAlerts from "../components/DesktopAlerts";
 import { enableAlerts, alertsState } from "../lib/webNotify";
 import { Button, Card, Chip, StatusBadge, Field, Input, PageHeader, SectionCard, Spinner } from "../components/ui";
@@ -15,6 +16,7 @@ const Toggle = ({ label, hint, checked, onChange, testid }) => (
 const KINDS = ["requests", "events", "members", "matches", "announcements", "resources", "support"];
 
 export default function SettingsPage() {
+  const { resetAnalyticsIdentity } = useAuth();
   const [d, setD] = useState(null);
   const [bill, setBill] = useState(null);
   const loadBill = () => api.get("/me/billing").then((r) => setBill(r.data)).catch(() => {});
@@ -48,9 +50,9 @@ export default function SettingsPage() {
       toast.success("Your data was downloaded");
     } catch (e) { toast.error(errMsg(e)); }
   };
-  const signOutEverywhere = async () => { try { await api.post("/hub/account/sign-out-everywhere"); window.location.href = "/login"; } catch (e) { toast.error(errMsg(e)); } };
+  const signOutEverywhere = async () => { try { await api.post("/hub/account/sign-out-everywhere"); resetAnalyticsIdentity(); window.location.href = "/login"; } catch (e) { toast.error(errMsg(e)); } };
   const deleteAccount = async () => {
-    try { await api.post("/hub/account/delete", { confirm: del.confirm, password: del.password || undefined, email: del.email || undefined }); window.location.href = "/"; }
+    try { await api.post("/hub/account/delete", { confirm: del.confirm, password: del.password || undefined, email: del.email || undefined }); resetAnalyticsIdentity(); window.location.href = "/"; }
     catch (e) { toast.error(errMsg(e)); }
   };
   return (
