@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { api } from "../lib/api";
+import posthog, { posthogEnabled, posthogLogger } from "../lib/posthog";
 import { Modal } from "./ui";
 
 // Writing to someone from their profile. A person who listed themselves in Talent gets a message request they can accept or decline (and their
@@ -19,6 +20,9 @@ export default function MessageRequestModal({ to, onClose }) {
     try {
       if (to.request) await api.post(`/talent/${to.id}/message`, { message: text.trim() });
       else await api.post("/hub/messages/threads", { recipient_emails: [to.email], subject: "", body: text.trim() });
+      const messageType = to.request ? "request" : "direct";
+      if (posthogEnabled) posthog.capture("message_sent", { message_type: messageType });
+      posthogLogger.info("message sent", { message_type: messageType });
       toast.success(to.request ? `Request sent. ${first} will see it first.` : `Sent to ${first}.`);
       onClose(true);
     } catch (e) { toast.error(errMsg(e)); } finally { setBusy(false); }

@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { api, errMsg } from "../lib/api";
 import { useAuth } from "../lib/auth";
+import posthog, { posthogEnabled, posthogLogger } from "../lib/posthog";
 import DesktopAlerts from "../components/DesktopAlerts";
 import { enableAlerts, alertsState } from "../lib/webNotify";
 import { Button, Card, Chip, StatusBadge, Field, Input, PageHeader, SectionCard, Spinner } from "../components/ui";
@@ -21,7 +22,7 @@ export default function SettingsPage() {
   const [bill, setBill] = useState(null);
   const loadBill = () => api.get("/me/billing").then((r) => setBill(r.data)).catch(() => {});
   useEffect(() => { loadBill(); }, []);
-  const pay = async (key) => { try { const { data } = await api.post("/me/billing/checkout", { plan_key: key }); if (data.url) window.location.href = data.url; else { toast.success(data.message); loadBill(); } } catch (e) { toast.error(errMsg(e)); } };
+  const pay = async (key) => { try { const { data } = await api.post("/me/billing/checkout", { plan_key: key }); if (data.url) { if (posthogEnabled) posthog.capture("subscription_checkout_started", { plan_key: key }); posthogLogger.info("subscription checkout started", { plan_key: key }); window.location.href = data.url; } else { toast.success(data.message); loadBill(); } } catch (e) { toast.error(errMsg(e)); } };
   const [pw, setPw] = useState({ current_password: "", new_password: "" });
   const [del, setDel] = useState({ open: false, confirm: "", password: "", email: "" });
   useEffect(() => { api.get("/me/settings").then((r) => setD(r.data)).catch((e) => toast.error(errMsg(e))); }, []);
