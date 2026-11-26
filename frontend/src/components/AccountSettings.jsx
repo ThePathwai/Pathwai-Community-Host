@@ -49,7 +49,7 @@ export default function AccountSettings({ account, onEditProfile }) {
 
   const via = sec?.sign_in_with ? sec.sign_in_with[0].toUpperCase() + sec.sign_in_with.slice(1) : (sec?.has_password === false ? "Google or Apple" : "Email and password");
   return (
-    <div className="mx-auto w-full max-w-3xl space-y-5" data-testid="account-settings">
+    <div className="mx-auto w-full max-w-3xl space-y-5" data-testid="account-settings" data-ph-mask>
       <Section title="Your account" testId="settings-account">
         <dl className="grid gap-4 sm:grid-cols-3">
           <div className="min-w-0"><dt className="eyebrow">Name</dt><dd className="mt-1 truncate text-sm">{account.name}</dd></div>

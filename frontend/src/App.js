@@ -31,7 +31,7 @@ import Navigator from "./pages/Navigator";
 import Journey from "./pages/Journey";
 import Admin from "./pages/Admin";
 import { trackView } from "./lib/track";
-import { analyticsPage, syncAnalyticsAccount } from "./lib/analytics";
+import { syncAnalyticsAccount } from "./lib/analytics";
 import { COMMUNITIES_VISIBLE } from "./lib/flags";
 import UnderConstruction from "./components/UnderConstruction";
 import AccountShell from "./components/AccountShell";
@@ -117,7 +117,7 @@ function HomeRoute() {
 function TrackViews() {
   const { pathname } = useLocation();
   const { account } = useAuth();
-  useEffect(() => { trackView(pathname); analyticsPage(pathname); }, [pathname]);
+  useEffect(() => { trackView(pathname); }, [pathname]);
   useEffect(() => { syncAnalyticsAccount(account); }, [account?.id, account?.platform_admin]); // eslint-disable-line react-hooks/exhaustive-deps
   return null;
 }

@@ -9,12 +9,13 @@ import { isDemo } from "./demo";
 //  - the identifier lives in localStorage, not a cookie;
 //  - addresses are sent without their query or hash, so a reset-password link is never stored in the click trail;
 //  - nothing is recorded on /admin or /reset-password, in the demo, for platform admins, or when the browser sends Do Not Track;
-//  - only clicks on links and buttons are captured (no typing, no form values); session replay is OFF unless
-//    REACT_APP_POSTHOG_REPLAY=true, and even then every input is masked. Add data-ph-no-capture to anything that must never be captured.
+//  - only clicks on links and buttons are captured (no typing, no form values); session replay (a screen recording) masks every input and
+//    the text of any area marked data-ph-mask (profile, settings, journey, guide chat). Add data-ph-no-capture to hide an element entirely.
 
 const key = process.env.REACT_APP_POSTHOG_KEY || "";
 const host = (process.env.REACT_APP_POSTHOG_HOST || "https://us.i.posthog.com").replace(/\/$/, "");
-const replay = process.env.REACT_APP_POSTHOG_REPLAY === "true";
+// Session replay is on unless REACT_APP_POSTHOG_REPLAY is set to "false". It also has to be switched on in the PostHog project settings.
+const replay = process.env.REACT_APP_POSTHOG_REPLAY !== "false";
 
 // Pages that are never captured, whatever the setting.
 const SKIP_PATH = /^\/(admin|reset-password)(\/|$)/;
@@ -29,7 +30,7 @@ if (posthogEnabled) {
       api_host: host,
       person_profiles: "identified_only",   // anonymous visitors are counted but get no profile until they sign up
       persistence: "localStorage",
-      capture_pageview: false,               // one per screen is sent by analyticsPage (lib/analytics.js), since the app never reloads
+      capture_pageview: "history_change",   // one per screen, including moves inside the app (the page never reloads)
       capture_pageleave: true,
       respect_dnt: true,
       autocapture: { dom_event_allowlist: ["click"], element_allowlist: ["a", "button", "summary"], capture_copied_text: false, url_ignorelist: [/^\/admin/, /^\/reset-password/] },
@@ -38,7 +39,7 @@ if (posthogEnabled) {
       enable_heatmaps: true,
       disable_surveys: true,
       disable_session_recording: !replay,
-      session_recording: { maskAllInputs: true, blockSelector: "[data-ph-no-capture]" },
+      session_recording: { maskAllInputs: true, maskTextSelector: "[data-ph-mask]", blockSelector: "[data-ph-no-capture]" },
       sanitize_properties: (props) => {
         for (const k of ["$current_url", "$referrer", "$initial_current_url", "$initial_referrer", "$pathname"]) if (props && props[k]) props[k] = clean(props[k]);
         return props;

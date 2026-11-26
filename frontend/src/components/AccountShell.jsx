@@ -67,7 +67,7 @@ export default function AccountShell({ active, children }) {
   const UserMenu = ({ up }) => menu && (
     <>
       <div className="fixed inset-0 z-40" onClick={() => setMenu(false)} aria-hidden />
-      <div role="menu" className={cx("absolute z-50 w-60 overflow-hidden rounded-xl border border-line bg-surface shadow-xl", up ? "bottom-full left-0 mb-2" : "right-0 top-12")} data-testid="shell-menu-panel">
+      <div role="menu" className={cx("absolute z-50 w-60 overflow-hidden rounded-xl border border-line bg-surface shadow-xl", up ? "bottom-full left-0 mb-2" : "right-0 top-12")} data-testid="shell-menu-panel" data-ph-mask>
         <div className="border-b border-line px-4 py-3"><p className="truncate text-sm font-medium">{account.name}</p><p className="truncate text-xs text-muted">{account.email}</p></div>
         <Link role="menuitem" to="/me" onClick={() => setMenu(false)} className="flex items-center gap-2 px-4 py-2.5 text-sm hover:bg-ink/5"><User className="h-4 w-4" />Your profile</Link>
         <Link role="menuitem" to="/me?tab=settings" onClick={() => setMenu(false)} className="flex items-center gap-2 px-4 py-2.5 text-sm hover:bg-ink/5" data-testid="shell-menu-settings"><Settings className="h-4 w-4" />Settings</Link>

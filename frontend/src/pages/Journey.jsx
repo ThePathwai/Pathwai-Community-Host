@@ -360,7 +360,7 @@ export default function Journey({ embedded }) {
   }
 
   const page = (
-    <div className="mx-auto w-full max-w-6xl" data-testid="journey-page">
+    <div className="mx-auto w-full max-w-6xl" data-testid="journey-page" data-ph-mask>
       <div className="mb-6 max-w-3xl">
         <p className="eyebrow">Journey</p>
         <h1 className="mt-2 text-3xl sm:text-4xl" style={{ textTransform: "none", letterSpacing: "-0.03em", fontWeight: 800, textWrap: "balance" }}>{account.startup?.name ? `${account.startup.name}'s path` : "Your path"}</h1>

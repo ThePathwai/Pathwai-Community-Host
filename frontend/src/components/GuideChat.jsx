@@ -87,7 +87,7 @@ export default function GuideChat({ signedIn, hasProfile, formProfile, startupNa
   if (!msgs) return null;
   const last = msgs[msgs.length - 1];
   return (
-    <section className={cx("flex min-h-0 flex-col rounded-2xl border border-line bg-surface", className)} aria-label="Ask the guide" data-testid="guide-chat">
+    <section className={cx("flex min-h-0 flex-col rounded-2xl border border-line bg-surface", className)} aria-label="Ask the guide" data-testid="guide-chat" data-ph-mask>
       <div ref={box} className="min-h-0 flex-1 space-y-4 overflow-y-auto p-4" aria-live="polite">
         {msgs.map((m, i) => m.role === "user" ? (
           <div key={i} className="flex justify-end"><p className="max-w-[85%] rounded-2xl rounded-br-md px-4 py-2.5 text-sm" style={{ background: "var(--accent)", color: "var(--on-accent)" }} data-testid="guide-user">{m.text}</p></div>

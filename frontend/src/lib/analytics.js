@@ -4,11 +4,6 @@ import posthog, { posthogEnabled } from "./posthog";
 
 export const analyticsEnabled = () => posthogEnabled;
 
-// One page view per screen: the address without its query.
-export function analyticsPage(path) {
-  try { if (posthogEnabled) posthog.capture("$pageview", { $current_url: window.location.origin + path }); } catch { /* ignore */ }
-}
-
 // A named moment worth counting. Properties must be small, non-personal facts (an id, a kind), never a name, email or typed text.
 export function captureEvent(name, props) {
   try { if (posthogEnabled) posthog.capture(name, props || {}); } catch { /* ignore */ }
