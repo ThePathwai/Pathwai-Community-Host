@@ -20,12 +20,21 @@ ARG REACT_APP_AI_CHAT_ENABLED=false
 # Shown on the public Terms / Privacy pages (/terms, /privacy). Set both before launch.
 ARG REACT_APP_LEGAL_EMAIL=""
 ARG REACT_APP_LEGAL_ENTITY=""
+# Product analytics (PostHog). Leave REACT_APP_POSTHOG_KEY empty and analytics stay completely off. The key is the project's public
+# "phc_..." key (safe to ship in the page). Use https://eu.i.posthog.com for PostHog's EU cloud. Set REACT_APP_POSTHOG_REPLAY=true only if you
+# want session recordings (inputs are always masked).
+ARG REACT_APP_POSTHOG_KEY=""
+ARG REACT_APP_POSTHOG_HOST="https://us.i.posthog.com"
+ARG REACT_APP_POSTHOG_REPLAY="false"
 # Railway supplies the commit being built; it is stamped into the app so a page can say which build it is.
 ARG RAILWAY_GIT_COMMIT_SHA=""
 ENV REACT_APP_BACKEND_URL="" \
     REACT_APP_AI_CHAT_ENABLED=$REACT_APP_AI_CHAT_ENABLED \
     REACT_APP_LEGAL_EMAIL=$REACT_APP_LEGAL_EMAIL \
     REACT_APP_LEGAL_ENTITY=$REACT_APP_LEGAL_ENTITY \
+    REACT_APP_POSTHOG_KEY=$REACT_APP_POSTHOG_KEY \
+    REACT_APP_POSTHOG_HOST=$REACT_APP_POSTHOG_HOST \
+    REACT_APP_POSTHOG_REPLAY=$REACT_APP_POSTHOG_REPLAY \
     REACT_APP_BUILD_ID=$RAILWAY_GIT_COMMIT_SHA \
     CI=false \
     GENERATE_SOURCEMAP=false

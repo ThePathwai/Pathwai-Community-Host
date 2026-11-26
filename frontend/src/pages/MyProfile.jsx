@@ -11,6 +11,7 @@ import GuideChat from "../components/GuideChat";
 import NextSteps from "../components/NextSteps";
 import PitchCard from "../components/PitchCard";
 import AccountShell from "../components/AccountShell";
+import { captureEvent } from "../lib/analytics";
 import AccountSettings from "../components/AccountSettings";
 import Journey from "../components/Journey";
 import { ContactCard, List } from "./MemberProfile";
@@ -62,7 +63,7 @@ export default function MyProfile({ embedded }) {
     const problem = profileProblem(pf);
     if (problem) return toast.error(problem);
     setBusy(true);
-    try { await api.patch("/hub/profile", profileBody(pf, photo)); await refresh(); setVersion((v) => v + 1); toast.success("Profile saved"); setEditing(false); }
+    try { await api.patch("/hub/profile", profileBody(pf, photo)); await refresh(); setVersion((v) => v + 1); captureEvent("profile_saved", { has_startup: !!pf?.startup }); toast.success("Profile saved"); setEditing(false); }
     catch (e) { toast.error(errMsg(e)); } finally { setBusy(false); }
   };
 

@@ -31,6 +31,7 @@ import Navigator from "./pages/Navigator";
 import Journey from "./pages/Journey";
 import Admin from "./pages/Admin";
 import { trackView } from "./lib/track";
+import { analyticsPage, syncAnalyticsAccount } from "./lib/analytics";
 import { COMMUNITIES_VISIBLE } from "./lib/flags";
 import UnderConstruction from "./components/UnderConstruction";
 import AccountShell from "./components/AccountShell";
@@ -115,7 +116,9 @@ function HomeRoute() {
 // Counts a page view each time the address changes (the page name only, never the query; see lib/track.js).
 function TrackViews() {
   const { pathname } = useLocation();
-  useEffect(() => { trackView(pathname); }, [pathname]);
+  const { account } = useAuth();
+  useEffect(() => { trackView(pathname); analyticsPage(pathname); }, [pathname]);
+  useEffect(() => { syncAnalyticsAccount(account); }, [account?.id, account?.platform_admin]); // eslint-disable-line react-hooks/exhaustive-deps
   return null;
 }
 

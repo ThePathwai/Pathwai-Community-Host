@@ -6,6 +6,7 @@ import ScrollLock from "./ScrollLock";
 import { useShell } from "./AccountShell";
 import { AUDIENCE_LABEL, isStageLine, REGION_LABEL, STAGE_LABEL, STAGES, STATUS_HELP, TYPE_LABEL } from "../lib/navigator";
 import { deadlineInfo, leadReason, tint, typeMeta } from "../lib/programStyle";
+import { captureEvent } from "../lib/analytics";
 import { cx } from "./ui";
 
 // The program pieces shared by Home, Programs and the Navigator: a card for scanning, a drawer for the detail, and the three-step path.
@@ -189,6 +190,7 @@ function Section({ title, children }) {
 // The detail: a right-hand panel on a computer, a bottom sheet on a phone. Everything about one program, with the way to apply pinned at the bottom.
 export function ProgramDrawer({ p, onClose, meta, tracked, onTrack, stage, interest, eco }) {
   const shell = useShell();
+  useEffect(() => { if (p?.id) captureEvent("program_opened", { program_id: p.id, kind: p.type || "", fit: p.fit || "" }); }, [p?.id]); // eslint-disable-line react-hooks/exhaustive-deps
   useEffect(() => {
     if (!p) return undefined;
     const k = (e) => { if (e.key === "Escape") onClose(); };

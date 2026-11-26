@@ -1,5 +1,6 @@
 import { useCallback, useMemo, useState } from "react";
 import { toast } from "sonner";
+import { captureEvent } from "./analytics";
 import { api } from "./api";
 
 // "Are you interested?" for programs. Lives on the account (POST /navigator/interest): yes puts a program on the shortlist,
@@ -26,6 +27,7 @@ export function useInterest() {
     const next = now === want ? "none" : want;
     const ok = await send(p, next);
     if (!ok) return false;
+    captureEvent("program_interest", { program_id: p.id, state: next });
     if (next === "no") toast("Hidden from your suggestions", { description: p.name, action: { label: "Undo", onClick: () => send(p, "none") } });
     else if (next === "yes") toast.success("Added to your interested list", { description: p.name });
     return next;
