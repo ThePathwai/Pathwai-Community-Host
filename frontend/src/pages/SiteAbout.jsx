@@ -2,7 +2,7 @@ import React from "react";
 import { Link } from "react-router-dom";
 import { ArrowRight, Rocket } from "../components/icons";
 import { DEMO_PATH } from "../lib/demo";
-import { Eyebrow, Growth, Num, PageTop, Section, SiteShell, WAITLIST } from "../components/SiteKit";
+import { Eyebrow, Growth, Num, PageTop, Proof, Section, SiteShell, WAITLIST } from "../components/SiteKit";
 
 // The website's About page (/about). Wording follows thepathwai.com.
 
@@ -20,7 +20,7 @@ const VALUE = [
 ];
 
 const WHY = [
-  ["For hubs", "A venture advisor that knows your programs."],
+  ["For hubs", "A venture advisor that knows your programs, and the numbers your funders ask for."],
   ["For founders", "Clarity without waiting."],
   ["For advisors", "Time for deeper needs."],
   ["Human support stays", "Advisors for what matters."],
@@ -43,6 +43,10 @@ export default function SiteAbout() {
           <div className="card"><Eyebrow>Founders</Eyebrow><p className="mt-2 text-2xl font-bold">Know your next move.</p></div>
           <div className="card"><Eyebrow>Investors</Eyebrow><p className="mt-2 text-2xl font-bold">Meet founders worth backing.</p></div>
         </div>
+      </Section>
+
+      <Section eyebrow="Proof for your funders" title="Report what your hub achieved." sub="The numbers come from what happens in your hub, so the report is something you can stand behind." className="border-t border-line/60">
+        <Proof />
       </Section>
 
       <Section eyebrow="Where this goes" title="From one hub to a national system." sub="Each hub keeps its own advisor. Together they become one network." className="border-t border-line/60">

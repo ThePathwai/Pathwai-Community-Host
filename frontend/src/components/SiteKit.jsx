@@ -32,6 +32,19 @@ export const GROWTH = [
   ["Many hubs", "Founders carry their profile from hub to hub when they choose to, and hubs refer founders to each other."],
   ["Every hub", "Every innovation hub in the country on one system: a national map of support, and no founder left to search alone."],
 ];
+// What a hub can hand its funders. Shown on the home page and About. No figures, on purpose.
+export const PROOF = [
+  ["Reports", "Funder, sponsor and board reports in your hub's own colours, as a PDF, as slides, or as a link that stays current."],
+  ["The raw numbers", "Every number behind those reports as one spreadsheet, for your own reporting or your funder's template."],
+  ["Private by design", "Totals only. Never names or emails, and small groups are hidden in the export so no one can be picked out."],
+];
+export const Proof = () => (
+  <ol className="grid gap-4 sm:grid-cols-3" data-testid="site-proof">
+    {PROOF.map(([t, d], i) => (
+      <li key={t} className="card flex flex-col gap-2 !p-7"><Num n={i + 1} /><h3 className="mt-3 text-2xl">{t}</h3><p className="text-sm text-muted">{d}</p></li>
+    ))}
+  </ol>
+);
 export const Growth = () => (
   <ol className="grid gap-4 sm:grid-cols-3" data-testid="site-growth">
     {GROWTH.map(([t, d], i) => (

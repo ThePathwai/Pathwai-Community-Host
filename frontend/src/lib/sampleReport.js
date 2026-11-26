@@ -247,3 +247,51 @@ export function withInstagram(report, snap) {
   secs.splice(report.type === "sponsor" ? 1 : secs.length, 0, instagramSection(snap));
   return { ...report, sections: secs };
 }
+
+// ---- the metrics export for the practice copy: the same rows as GET /admin/metrics (backend/impact.py, metrics_table) ----
+const EXPORT_ROWS = [
+  ["Membership", "Members", "members", "people"], ["Membership", "New members", "new_members", "people"], ["Membership", "Active members (last 30 days)", "active", "people"],
+  ["Membership", "Share of members active", "active_pct", "%"], ["Membership", "Members who have gone quiet", "quiet", "people"], ["Membership", "Profile completeness (average)", "completeness", "%"],
+  ["Membership", "Applications waiting", "pending_apps", "applications"], ["Introductions", "Introductions requested", "intros_sent", "requests"],
+  ["Introductions", "Introductions made", "intros_made", "introductions"], ["Introductions", "People connected", "people_connected", "people"],
+  ["Events", "Events held", "events_held", "events"], ["Events", "Events coming up", "upcoming", "events"], ["Events", "RSVPs", "rsvps", "RSVPs"],
+  ["Events", "Average RSVPs per event", "avg_rsvp", "RSVPs"], ["Events", "Checked in at events", "attended", "people"], ["Events", "Turnout of those who signed up", "turnout_pct", "%"],
+  ["Events", "Members who went to an event", "event_goers", "people"], ["Perks", "Perks offered", "perks_offered", "perks"], ["Perks", "Perk opens", "perk_opens", "opens"],
+  ["Perks", "Members who opened a perk", "perk_users", "people"], ["Support", "Help requests answered", "sup_resolved", "requests"], ["Support", "Help requests still open", "sup_open", "requests"],
+  ["Re-engagement", "Quiet members nudged (last 30 days)", "nudged", "people"], ["Re-engagement", "Of those, came back", "came_back", "people"],
+];
+const SAMPLE_NEEDS = [["Funding", 14], ["Mentors", 9], ["Help finding customers", 6], ["Help hiring", 4], ["A workspace", 3]];
+const MIN_GROUP = 5;
+
+export function metricsTable(m, community = "Community") {
+  const day = (d) => d.toISOString().slice(0, 10);
+  const end = new Date();
+  const rows = [];
+  const add = (section, metric, value, previous = null, unit = "", note = "") => {
+    const change = typeof value === "number" && typeof previous === "number" ? Math.round((value - previous) * 10) / 10 : null;
+    rows.push({ section, metric, value, previous, change, unit, note });
+  };
+  for (const [section, label, key, unit] of EXPORT_ROWS) {
+    const v = m[key];
+    if (v == null) continue;
+    add(section, label, v, m.prev && m.prev[key] != null ? m.prev[key] : null, unit);
+  }
+  for (const [title, date, going, went] of m.event_rows || []) add("Events held", title, Number(going), null, "RSVPs", `${date}; ${went} checked in`);
+  for (const w of m.weekly || []) add("Active members per week", `Week ending ${w.label}`, w.value, null, "people");
+  for (const j of m.joins || []) add("New members per month", j.label, j.value, null, "people");
+  for (const p of m.top_perks || []) add("Most-used perks", p.label, p.value, null, "opens");
+  for (const [label, n] of SAMPLE_NEEDS) add("What members said they need", label, n >= MIN_GROUP ? n : `<${MIN_GROUP}`, null, "members");
+  return {
+    community, sample: true, period_days: m.days, period_label: (PERIODS.find((p) => p.days === m.days) || {}).label || `Last ${m.days} days`,
+    period_start: day(new Date(end.getTime() - m.days * 86400000)), period_end: day(end), generated_at: day(end), compared_with_previous: !!m.prev,
+    note: "Totals only. No names, emails or member records. Groups smaller than 5 are shown as <5.", rows,
+  };
+}
+
+export function metricsCsv(t) {
+  const safe = (v) => (typeof v === "string" && /^[=+\-@\t\r]/.test(v) ? "'" + v : v);
+  const cell = (v) => { const s = v == null ? "" : String(safe(v)); return /[",\r\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s; };
+  const head = ["community", "period", "period_start", "period_end", "section", "metric", "value", "previous_period", "change", "unit", "note"];
+  const lines = [head.join(",")].concat(t.rows.map((r) => [t.community, t.period_label, t.period_start, t.period_end, r.section, r.metric, r.value, r.previous, r.change, r.unit, r.note].map(cell).join(",")));
+  return "﻿" + lines.join("\r\n") + "\r\n";
+}

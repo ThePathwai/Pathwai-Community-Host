@@ -1,7 +1,7 @@
 // The in-browser demo's stand-in for backend/routes/impact.py: the Impact numbers, sponsor / funder / board reports,
 // read-only share links and the "going quiet" list. Every figure is sample data (and labelled that way on screen),
 // made from the demo community's own member, event and perk lists so it looks like that community.
-import { sampleMetrics, impactCards, reliabilityCards, buildReport, DEFAULT_OFFER, cleanOffer, withSocial, sampleInstagram, sampleTikTok, REPORT_TYPES, PERIODS } from "../lib/sampleReport";
+import { sampleMetrics, metricsTable, metricsCsv, impactCards, reliabilityCards, buildReport, DEFAULT_OFFER, cleanOffer, withSocial, sampleInstagram, sampleTikTok, REPORT_TYPES, PERIODS } from "../lib/sampleReport";
 
 const hash = (s) => String(s || "x").split("").reduce((a, c) => (a * 31 + c.charCodeAt(0)) >>> 0, 7);
 const err = (status, detail) => ({ status, data: { detail } });
@@ -30,6 +30,8 @@ export function impactHandler({ method, path, body, params, store, users, events
 
   if (path === "/community/reliability" && method === "get") return { status: 200, data: reliabilityCards(metrics()) };
   if (path === "/admin/impact" && method === "get") return { status: 200, data: { ...impactCards(metrics()), quiet: quietRows().length } };
+  if (path === "/admin/metrics" && method === "get") return { status: 200, data: metricsTable(metrics(), communityName) };
+  if (path === "/admin/metrics.csv" && method === "get") return { status: 200, data: new Blob([metricsCsv(metricsTable(metrics(), communityName))], { type: "text/csv" }) };
   if (path === "/admin/instagram" && method === "get") {
     const ig = sampleInstagram(community);
     return { status: 200, data: { connected: !!instagramOn, has_data: !!instagramOn, fetched_at: instagramOn ? new Date().toISOString() : null, handle: instagramOn ? ig.account.username : null, followers: instagramOn ? ig.account.followers : null, sample: true } };

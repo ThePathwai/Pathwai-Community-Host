@@ -458,3 +458,107 @@ def add_social(report: Dict[str, Any], ig: Optional[Dict[str, Any]] = None, ig_h
     at = 1 if report["type"] == "sponsor" else len(secs)  # a sponsor sees reach straight after the headline numbers
     secs[at:at] = new
     return {**report, "sections": secs, "sample": bool(report.get("sample") or (ig or {}).get("sample") or (tt or {}).get("sample"))}
+
+
+# ---------- the metrics export (CSV / JSON): the same numbers as the reports, as rows a hub can hand to a funder or open in a sheet ----------
+MIN_GROUP = 5   # a group smaller than this is shown as "<5", so a handful of people can never be picked out of a total
+EXPORT_NOTE = "Totals only. No names, emails or member records. Groups smaller than 5 are shown as <5."
+
+# (section, label, key in compute(), unit). A row is skipped when the number does not exist yet (for example turnout before check-ins are used).
+_EXPORT_ROWS: List[Tuple[str, str, str, str]] = [
+    ("Membership", "Members", "members", "people"),
+    ("Membership", "New members", "new_members", "people"),
+    ("Membership", f"Active members (last {ACTIVE_DAYS} days)", "active", "people"),
+    ("Membership", "Share of members active", "active_pct", "%"),
+    ("Membership", "Members who have gone quiet", "quiet", "people"),
+    ("Membership", "Profile completeness (average)", "completeness", "%"),
+    ("Membership", "Applications waiting", "pending_apps", "applications"),
+    ("Introductions", "Introductions requested", "intros_sent", "requests"),
+    ("Introductions", "Introductions made", "intros_made", "introductions"),
+    ("Introductions", "People connected", "people_connected", "people"),
+    ("Events", "Events held", "events_held", "events"),
+    ("Events", "Events coming up", "upcoming", "events"),
+    ("Events", "RSVPs", "rsvps", "RSVPs"),
+    ("Events", "Average RSVPs per event", "avg_rsvp", "RSVPs"),
+    ("Events", "Checked in at events", "attended", "people"),
+    ("Events", "Turnout of those who signed up", "turnout_pct", "%"),
+    ("Events", "Members who went to an event", "event_goers", "people"),
+    ("Perks", "Perks offered", "perks_offered", "perks"),
+    ("Perks", "Perk opens", "perk_opens", "opens"),
+    ("Perks", "Members who opened a perk", "perk_users", "people"),
+    ("Support", "Help requests answered", "sup_resolved", "requests"),
+    ("Support", "Help requests still open", "sup_open", "requests"),
+    ("Re-engagement", "Quiet members nudged (last 30 days)", "nudged", "people"),
+    ("Re-engagement", "Of those, came back", "came_back", "people"),
+]
+
+
+def _csv_safe(v: Any) -> Any:
+    """A spreadsheet runs text that starts with = + - @ as a formula. Event and perk titles are typed by people, so defuse them."""
+    return "'" + v if isinstance(v, str) and v[:1] in ("=", "+", "-", "@", "\t", "\r") else v
+
+
+def _change(now_v: Any, then_v: Any) -> Optional[float]:
+    if isinstance(now_v, (int, float)) and isinstance(then_v, (int, float)):
+        c = round(now_v - then_v, 1)
+        return int(c) if c == int(c) else c
+    return None
+
+
+def small_group(n: int) -> Any:
+    """A head-count that is safe to publish: the number itself, or "<5" when the group is small."""
+    return n if n >= MIN_GROUP else f"<{MIN_GROUP}"
+
+
+def metrics_table(d: Dict[str, Any], days: int, community: str, need_counts: Optional[Dict[str, int]] = None) -> Dict[str, Any]:
+    """Every number the reports use, as flat rows: {section, metric, value, previous, change, unit, note}.
+    `previous` is the window just before this one (empty for a community that did not exist yet). Aggregates only."""
+    m = compute(d, days)
+    p = previous(d, days)
+    p = p if p["members"] > 0 else None
+    rows: List[Dict[str, Any]] = []
+
+    def add(section: str, metric: str, value: Any, previous_v: Any = None, unit: str = "", note: str = "") -> None:
+        rows.append({"section": section, "metric": metric, "value": value, "previous": previous_v, "change": _change(value, previous_v), "unit": unit, "note": note})
+
+    for section, label, key, unit in _EXPORT_ROWS:
+        v = m.get(key)
+        if v is None or (key == "attended" and not m["checkin_events"]):
+            continue
+        add(section, label, v, p.get(key) if p else None, unit)
+
+    since, now = m["since"], m["now"]
+    for e in sorted((e for e in d["events"] if (s := _dt(e.get("starts_at"))) and since <= s <= now), key=lambda x: _dt(x.get("starts_at")), reverse=True)[:50]:
+        went = len(e.get("attended_ids") or [])
+        add("Events held", str(e.get("title") or "Event")[:120], len(e.get("attendee_ids") or []), None, "RSVPs",
+            f"{_dt(e.get('starts_at')).strftime('%Y-%m-%d')}" + (f"; {went} checked in" if e.get("attended_ids") else ""))
+    for w in m["weekly"]:
+        add("Active members per week", f"Week ending {w['label']}", w["value"], None, "people")
+    for j in m["joins"]:
+        add("New members per month", j["label"], j["value"], None, "people")
+    for t in m["top_perks"]:
+        add("Most-used perks", t["label"], t["value"], None, "opens")
+    for label, n in sorted((need_counts or {}).items(), key=lambda kv: -kv[1]):
+        if n > 0:
+            add("What members said they need", label, small_group(n), None, "members")
+
+    return {"community": community, "period_days": days, "period_label": PERIODS.get(days, f"Last {days} days"),
+            "period_start": since.strftime("%Y-%m-%d"), "period_end": now.strftime("%Y-%m-%d"),
+            "generated_at": now.strftime("%Y-%m-%d"), "compared_with_previous": bool(p), "note": EXPORT_NOTE, "rows": rows}
+
+
+CSV_COLUMNS = ["community", "period", "period_start", "period_end", "section", "metric", "value", "previous_period", "change", "unit", "note"]
+
+
+def metrics_csv(table: Dict[str, Any]) -> str:
+    """The table as CSV text, with a byte-order mark so Excel reads accents correctly."""
+    import csv
+    import io
+    buf = io.StringIO()
+    w = csv.writer(buf, lineterminator="\r\n")
+    w.writerow(CSV_COLUMNS)
+    for r in table["rows"]:
+        w.writerow([_csv_safe(x) if x is not None else "" for x in (
+            table["community"], table["period_label"], table["period_start"], table["period_end"],
+            r["section"], r["metric"], r["value"], r["previous"], r["change"], r["unit"], r["note"])])
+    return "﻿" + buf.getvalue()

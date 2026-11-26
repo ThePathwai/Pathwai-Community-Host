@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from "react";
 import { Link, NavLink, useLocation, useNavigate } from "react-router-dom";
-import { Building2, Compass, MessageCircle, Target, Calendar, Gift, Info, Home as HomeIcon, LogOut, Moon, Settings, Sparkles, Sun, Users, CircleUser, ChevronDown } from "./icons";
+import { Building2, Compass, MessageCircle, Target, Calendar, Gift, Info, Home as HomeIcon, LogOut, Moon, Settings, Sparkles, Sun, Users, CircleUser, ChevronDown, TrendingUp } from "./icons";
 import { applyBrand, effectiveMode, setModePref } from "../lib/theme";
 import { useAuth } from "../lib/auth";
 import { Avatar, BackButton, PoweredBy, Wordmark, cx } from "./ui";
@@ -74,7 +74,7 @@ export default function Layout({ children }) {
   const overflowNav = [...mainItems.slice(tabItems.length), ...menuOnly];
   // The computer sidebar lists every section (the same place Pathwai's own sidebar is), then the parts of your account.
   const sideItems = [["/", "Home", TAB_ICONS["/"]], ...[...mainItems, ...menuOnly].map((n) => [ROUTES[n.key], n.label, TAB_ICONS[n.key]])];
-  const youItems = [["/journey", "Journey", Target], ["/me", "My profile", CircleUser], ["/communities", "Communities", Building2], ["/settings", "Settings", Settings]];
+  const youItems = [["/journey", "Journey", Target], ["/me", "My profile", CircleUser], ["/communities", "Communities", Building2], ...(user?.role === "admin" ? [["/impact", "Impact and export", TrendingUp]] : []), ["/settings", "Settings", Settings]];
   const toggleMode = () => { const n = mode === "dark" ? "light" : "dark"; setModePref(n); applyBrand(config); setMode(n); };
   const SideLink = ({ to, label, Icon }) => (
     <NavLink to={to} end={to === "/"} data-testid={`side-${to === "/" ? "home" : to.slice(1)}`}
@@ -102,6 +102,7 @@ export default function Layout({ children }) {
         <MenuRow to="/journey" icon={Target} testid="user-menu-journey">Journey</MenuRow>
         <MenuRow to="/me" icon={CircleUser} testid="user-menu-profile">My profile</MenuRow>
         <MenuRow to="/communities" icon={Building2} testid="user-menu-communities">Communities</MenuRow>
+        {user?.role === "admin" && <MenuRow to="/impact" icon={TrendingUp} testid="user-menu-impact">Impact and export</MenuRow>}
         <MenuRow to="/settings" icon={Settings} testid="user-menu-settings">Settings</MenuRow>
       </MenuGroup>
       <div className="mt-1 border-t border-line pt-1">

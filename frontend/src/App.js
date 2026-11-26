@@ -30,6 +30,7 @@ import { HUB } from "./lib/demoHubConfig";
 import Navigator from "./pages/Navigator";
 import Journey from "./pages/Journey";
 import Admin from "./pages/Admin";
+import HubImpact from "./pages/HubImpact";
 import { trackView } from "./lib/track";
 import { syncAnalyticsAccount } from "./lib/analytics";
 import { COMMUNITIES_VISIBLE } from "./lib/flags";
@@ -162,6 +163,7 @@ export default function App() {
         <Route path="/events/:id" element={<P><EventDetail /></P>} />
         <Route path="/resources" element={<P><HubResources /></P>} />
         <Route path="/settings" element={<P><SettingsPage /></P>} />
+        <Route path="/impact" element={<P><HubImpact /></P>} />
         {/* Screens that no longer exist send people somewhere that does. */}
         <Route path="/profile" element={<Navigate to="/me" replace />} />
         <Route path="/ask" element={<Navigate to="/assistant" replace />} />

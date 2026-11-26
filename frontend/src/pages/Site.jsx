@@ -3,7 +3,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { ArrowRight, ArrowUp, Briefcase, Building2, Check, Compass, Layers, Rocket, Search, Target, TrendingUp, Users } from "../components/icons";
 import { cx } from "../components/ui";
 import { DEMO_PATH } from "../lib/demo";
-import { Eyebrow, Glow, Growth, Num, Pill, Section, SiteShell, WAITLIST } from "../components/SiteKit";
+import { Eyebrow, Glow, Growth, Num, Pill, Proof, Section, SiteShell, WAITLIST } from "../components/SiteKit";
 
 // The website home page (shown at / to anyone who is signed out). About and Contact are their own pages (SiteAbout.jsx, SiteContact.jsx);
 // header, footer and shared blocks live in components/SiteKit.jsx. Plain data arrays below, so copy edits are one-liners.
@@ -31,7 +31,7 @@ const PROMPTS = ["I need to find my first customers", "Which grant should I appl
 const STARTS = ["Funding", "Investors", "Mentors", "Events", "People", "Resources"];
 
 const SIDES = [
-  { tag: "For hubs", title: "A venture advisor on call.", sub: "Your programs, events and people, put to work.", items: ["Answers the routine questions at intake", "Matches each founder to your programs first", "Plans the next steps with the founder", "Your team keeps the hard conversations"] },
+  { tag: "For hubs", title: "A venture advisor on call.", sub: "Your programs, events and people, put to work.", items: ["Answers the routine questions at intake", "Matches each founder to your programs first", "Funder-ready numbers you can export", "Your team keeps the hard conversations"] },
   { tag: "For founders", title: "Know your next move.", sub: "Matched to you, and to the hub behind you.", items: ["Programs, grants and events that fit", "Mentors and investors who back your stage", "Why each match matters", "A plan, not a list"] },
   { tag: "For the ecosystem", title: "One system, hub to hub.", sub: "Stronger with every hub that joins.", items: ["Founders carry their profile between hubs, when they choose", "Hubs refer founders to each other", "Investors meet founders their hub already knows", "One national picture of innovation support"] },
 ];
@@ -301,6 +301,10 @@ export default function Site() {
             </div>
           ))}
         </div>
+      </Section>
+
+      <Section id="proof" eyebrow="Proof for your funders" title="The numbers your funders ask for, ready to send." sub="Members active, introductions made, events held, perks used. Measured from your own hub, never guessed.">
+        <Proof />
       </Section>
 
       <Section id="network" eyebrow="How it grows" title="One hub at a time. One national system in the end." sub="Each hub keeps its own advisor. Together they become one network.">

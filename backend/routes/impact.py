@@ -4,6 +4,7 @@
   GET  /community/reliability?days=   the member-facing "how dependable is this community" totals
   GET  /admin/reports/{type}?days=    a sponsor / funder / board report as data
   GET  /admin/reports/{type}.pdf      the same report as a PDF
+  GET  /admin/metrics, /admin/metrics.csv   every number in the reports as rows (JSON) or a spreadsheet file (CSV); totals only
   GET/POST/DELETE /admin/report-shares   read-only live links to share instead of a PDF
   GET  /public/report/{token}         what a shared link shows (no login; totals only, never names)
   GET  /admin/quiet, POST /admin/quiet/nudge   members who have gone quiet, and a one-tap nudge
@@ -157,6 +158,44 @@ async def report_deck_pdf(kind: str, days: int = Query(90), include: str = Query
     slug = "".join(ch if ch.isalnum() else "-" for ch in rep["community"].lower()).strip("-") or "community"
     await audit(me["id"], "admin.report_deck", "report", kind)
     return Response(pdf, media_type="application/pdf", headers={"Content-Disposition": f'attachment; filename="{slug}-{kind}-slides-{datetime.utcnow().strftime("%Y-%m-%d")}.pdf"', "Cache-Control": "no-store"})
+
+
+async def _need_counts() -> dict:
+    """How many members said they need each kind of support (profile fields only). Anyone hidden from the directory is left out."""
+    import navigator as nav
+    from .navigator import needs_from_text
+    counts: dict = {}
+    for u in impact._members(await db.users.find({"hidden_from_directory": {"$ne": True}}, {"id": 1, "role": 1, "membership_status": 1, "support_needs": 1, "needs_seeking": 1, "goals": 1}).to_list(5000)):
+        seen = set()
+        for field in ("support_needs", "needs_seeking", "goals"):
+            v = u.get(field)
+            for item in (v if isinstance(v, list) else [v] if v else []):
+                seen.update(needs_from_text(str(item)))
+        for k in seen:
+            if k in nav.NEED_LABEL:
+                label = nav.NEED_LABEL[k][:1].upper() + nav.NEED_LABEL[k][1:]   # "funding" reads as "Funding" on a sheet
+                counts[label] = counts.get(label, 0) + 1
+    return counts
+
+
+async def _metrics(days: int) -> dict:
+    cfg = await _config()
+    return impact.metrics_table(await impact.load(db), _days(days), cfg.get("community_name") or "Community", await _need_counts())
+
+
+@router.get("/admin/metrics.csv")
+async def metrics_csv(days: int = Query(90), me: dict = Depends(require_role("admin"))):
+    """Every number in the reports as one CSV a hub can open in a spreadsheet or send to a funder. Totals only; small groups show as <5."""
+    t = await _metrics(days)
+    slug = "".join(ch if ch.isalnum() else "-" for ch in t["community"].lower()).strip("-") or "community"
+    await audit(me["id"], "admin.metrics_export", "metrics", "csv", {"days": t["period_days"], "rows": len(t["rows"])})
+    return Response(impact.metrics_csv(t), media_type="text/csv; charset=utf-8", headers={"Content-Disposition": f'attachment; filename="{slug}-metrics-{t["period_end"]}.csv"', "Cache-Control": "no-store"})
+
+
+@router.get("/admin/metrics")
+async def metrics_json(days: int = Query(90), me: dict = Depends(require_role("admin"))):
+    """The same rows as JSON, for the screen or for another system."""
+    return await _metrics(days)
 
 
 @router.get("/admin/reports/{kind}")

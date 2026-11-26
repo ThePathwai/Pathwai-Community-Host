@@ -27,7 +27,7 @@ export const FEATURES = [
   { id: "whitelabel", label: "Fully white-label (no Pathwai branding)" },
   { id: "imports", label: "Founder and resource imports" },
   { id: "events", label: "Events and RSVPs" },
-  { id: "reports", label: "Impact reports for your funders" },
+  { id: "reports", label: "Impact reports and data export for your funders" },
   { id: "integrations", label: "Integrations" },
   { id: "domain", label: "Custom domain" },
   { id: "sso", label: "Single sign-on" },

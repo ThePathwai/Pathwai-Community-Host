@@ -655,7 +655,7 @@ function get(path, p, config) {
   if (path.startsWith("/talent")) return talentCall("get", path, null, p, navCtx(config));
   if (path.startsWith("/classes")) return classesCall("get", path, {}, p, config);
   if (path.startsWith("/teams")) return teamsCall("get", path, {}, config);
-  if (/^\/(admin\/(impact|report-types|reports\/|report-shares|deck-selection|partnership-offer|quiet|instagram|tiktok)|public\/report\/)/.test(path) || path === "/community/reliability") return impactCall("get", path, {}, config);
+  if (/^\/(admin\/(impact|metrics|report-types|reports\/|report-shares|deck-selection|partnership-offer|quiet|instagram|tiktok)|public\/report\/)/.test(path) || path === "/community/reliability") return impactCall("get", path, {}, config);
   if (path === "/admin/blasts/history") {
     if (slugOf() === HUB_SLUG && !S.extra.hubBlasts) { S.extra.hubBlasts = true; S.extra.blasts = [...(S.extra.blasts || []), ...hubBlasts()].sort((a, b) => b.at.localeCompare(a.at)); }
     let blasts = (S.extra.blasts || []).filter((b) => !b.slug || b.slug === slugOf());
