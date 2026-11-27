@@ -1,15 +1,15 @@
 import React from "react";
-import { ArrowRight, Check, Circle, CircleCheck, Download, FileText, Lock } from "./icons";
+import { ArrowRight, Check, Circle, CircleCheck } from "./icons";
 import { Eyebrow, Pill } from "./SiteKit";
 import { cx } from "./ui";
 
-// The pictures on the home page: a made-up hub window, the scattered-to-one-map diagram, the three stages of growth and a funder report.
+// The pictures on the home page: a made-up hub window, the scattered-to-one-map diagram, and the three stages of growth.
 // Everything here is sample material made up for illustration, with no figures, and says so under each picture.
 // Colours come from the site's own tokens so every picture works in both the dark and the light theme.
 
 const ink = (a) => `rgb(var(--c-ink) / ${a})`;
 
-/* ---------- the hero picture: what only Pathwai has. The hub's own catalogue in, a plan that stays current, the proof out ---------- */
+/* ---------- the hero picture: what only Pathwai has. The hub's own catalogue in, a plan that stays current, the hard conversations left to the team ---------- */
 
 const HUB_ONLY = [
   ["Founder Fundamentals", "Next cohort opens in January", "Your hub", "gray"],
@@ -22,7 +22,6 @@ const PLAN = [
   ["next", "Next", "Clean growth grant", "Closes in 9 days"],
   ["later", "Then", "Book the utility mentor", "Thursday · Your hub"],
 ];
-const FUNDER_ROWS = [["Founders matched to programs", 0.78], ["Applications reported", 0.52], ["Events held", 0.66]];
 
 export function HubWindow() {
   return (
@@ -63,16 +62,18 @@ export function HubWindow() {
               ))}
             </ol>
           </div>
-          {/* out: proof for the funder */}
+          {/* out: the team keeps the hard conversations */}
           <div className="hidden border-l border-line/60 p-5 lg:block">
-            <Eyebrow>What your funder sees</Eyebrow>
-            <div className="mt-4 space-y-3.5">
-              {FUNDER_ROWS.map(([t, w]) => (
-                <div key={t}><p className="text-xs text-muted">{t}</p><div className="mt-1.5 h-2 rounded-full bg-ink/10"><div className="h-full rounded-full bg-ink/80" style={{ width: `${w * 100}%` }} /></div></div>
-              ))}
+            <Eyebrow>Your team's view</Eyebrow>
+            <p className="mt-4 text-xs font-semibold text-muted">Answered by Pathwai</p>
+            <ul className="mt-2 space-y-1.5">
+              {["Which programs are open now?", "Am I eligible for the clinic?", "Where do I start?"].map((t) => <li key={t} className="flex items-start gap-2 rounded-xl bg-ink/[.05] px-3 py-2 text-xs"><Check className="mt-0.5 h-3.5 w-3.5 shrink-0 text-emerald-400" aria-hidden />{t}</li>)}
+            </ul>
+            <p className="mt-5 text-xs font-semibold text-muted">Needs your advisor</p>
+            <div className="mt-2 rounded-2xl border border-ink/30 bg-ink/[.07] p-3">
+              <p className="text-sm font-semibold leading-snug">Amara · utility pilot contract</p>
+              <p className="mt-1 text-xs text-muted">Plan and history attached</p>
             </div>
-            <p className="mt-5 flex items-start gap-2 text-xs text-muted"><Lock className="mt-0.5 h-3.5 w-3.5 shrink-0" aria-hidden />Totals only. Groups under five are hidden.</p>
-            <div className="mt-4 flex flex-wrap gap-1.5">{["PDF", "Spreadsheet", "Live link"].map((t) => <span key={t} className="chip !px-2.5 !py-0.5 text-[11px]">{t}</span>)}</div>
           </div>
         </div>
       </div>
@@ -201,50 +202,6 @@ export function GrowthStages() {
   );
 }
 
-/* ---------- the funder report, as a page you could hand over ---------- */
-
-const REPORT_ROWS = [["Members active", 0.82], ["Introductions made", 0.56], ["Events held", 0.68], ["Perks used", 0.44]];
-const HANDOVER = [
-  [FileText, "Reports", "PDF, slides or a live link, in your hub's own colours."],
-  [Download, "The raw numbers", "Every number behind them in one spreadsheet."],
-  [Lock, "Private by design", "Totals only. Small groups are hidden so no one can be picked out."],
-];
-
-export function ReportMock() {
-  return (
-    <div className="grid items-center gap-6 lg:grid-cols-[1.1fr_1fr] lg:gap-10" data-testid="site-proof">
-      <figure>
-        <div className="mx-auto max-w-xl rounded-[1.4rem] bg-[#F6F6F8] p-6 text-[#16161C] shadow-[0_34px_70px_-30px_rgba(0,0,0,.7)] sm:p-8">
-          <div className="flex items-start justify-between gap-4 border-b border-[#16161C]/10 pb-4">
-            <div><p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-[#16161C]/55">Funder report</p><p className="mt-1 text-lg font-semibold">Northfield Innovation Hub</p></div>
-            <span className="rounded-full bg-[#16161C] px-3 py-1 text-[11px] font-medium text-white">Last 90 days</span>
-          </div>
-          <div className="mt-5 space-y-4">
-            {REPORT_ROWS.map(([t, w]) => (
-              <div key={t}>
-                <p className="text-sm font-medium">{t}</p>
-                <div className="mt-1.5 h-2.5 rounded-full bg-[#16161C]/10"><div className="h-full rounded-full bg-[#16161C]" style={{ width: `${w * 100}%` }} /></div>
-              </div>
-            ))}
-          </div>
-          <div className="mt-6 flex flex-wrap items-center gap-2 border-t border-[#16161C]/10 pt-4">
-            {["PDF", "Slides", "Live link", "Spreadsheet"].map((t) => <span key={t} className="rounded-full border border-[#16161C]/20 px-3 py-1 text-[11px] font-medium">{t}</span>)}
-          </div>
-        </div>
-        <figcaption className="mt-3 text-center text-xs text-muted">Sample report, made up for illustration.</figcaption>
-      </figure>
-      <ul className="space-y-3">
-        {HANDOVER.map(([Icon, t, d]) => (
-          <li key={t} className="card flex items-start gap-4 !p-5">
-            <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-ink/10"><Icon className="h-4 w-4" aria-hidden /></span>
-            <span><h3 className="text-lg">{t}</h3><p className="mt-1 text-sm text-muted">{d}</p></span>
-          </li>
-        ))}
-      </ul>
-    </div>
-  );
-}
-
 /* ---------- the three "see it in action" pictures ---------- */
 
 export function StoryHub() {
@@ -293,28 +250,20 @@ export function StoryCurrent() {
   );
 }
 
-export function StoryProof() {
-  const Step = ({ n, t, children }) => (
-    <li className="card !p-4">
-      <p className="eyebrow">Step {n}</p>
-      <p className="mt-1 text-sm font-semibold">{t}</p>
-      <div className="mt-3">{children}</div>
-    </li>
-  );
-  const Down = () => <li className="flex justify-center text-muted" aria-hidden><ArrowRight className="h-4 w-4 rotate-90" /></li>;
+export function StoryTeam() {
+  const routine = ["Which programs are open now?", "Am I eligible for the legal clinic?", "Where do I start?", "When is the next cohort?"];
+  const hard = ["Negotiating a utility pilot", "Choosing between two offers"];
   return (
-    <ol className="space-y-2" data-testid="story-proof-art">
-      <Step n="1" t="Founders tick where they applied, if they choose">
-        <div className="space-y-1.5">{["Seed funding round", "Clean growth grant"].map((t) => <p key={t} className="flex items-center gap-2.5 rounded-xl bg-ink/[.06] px-3 py-2 text-sm"><span className="flex h-4 w-4 items-center justify-center rounded bg-ink text-paper"><Check className="h-3 w-3" aria-hidden /></span>{t}</p>)}</div>
-      </Step>
-      <Down />
-      <Step n="2" t="Added up. Never names. Hidden below five.">
-        <p className="flex items-center gap-1.5" aria-hidden>{[0, 1, 2, 3, 4].map((i) => <i key={i} className="h-3 w-3 rounded-full bg-ink/60" />)}<Lock className="ml-2 h-3.5 w-3.5 text-muted" /></p>
-      </Step>
-      <Down />
-      <Step n="3" t="A report your funder can use">
-        <div className="space-y-2">{[0.78, 0.52, 0.66].map((w, i) => <div key={i} className="h-2 rounded-full bg-ink/10"><div className="h-full rounded-full bg-ink/80" style={{ width: `${w * 100}%` }} /></div>)}</div>
-      </Step>
-    </ol>
+    <div className="grid gap-3 sm:grid-cols-[1fr_1.15fr]" data-testid="story-team-art">
+      <div className="card !p-5">
+        <Eyebrow>Pathwai answers</Eyebrow>
+        <ul className="mt-4 space-y-2">{routine.map((t) => <li key={t} className="flex items-start gap-2.5 rounded-xl bg-ink/[.06] px-3 py-2.5 text-sm"><Check className="mt-0.5 h-3.5 w-3.5 shrink-0 text-emerald-400" aria-hidden />{t}</li>)}</ul>
+      </div>
+      <div className="card !border-ink/30 !p-5">
+        <Eyebrow>Your team takes</Eyebrow>
+        <ul className="mt-4 space-y-2">{hard.map((t) => <li key={t} className="rounded-xl bg-ink/[.07] px-3 py-3"><span className="block text-sm font-semibold">{t}</span><span className="mt-1 block text-xs text-muted">The founder's plan and history come with it</span></li>)}</ul>
+        <p className="mt-4 flex items-center gap-2 text-xs text-muted"><ArrowRight className="h-3.5 w-3.5" aria-hidden />Handed over when a founder needs a person</p>
+      </div>
+    </div>
   );
 }

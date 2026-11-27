@@ -4,7 +4,7 @@ import { ArrowRight, ArrowUp, Rocket, Search } from "../components/icons";
 import { cx } from "../components/ui";
 import { DEMO_PATH } from "../lib/demo";
 import { Eyebrow, Glow, Section, SiteShell, WAITLIST } from "../components/SiteKit";
-import { GrowthStages, HubWindow, ReportMock, ScatterToMap, StoryCurrent, StoryHub, StoryProof } from "../components/SiteVisuals";
+import { GrowthStages, HubWindow, ScatterToMap, StoryCurrent, StoryHub, StoryTeam } from "../components/SiteVisuals";
 
 // The website home page (shown at / to anyone who is signed out). About and Contact are their own pages (SiteAbout.jsx, SiteContact.jsx);
 // header, footer and shared blocks live in components/SiteKit.jsx. Plain data arrays below, so copy edits are one-liners.
@@ -20,12 +20,12 @@ const STEPS = [
   ["Advisors focus", "Routine questions are answered. Your team takes the rest."],
 ];
 
-const TABS = [["hub", "Knows your hub"], ["current", "Stays current"], ["proof", "Proves the work"]];
+const TABS = [["hub", "Knows your hub"], ["current", "Stays current"], ["team", "Frees your team"]];
 
 const STORY = {
   hub: { eyebrow: "Knows your hub", title: "Your hub's own knowledge, put to work.", body: "Load your programs, events and people once. Pathwai answers from your own catalogue first, then the wider ecosystem, and shows when each entry was last checked.", Art: StoryHub },
   current: { eyebrow: "Stays current", title: "A plan that changes when things do.", body: "Deadlines pass, programs open, the next step moves. The founder always sees what to do now, without searching again.", Art: StoryCurrent },
-  proof: { eyebrow: "Proves the work", title: "From advice to proof.", body: "Founders tick where they applied, if they choose to. Your funders get totals, with no names and no small groups.", Art: StoryProof },
+  team: { eyebrow: "Frees your team", title: "Your advisors keep the hard conversations.", body: "Routine questions get answered at intake, from your own catalogue. When a founder needs a person, the advisor gets the plan and history with them.", Art: StoryTeam },
 };
 
 function Story() {
@@ -85,7 +85,7 @@ export default function Site() {
           <h1 className="mx-auto text-[2.6rem] leading-[1.05] sm:text-7xl lg:text-8xl" style={{ textWrap: "balance" }}>
             A venture advisor for every innovation hub.
           </h1>
-          <p className="mx-auto mt-4 max-w-2xl text-base text-muted sm:mt-5 sm:text-xl">Pathwai knows your hub's own programs, keeps each founder's plan current, and gives your funders the proof. Hub by hub, it becomes one national system.</p>
+          <p className="mx-auto mt-4 max-w-2xl text-base text-muted sm:mt-5 sm:text-xl">Pathwai knows your hub's own programs, keeps each founder's plan current, and leaves your team the hard conversations. Hub by hub, it becomes one national system.</p>
           <AskBox />
           <div className="mx-auto mt-7 grid max-w-sm grid-cols-2 gap-3 sm:flex sm:max-w-none sm:flex-wrap sm:items-center sm:justify-center">
             <Link to="/contact" className="btn-primary col-span-2 !px-6 !py-3 text-base sm:col-span-1" data-testid="site-incubators">Bring Pathwai to your hub<ArrowRight className="h-4 w-4" aria-hidden /></Link>
@@ -104,12 +104,8 @@ export default function Site() {
 
       <Glow />
 
-      <Section id="see" eyebrow="See it in action" title="What a search can't do." sub="Any founder can search. Pathwai knows your hub, keeps the plan current, and proves the work.">
+      <Section id="see" eyebrow="See it in action" title="What a search can't do." sub="Any founder can search. Pathwai knows your hub, keeps the plan current, and frees your team for the hard conversations.">
         <Story />
-      </Section>
-
-      <Section id="proof" eyebrow="Proof for your funders" title="The numbers your funders ask for, ready to send." sub="Members active, introductions made, events held, perks used. Measured from your own hub, never guessed.">
-        <ReportMock />
       </Section>
 
       <Section id="network" eyebrow="How it grows" title="One hub at a time. One national system in the end." sub="Each hub keeps its own advisor. Together they become one network.">
