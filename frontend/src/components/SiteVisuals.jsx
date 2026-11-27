@@ -1,6 +1,7 @@
 import React from "react";
-import { ArrowUp, Building2, Calendar, Check, Download, FileText, Gift, Lock, Users } from "./icons";
+import { ArrowRight, Check, Circle, CircleCheck, Download, FileText, Lock } from "./icons";
 import { Eyebrow, Pill } from "./SiteKit";
+import { cx } from "./ui";
 
 // The pictures on the home page: a made-up hub window, the scattered-to-one-map diagram, the three stages of growth and a funder report.
 // Everything here is sample material made up for illustration, with no figures, and says so under each picture.
@@ -8,13 +9,20 @@ import { Eyebrow, Pill } from "./SiteKit";
 
 const ink = (a) => `rgb(var(--c-ink) / ${a})`;
 
-/* ---------- the hero picture: a hub's advisor, as a founder meets it ---------- */
+/* ---------- the hero picture: what only Pathwai has. The hub's own catalogue in, a plan that stays current, the proof out ---------- */
 
-const MATCHES = [
-  ["Seed funding round", "Your hub · Closes soon", "Good match now", "green"],
-  ["Clean growth grant", "Federal · Rolling intake", "Good match now", "green"],
-  ["Pilot accelerator", "Regional · Opens in spring", "Almost", "blue"],
+const HUB_ONLY = [
+  ["Founder Fundamentals", "Next cohort opens in January", "Your hub", "gray"],
+  ["Legal clinic", "Every second Tuesday", "Your hub", "gray"],
+  ["Mentor, utility sales", "Thursdays, by booking", "Your hub", "gray"],
+  ["Seed funding round", "Federal · checked Nov 24", "Checked", "green"],
 ];
+const PLAN = [
+  ["done", "Applied", "Seed funding round", "Marked by the founder"],
+  ["next", "Next", "Clean growth grant", "Closes in 9 days"],
+  ["later", "Then", "Book the utility mentor", "Thursday · Your hub"],
+];
+const FUNDER_ROWS = [["Founders matched to programs", 0.78], ["Applications reported", 0.52], ["Events held", 0.66]];
 
 export function HubWindow() {
   return (
@@ -22,60 +30,49 @@ export function HubWindow() {
       <div className="overflow-hidden rounded-[1.6rem] border border-line/70 bg-paper/60 shadow-[0_40px_90px_-34px_rgba(0,0,0,.7)] backdrop-blur-xl">
         <div className="flex items-center gap-2 border-b border-line/60 px-4 py-3">
           <span className="flex gap-1.5" aria-hidden>{[0, 1, 2].map((i) => <i key={i} className="h-2.5 w-2.5 rounded-full bg-ink/20" />)}</span>
-          <span className="mx-auto text-xs text-muted">Northfield Innovation Hub · Advisor</span>
+          <span className="mx-auto text-xs text-muted">Northfield Innovation Hub · Pathwai</span>
           <span className="w-10 max-sm:hidden" aria-hidden />
         </div>
-        <div className="grid lg:grid-cols-[12.5rem_minmax(0,1fr)_15rem]">
-          {/* what the hub loaded once */}
+        <div className="grid lg:grid-cols-[minmax(0,1fr)_minmax(0,1.15fr)_minmax(0,1fr)]">
+          {/* in: the hub's own knowledge */}
           <div className="hidden border-r border-line/60 p-5 lg:block">
-            <Eyebrow>Loaded once</Eyebrow>
-            <ul className="mt-4 space-y-1.5">
-              {[[Building2, "Programs"], [Calendar, "Events"], [Users, "People"], [Gift, "Perks"]].map(([Icon, t]) => (
-                <li key={t} className="flex items-center gap-2.5 rounded-xl bg-ink/[.05] px-3 py-2.5 text-sm">
-                  <Icon className="h-4 w-4 text-muted" aria-hidden />{t}<Check className="ml-auto h-3.5 w-3.5 text-emerald-400" aria-hidden />
+            <Eyebrow>Your hub's own programs</Eyebrow>
+            <ul className="mt-4 space-y-2">
+              {HUB_ONLY.map(([t, meta, tag, tone]) => (
+                <li key={t} className="rounded-2xl bg-ink/[.05] p-3">
+                  <span className="flex items-start justify-between gap-2"><span className="text-sm font-semibold leading-snug">{t}</span><Pill tone={tone}>{tag}</Pill></span>
+                  <span className="mt-0.5 block text-xs text-muted">{meta}</span>
                 </li>
               ))}
             </ul>
           </div>
-          {/* the conversation */}
-          <div className="flex flex-col gap-4 p-4 sm:p-6">
-            <p className="ml-auto max-w-[85%] rounded-2xl rounded-br-md bg-ink px-4 py-2.5 text-sm text-paper">Which grant should I apply for?</p>
-            <div className="flex items-start gap-3">
-              <span className="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-ink/10 text-[11px] font-bold" aria-hidden>P</span>
-              <div className="min-w-0 flex-1">
-                <p className="text-sm">Three fit a seed-stage climate team in Ontario. Start with the first, it closes soonest.</p>
-                <ul className="mt-3 space-y-2">
-                  {MATCHES.map(([t, meta, tag, tone], i) => (
-                    <li key={t} className="flex items-center gap-3 rounded-2xl border border-line/60 bg-ink/[.04] p-3">
-                      <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-ink/10 text-xs font-bold" aria-hidden>{i + 1}</span>
-                      <span className="min-w-0 flex-1"><span className="block truncate text-sm font-semibold">{t}</span><span className="block truncate text-xs text-muted">{meta}</span></span>
-                      <span className="max-sm:hidden"><Pill tone={tone}>{tag}</Pill></span>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            </div>
-            <div className="flex items-center gap-3 rounded-full border border-line/60 px-4 py-2 text-sm text-muted" aria-hidden>
-              <span className="flex-1">Ask the advisor</span>
-              <span className="flex h-7 w-7 items-center justify-center rounded-full bg-ink text-paper"><ArrowUp className="h-3.5 w-3.5" /></span>
-            </div>
-          </div>
-          {/* who is asking */}
-          <div className="hidden border-l border-line/60 p-5 lg:block">
-            <Eyebrow>The founder</Eyebrow>
-            <div className="mt-4 flex items-center gap-3">
+          {/* the founder's plan, kept current */}
+          <div className="p-4 sm:p-6">
+            <div className="flex items-center gap-3">
               <span className="flex h-10 w-10 items-center justify-center rounded-full bg-accent text-xs font-bold" style={{ color: "var(--on-accent)" }}>AJ</span>
-              <span><span className="block text-sm font-semibold">Amara J.</span><span className="block text-xs text-muted">VoltGrid · Toronto</span></span>
+              <span className="min-w-0"><span className="block text-sm font-semibold">Amara's plan</span><span className="block text-xs text-muted">VoltGrid · Seed · Updated today</span></span>
             </div>
-            <dl className="mt-4 space-y-2 text-xs">
-              {[["Stage", "Seed"], ["Region", "Ontario"], ["Needs", "Funding, mentors"]].map(([k, v]) => (
-                <div key={k} className="flex justify-between gap-3 rounded-xl bg-ink/[.05] px-3 py-2"><dt className="text-muted">{k}</dt><dd className="font-medium">{v}</dd></div>
+            <p className="mt-4 rounded-2xl border border-line/70 border-l-2 border-l-emerald-400 bg-ink/[.04] px-4 py-3 text-sm"><span className="eyebrow block">What changed</span><span className="mt-1 block">Pilot accelerator closed. Next intake is in spring, so the funding step moved up.</span></p>
+            <ol className="mt-4 space-y-2">
+              {PLAN.map(([state, tag, t, meta]) => (
+                <li key={t} className="flex items-center gap-3 rounded-2xl border border-line/60 bg-ink/[.04] p-3">
+                  {state === "done" ? <CircleCheck className="h-5 w-5 shrink-0 text-emerald-400" aria-hidden /> : <Circle className={cx("h-5 w-5 shrink-0", state === "next" ? "text-ink" : "text-muted")} aria-hidden />}
+                  <span className="min-w-0 flex-1"><span className="block truncate text-sm font-semibold">{t}</span><span className="block truncate text-xs text-muted">{meta}</span></span>
+                  <span className="eyebrow">{tag}</span>
+                </li>
               ))}
-            </dl>
-            <div className="mt-4 rounded-2xl border border-line/60 p-3">
-              <p className="eyebrow">Next move</p>
-              <p className="mt-1.5 text-sm font-semibold leading-snug">Apply to the seed funding round</p>
+            </ol>
+          </div>
+          {/* out: proof for the funder */}
+          <div className="hidden border-l border-line/60 p-5 lg:block">
+            <Eyebrow>What your funder sees</Eyebrow>
+            <div className="mt-4 space-y-3.5">
+              {FUNDER_ROWS.map(([t, w]) => (
+                <div key={t}><p className="text-xs text-muted">{t}</p><div className="mt-1.5 h-2 rounded-full bg-ink/10"><div className="h-full rounded-full bg-ink/80" style={{ width: `${w * 100}%` }} /></div></div>
+              ))}
             </div>
+            <p className="mt-5 flex items-start gap-2 text-xs text-muted"><Lock className="mt-0.5 h-3.5 w-3.5 shrink-0" aria-hidden />Totals only. Groups under five are hidden.</p>
+            <div className="mt-4 flex flex-wrap gap-1.5">{["PDF", "Spreadsheet", "Live link"].map((t) => <span key={t} className="chip !px-2.5 !py-0.5 text-[11px]">{t}</span>)}</div>
           </div>
         </div>
       </div>
@@ -245,5 +242,79 @@ export function ReportMock() {
         ))}
       </ul>
     </div>
+  );
+}
+
+/* ---------- the three "see it in action" pictures ---------- */
+
+export function StoryHub() {
+  const open = ["Federal grants", "Provincial programs", "Public event pages"];
+  const own = ["Cohort dates and intake notes", "Your mentors and their hours", "Your events, perks and clinics", "Local rules, and who to call"];
+  return (
+    <div className="grid gap-3 sm:grid-cols-[1fr_1.25fr]" data-testid="story-hub-art">
+      <div className="card !p-5">
+        <Eyebrow>Anyone can find</Eyebrow>
+        <ul className="mt-4 space-y-2" aria-hidden>{open.map((t) => <li key={t} className="rounded-xl border border-dashed border-ink/25 px-3 py-2.5 text-sm text-muted">{t}</li>)}</ul>
+      </div>
+      <div className="card !border-ink/30 !p-5">
+        <Eyebrow>Only your hub has</Eyebrow>
+        <ul className="mt-4 space-y-2">{own.map((t) => <li key={t} className="flex items-center gap-2.5 rounded-xl bg-ink/[.07] px-3 py-2.5 text-sm font-medium"><Check className="h-3.5 w-3.5 shrink-0 text-emerald-400" aria-hidden />{t}</li>)}</ul>
+      </div>
+    </div>
+  );
+}
+
+const WEEK0 = [["Seed funding round", "Applied", "green"], ["Clean growth grant", "Closes in 9 days", "gray"], ["Pilot accelerator", "Closes in 12 days", "gray"]];
+const WEEK2 = [["Seed funding round", "Applied", "green"], ["Clean growth grant", "Closed", "gray", true], ["Pilot accelerator", "Closed", "gray", true], ["Venture clinic at your hub", "New · Dec 16", "blue"]];
+
+function Snapshot({ label, rows }) {
+  return (
+    <div className="card !p-4">
+      <Eyebrow>{label}</Eyebrow>
+      <ul className="mt-3 space-y-2">
+        {rows.map(([t, tag, tone, struck]) => (
+          <li key={t} className="rounded-xl bg-ink/[.06] px-3 py-2.5">
+            <span className={cx("block text-sm font-medium", struck && "text-muted line-through decoration-ink/40")}>{t}</span>
+            <span className="mt-1.5 inline-block"><Pill tone={tone}>{tag}</Pill></span>
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
+}
+
+export function StoryCurrent() {
+  return (
+    <div className="grid items-center gap-3 sm:grid-cols-[1fr_auto_1fr]" data-testid="story-current-art">
+      <Snapshot label="The plan today" rows={WEEK0} />
+      <span className="mx-auto flex flex-col items-center gap-1 text-xs text-muted"><ArrowRight className="h-5 w-5 rotate-90 sm:rotate-0" aria-hidden />Two weeks on</span>
+      <Snapshot label="The plan, kept current" rows={WEEK2} />
+    </div>
+  );
+}
+
+export function StoryProof() {
+  const Step = ({ n, t, children }) => (
+    <li className="card !p-4">
+      <p className="eyebrow">Step {n}</p>
+      <p className="mt-1 text-sm font-semibold">{t}</p>
+      <div className="mt-3">{children}</div>
+    </li>
+  );
+  const Down = () => <li className="flex justify-center text-muted" aria-hidden><ArrowRight className="h-4 w-4 rotate-90" /></li>;
+  return (
+    <ol className="space-y-2" data-testid="story-proof-art">
+      <Step n="1" t="Founders tick where they applied, if they choose">
+        <div className="space-y-1.5">{["Seed funding round", "Clean growth grant"].map((t) => <p key={t} className="flex items-center gap-2.5 rounded-xl bg-ink/[.06] px-3 py-2 text-sm"><span className="flex h-4 w-4 items-center justify-center rounded bg-ink text-paper"><Check className="h-3 w-3" aria-hidden /></span>{t}</p>)}</div>
+      </Step>
+      <Down />
+      <Step n="2" t="Added up. Never names. Hidden below five.">
+        <p className="flex items-center gap-1.5" aria-hidden>{[0, 1, 2, 3, 4].map((i) => <i key={i} className="h-3 w-3 rounded-full bg-ink/60" />)}<Lock className="ml-2 h-3.5 w-3.5 text-muted" /></p>
+      </Step>
+      <Down />
+      <Step n="3" t="A report your funder can use">
+        <div className="space-y-2">{[0.78, 0.52, 0.66].map((w, i) => <div key={i} className="h-2 rounded-full bg-ink/10"><div className="h-full rounded-full bg-ink/80" style={{ width: `${w * 100}%` }} /></div>)}</div>
+      </Step>
+    </ol>
   );
 }

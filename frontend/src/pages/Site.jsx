@@ -1,10 +1,10 @@
 import React, { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { ArrowRight, ArrowUp, Check, Rocket, Search } from "../components/icons";
+import { ArrowRight, ArrowUp, Rocket, Search } from "../components/icons";
 import { cx } from "../components/ui";
 import { DEMO_PATH } from "../lib/demo";
-import { Eyebrow, Glow, Pill, Section, SiteShell, WAITLIST } from "../components/SiteKit";
-import { GrowthStages, HubWindow, ReportMock, ScatterToMap } from "../components/SiteVisuals";
+import { Eyebrow, Glow, Section, SiteShell, WAITLIST } from "../components/SiteKit";
+import { GrowthStages, HubWindow, ReportMock, ScatterToMap, StoryCurrent, StoryHub, StoryProof } from "../components/SiteVisuals";
 
 // The website home page (shown at / to anyone who is signed out). About and Contact are their own pages (SiteAbout.jsx, SiteContact.jsx);
 // header, footer and shared blocks live in components/SiteKit.jsx. Plain data arrays below, so copy edits are one-liners.
@@ -20,102 +20,17 @@ const STEPS = [
   ["Advisors focus", "Routine questions are answered. Your team takes the rest."],
 ];
 
-const TABS = [["match", "The match"], ["profile", "The profile"], ["plan", "The plan"]];
+const TABS = [["hub", "Knows your hub"], ["current", "Stays current"], ["proof", "Proves the work"]];
 
-/* ---------- the product story: three short, made-up screens ---------- */
-
-function Match() {
-  const rows = [
-    ["1", "Apply to the seed funding round", "Closes Dec 2 · Fits your stage and sector, and gives you the funding you asked for.", "Good match now"],
-    ["2", "Meet the utility partnerships mentor", "Has sold to Canadian utilities. Covers first pilots, which you asked for.", "Good match now"],
-    ["3", "Meet an angel who backs early climate hardware", "Invests in Ontario pre-seed teams. Wants a clear ask and a pilot story first.", "Good match now"],
-    ["4", "Go to the founders and utilities mixer", "Thu, 6:00 PM · You will meet three buyers. Does not cover fundraising.", "Almost"],
-  ];
-  return (
-    <div className="grid items-center gap-8 lg:grid-cols-2" data-testid="story-match">
-      <div>
-        <Eyebrow>The match</Eyebrow>
-        <h3 className="mt-3 text-3xl font-bold sm:text-4xl" style={{ textWrap: "balance" }}>Relevant support, explained.</h3>
-        <p className="mt-4 max-w-md text-base text-muted">Every program, person and resource is checked against the founder's business. Each match says why it fits and what to confirm first.</p>
-      </div>
-      <div className="card">
-        <Eyebrow>Do these next</Eyebrow>
-        <ul className="mt-4 space-y-3">
-          {rows.map(([n, t, d, tag]) => (
-            <li key={n} className="flex items-start gap-3 rounded-2xl bg-ink/[.04] p-3">
-              <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-ink text-xs font-bold text-paper">{n}</span>
-              <span className="min-w-0"><span className="block text-sm font-semibold">{t}</span><span className="mt-0.5 block text-xs text-muted">{d}</span><span className="mt-2 inline-block"><Pill tone={tag === "Almost" ? "blue" : "green"}>{tag}</Pill></span></span>
-            </li>
-          ))}
-        </ul>
-      </div>
-    </div>
-  );
-}
-
-function Profile() {
-  const skills = [["Hardware", 95], ["Climate tech", 88], ["Fundraising", 80]];
-  return (
-    <div className="grid items-center gap-8 lg:grid-cols-2" data-testid="story-profile">
-      <div>
-        <Eyebrow>The profile</Eyebrow>
-        <h3 className="mt-3 text-3xl font-bold sm:text-4xl" style={{ textWrap: "balance" }}>One profile. Every program.</h3>
-        <p className="mt-4 text-base text-muted">A living profile that follows you across every program.</p>
-        <ul className="mt-5 space-y-2.5 text-base text-muted">
-          {["Follows you across programs", "Discoverable to the ecosystem", "Always yours"].map((t) => <li key={t} className="flex items-start gap-2.5"><Check className="mt-1 h-4 w-4 shrink-0 text-ink" aria-hidden />{t}</li>)}
-        </ul>
-      </div>
-      <div className="card">
-        <div className="flex items-center gap-3">
-          <span className="flex h-12 w-12 items-center justify-center rounded-full bg-accent text-sm font-bold" style={{ color: "var(--on-accent)" }}>AJ</span>
-          <span><span className="block font-semibold">Amara Johnson</span><span className="block text-xs text-muted">Founder · VoltGrid · Toronto</span></span>
-          <span className="ml-auto hidden gap-1.5 sm:flex"><Pill tone="gray">Open to programs</Pill><Pill tone="gray">Funding</Pill></span>
-        </div>
-        <p className="mt-4 text-sm">Grid-scale battery storage helping Canadian utilities integrate renewables.</p>
-        <div className="mt-4 grid grid-cols-2 gap-3 text-xs">
-          <div className="rounded-2xl bg-ink/[.04] p-3"><p className="eyebrow">Stage</p><p className="mt-1 text-sm font-semibold">Seed</p></div>
-          <div className="rounded-2xl bg-ink/[.04] p-3"><p className="eyebrow">Region</p><p className="mt-1 text-sm font-semibold">Ontario</p></div>
-        </div>
-        <div className="mt-4 space-y-2.5">
-          {skills.map(([s, v]) => (
-            <div key={s}><div className="flex justify-between text-xs"><span>{s}</span><span className="text-muted" style={{ fontVariantNumeric: "tabular-nums" }}>{v}%</span></div>
-              <div className="mt-1 h-1.5 rounded-full bg-ink/10"><div className="h-full rounded-full bg-accent" style={{ width: `${v}%` }} /></div></div>
-          ))}
-        </div>
-        <p className="mt-4 text-[11px] text-muted">Sample profile. Made up for illustration.</p>
-      </div>
-    </div>
-  );
-}
-
-function Plan() {
-  const cols = [["Next 2 weeks", ["Book the utility mentor", "Draft the one-page pilot offer"]], ["30 days", ["Apply to the seed funding round", "Run two utility discovery calls"]], ["90 days", ["Sign a pilot letter of intent", "Open the seed conversation with an investor"]]];
-  return (
-    <div className="grid items-center gap-8 lg:grid-cols-2" data-testid="story-plan">
-      <div>
-        <Eyebrow>The plan</Eyebrow>
-        <h3 className="mt-3 text-3xl font-bold sm:text-4xl" style={{ textWrap: "balance" }}>Leave with a decision.</h3>
-        <p className="mt-4 max-w-md text-base text-muted">The founder picks a direction, in their own words. Pathwai turns it into a plan built from the programs, events and people in your community. They start it alone, or share it with an advisor.</p>
-      </div>
-      <div className="card">
-        <Eyebrow>Decision</Eyebrow>
-        <p className="mt-2 text-lg font-semibold leading-snug">Win a utility pilot first, then raise the seed round.</p>
-        <div className="mt-4 grid gap-3 sm:grid-cols-3">
-          {cols.map(([h, items]) => (
-            <div key={h} className="rounded-2xl bg-ink/[.04] p-3">
-              <p className="text-xs font-semibold">{h}</p>
-              <ul className="mt-2 space-y-1.5 text-xs text-muted">{items.map((i) => <li key={i}>{i}</li>)}</ul>
-            </div>
-          ))}
-        </div>
-      </div>
-    </div>
-  );
-}
+const STORY = {
+  hub: { eyebrow: "Knows your hub", title: "Your hub's own knowledge, put to work.", body: "Load your programs, events and people once. Pathwai answers from your own catalogue first, then the wider ecosystem, and shows when each entry was last checked.", Art: StoryHub },
+  current: { eyebrow: "Stays current", title: "A plan that changes when things do.", body: "Deadlines pass, programs open, the next step moves. The founder always sees what to do now, without searching again.", Art: StoryCurrent },
+  proof: { eyebrow: "Proves the work", title: "From advice to proof.", body: "Founders tick where they applied, if they choose to. Your funders get totals, with no names and no small groups.", Art: StoryProof },
+};
 
 function Story() {
-  const [tab, setTab] = useState("match");
-  const View = { match: Match, profile: Profile, plan: Plan }[tab];
+  const [tab, setTab] = useState("hub");
+  const { eyebrow, title, body, Art } = STORY[tab];
   return (
     <div data-testid="story">
       <div role="tablist" aria-label="Product story" className="mx-auto grid max-w-md grid-cols-3 gap-1 rounded-full border border-line bg-ink/[.05] p-1">
@@ -124,7 +39,14 @@ function Story() {
             className={cx("truncate rounded-full px-3 py-2 text-sm font-medium", tab === k ? "glass-active text-ink" : "text-muted hover:text-ink")}>{label}</button>
         ))}
       </div>
-      <div className="mt-8"><View /></div>
+      <div className="mt-8 grid items-center gap-8 lg:grid-cols-2" data-testid={`story-${tab}`}>
+        <div>
+          <Eyebrow>{eyebrow}</Eyebrow>
+          <h3 className="mt-3 text-3xl font-bold sm:text-4xl" style={{ textWrap: "balance" }}>{title}</h3>
+          <p className="mt-4 max-w-md text-base text-muted">{body}</p>
+        </div>
+        <Art />
+      </div>
     </div>
   );
 }
@@ -163,7 +85,7 @@ export default function Site() {
           <h1 className="mx-auto text-[2.6rem] leading-[1.05] sm:text-7xl lg:text-8xl" style={{ textWrap: "balance" }}>
             A venture advisor for every innovation hub.
           </h1>
-          <p className="mx-auto mt-4 max-w-2xl text-base text-muted sm:mt-5 sm:text-xl">Pathwai gives every hub its own venture advisor, and links them into one national system.</p>
+          <p className="mx-auto mt-4 max-w-2xl text-base text-muted sm:mt-5 sm:text-xl">Pathwai knows your hub's own programs, keeps each founder's plan current, and gives your funders the proof. Hub by hub, it becomes one national system.</p>
           <AskBox />
           <div className="mx-auto mt-7 grid max-w-sm grid-cols-2 gap-3 sm:flex sm:max-w-none sm:flex-wrap sm:items-center sm:justify-center">
             <Link to="/contact" className="btn-primary col-span-2 !px-6 !py-3 text-base sm:col-span-1" data-testid="site-incubators">Bring Pathwai to your hub<ArrowRight className="h-4 w-4" aria-hidden /></Link>
@@ -182,7 +104,7 @@ export default function Site() {
 
       <Glow />
 
-      <Section id="see" eyebrow="See it in action" title="Watch the product come alive." sub="From the match to the plan.">
+      <Section id="see" eyebrow="See it in action" title="What a search can't do." sub="Any founder can search. Pathwai knows your hub, keeps the plan current, and proves the work.">
         <Story />
       </Section>
 
